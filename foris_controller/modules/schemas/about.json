@@ -1,0 +1,60 @@
+{
+    "oneOf": [
+        {
+            "description": "Get information for the about tab",
+            "properties": {
+                "module": {"enum": ["about"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to call get action in about module",
+            "properties": {
+                "module": {"enum": ["about"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "model": {"type": "string"},
+                        "board_name": {"type": "string"},
+                        "serial": {"type": "string"},
+                        "os_version": {"type": "string"},
+                        "kernel": {"type": "string"},
+                        "temperature": {
+                            "type": "object",
+                            "properties": {
+                                "CPU": {"type": "number"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["CPU"]
+                        },
+                        "firewall_status": {
+                            "type": "object",
+                            "properties": {
+                                "working": {"type": "boolean"},
+                                "last_check": {"type": "number"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["working", "last_check"]
+                        },
+                        "ucollect_status": {
+                            "type": "object",
+                            "properties": {
+                                "working": {"type": "boolean"},
+                                "last_check": {"type": "number"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["working", "last_check"]
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}

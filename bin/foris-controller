@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+
+#
+# foris-controller
+# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+#
+
+import argparse
+import logging
+
+from foris_controller.backends import OpenwrtBackend, MockBackend
+from foris_controller.buses import UnixSocketListener, UbusListener
+
+logger = logging.getLogger("main")
+
+
+if __name__ == "__main__":
+
+    # Parse the command line options
+    parser = argparse.ArgumentParser(prog="foris-controller")
+    subparsers = parser.add_subparsers(help="buses", dest="bus")
+    ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
+    ubus_parser.add_argument("--path", default='/tmp/run/ubus.sock')
+    ubus_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
+    ubus_parser.add_argument("--path", default='/tmp/foris-controller.soc')
+
+    exclusive_groups = parser.add_mutually_exclusive_group(required=True)
+    exclusive_groups.add_argument(
+        "-o", "--openwrt-backend", action='store_true',
+        help="Use backend to configure OpenWRT"
+    )
+    exclusive_groups.add_argument(
+        "-m", "--mock-backend", action='store_true',
+        help="Use mock config backend"
+    )
+    parser.add_argument("-d", "--debug", action="store_true", default=False)
+
+    options = parser.parse_args()
+
+    if options.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    logger.info("Foris controller is starting.")
+    if options.openwrt_backend:
+        logger.info("Using OpenWRT config backend.")
+        backend = OpenwrtBackend()
+    elif options.mock_backend:
+        logger.info("Using Mock config backend.")
+        backend = MockBackend()
+
+    if options.bus == "ubus":
+        logger.info("Using ubus to recieve commands.")
+        server = UbusListener(options.path, backend)
+
+    elif options.bus == "unix-socket":
+        logger.info("Using unix-socket to recieve commands.")
+        server = UnixSocketListener(options.path, backend)
+        server.serve_forever()
