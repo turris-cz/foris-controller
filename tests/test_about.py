@@ -17,10 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import backend, infrastructure
+from .fixtures import backend, infrastructure, ubusd_test
 
 
-def test_about(infrastructure):
+def test_about(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "about",
         "action": "get",
