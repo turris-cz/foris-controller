@@ -101,12 +101,12 @@ class Infrastructure(object):
         raise NotImplementedError()
 
 
-@pytest.fixture(params=['--openwrt-backend', '--mock-backend'], scope="session")
+@pytest.fixture(params=['--openwrt-backend', '--mock-backend'], scope="module")
 def backend(request):
     return request.param
 
 
-@pytest.fixture(params=["unix-socket", "ubus"], scope="session")
+@pytest.fixture(params=["unix-socket", "ubus"], scope="module")
 def infrastructure(request, backend):
     instance = Infrastructure(request.param, backend)
     yield instance

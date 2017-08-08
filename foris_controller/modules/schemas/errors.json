@@ -1,0 +1,25 @@
+{
+    "oneOf": [
+        {
+            "description": "Generic error responses.",
+            "properties": {
+                "module": {"type": ["string"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"type": ["string"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "errors": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["errors"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}

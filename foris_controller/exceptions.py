@@ -18,13 +18,5 @@
 #
 
 
-class IncorrectMessageType(Exception):
-    pass
-
-
-class ModuleNotFound(Exception):
-    pass
-
-
 class UnknownAction(Exception):
     pass
