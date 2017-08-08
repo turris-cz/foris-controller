@@ -25,7 +25,12 @@ import sys
 if sys.version_info >= (3, 0):
     from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
 else:
-    from SocketServer import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
+    from SocketServer import (
+        BaseRequestHandler, UnixStreamServer, ThreadingMixIn as NonObjectThreadingMixIn
+    )
+
+    class ThreadingMixIn(object, NonObjectThreadingMixIn):
+        pass
 
 from foris_controller.message_router import Router
 
@@ -43,7 +48,7 @@ class UnixSocketHandler(BaseRequestHandler):
         received_data = self.request.recv(4096)
         logger.debug("Data received '%s'." % str(received_data))
         try:
-            parsed = json.loads(str(received_data))
+            parsed = json.loads(received_data.decode("utf8"))
         except ValueError:
             logger.warning("Wrong data received. Handling finished.")
             return
@@ -51,14 +56,14 @@ class UnixSocketHandler(BaseRequestHandler):
         router = Router(self.server.backend)
         response = router.process_message(parsed)
         logger.debug("Sending response %s" % str(response))
-        self.request.send(json.dumps(response))
+        self.request.send(json.dumps(response).encode("utf8"))
         logger.debug("Handling finished.")
 
     def finish(self):
         logger.debug("Client diconnected.")
 
 
-class UnixSocketListener(object, ThreadingMixIn, UnixStreamServer):
+class UnixSocketListener(ThreadingMixIn, UnixStreamServer):
 
     def __init__(self, socket_path, backend):
 

@@ -57,7 +57,7 @@ class Infrastructure(object):
                 time.sleep(1)
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.connect(UNIX_SOCK_PATH)
-            sock.sendall(json.dumps(data))
+            sock.sendall(json.dumps(data).encode("utf8"))
 
             received = b''
             while True:
@@ -66,7 +66,7 @@ class Infrastructure(object):
                     break
                 received += data
 
-            return json.loads(received)
+            return json.loads(received.decode("utf8"))
 
         raise NotImplementedError()
 

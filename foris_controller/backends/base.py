@@ -31,9 +31,9 @@ def logger_wrapper(logger):
     def outer(func):
         @wraps(func)
         def inner(*args, **kwargs):
-            logger.debug("Starting to perform '%s' (%s, %s)" % (func.func_name, args[1:], kwargs))
+            logger.debug("Starting to perform '%s' (%s, %s)" % (func.__name__, args[1:], kwargs))
             res = func(*args, **kwargs)
-            logger.debug("Performing '%s' finished (%s)." % (func.func_name, res))
+            logger.debug("Performing '%s' finished (%s)." % (func.__name__, res))
             return res
 
         return inner
