@@ -17,7 +17,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import logging
+
 from functools import wraps
+
+logger = logging.getLogger("backends.base")
 
 REQUIRED_FUNCTIONS = [
     'get_device_info',
@@ -38,6 +42,30 @@ def logger_wrapper(logger):
 
         return inner
 
+    return outer
+
+
+def readlock(lock):
+    def outer(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            logger.debug("Acquiring read lock for '%s'" % (func.__name__))
+            with lock.readlock:
+                return func(*args, **kwargs)
+            logger.debug("Releasing read lock for '%s'" % (func.__name__))
+        return inner
+    return outer
+
+
+def writelock(lock):
+    def outer(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            logger.debug("Acquiring write lock for '%s'" % (func.__name__))
+            with lock.writelock:
+                return func(*args, **kwargs)
+            logger.debug("Releasing write lock for '%s'" % (func.__name__))
+        return inner
     return outer
 
 

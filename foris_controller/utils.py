@@ -1,0 +1,73 @@
+#
+# foris-controller
+# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+#
+
+import threading
+
+
+class RWLock(object):
+
+    class ReadLock(object):
+        def __init__(self, parent):
+            self.parent = parent
+
+        def __enter__(self):
+            self.acquire()
+
+        def __exit__(self, *args, **kwargs):
+            self.release()
+
+        def acquire(self):
+            with self.parent._new_readers:
+                with self.parent._counter_lock:
+                    self.parent._counter += 1
+                    self.parent._counter_lock.notify()
+
+        def release(self):
+            with self.parent._counter_lock:
+                self.parent._counter -= 1
+                self.parent._counter_lock.notify()
+
+    class WriteLock(object):
+        def __init__(self, parent):
+            self.parent = parent
+
+        def __enter__(self):
+            self.acquire()
+
+        def __exit__(self, *args, **kwargs):
+            self.release()
+
+        def acquire(self):
+            self.parent._writer_lock.acquire()
+            self.parent._new_readers.acquire()
+            with self.parent._counter_lock:
+                while self.parent._counter != 0:
+                    self.parent._counter_lock.wait()
+
+        def release(self):
+            self.parent._new_readers.release()
+            self.parent._writer_lock.release()
+
+    def __init__(self):
+        self._counter = 0
+        self._writer_lock = threading.Lock()
+        self._new_readers = threading.Lock()
+        self._counter_lock = threading.Condition(threading.Lock())
+        self.readlock = RWLock.ReadLock(self)
+        self.writelock = RWLock.WriteLock(self)

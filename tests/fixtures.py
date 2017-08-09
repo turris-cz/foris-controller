@@ -27,9 +27,29 @@ import subprocess
 import time
 import tempfile
 import ubus
+import threading
+
+from foris_controller.utils import RWLock
+from foris_controller.backends.base import readlock, writelock
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
+
+
+class Locker(object):
+    PLACE_BEGIN = 'B'
+    PLACE_END = 'E'
+    KIND_READ = 'R'
+    KIND_WRITE = 'W'
+
+    def __init__(self):
+        self.lock = RWLock()
+        self.output = []
+        self._output_lock = threading.Lock()
+
+    def store_log(self, kind, place):
+        with self._output_lock:
+            self.output.append((kind, place))
 
 
 @pytest.fixture(scope="session")
@@ -111,3 +131,7 @@ def infrastructure(request, backend):
     instance = Infrastructure(request.param, backend)
     yield instance
     instance.exit()
+
+@pytest.fixture(scope="function")
+def locker_instance():
+    yield Locker()
