@@ -21,16 +21,12 @@
 import json
 import os
 import pytest
-import shutil
 import socket
 import subprocess
 import time
-import tempfile
-import ubus
 import threading
 
 from foris_controller.utils import RWLock
-from foris_controller.backends.base import readlock, writelock
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
@@ -64,7 +60,7 @@ def ubusd_test():
 
 
 class Infrastructure(object):
-    def __init__(self, name, backend_name):
+    def __init__(self, name, backend_name, suppress_output=False):
         try:
             os.unlink(SOCK_PATH)
         except:
@@ -74,7 +70,7 @@ class Infrastructure(object):
         self.backend_name = backend_name
         if name not in ["unix-socket", "ubus"]:
             raise NotImplementedError()
-        if backend_name not in ["--openwrt-backend", "--mock-backend"]:
+        if backend_name not in ["openwrt-backend", "mock-backend"]:
             raise NotImplementedError()
 
         self.sock_path = SOCK_PATH
@@ -83,10 +79,15 @@ class Infrastructure(object):
             while not os.path.exists(self.sock_path):
                 time.sleep(0.3)
 
+        kwargs = {}
+        if suppress_output:
+            devnull = open(os.devnull, 'wb')
+            kwargs['stderr'] = devnull
+            kwargs['stdout'] = devnull
 
         self.server = subprocess.Popen([
-            "bin/foris-controller", "-d", backend_name, name, "--path", self.sock_path
-        ])
+            "bin/foris-controller", "-d", "--" + backend_name, name, "--path", self.sock_path
+        ], **kwargs)
 
     def exit(self):
         self.server.kill()
@@ -109,6 +110,7 @@ class Infrastructure(object):
             return json.loads(received.decode("utf8"))
 
         elif self.name == "ubus":
+            import ubus
             wait_process = subprocess.Popen(
                 ["ubus", "wait_for", "foris-controller", "-s", self.sock_path])
             wait_process.wait()
@@ -121,14 +123,15 @@ class Infrastructure(object):
         raise NotImplementedError()
 
 
-@pytest.fixture(params=['--openwrt-backend', '--mock-backend'], scope="module")
-def backend(request):
-    return request.param
+@pytest.fixture(scope="module")
+def backend(backend_param):
+    return backend_param
 
 
 @pytest.fixture(params=["unix-socket", "ubus"], scope="module")
 def infrastructure(request, backend):
-    instance = Infrastructure(request.param, backend)
+    instance = Infrastructure(
+        request.param, backend, request.config.getoption("--suppress-output"))
     yield instance
     instance.exit()
 

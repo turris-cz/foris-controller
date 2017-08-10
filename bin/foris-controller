@@ -23,7 +23,6 @@ import argparse
 import logging
 
 from foris_controller.backends import OpenwrtBackend, MockBackend
-from foris_controller.buses import UnixSocketListener, UbusListener
 
 logger = logging.getLogger("main")
 
@@ -63,10 +62,12 @@ if __name__ == "__main__":
         backend = MockBackend()
 
     if options.bus == "ubus":
+        from foris_controller.buses.ubus import UbusListener
         logger.info("Using ubus to recieve commands.")
         server = UbusListener(options.path, backend)
 
     elif options.bus == "unix-socket":
+        from foris_controller.buses.unix_socket import UnixSocketListener
         logger.info("Using unix-socket to recieve commands.")
         server = UnixSocketListener(options.path, backend)
 

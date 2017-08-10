@@ -47,5 +47,11 @@ setup(
     requires=[
         'foris_schema',
     ],
+    setup_requires=[
+        'pytest-runner',
+    ],
+    tests_require=[
+        'pytest'
+    ],
     include_package_data=True,
 )
