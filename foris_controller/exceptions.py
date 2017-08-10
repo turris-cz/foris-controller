@@ -20,3 +20,18 @@
 
 class UnknownAction(Exception):
     pass
+
+
+class BackendCommandFailed(Exception):
+    def __init__(self, retval, args):
+        super(BackendCommandFailed, self).__init__("Retval=%d for %s" % (retval, args))
+
+
+class FailedToParseCommandOutput(Exception):
+    def __init__(self, args, output):
+        super(FailedToParseCommandOutput, self).__init__("%s: %s" % (args, output))
+
+
+class FailedToParseFileContent(Exception):
+    def __init__(self, path, content):
+        super(FailedToParseFileContent, self).__init__("%s: %s" % (path, content))

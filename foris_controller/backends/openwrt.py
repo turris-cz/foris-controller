@@ -17,19 +17,47 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .base import BaseBackend
+import logging
+
+from .base import BaseBackend, logger_wrapper, writelock
+from ..utils import RWLock
+
+from .modules.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
+from .modules.files import SendingFiles, SystemInfoFiles
+
+logger = logging.getLogger("backends.mock")
 
 
 class OpenwrtBackend(BaseBackend):
+    i2c_lock = RWLock()
 
+    atsha_cmds = AtshaCmds()
+    temperature_cmds = TemperatureCmds()
+    sending_files = SendingFiles()
+    system_info_cmds = SystemInfoCmds()
+    system_info_files = SystemInfoFiles()
+
+    @logger_wrapper(logger)
     def get_device_info(self):
-        raise NotImplementedError()
+        return {
+            "model": self.system_info_files.get_model(),
+            "board_name": self.system_info_files.get_board_name(),
+            "kernel": self.system_info_cmds.get_kernel_version(),
+            "os_version": self.system_info_files.get_os_version(),
+        }
 
+    @writelock(i2c_lock)
+    @logger_wrapper(logger)
     def get_serial(self):
-        raise NotImplementedError()
+        return {"serial": self.atsha_cmds.get_serial()}
 
+    @writelock(i2c_lock)
+    @logger_wrapper(logger)
     def get_temperature(self):
-        raise NotImplementedError()
+        return {
+            "temperature": {"CPU": self.temperature_cmds.get_cpu_temperature()},
+        }
 
+    @logger_wrapper(logger)
     def get_sending_info(self):
-        raise NotImplementedError()
+        return self.sending_files.get_sending_info()
