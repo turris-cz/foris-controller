@@ -25,6 +25,7 @@ import socket
 import subprocess
 import time
 import threading
+import struct
 
 from foris_controller.utils import RWLock
 
@@ -98,14 +99,12 @@ class Infrastructure(object):
                 time.sleep(1)
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.connect(self.sock_path)
-            sock.sendall(json.dumps(data).encode("utf8"))
+            data = json.dumps(data).encode("utf8")
+            length_bytes = struct.pack("I", len(data))
+            sock.sendall(length_bytes + data)
 
-            received = b''
-            while True:
-                data = sock.recv(1024)
-                if not data:
-                    break
-                received += data
+            length = struct.unpack("I", sock.recv(4))[0]
+            received = sock.recv(length)
 
             return json.loads(received.decode("utf8"))
 
