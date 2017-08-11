@@ -42,26 +42,37 @@ class UnixSocketHandler(BaseRequestHandler):
 
     def setup(self):
         logger.debug("Client connected.")
+        self.router = Router(self.server.backend)
 
     def handle(self):
         logger.debug("Handling request")
-        # read data from the socket
-        length = struct.unpack("I", self.request.recv(4))[0]
-        logger.debug("Length received '%s'." % str(length))
-        received_data = self.request.recv(length)
-        logger.debug("Data received '%s'." % str(received_data))
-        try:
-            parsed = json.loads(received_data.decode("utf8"))
-        except ValueError:
-            logger.warning("Wrong data received. Handling finished.")
-            return
+        while True:
+            try:
+                # read data from the socket
+                length_data = self.request.recv(4)
+                if not length_data:
+                    logger.debug("Connection closed.")
+                    break
+                length = struct.unpack("I", length_data)[0]
+                logger.debug("Length received '%s'." % str(length))
+                received_data = self.request.recv(length)
+                logger.debug("Data received '%s'." % str(received_data))
+                try:
+                    parsed = json.loads(received_data.decode("utf8"))
+                except ValueError:
+                    logger.warning("Wrong data received.")
+                    continue
 
-        router = Router(self.server.backend)
-        response = router.process_message(parsed)
-        response = json.dumps(response).encode("utf8")
-        response_length = struct.pack("I", len(response))
-        logger.debug("Sending response (len=%d) %s" % (len(response), str(response)))
-        self.request.send(response_length + response)
+                response = self.router.process_message(parsed)
+                response = json.dumps(response).encode("utf8")
+                response_length = struct.pack("I", len(response))
+                logger.debug("Sending response (len=%d) %s" % (len(response), str(response)))
+                self.request.send(response_length + response)
+
+            except:
+                logger.debug("Connection closed.")
+                break
+
         logger.debug("Handling finished.")
 
     def finish(self):
