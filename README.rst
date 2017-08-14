@@ -17,9 +17,9 @@ Usage
 To run foris-controller using unix-socket and mock-backend (debugging purposes)::
 
 
-	foris-controller --mock-backend unix-socket
+	foris-controller --backend mock unix-socket
 
 
 To run foris-controller using ubus and openwrt-backend::
 
-	foris-controller --openwrt-backend ubus
+	foris-controller --backend openwrt ubus

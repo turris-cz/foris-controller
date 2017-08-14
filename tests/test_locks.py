@@ -19,7 +19,6 @@
 
 import pytest
 import random
-import threading
 import time
 
 from .fixtures import locker_instance
@@ -42,7 +41,7 @@ def test_locks_single(locker_instance):
         locker_instance.store_log(locker_instance.KIND_WRITE, locker_instance.PLACE_BEGIN)
         locker_instance.store_log(locker_instance.KIND_WRITE, locker_instance.PLACE_END)
 
-    assert locker_instance.output == [
+    assert list(locker_instance.output) == [
         (locker_instance.KIND_READ, locker_instance.PLACE_BEGIN),
         (locker_instance.KIND_READ, locker_instance.PLACE_END),
         (locker_instance.KIND_WRITE, locker_instance.PLACE_BEGIN),
@@ -64,14 +63,15 @@ def test_multiple_reads(locker_instance, thread_count):
             locker_instance.store_log(locker_instance.KIND_READ, locker_instance.PLACE_END)
             time.sleep(random.uniform(0.1, 0.01))
 
-    threads = []
+    entity_class = locker_instance.entity
+    entities = []
     for _ in range(thread_count):
-        t = threading.Thread(target=activity, args=(locker_instance, ))
-        threads.append(t)
-        t.start()
+        e = entity_class(target=activity, args=(locker_instance, ))
+        entities.append(e)
+        e.start()
 
-    for thread in threads:
-        thread.join()
+    for entity in entities:
+        entity.join()
 
     b_count, e_count = 0, 0
     for _, place in locker_instance.output:
@@ -96,19 +96,20 @@ def test_multiple_writes(locker_instance, thread_count):
             locker_instance.store_log(locker_instance.KIND_WRITE, locker_instance.PLACE_END)
             time.sleep(random.uniform(0.1, 0.01))
 
-    threads = []
+    entity_class = locker_instance.entity
+    entities = []
     for _ in range(thread_count):
-        t = threading.Thread(target=activity, args=(locker_instance, ))
-        threads.append(t)
-        t.start()
+        e = entity_class(target=activity, args=(locker_instance, ))
+        entities.append(e)
+        e.start()
 
-    for thread in threads:
-        thread.join()
+    for entity in entities:
+        entity.join()
 
     assert [
         (locker_instance.KIND_WRITE, locker_instance.PLACE_BEGIN),
         (locker_instance.KIND_WRITE, locker_instance.PLACE_END),
-    ] * thread_count == locker_instance.output
+    ] * thread_count == list(locker_instance.output)
 
 
 @pytest.mark.parametrize(
@@ -131,19 +132,20 @@ def test_multiple_reads_and_writes(locker_instance, read_thread_count, write_thr
             locker_instance.store_log(locker_instance.KIND_READ, locker_instance.PLACE_END)
             time.sleep(random.uniform(0.1, 0.01))
 
-    threads = []
+    entity_class = locker_instance.entity
+    entities = []
     for _ in range(read_thread_count):
-        t = threading.Thread(target=activity_read, args=(locker_instance, ))
-        threads.append(t)
-        t.start()
+        e = entity_class(target=activity_read, args=(locker_instance, ))
+        entities.append(e)
+        e.start()
 
     for _ in range(write_thread_count):
-        t = threading.Thread(target=activity_write, args=(locker_instance, ))
-        threads.append(t)
-        t.start()
+        e = entity_class(target=activity_write, args=(locker_instance, ))
+        entities.append(e)
+        e.start()
 
-    for thread in threads:
-        thread.join()
+    for entity in entities:
+        entity.join()
 
     b_count, e_count = 0, 0
     prev_kind, prev_place = None, None

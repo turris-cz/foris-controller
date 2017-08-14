@@ -22,7 +22,7 @@
 import argparse
 import logging
 
-from foris_controller.backends import OpenwrtBackend, MockBackend
+from foris_controller.app import set_app_info
 
 logger = logging.getLogger("main")
 
@@ -34,32 +34,34 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help="buses", dest="bus")
     ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
     ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
-    ubus_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
-    ubus_parser.add_argument("--path", default='/tmp/foris-controller.soc')
+    unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
+    unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
 
-    exclusive_groups = parser.add_mutually_exclusive_group(required=True)
-    exclusive_groups.add_argument(
-        "-o", "--openwrt-backend", action='store_true',
-        help="Use backend to configure OpenWRT"
-    )
-    exclusive_groups.add_argument(
-        "-m", "--mock-backend", action='store_true',
-        help="Use mock config backend"
+    parser.add_argument(
+        "-b", "--backend", type=str, choices=["mock", "openwrt"],
+        help="Configuration backend to be used", required=True
     )
     parser.add_argument("-d", "--debug", action="store_true", default=False)
 
     options = parser.parse_args()
 
+    # Store app info
+    set_app_info(options)
+
     if options.debug:
         logging.basicConfig(level=logging.DEBUG)
 
     logger.info("Foris controller is starting.")
-    if options.openwrt_backend:
+    if options.backend == "openwrt":
+        from foris_controller.backends import OpenwrtBackend
         logger.info("Using OpenWRT config backend.")
         backend = OpenwrtBackend()
-    elif options.mock_backend:
+    elif options.backend == "mock":
+        from foris_controller.backends import MockBackend
         logger.info("Using Mock config backend.")
         backend = MockBackend()
+    else:
+        raise NotImplementedError("Backend '%s' is not implemented" % options.backend)
 
     if options.bus == "ubus":
         from foris_controller.buses.ubus import UbusListener

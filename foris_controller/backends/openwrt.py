@@ -20,6 +20,7 @@
 import logging
 
 from .base import BaseBackend, logger_wrapper, writelock
+from ..app import app_info
 from ..utils import RWLock
 
 from .modules.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
@@ -29,7 +30,7 @@ logger = logging.getLogger("backends.mock")
 
 
 class OpenwrtBackend(BaseBackend):
-    i2c_lock = RWLock()
+    i2c_lock = RWLock(app_info["lock_backend"])
 
     atsha_cmds = AtshaCmds()
     temperature_cmds = TemperatureCmds()

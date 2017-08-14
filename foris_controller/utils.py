@@ -17,8 +17,6 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import threading
-
 
 class RWLock(object):
 
@@ -64,10 +62,10 @@ class RWLock(object):
             self.parent._new_readers.release()
             self.parent._writer_lock.release()
 
-    def __init__(self):
+    def __init__(self, lock_module):
         self._counter = 0
-        self._writer_lock = threading.Lock()
-        self._new_readers = threading.Lock()
-        self._counter_lock = threading.Condition(threading.Lock())
+        self._writer_lock = lock_module.Lock()
+        self._new_readers = lock_module.Lock()
+        self._counter_lock = lock_module.Condition(lock_module.Lock())
         self.readlock = RWLock.ReadLock(self)
         self.writelock = RWLock.WriteLock(self)

@@ -24,7 +24,6 @@ import pytest
 import socket
 import subprocess
 import time
-import threading
 import struct
 
 from foris_controller.utils import RWLock
@@ -39,10 +38,11 @@ class Locker(object):
     KIND_READ = 'R'
     KIND_WRITE = 'W'
 
-    def __init__(self):
-        self.lock = RWLock()
-        self.output = []
-        self._output_lock = threading.Lock()
+    def __init__(self, locking_module, entity_object, output):
+        self.lock = RWLock(locking_module)
+        self.output = output
+        self._output_lock = locking_module.Lock()
+        self.entity = entity_object
 
     def store_log(self, kind, place):
         with self._output_lock:
@@ -71,7 +71,7 @@ class Infrastructure(object):
         self.backend_name = backend_name
         if name not in ["unix-socket", "ubus"]:
             raise NotImplementedError()
-        if backend_name not in ["openwrt-backend", "mock-backend"]:
+        if backend_name not in ["openwrt", "mock"]:
             raise NotImplementedError()
 
         self.sock_path = SOCK_PATH
@@ -87,7 +87,7 @@ class Infrastructure(object):
             kwargs['stdout'] = devnull
 
         self.server = subprocess.Popen([
-            "bin/foris-controller", "-d", "--" + backend_name, name, "--path", self.sock_path
+            "bin/foris-controller", "-d", "-b", backend_name, name, "--path", self.sock_path
         ], **kwargs)
 
     def exit(self):
@@ -134,6 +134,16 @@ def infrastructure(request, backend):
     yield instance
     instance.exit()
 
-@pytest.fixture(scope="function")
-def locker_instance():
-    yield Locker()
+
+@pytest.fixture(params=["threading", "multiprocessing"], scope="function")
+def locker_instance(request):
+    if request.param == "threading":
+        import threading
+        output = []
+        locker = Locker(threading, threading.Thread, output)
+    elif request.param == "multiprocessing":
+        import multiprocessing
+        manager = multiprocessing.Manager()
+        output = manager.list()
+        locker = Locker(multiprocessing, multiprocessing.Process, output)
+    yield locker

@@ -19,13 +19,17 @@
 
 import logging
 
-from .base import BaseBackend, logger_wrapper
+from .base import BaseBackend, logger_wrapper, readlock
+from ..app import app_info
+from ..utils import RWLock
 
 logger = logging.getLogger("backends.mock")
 
 
 class MockBackend(BaseBackend):
+    backend_lock = RWLock(app_info["lock_backend"])
 
+    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_device_info(self):
         return {
@@ -35,14 +39,17 @@ class MockBackend(BaseBackend):
             "os_version": "3.7",
         }
 
+    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_serial(self):
         return {"serial": "0000000B00009CD6"}
 
+    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_temperature(self):
         return {"temperature": {"CPU": 73}}
 
+    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_sending_info(self):
         return {
