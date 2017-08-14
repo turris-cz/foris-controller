@@ -1,3 +1,4 @@
+python-prctl
 foris-schema
 pytest
 pytest-runner

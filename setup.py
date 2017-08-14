@@ -46,6 +46,7 @@ setup(
     long_description=open('README.rst').read(),
     requires=[
         'foris_schema',
+        'prctl',
     ],
     setup_requires=[
         'pytest-runner',

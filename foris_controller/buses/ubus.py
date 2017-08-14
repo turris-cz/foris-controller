@@ -24,63 +24,80 @@ import ubus
 import importlib
 import inspect
 import pkgutil
+import prctl
+import signal
+import multiprocessing
 
 logger = logging.getLogger("buses.ubus")
 
 from foris_controller.message_router import Router
 
 
+def _get_method_names_from_module(module):
+    module_class = getattr(module, "Class", None)
+
+    if not module_class:
+        # Class not found
+        return None
+
+    # read all names fucntions which starts with action_
+    res = [
+        e[0] for e in inspect.getmembers(
+            module_class, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x)
+        ) if e[0].startswith("action_")
+    ]
+
+    # remove action_ prefix
+    return [e.lstrip("action_") for e in res]
+
+
+def _register_object(module_name, module):
+    methods = _get_method_names_from_module(module)
+    if not methods:
+        logger.warning("No suitable method found in '%s' module. Skipping" % module_name)
+
+    object_name = 'foris-controller-%s' % module_name
+    logger.debug("Trying to register '%s' object." % object_name)
+
+    def handler_gen(module, action):
+        def handler(handler, data):
+            logger.debug("Handling request")
+            logger.debug("Data received '%s'." % str(data))
+            router = Router()
+            data["module"] = module
+            data["action"] = action
+            data["kind"] = "request"
+            if not data["data"]:
+                del data["data"]
+            response = router.process_message(data)
+            logger.debug("Sending response %s" % str(response))
+            logger.debug("Handling finished.")
+            handler.reply(response)
+        return handler
+
+    ubus.add(
+        object_name,
+        {
+            method_name: {"method": handler_gen(module_name, method_name), "signature": {
+                "data": ubus.BLOBMSG_TYPE_TABLE
+            }} for method_name in methods
+        }
+    )
+    logger.debug("Object '%s' was successfully registered." % object_name)
+
+
+def ubus_listener_worker(socket_path, module_name, module):
+    ubus.connect(socket_path)
+    prctl.set_pdeathsig(signal.SIGKILL)
+    _register_object(module_name, module)
+    try:
+        while True:
+            ubus.loop(500)
+    finally:
+        ubus.disconnect()
+
+
 class UbusListener(object):
-
-    def _get_method_names_from_module(self, module):
-        module_class = getattr(module, "Class", None)
-
-        if not module_class:
-            # Class not found
-            return None
-
-        # read all names fucntions which starts with action_
-        res = [
-            e[0] for e in inspect.getmembers(
-                module_class, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x)
-            ) if e[0].startswith("action_")
-        ]
-
-        # remove action_ prefix
-        return [e.lstrip("action_") for e in res]
-
-    def _register_object(self, module_name, module):
-        methods = self._get_method_names_from_module(module)
-        if not methods:
-            logger.warning("No suitable method found in '%s' module. Skipping" % module_name)
-
-        object_name = 'foris-controller-%s' % module_name
-        logger.debug("Trying to register '%s' object." % object_name)
-
-        def handler_gen(module, action):
-            def handler(handler, data):
-                logger.debug("Handling request")
-                logger.debug("Data received '%s'." % str(data))
-                router = Router()
-                data["module"] = module
-                data["action"] = action
-                data["kind"] = "request"
-                if not data["data"]:
-                    del data["data"]
-                response = router.process_message(data)
-                logger.debug("Sending response %s" % str(response))
-                logger.debug("Handling finished.")
-                handler.reply(response)
-            return handler
-
-        ubus.add(
-            object_name,
-            {
-                method_name: {"method": handler_gen(module_name, method_name), "signature": {
-                    "data": ubus.BLOBMSG_TYPE_TABLE
-                }} for method_name in methods
-            }
-        )
 
     def _get_modules(self):
         from .. import modules
@@ -92,17 +109,28 @@ class UbusListener(object):
         return res
 
     def __init__(self, socket_path):
-        logger.debug("Starting to initialize ubus message bus.")
-        ubus.connect(socket_path)
+        logger.debug("Starting to create workers for ubus.")
 
+        self.workers = []
         for module_name, module in self._get_modules():
-            self._register_object(module_name, module)
+            worker = multiprocessing.Process(
+                name=module_name, target=ubus_listener_worker,
+                args=(socket_path, module_name, module)
+            )
+            self.workers.append(worker)
 
-        logger.debug("Ubus message bus was successfully initialized.")
+        logger.debug("Ubus workers successfully initialized.")
 
     def serve_forever(self):
-        try:
-            while True:
-                ubus.loop(500)
-        finally:
-            ubus.disconnect()
+        logger.debug("Starting to run workers.")
+
+        for worker in self.workers:
+            worker.start()
+
+        logger.debug("All workers started.")
+
+        # wait for all processes to finish
+        for worker in self.workers:
+            worker.join()
+
+        logger.warning("All workers finished.")
