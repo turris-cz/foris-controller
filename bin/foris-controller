@@ -22,7 +22,7 @@
 import argparse
 import logging
 
-from foris_controller.app import set_app_info
+from foris_controller.app import set_app_info, set_app_backend_instance
 
 logger = logging.getLogger("main")
 
@@ -55,23 +55,23 @@ if __name__ == "__main__":
     if options.backend == "openwrt":
         from foris_controller.backends import OpenwrtBackend
         logger.info("Using OpenWRT config backend.")
-        backend = OpenwrtBackend()
+        set_app_backend_instance(OpenwrtBackend())
     elif options.backend == "mock":
         from foris_controller.backends import MockBackend
         logger.info("Using Mock config backend.")
-        backend = MockBackend()
+        set_app_backend_instance(MockBackend())
     else:
         raise NotImplementedError("Backend '%s' is not implemented" % options.backend)
 
     if options.bus == "ubus":
         from foris_controller.buses.ubus import UbusListener
         logger.info("Using ubus to recieve commands.")
-        server = UbusListener(options.path, backend)
+        server = UbusListener(options.path)
 
     elif options.bus == "unix-socket":
         from foris_controller.buses.unix_socket import UnixSocketListener
         logger.info("Using unix-socket to recieve commands.")
-        server = UnixSocketListener(options.path, backend)
+        server = UnixSocketListener(options.path)
 
     logger.debug("Entering main loop.")
     server.serve_forever()

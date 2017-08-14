@@ -21,9 +21,6 @@ class Router(object):
             "data": {"errors": errors},
         }
 
-    def __init__(self, backend):
-        self.backend = backend
-
     def validate(self, message, module=None, idx=None):
         validator.validate(message, module, idx)
 
@@ -55,7 +52,7 @@ class Router(object):
                 ]
             )
 
-        module_instance = module.Class(self.backend)
+        module_instance = module.Class()
         try:
             data = module_instance.perform_action(message["action"], message.get("data", {}))
         except Exception as e:

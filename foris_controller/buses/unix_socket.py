@@ -42,7 +42,7 @@ class UnixSocketHandler(BaseRequestHandler):
 
     def setup(self):
         logger.debug("Client connected.")
-        self.router = Router(self.server.backend)
+        self.router = Router()
 
     def handle(self):
         logger.debug("Handling request")
@@ -81,12 +81,11 @@ class UnixSocketHandler(BaseRequestHandler):
 
 class UnixSocketListener(ThreadingMixIn, UnixStreamServer):
 
-    def __init__(self, socket_path, backend):
+    def __init__(self, socket_path):
 
         try:
             os.unlink(socket_path)
         except OSError:
             pass
 
-        self.backend = backend
         UnixStreamServer.__init__(self, socket_path, UnixSocketHandler)

@@ -61,7 +61,7 @@ class UbusListener(object):
             def handler(handler, data):
                 logger.debug("Handling request")
                 logger.debug("Data received '%s'." % str(data))
-                router = Router(self.backend)
+                router = Router()
                 data["module"] = module
                 data["action"] = action
                 data["kind"] = "request"
@@ -91,9 +91,8 @@ class UbusListener(object):
                 res.append((mod_name, module))
         return res
 
-    def __init__(self, socket_path, backend):
+    def __init__(self, socket_path):
         logger.debug("Starting to initialize ubus message bus.")
-        self.backend = backend
         ubus.connect(socket_path)
 
         for module_name, module in self._get_modules():

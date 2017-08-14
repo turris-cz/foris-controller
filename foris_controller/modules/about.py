@@ -19,6 +19,7 @@
 
 import logging
 
+from ..app import app_info
 from .base import BaseModule
 
 
@@ -27,10 +28,10 @@ class AboutModule(BaseModule):
 
     def action_get(self, data):
         res = {}
-        res.update(self.backend.get_device_info())
-        res.update(self.backend.get_serial())
-        res.update(self.backend.get_temperature())
-        res.update(self.backend.get_sending_info())
+        res.update(app_info["backend_instance"].get_device_info())
+        res.update(app_info["backend_instance"].get_serial())
+        res.update(app_info["backend_instance"].get_temperature())
+        res.update(app_info["backend_instance"].get_sending_info())
         return res
 
 

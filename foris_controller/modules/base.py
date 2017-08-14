@@ -21,8 +21,6 @@ from ..exceptions import UnknownAction
 
 
 class BaseModule(object):
-    def __init__(self, backend):
-        self.backend = backend
 
     def perform_action(self, action, data):
         action_function = getattr(self, "action_%s" % action)

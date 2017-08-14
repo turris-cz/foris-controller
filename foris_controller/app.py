@@ -31,3 +31,7 @@ def set_app_info(program_options):
     import multiprocessing
     import threading
     app_info["lock_backend"] = multiprocessing if app_info["bus"] in ["ubus"] else threading
+
+
+def set_app_backend_instance(instance):
+    app_info["backend_instance"] = instance
