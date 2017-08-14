@@ -19,27 +19,19 @@
 
 import logging
 
-from ..exceptions import UnknownAction
 from .base import BaseModule
-
-logger = logging.getLogger("modules.about")
 
 
 class AboutModule(BaseModule):
+    logger = logging.getLogger("modules.about")
 
-    def perform_action(self, action, data):
-        if action == "get":
-            logger.debug("Starting to perform '%s' action" % action)
-            res = {}
-            res.update(self.backend.get_device_info())
-            res.update(self.backend.get_serial())
-            res.update(self.backend.get_temperature())
-            res.update(self.backend.get_sending_info())
-            logger.debug("Action '%s' finished" % action)
-            return res
-        else:
-            logger.error("Unkown action '%s'!" % action)
-            raise UnknownAction(action)
+    def action_get(self, data):
+        res = {}
+        res.update(self.backend.get_device_info())
+        res.update(self.backend.get_serial())
+        res.update(self.backend.get_temperature())
+        res.update(self.backend.get_sending_info())
+        return res
 
 
 Class = AboutModule

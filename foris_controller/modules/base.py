@@ -17,10 +17,20 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+from ..exceptions import UnknownAction
+
 
 class BaseModule(object):
     def __init__(self, backend):
         self.backend = backend
 
     def perform_action(self, action, data):
-        raise NotImplementedError()
+        action_function = getattr(self, "action_%s" % action)
+        if not action_function:
+            self.logger.error("Unkown action '%s'!" % action)
+            raise UnknownAction(action)
+
+        self.logger.debug("Starting to perform '%s' action" % action)
+        res = action_function(data)
+        self.logger.debug("Action '%s' finished" % action)
+        return res

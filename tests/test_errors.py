@@ -17,23 +17,24 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import backend, infrastructure, ubusd_test
+from .fixtures import backend, infrastructure, infrastructure_unix_socket, ubusd_test
 
-def test_wrong_input_format(infrastructure, ubusd_test):
+def test_wrong_input_data(infrastructure, ubusd_test):
     res = infrastructure.process_message({
-        "module": "non-existing",
+        "module": "about",
         "action": "get",
         "kind": "request",
+        "data": {"extra": "data"},
     })
     assert res == {
         u'action': u'get',
         u'data': {u'errors': [u'Incorrect input.']},
         u'kind': u'request',
-        u'module': u'non-existing'
+        u'module': u'about'
     }
 
-def test_wrong_input_kind(infrastructure, ubusd_test):
-    res = infrastructure.process_message({
+def test_wrong_input_kind(infrastructure_unix_socket, ubusd_test):
+    res = infrastructure_unix_socket.process_message({
         "module": "about",
         "action": "get",
         "kind": "reply",
@@ -59,3 +60,28 @@ def test_wrong_input_kind(infrastructure, ubusd_test):
             u'module': u'about'
     }
 
+def test_wrong_input_action(infrastructure_unix_socket, ubusd_test):
+    res = infrastructure_unix_socket.process_message({
+        "module": "about",
+        "action": "non-exiting",
+        "kind": "request",
+    })
+    assert res == {
+        u'action': u'non-exiting',
+        u'data': {u'errors': [u'Incorrect input.']},
+        u'kind': u'request',
+        u'module': u'about'
+    }
+
+def test_wrong_input_module(infrastructure_unix_socket, ubusd_test):
+    res = infrastructure_unix_socket.process_message({
+        "module": "non-exiting",
+        "action": "get",
+        "kind": "request",
+    })
+    assert res == {
+        u'action': u'get',
+        u'data': {u'errors': [u'Incorrect input.']},
+        u'kind': u'request',
+        u'module': u'non-exiting',
+    }

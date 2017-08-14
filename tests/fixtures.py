@@ -110,12 +110,15 @@ class Infrastructure(object):
 
         elif self.name == "ubus":
             import ubus
+            module = "foris-controller-%s" % data.get("module", "?")
             wait_process = subprocess.Popen(
-                ["ubus", "wait_for", "foris-controller", "-s", self.sock_path])
+                ["ubus", "wait_for", module, "-s", self.sock_path])
             wait_process.wait()
             if not ubus.get_connected():
                 ubus.connect(self.sock_path)
-            res = ubus.call("foris-controller", "send", {"message": data})
+            function = data.get("action", "?")
+            inner_data = data.get("data", {})
+            res = ubus.call(module, function, {"data": inner_data})
             ubus.disconnect()
             return res[0]
 
@@ -131,6 +134,14 @@ def backend(backend_param):
 def infrastructure(request, backend):
     instance = Infrastructure(
         request.param, backend, request.config.getoption("--suppress-output"))
+    yield instance
+    instance.exit()
+
+
+@pytest.fixture(scope="module")
+def infrastructure_unix_socket(request, backend):
+    instance = Infrastructure(
+        "unix-socket", backend, request.config.getoption("--suppress-output"))
     yield instance
     instance.exit()
 
