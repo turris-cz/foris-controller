@@ -30,7 +30,8 @@ import multiprocessing
 
 logger = logging.getLogger("buses.ubus")
 
-from foris_controller.message_router import Router
+from ..message_router import Router
+from ..app import app_info
 
 
 def _get_method_names_from_module(module):
@@ -109,28 +110,44 @@ class UbusListener(object):
         return res
 
     def __init__(self, socket_path):
-        logger.debug("Starting to create workers for ubus.")
+        if app_info["ubus_single_process"]:
+            logger.debug("Starting ubus in single process mode.")
+            ubus.connect(socket_path)
+            for module_name, module in self._get_modules():
+                _register_object(module_name, module)
+            logger.debug("All object were successfully registered.")
+        else:
+            logger.debug("Starting to create workers for ubus.")
 
-        self.workers = []
-        for module_name, module in self._get_modules():
-            worker = multiprocessing.Process(
-                name=module_name, target=ubus_listener_worker,
-                args=(socket_path, module_name, module)
-            )
-            self.workers.append(worker)
+            self.workers = []
+            for module_name, module in self._get_modules():
+                worker = multiprocessing.Process(
+                    name=module_name, target=ubus_listener_worker,
+                    args=(socket_path, module_name, module)
+                )
+                self.workers.append(worker)
 
-        logger.debug("Ubus workers successfully initialized.")
+            logger.debug("Ubus workers successfully initialized.")
 
     def serve_forever(self):
-        logger.debug("Starting to run workers.")
+        if app_info["ubus_single_process"]:
+            logger.debug("Starting to listen on ubus.")
+            try:
+                while True:
+                    ubus.loop(500)
+            finally:
+                ubus.disconnect()
+                logger.warning("Disconnected from ubus.")
+        else:
+            logger.debug("Starting to run workers.")
 
-        for worker in self.workers:
-            worker.start()
+            for worker in self.workers:
+                worker.start()
 
-        logger.debug("All workers started.")
+            logger.debug("All workers started.")
 
-        # wait for all processes to finish
-        for worker in self.workers:
-            worker.join()
+            # wait for all processes to finish
+            for worker in self.workers:
+                worker.join()
 
-        logger.warning("All workers finished.")
+            logger.warning("All workers finished.")

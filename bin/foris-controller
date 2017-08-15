@@ -34,6 +34,8 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help="buses", dest="bus")
     ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
     ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
+    ubus_parser.add_argument(
+        "--single", default=False, action="store_true", help="run as a single process")
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
     unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
 
