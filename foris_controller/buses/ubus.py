@@ -98,6 +98,18 @@ def ubus_listener_worker(socket_path, module_name, module):
         ubus.disconnect()
 
 
+def ubus_all_in_one_worker(socket_path, modules_list):
+    ubus.connect(socket_path)
+    prctl.set_pdeathsig(signal.SIGKILL)
+    for module_name, module in modules_list:
+        _register_object(module_name, module)
+    try:
+        while True:
+            ubus.loop(500)
+    finally:
+        ubus.disconnect()
+
+
 class UbusListener(object):
 
     def _get_modules(self):
@@ -110,16 +122,16 @@ class UbusListener(object):
         return res
 
     def __init__(self, socket_path):
-        if app_info["ubus_single_process"]:
-            logger.debug("Starting ubus in single process mode.")
-            ubus.connect(socket_path)
-            for module_name, module in self._get_modules():
-                _register_object(module_name, module)
-            logger.debug("All object were successfully registered.")
-        else:
-            logger.debug("Starting to create workers for ubus.")
+        logger.debug("Starting to create workers for ubus.")
 
-            self.workers = []
+        self.workers = []
+        if app_info["ubus_single_process"]:
+            worker = multiprocessing.Process(
+                name="all-in-one", target=ubus_all_in_one_worker,
+                args=(socket_path, self._get_modules(), )
+            )
+            self.workers.append(worker)
+        else:
             for module_name, module in self._get_modules():
                 worker = multiprocessing.Process(
                     name=module_name, target=ubus_listener_worker,
@@ -127,27 +139,18 @@ class UbusListener(object):
                 )
                 self.workers.append(worker)
 
-            logger.debug("Ubus workers successfully initialized.")
+        logger.debug("Ubus workers successfully initialized.")
 
     def serve_forever(self):
-        if app_info["ubus_single_process"]:
-            logger.debug("Starting to listen on ubus.")
-            try:
-                while True:
-                    ubus.loop(500)
-            finally:
-                ubus.disconnect()
-                logger.warning("Disconnected from ubus.")
-        else:
-            logger.debug("Starting to run workers.")
+        logger.debug("Starting to run workers.")
 
-            for worker in self.workers:
-                worker.start()
+        for worker in self.workers:
+            worker.start()
 
-            logger.debug("All workers started.")
+        logger.debug("All workers started.")
 
-            # wait for all processes to finish
-            for worker in self.workers:
-                worker.join()
+        # wait for all processes to finish
+        for worker in self.workers:
+            worker.join()
 
-            logger.warning("All workers finished.")
+        logger.warning("All workers finished.")
