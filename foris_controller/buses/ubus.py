@@ -21,17 +21,16 @@ from __future__ import absolute_import
 
 import logging
 import ubus
-import importlib
 import inspect
-import pkgutil
 import prctl
 import signal
 import multiprocessing
 
 logger = logging.getLogger("buses.ubus")
 
-from ..message_router import Router
-from ..app import app_info
+from foris_controller.message_router import Router
+from foris_controller.app import app_info
+from foris_controller.modules import get_modules
 
 
 def _get_method_names_from_module(module):
@@ -112,15 +111,6 @@ def ubus_all_in_one_worker(socket_path, modules_list):
 
 class UbusListener(object):
 
-    def _get_modules(self):
-        from .. import modules
-        res = []
-        for _, mod_name, _ in pkgutil.iter_modules(modules.__path__):
-            module = importlib.import_module("foris_controller.modules.%s" % mod_name)
-            if hasattr(module, "Class"):
-                res.append((mod_name, module))
-        return res
-
     def __init__(self, socket_path):
         logger.debug("Starting to create workers for ubus.")
 
@@ -128,11 +118,11 @@ class UbusListener(object):
         if app_info["ubus_single_process"]:
             worker = multiprocessing.Process(
                 name="all-in-one", target=ubus_all_in_one_worker,
-                args=(socket_path, self._get_modules(), )
+                args=(socket_path, get_modules(), )
             )
             self.workers.append(worker)
         else:
-            for module_name, module in self._get_modules():
+            for module_name, module in get_modules():
                 worker = multiprocessing.Process(
                     name=module_name, target=ubus_listener_worker,
                     args=(socket_path, module_name, module)

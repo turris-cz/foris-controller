@@ -19,8 +19,8 @@
 
 import logging
 
-from ..app import app_info
-from .base import BaseModule
+from foris_controller.modules.base import BaseModule
+from foris_controller.handler_base import wrap_required_functions
 
 
 class AboutModule(BaseModule):
@@ -28,11 +28,21 @@ class AboutModule(BaseModule):
 
     def action_get(self, data):
         res = {}
-        res.update(app_info["backend_instance"].get_device_info())
-        res.update(app_info["backend_instance"].get_serial())
-        res.update(app_info["backend_instance"].get_temperature())
-        res.update(app_info["backend_instance"].get_sending_info())
+        res.update(self.handler.get_device_info())
+        res.update(self.handler.get_serial())
+        res.update(self.handler.get_temperature())
+        res.update(self.handler.get_sending_info())
         return res
 
 
 Class = AboutModule
+
+
+@wrap_required_functions([
+    'get_device_info',
+    'get_serial',
+    'get_temperature',
+    'get_sending_info',
+])
+class Handler(object):
+    pass

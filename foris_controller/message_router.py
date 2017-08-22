@@ -1,15 +1,29 @@
-import importlib
+#
+# foris-controller
+# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+#
+
 import logging
-import os
 
 from jsonschema import ValidationError
-from foris_schema import ForisValidator
+
+from foris_controller.app import app_info
 
 logger = logging.getLogger("message_router")
-
-validator = ForisValidator([
-    os.path.join(os.path.abspath(os.path.dirname(__file__)), "modules", "schemas"),
-])
 
 
 class Router(object):
@@ -22,7 +36,7 @@ class Router(object):
         }
 
     def validate(self, message, module=None, idx=None):
-        validator.validate(message, module, idx)
+        app_info["validator"].validate(message, module, idx)
 
     def process_message(self, message):
         # validate input message
@@ -34,25 +48,22 @@ class Router(object):
             return self._build_error_msg(message, ["Incorrect input."])
         logger.debug("Input message validated.")
 
-        # find the module
         if message["kind"] != "request":
             logger.warning("Wrong message kind (only requests allowed) (=%s)." % message["kind"])
             return self._build_error_msg(
                 message, ["Wrong message kind (only request are allowed)."])
 
-        try:
-            module = importlib.import_module(
-                ".modules.%s" % message["module"], "foris_controller")
-        except ImportError:
+        # check whether the module is loaded
+        if message["module"] not in app_info["modules"]:
             logger.error(
-                "Failed to import module 'foris_controller.modules.%s'" % message["module"])
+                "Module not found '%s'" % message["module"])
             return self._build_error_msg(
                 message, [
-                    "Internal error (failed to import module '%s')" % message["module"]
+                    "Internal error (module not found '%s')." % message["module"]
                 ]
             )
 
-        module_instance = module.Class()
+        module_instance = app_info["modules"][message["module"]]
         try:
             data = module_instance.perform_action(message["action"], message.get("data", {}))
         except Exception as e:

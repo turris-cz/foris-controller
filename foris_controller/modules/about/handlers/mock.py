@@ -19,14 +19,16 @@
 
 import logging
 
-from .base import BaseBackend, logger_wrapper, readlock
-from ..app import app_info
-from ..utils import RWLock
+from foris_controller.handler_base import logger_wrapper, readlock, BaseMockHandler
+from foris_controller.app import app_info
+from foris_controller.utils import RWLock
 
-logger = logging.getLogger("backends.mock")
+from .. import Handler
+
+logger = logging.getLogger("about.handlers.mock")
 
 
-class MockBackend(BaseBackend):
+class MockAboutHandler(Handler, BaseMockHandler):
     backend_lock = RWLock(app_info["lock_backend"])
 
     @readlock(backend_lock)

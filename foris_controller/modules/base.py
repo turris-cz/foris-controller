@@ -22,6 +22,9 @@ from ..exceptions import UnknownAction
 
 class BaseModule(object):
 
+    def __init__(self, handler):
+        self.handler = handler
+
     def perform_action(self, action, data):
         action_function = getattr(self, "action_%s" % action)
         if not action_function:

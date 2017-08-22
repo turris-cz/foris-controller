@@ -17,6 +17,15 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import os
+import logging
+
+from foris_schema import ForisValidator
+
+from foris_controller.modules import get_modules, get_handler
+
+
+logger = logging.getLogger("app")
 
 app_info = {
 }
@@ -35,5 +44,24 @@ def set_app_info(program_options):
         app_info["ubus_single_process"] = program_options.single
 
 
-def set_app_backend_instance(instance):
-    app_info["backend_instance"] = instance
+def prepare_app_modules(base_handler_class):
+    app_info["modules"] = {}
+    schema_dirs = [
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), "modules", "schemas"),
+    ]
+
+    for module_name, module in get_modules():
+        logger.debug("Trying to load module '%s'." % module_name)
+        handler = get_handler(module, base_handler_class)
+        if not handler:
+            logger.error(
+                "Failed to find handler '%s' for base '%s'. Skipping module."
+                % (module_name, base_handler_class.__name__)
+            )
+            continue
+
+        app_info["modules"][module_name] = module.Class(handler)
+        schema_dirs.append(os.path.join(module.__path__[0], "schema"))
+
+    logger.debug("Modules loaded %s." % app_info["modules"].keys())
+    app_info["validator"] = ForisValidator(schema_dirs)

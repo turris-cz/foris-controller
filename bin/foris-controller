@@ -22,7 +22,7 @@
 import argparse
 import logging
 
-from foris_controller.app import set_app_info, set_app_backend_instance
+from foris_controller.app import set_app_info, prepare_app_modules
 
 logger = logging.getLogger("main")
 
@@ -35,7 +35,9 @@ if __name__ == "__main__":
     ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
     ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
     ubus_parser.add_argument(
-        "--single", default=False, action="store_true", help="run only through a single worker process")
+        "--single", default=False, action="store_true",
+        help="run only through a single worker process"
+    )
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
     unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
 
@@ -55,13 +57,13 @@ if __name__ == "__main__":
 
     logger.info("Foris controller is starting.")
     if options.backend == "openwrt":
-        from foris_controller.backends import OpenwrtBackend
+        from foris_controller.handler_base import BaseOpenwrtHandler
         logger.info("Using OpenWRT config backend.")
-        set_app_backend_instance(OpenwrtBackend())
+        prepare_app_modules(BaseOpenwrtHandler)
     elif options.backend == "mock":
-        from foris_controller.backends import MockBackend
+        from foris_controller.handler_base import BaseMockHandler
         logger.info("Using Mock config backend.")
-        set_app_backend_instance(MockBackend())
+        prepare_app_modules(BaseMockHandler)
     else:
         raise NotImplementedError("Backend '%s' is not implemented" % options.backend)
 

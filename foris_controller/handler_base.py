@@ -18,17 +18,11 @@
 #
 
 import logging
+import inspect
 
 from functools import wraps
 
-logger = logging.getLogger("backends.base")
-
-REQUIRED_FUNCTIONS = [
-    'get_device_info',
-    'get_serial',
-    'get_temperature',
-    'get_sending_info',
-]
+logger = logging.getLogger("handler_base")
 
 
 def logger_wrapper(logger):
@@ -69,23 +63,42 @@ def writelock(lock):
     return outer
 
 
-class BackendFunctionNotImplemented(BaseException):
+class HandlerFunctionNotImplemented(BaseException):
     pass
 
 
-class MetaBackend(type):
-    def __init__(cls, name, bases, dct):
-        # Check presence of REQUIRED_FUNCTIONS for all instances except for BaseBackend
-        if name != "BaseBackend":
-            for function_name in REQUIRED_FUNCTIONS:
-                if function_name not in dct:
-                    raise BackendFunctionNotImplemented(function_name)
+def wrap_required_functions(required_functions):
+    """
+    param base_class: base class
+    type base_class: type
+    """
+    def wrapped(base_class):
+        class MetaClass(type):
+            def __init__(cls, name, bases, dct):
+                # Check required_functions for all instances except for ancestors of base_class
+                if name not in [e.__name__ for e in inspect.getmro(base_class)]:
+                    for function_name in required_functions:
+                        if function_name not in dct:
+                            raise HandlerFunctionNotImplemented(function_name)
 
-        super(MetaBackend, cls).__init__(name, bases, dct)
+                super(MetaClass, cls).__init__(name, bases, dct)
+
+        body = vars(base_class).copy()
+        body.pop('__dict__', None)
+        body.pop('__weakref__', None)
+
+        return MetaClass(base_class.__name__, base_class.__bases__, body)
+
+    return wrapped
 
 
-class BaseBackend(object):
+class BaseHandler(object):
     pass
 
 
-BaseBackend = MetaBackend(BaseBackend.__name__, BaseBackend.__bases__, {})
+class BaseOpenwrtHandler(object):
+    pass
+
+
+class BaseMockHandler(object):
+    pass

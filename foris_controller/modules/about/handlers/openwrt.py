@@ -19,17 +19,19 @@
 
 import logging
 
-from .base import BaseBackend, logger_wrapper, writelock
-from ..app import app_info
-from ..utils import RWLock
+from foris_controller.handler_base import logger_wrapper, writelock, BaseOpenwrtHandler
+from foris_controller.app import app_info
+from foris_controller.utils import RWLock
 
-from .modules.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
-from .modules.files import SendingFiles, SystemInfoFiles
+from foris_controller.backends.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
+from foris_controller.backends.files import SendingFiles, SystemInfoFiles
+
+from .. import Handler
 
 logger = logging.getLogger("backends.mock")
 
 
-class OpenwrtBackend(BaseBackend):
+class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
     i2c_lock = RWLock(app_info["lock_backend"])
 
     atsha_cmds = AtshaCmds()

@@ -32,12 +32,16 @@ setup(
     packages=[
         'foris_controller',
         'foris_controller.backends',
-        'foris_controller.backends.modules',
+        'foris_controller.backends.cmdline',
+        'foris_controller.backends.files',
         'foris_controller.buses',
         'foris_controller.modules',
+        'foris_controller.modules.about',
+        'foris_controller.modules.about.handlers',
     ],
     package_data={
-        'foris_controller.modules': ['schema', 'schema/*.json'],
+        'foris_controller.modules': ['schemas', 'schemas/*.json'],
+        'foris_controller.modules.about': ['schema', 'schema/*.json'],
     },
     scripts=['bin/foris-controller'],
     url='https://gitlab.labs.nic.cz/turris/foris-controller',
@@ -55,4 +59,5 @@ setup(
         'pytest'
     ],
     include_package_data=True,
+    zip_safe=False,
 )
