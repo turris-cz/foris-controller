@@ -21,8 +21,15 @@ import logging
 import re
 
 import subprocess
+
+from foris_controller.app import app_info
+from foris_controller.exceptions import BackendCommandFailed, FailedToParseCommandOutput
+from foris_controller.utils import RWLock, writelock
+
+
 logger = logging.getLogger("backends.modules.cmdline")
-from ...exceptions import BackendCommandFailed, FailedToParseCommandOutput
+
+i2c_lock = RWLock(app_info["lock_backend"])
 
 
 class BaseCmdLine(object):
@@ -57,12 +64,14 @@ class BaseCmdLine(object):
 
 
 class AtshaCmds(BaseCmdLine):
+    @writelock(i2c_lock, logger)
     def get_serial(self):
         return self._trigger_and_parse(
             ("atsha204cmd", "serial-number"), r'^([0-9a-fA-F]{16})$', (1, ))
 
 
 class TemperatureCmds(BaseCmdLine):
+    @writelock(i2c_lock, logger)
     def get_cpu_temperature(self):
         return int(self._trigger_and_parse(
             ("thermometer", ), r'^CPU:\s+([0-9]+)$', (1, )))

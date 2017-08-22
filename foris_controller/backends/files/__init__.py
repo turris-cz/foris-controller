@@ -20,7 +20,10 @@
 import logging
 import re
 
-from ...exceptions import FailedToParseFileContent
+
+from foris_controller.app import app_info
+from foris_controller.exceptions import FailedToParseFileContent
+from foris_controller.utils import readlock, RWLock
 
 logger = logging.getLogger("backends.modules.files")
 
@@ -46,7 +49,9 @@ class BaseFile(object):
 class SendingFiles(BaseFile):
     FW_PATH = "/tmp/firewall-turris-status.txt"
     UC_PATH = "/tmp/ucollect-status"
+    file_lock = RWLock(app_info["lock_backend"])
 
+    @readlock(file_lock, logger)
     def get_sending_info(self):
         result = {
             'firewall_status': {"working": False, "last_check": 0},
@@ -83,12 +88,16 @@ class SystemInfoFiles(BaseFile):
     OS_RELEASE_PATH = "/etc/turris-version"
     MODEL_PATH = "/tmp/sysinfo/model"
     BOARD_NAME_PATH = "/tmp/sysinfo/board_name"
+    file_lock = RWLock(app_info["lock_backend"])
 
+    @readlock(file_lock, logger)
     def get_os_version(self):
         return self._read_and_parse(SystemInfoFiles.OS_RELEASE_PATH, r'^([0-9]+\.[0-9]+)$', (1, ))
 
+    @readlock(file_lock, logger)
     def get_model(self):
         return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r'^(\w+ \w+).*$', (1, ))
 
+    @readlock(file_lock, logger)
     def get_board_name(self):
         return self._read_and_parse(SystemInfoFiles.BOARD_NAME_PATH, r'^(\w+).*$', (1, ))

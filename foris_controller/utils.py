@@ -17,6 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+from functools import wraps
+
 
 class RWLock(object):
 
@@ -69,3 +71,41 @@ class RWLock(object):
         self._counter_lock = lock_module.Condition(lock_module.Lock())
         self.readlock = RWLock.ReadLock(self)
         self.writelock = RWLock.WriteLock(self)
+
+
+def logger_wrapper(logger):
+    def outer(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            logger.debug("Starting to perform '%s' (%s, %s)" % (func.__name__, args[1:], kwargs))
+            res = func(*args, **kwargs)
+            logger.debug("Performing '%s' finished (%s)." % (func.__name__, res))
+            return res
+
+        return inner
+
+    return outer
+
+
+def readlock(lock, logger):
+    def outer(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            logger.debug("Acquiring read lock for '%s'" % (func.__name__))
+            with lock.readlock:
+                return func(*args, **kwargs)
+            logger.debug("Releasing read lock for '%s'" % (func.__name__))
+        return inner
+    return outer
+
+
+def writelock(lock, logger):
+    def outer(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            logger.debug("Acquiring write lock for '%s'" % (func.__name__))
+            with lock.writelock:
+                return func(*args, **kwargs)
+            logger.debug("Releasing write lock for '%s'" % (func.__name__))
+        return inner
+    return outer

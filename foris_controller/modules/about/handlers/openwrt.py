@@ -19,9 +19,8 @@
 
 import logging
 
-from foris_controller.handler_base import logger_wrapper, writelock, BaseOpenwrtHandler
-from foris_controller.app import app_info
-from foris_controller.utils import RWLock
+from foris_controller.handler_base import BaseOpenwrtHandler
+from foris_controller.utils import logger_wrapper
 
 from foris_controller.backends.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
 from foris_controller.backends.files import SendingFiles, SystemInfoFiles
@@ -32,7 +31,6 @@ logger = logging.getLogger("backends.mock")
 
 
 class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
-    i2c_lock = RWLock(app_info["lock_backend"])
 
     atsha_cmds = AtshaCmds()
     temperature_cmds = TemperatureCmds()
@@ -49,12 +47,10 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
             "os_version": self.system_info_files.get_os_version(),
         }
 
-    @writelock(i2c_lock)
     @logger_wrapper(logger)
     def get_serial(self):
         return {"serial": self.atsha_cmds.get_serial()}
 
-    @writelock(i2c_lock)
     @logger_wrapper(logger)
     def get_temperature(self):
         return {

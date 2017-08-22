@@ -19,9 +19,8 @@
 
 import logging
 
-from foris_controller.handler_base import logger_wrapper, readlock, BaseMockHandler
-from foris_controller.app import app_info
-from foris_controller.utils import RWLock
+from foris_controller.handler_base import BaseMockHandler
+from foris_controller.utils import logger_wrapper
 
 from .. import Handler
 
@@ -29,9 +28,7 @@ logger = logging.getLogger("about.handlers.mock")
 
 
 class MockAboutHandler(Handler, BaseMockHandler):
-    backend_lock = RWLock(app_info["lock_backend"])
 
-    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_device_info(self):
         return {
@@ -41,17 +38,14 @@ class MockAboutHandler(Handler, BaseMockHandler):
             "os_version": "3.7",
         }
 
-    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_serial(self):
         return {"serial": "0000000B00009CD6"}
 
-    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_temperature(self):
         return {"temperature": {"CPU": 73}}
 
-    @readlock(backend_lock)
     @logger_wrapper(logger)
     def get_sending_info(self):
         return {
