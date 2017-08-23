@@ -22,7 +22,7 @@ import logging
 
 from foris_schema import ForisValidator
 
-from foris_controller.modules import get_modules, get_handler
+from foris_controller.utils import get_modules, get_handler
 
 
 logger = logging.getLogger("app")
@@ -46,8 +46,10 @@ def set_app_info(program_options):
 
 def prepare_app_modules(base_handler_class):
     app_info["modules"] = {}
+
+    # use root schema dir
     schema_dirs = [
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "modules", "schemas"),
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas"),
     ]
 
     for module_name, module in get_modules():

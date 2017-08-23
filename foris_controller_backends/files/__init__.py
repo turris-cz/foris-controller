@@ -25,7 +25,7 @@ from foris_controller.app import app_info
 from foris_controller.exceptions import FailedToParseFileContent
 from foris_controller.utils import readlock, RWLock
 
-logger = logging.getLogger("backends.modules.files")
+logger = logging.getLogger("backends.files")
 
 
 class BaseFile(object):

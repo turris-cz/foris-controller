@@ -30,7 +30,7 @@ logger = logging.getLogger("buses.ubus")
 
 from foris_controller.message_router import Router
 from foris_controller.app import app_info
-from foris_controller.modules import get_modules
+from foris_controller.utils import get_modules
 
 
 def _get_method_names_from_module(module):

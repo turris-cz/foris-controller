@@ -27,7 +27,7 @@ from foris_controller.exceptions import BackendCommandFailed, FailedToParseComma
 from foris_controller.utils import RWLock, writelock
 
 
-logger = logging.getLogger("backends.modules.cmdline")
+logger = logging.getLogger("backends.cmdline")
 
 i2c_lock = RWLock(app_info["lock_backend"])
 

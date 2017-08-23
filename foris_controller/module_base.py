@@ -17,32 +17,21 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
-
-from foris_controller.modules.base import BaseModule
-from foris_controller.handler_base import wrap_required_functions
+from .exceptions import UnknownAction
 
 
-class AboutModule(BaseModule):
-    logger = logging.getLogger("modules.about")
+class BaseModule(object):
 
-    def action_get(self, data):
-        res = {}
-        res.update(self.handler.get_device_info())
-        res.update(self.handler.get_serial())
-        res.update(self.handler.get_temperature())
-        res.update(self.handler.get_sending_info())
+    def __init__(self, handler):
+        self.handler = handler
+
+    def perform_action(self, action, data):
+        action_function = getattr(self, "action_%s" % action)
+        if not action_function:
+            self.logger.error("Unkown action '%s'!" % action)
+            raise UnknownAction(action)
+
+        self.logger.debug("Starting to perform '%s' action" % action)
+        res = action_function(data)
+        self.logger.debug("Action '%s' finished" % action)
         return res
-
-
-Class = AboutModule
-
-
-@wrap_required_functions([
-    'get_device_info',
-    'get_serial',
-    'get_temperature',
-    'get_sending_info',
-])
-class Handler(object):
-    pass

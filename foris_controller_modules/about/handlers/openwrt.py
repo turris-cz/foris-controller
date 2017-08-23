@@ -22,12 +22,12 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
-from foris_controller.backends.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
-from foris_controller.backends.files import SendingFiles, SystemInfoFiles
+from foris_controller_backends.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
+from foris_controller_backends.files import SendingFiles, SystemInfoFiles
 
 from .. import Handler
 
-logger = logging.getLogger("backends.mock")
+logger = logging.getLogger("about.handlers.mock")
 
 
 class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):

@@ -17,6 +17,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import importlib
+import inspect
+import os
+import pkgutil
+
 from functools import wraps
 
 
@@ -109,3 +114,27 @@ def writelock(lock, logger):
             logger.debug("Releasing write lock for '%s'" % (func.__name__))
         return inner
     return outer
+
+
+def get_modules():
+    res = []
+    modules = importlib.import_module("foris_controller_modules")
+    for _, mod_name, _ in pkgutil.iter_modules(modules.__path__):
+        module = importlib.import_module("foris_controller_modules.%s" % mod_name)
+        if hasattr(module, "Class"):
+            res.append((mod_name, module))
+    return res
+
+
+def get_handler(module, base_handler_class):
+    handlers_path = os.path.join(module.__path__[0], "handlers")
+    for _, handler_name, _ in pkgutil.iter_modules([handlers_path]):
+        # load <module>.handlers module
+        handler_mod = importlib.import_module(
+            ".".join([module.__name__, "handlers", handler_name]))
+
+        # find subclass of base_handler (Mock/Openwrt)
+        for _, handler_class in inspect.getmembers(handler_mod, inspect.isclass):
+            if handler_class is not base_handler_class and \
+                    issubclass(handler_class, base_handler_class):
+                return handler_class()
