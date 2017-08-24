@@ -36,6 +36,8 @@ def set_app_info(program_options):
     app_info["bus"] = program_options.bus
     app_info["debug"] = program_options.debug
     app_info["backend"] = program_options.backend
+    app_info["filter_modules"] = program_options.modules.split(",") \
+        if program_options.modules else None
 
     import multiprocessing
     import threading
@@ -52,7 +54,7 @@ def prepare_app_modules(base_handler_class):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas"),
     ]
 
-    for module_name, module in get_modules():
+    for module_name, module in get_modules(app_info["filter_modules"]):
         logger.debug("Trying to load module '%s'." % module_name)
         handler = get_handler(module, base_handler_class)
         if not handler:

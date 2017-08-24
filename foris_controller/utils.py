@@ -116,10 +116,12 @@ def writelock(lock, logger):
     return outer
 
 
-def get_modules():
+def get_modules(filter_modules):
     res = []
     modules = importlib.import_module("foris_controller_modules")
     for _, mod_name, _ in pkgutil.iter_modules(modules.__path__):
+        if filter_modules and mod_name not in filter_modules:
+            continue
         module = importlib.import_module("foris_controller_modules.%s" % mod_name)
         if hasattr(module, "Class"):
             res.append((mod_name, module))
