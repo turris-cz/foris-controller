@@ -35,16 +35,20 @@ class Router(object):
             "data": {"errors": errors},
         }
 
-    def validate(self, message, module=None, idx=None):
-        app_info["validator"].validate(message, module, idx)
+    def validate(self, message):
+        try:
+            app_info["validator"].validate(message)
+        except ValidationError:
+            app_info["validator"].validate_verbose(message)
 
     def process_message(self, message):
         # validate input message
         logger.debug("Starting to validate input message.")
         try:
             self.validate(message)
-        except ValidationError:
+        except ValidationError as exc:
             logger.warning("Failed to validate input message.")
+            logger.debug("Error: \n%s" % str(exc))
             return self._build_error_msg(message, ["Incorrect input."])
         logger.debug("Input message validated.")
 
@@ -84,8 +88,9 @@ class Router(object):
         logger.debug("Starting to validate output message.")
         try:
             self.validate(reply)
-        except ValidationError:
+        except ValidationError as exc:
             logger.error("Failed to validate output message.")
+            logger.debug("Error: \n%s" % str(exc))
             return self._build_error_msg(message, ["Incorrect output %s." % str(reply)])
 
         logger.debug("Output message validated.")
