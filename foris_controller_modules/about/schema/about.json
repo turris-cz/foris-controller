@@ -82,6 +82,60 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Get contract status",
+            "properties": {
+                "module": {"enum": ["about"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_contract_status"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to call get contract status",
+            "properties": {
+                "module": {"enum": ["about"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_contract_status"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "contract_status": {"enum": [ "valid", "unknown", "not_valid"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["contract_status"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Trigges cmd which updates contract status (in background)",
+            "properties": {
+                "module": {"enum": ["about"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_contract_status"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to call update contract status",
+            "properties": {
+                "module": {"enum": ["about"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_contract_status"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [true]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

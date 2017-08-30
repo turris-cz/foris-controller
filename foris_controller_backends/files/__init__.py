@@ -27,6 +27,8 @@ from foris_controller.utils import readlock, RWLock
 
 logger = logging.getLogger("backends.files")
 
+server_uplink_lock = RWLock(app_info["lock_backend"])
+
 
 class BaseFile(object):
     def _file_content(self, path):
@@ -113,10 +115,9 @@ class SystemInfoFiles(BaseFile):
 
 class ServerUplinkFiles(BaseFile):
     REGNUM_PATH = "/usr/share/server-uplink/registration_code"
+    CONTRACT_PATH = "/usr/share/server-uplink/contract_valid"
 
-    file_lock = RWLock(app_info["lock_backend"])
-
-    @readlock(file_lock, logger)
+    @readlock(server_uplink_lock, logger)
     def get_registration_number(self):
         try:
             res = self._read_and_parse(ServerUplinkFiles.REGNUM_PATH, r'^([a-zA-Z0-9]{16})$', (1, ))
@@ -124,4 +125,14 @@ class ServerUplinkFiles(BaseFile):
             # failed to read file -> return None
             res = None
 
+        return res
+
+    @readlock(server_uplink_lock, logger)
+    def get_contract_status(self):
+        try:
+            res = self._read_and_parse(ServerUplinkFiles.CONTRACT_PATH, r'^(\w+)$', (1, ))
+            res = "not_valid" if res != "valid" else "valid"
+        except:
+            # failed to read file -> return None
+            res = "unknown"
         return res

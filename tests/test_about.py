@@ -49,3 +49,23 @@ def test_get_registration_number(infrastructure, ubusd_test):
     assert set(res["data"].keys()) == {
             u"registration_number"
     }
+
+def test_get_contract_status(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "about",
+        "action": "get_contract_status",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert set(res["data"].keys()) == {
+            u"contract_status"
+    }
+    assert res["data"]["contract_status"] in ["valid", "not_valid", "unknown"]
+
+def test_update_contract_status(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "about",
+        "action": "update_contract_status",
+        "kind": "request",
+    })
+    assert res["data"] == {"result": True}

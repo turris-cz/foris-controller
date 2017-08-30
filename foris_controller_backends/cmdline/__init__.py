@@ -25,6 +25,7 @@ import subprocess
 from foris_controller.app import app_info
 from foris_controller.exceptions import BackendCommandFailed, FailedToParseCommandOutput
 from foris_controller.utils import RWLock, writelock
+from foris_controller_backends.files import server_uplink_lock
 
 
 logger = logging.getLogger("backends.cmdline")
@@ -33,6 +34,14 @@ i2c_lock = RWLock(app_info["lock_backend"])
 
 
 class BaseCmdLine(object):
+
+    def _run_command_in_background(self, *args):
+        """
+        executes command in background
+
+        """
+        logger.debug("Starting Command '%s' is starting." % str(args))
+        subprocess.Popen(args)
 
     def _run_command(self, *args):
         """
@@ -80,3 +89,9 @@ class TemperatureCmds(BaseCmdLine):
 class SystemInfoCmds(BaseCmdLine):
     def get_kernel_version(self):
         return self._trigger_and_parse(("uname", "-r"), r'^([^\s]+)$', (1, ))
+
+
+class ServerUplinkCmds(BaseCmdLine):
+    @writelock(server_uplink_lock, logger)
+    def update_contract_status(self):
+        self._run_command_in_background("/usr/share/server-uplink/contract_valid.sh")

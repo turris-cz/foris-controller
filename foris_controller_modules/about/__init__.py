@@ -37,6 +37,12 @@ class AboutModule(BaseModule):
     def action_get_registration_number(self, data):
         return self.handler.get_registration_number()
 
+    def action_update_contract_status(self, data):
+        return self.handler.update_contract_status()
+
+    def action_get_contract_status(self, data):
+        return self.handler.get_contract_status()
+
 
 Class = AboutModule
 
@@ -47,6 +53,8 @@ Class = AboutModule
     'get_temperature',
     'get_sending_info',
     'get_registration_number',
+    'get_contract_status',
+    'update_contract_status',
 ])
 class Handler(object):
     pass
