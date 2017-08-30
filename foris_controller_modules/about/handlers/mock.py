@@ -18,6 +18,7 @@
 #
 
 import logging
+import random
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -48,7 +49,8 @@ class MockAboutHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_sending_info(self):
+        choices = ["online", "offline", "unknown"]
         return {
-            "firewall_status": {"working": False, "last_check": 1501857960},
-            "ucollect_status": {"working": True, "last_check": 1501857970},
+            "firewall_status": {"state": random.choice(choices), "last_check": 1501857960},
+            "ucollect_status": {"state": random.choice(choices), "last_check": 1501857970},
         }

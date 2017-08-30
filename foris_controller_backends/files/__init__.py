@@ -50,17 +50,22 @@ class SendingFiles(BaseFile):
     FW_PATH = "/tmp/firewall-turris-status.txt"
     UC_PATH = "/tmp/ucollect-status"
     file_lock = RWLock(app_info["lock_backend"])
+    STATE_ONLINE = "online"
+    STATE_OFFLINE = "offline"
+    STATE_UNKNOWN = "unknown"
 
     @readlock(file_lock, logger)
     def get_sending_info(self):
         result = {
-            'firewall_status': {"working": False, "last_check": 0},
-            'ucollect_status': {"working": False, "last_check": 0},
+            'firewall_status': {"state": SendingFiles.STATE_UNKNOWN, "last_check": 0},
+            'ucollect_status': {"state": SendingFiles.STATE_UNKNOWN, "last_check": 0},
         }
         try:
             content = self._file_content(SendingFiles.FW_PATH)
             if re.search(r"turris firewall working: yes", content):
-                result['firewall_status']["working"] = True
+                result['firewall_status']["state"] = SendingFiles.STATE_ONLINE
+            else:
+                result['firewall_status']["state"] = SendingFiles.STATE_OFFLINE
             match = re.search(r"last working timestamp: ([0-9]+)", content)
             if match:
                 result['firewall_status']["last_check"] = int(match.group(1))
@@ -74,7 +79,10 @@ class SendingFiles(BaseFile):
             if not match:
                 logger.error("Wrong format of file '%s'." % SendingFiles.UC_PATH)
             else:
-                result['ucollect_status']["working"] = "online" == match.group(1)
+                if match.group(1) == "online":
+                    result['ucollect_status']["state"] = SendingFiles.STATE_ONLINE
+                else:
+                    result['ucollect_status']["state"] = SendingFiles.STATE_OFFLINE
                 result['ucollect_status']["last_check"] = int(match.group(2))
 
         except IOError:
