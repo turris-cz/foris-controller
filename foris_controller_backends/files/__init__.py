@@ -109,3 +109,19 @@ class SystemInfoFiles(BaseFile):
     @readlock(file_lock, logger)
     def get_board_name(self):
         return self._read_and_parse(SystemInfoFiles.BOARD_NAME_PATH, r'^(\w+).*$', (1, ))
+
+
+class ServerUplinkFiles(BaseFile):
+    REGNUM_PATH = "/usr/share/server-uplink/registration_code"
+
+    file_lock = RWLock(app_info["lock_backend"])
+
+    @readlock(file_lock, logger)
+    def get_registration_number(self):
+        try:
+            res = self._read_and_parse(ServerUplinkFiles.REGNUM_PATH, r'^([a-zA-Z0-9]{16})$', (1, ))
+        except:
+            # failed to read file -> return None
+            res = None
+
+        return res

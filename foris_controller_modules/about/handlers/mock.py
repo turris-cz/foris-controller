@@ -54,3 +54,7 @@ class MockAboutHandler(Handler, BaseMockHandler):
             "firewall_status": {"state": random.choice(choices), "last_check": 1501857960},
             "ucollect_status": {"state": random.choice(choices), "last_check": 1501857970},
         }
+
+    @logger_wrapper(logger)
+    def get_registration_number(self):
+        return {"registration_number": "%016X" % random.randrange(2 ** 16)}

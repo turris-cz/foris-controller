@@ -34,6 +34,9 @@ class AboutModule(BaseModule):
         res.update(self.handler.get_sending_info())
         return res
 
+    def action_get_registration_number(self, data):
+        return self.handler.get_registration_number()
+
 
 Class = AboutModule
 
@@ -43,6 +46,7 @@ Class = AboutModule
     'get_serial',
     'get_temperature',
     'get_sending_info',
+    'get_registration_number',
 ])
 class Handler(object):
     pass

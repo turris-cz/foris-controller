@@ -20,7 +20,7 @@
 from .fixtures import backend, infrastructure, ubusd_test
 
 
-def test_about(infrastructure, ubusd_test):
+def test_get(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "about",
         "action": "get",
@@ -36,4 +36,16 @@ def test_about(infrastructure, ubusd_test):
         u"temperature",
         u"firewall_status",
         u"ucollect_status",
+    }
+
+
+def test_get_registration_number(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "about",
+        "action": "get_registration_number",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert set(res["data"].keys()) == {
+            u"registration_number"
     }

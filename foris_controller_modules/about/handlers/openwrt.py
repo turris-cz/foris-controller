@@ -23,7 +23,7 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.cmdline import AtshaCmds, SystemInfoCmds, TemperatureCmds
-from foris_controller_backends.files import SendingFiles, SystemInfoFiles
+from foris_controller_backends.files import SendingFiles, SystemInfoFiles, ServerUplinkFiles
 
 from .. import Handler
 
@@ -37,6 +37,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
     sending_files = SendingFiles()
     system_info_cmds = SystemInfoCmds()
     system_info_files = SystemInfoFiles()
+    server_uplink_files = ServerUplinkFiles()
 
     @logger_wrapper(logger)
     def get_device_info(self):
@@ -60,3 +61,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
     @logger_wrapper(logger)
     def get_sending_info(self):
         return self.sending_files.get_sending_info()
+
+    @logger_wrapper(logger)
+    def get_registration_number(self):
+        return {"registration_number": self.server_uplink_files.get_registration_number()}
