@@ -72,7 +72,7 @@
                         "registration_number": {
                             "oneOf": [
                                 {"type": "string", "pattern": "^[a-zA-Z0-9]{16}"},
-                                {"type": "null"}
+                                {"enum": [false]}
                             ]
                         }
                     },
