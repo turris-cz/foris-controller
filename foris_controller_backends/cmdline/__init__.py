@@ -57,7 +57,7 @@ class BaseCmdLine(object):
         logger.debug("Command '%s' finished." % str(args))
         logger.debug("retcode: %d" % process.returncode)
         logger.debug("stdout: %s" % stdout)
-        logger.debug("stderr: %s" % stdout)
+        logger.debug("stderr: %s" % stderr)
         return process.returncode, stdout, stderr
 
     def _trigger_and_parse(self, args, regex, groups=(1, )):
@@ -95,3 +95,43 @@ class ServerUplinkCmds(BaseCmdLine):
     @writelock(server_uplink_lock, logger)
     def update_contract_status(self):
         self._run_command_in_background("/usr/share/server-uplink/contract_valid.sh")
+
+
+class RegisteredCmds(BaseCmdLine):
+
+    def get_registered(self, email, language):
+        # get registration code
+        from foris_controller_backends.files import ServerUplinkFiles
+        registration_code = ServerUplinkFiles().get_registration_number()
+        if not registration_code:
+            # failed to obtain registration code
+            return {"status": "unknown"}
+        retcode, stdout, _ = self._run_command(
+            "/usr/share/server-uplink/registered.sh",
+            email, language
+        )
+        if not retcode == 0:
+            # cmd failed (e.g. connection failed)
+            return {"status": "unknown"}
+
+        # code field should be present
+        code_re = re.search(r"code: ([0-9]+)", stdout)
+        http_code = int(code_re.group(1))
+        if http_code != 200:
+            return {"status": "not_found"}
+
+        # status should be present
+        status_re = re.search(r"status: (\w+)", stdout)
+        status = status_re.group(1)
+
+        if status == "owned":
+            return {"status": status}
+        elif status in ["free", "foreign"]:
+            url_re = re.search(r"url: ([^\s]+)", stdout)
+            url = url_re.group(1)
+            return {
+                "status": status, "url": url,
+                "registration_number": registration_code,
+            }
+
+        return {"status": "unknown"}

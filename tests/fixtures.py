@@ -88,7 +88,7 @@ class Infrastructure(object):
 
         self.server = subprocess.Popen([
             "bin/foris-controller",
-            "-m", ",".join(["about"]),
+            "-m", ",".join(["about", "data_collect"]),
             "-d", "-b", backend_name, name, "--path", self.sock_path
         ], **kwargs)
 

@@ -1,0 +1,61 @@
+{
+    "definitions": {
+        "iso2country": {
+            "type": "string", "minlength": 2, "maxlength": 2
+        }
+    },
+    "oneOf": [
+        {
+            "description": "Get information whether specified user has registered the router",
+            "properties": {
+                "module": {"enum": ["data_collect"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_registered"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "email": {"type": "string"},
+                        "language": { "$def": "#/definitions/iso2country" }
+                    },
+                    "additionalProperties": false,
+                    "required": ["email", "language"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply whether specified user has registered the router",
+            "properties": {
+                "module": {"enum": ["data_collect"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_registered"]},
+                "data": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "status": {"enum": ["unknown", "owned", "not_found"]}
+                            },
+                            "additionalProperties": false,
+                            "required": ["status"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "status": {"enum": ["foreign", "free"]},
+                                "url": {"type": "string"},
+                                "registration_number": {
+                                    "type": "string", "pattern": "^[a-zA-Z0-9]{16}"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["status", "url", "registration_number"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false
+        }
+    ]
+}
