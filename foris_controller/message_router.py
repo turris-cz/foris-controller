@@ -19,6 +19,8 @@
 
 import logging
 
+from traceback import format_exc
+
 from jsonschema import ValidationError
 
 from foris_controller.app import app_info
@@ -71,7 +73,8 @@ class Router(object):
         try:
             data = module_instance.perform_action(message["action"], message.get("data", {}))
         except Exception as e:
-            logger.error("Internal error occured %s('%s')" % (type(e), str(e)))
+            logger.error("Internal error occured %s('%s'):" % (type(e), str(e)))
+            logger.debug(format_exc())
             return self._build_error_msg(
                 message, [
                     "Internal error %s('%s')" % (type(e), str(e))
