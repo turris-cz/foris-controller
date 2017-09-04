@@ -1,3 +1,9 @@
+0.3 (2017-09-04)
+----------------
+* registration number call added
+* contract valid call added
+* router registered call added
+
 0.2 (2017-08-23)
 ----------------
 * --single argument for ubus
