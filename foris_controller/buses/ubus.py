@@ -34,6 +34,15 @@ from foris_controller.utils import get_modules
 
 
 def _get_method_names_from_module(module):
+    """ Reads python module, checks for Class variable and reads all names of class functions
+        which starts with action_*
+
+    :param module: module to be examine
+    :type module: module
+    :returns: list of action names
+    :rtype: list of str
+    """
+
     module_class = getattr(module, "Class", None)
 
     if not module_class:
@@ -52,6 +61,13 @@ def _get_method_names_from_module(module):
 
 
 def _register_object(module_name, module):
+    """ Transfers a module to an object which is registered on ubus
+
+    :param module_name: the name of the module
+    :type module_name: str
+    :param module: the module to be registered
+    :type module: module
+    """
     methods = _get_method_names_from_module(module)
     if not methods:
         logger.warning("No suitable method found in '%s' module. Skipping" % module_name)
@@ -87,6 +103,15 @@ def _register_object(module_name, module):
 
 
 def ubus_listener_worker(socket_path, module_name, module):
+    """ This function is used after a fork() to register a separate object based on the module
+
+    :param socket_path: path to ubus socket
+    :type socket_path: str
+    :param module_name: the name of the module
+    :type module_name: str
+    :param module: the module which will be handled in this function
+    :type module: module
+    """
     ubus.connect(socket_path)
     prctl.set_pdeathsig(signal.SIGKILL)
     _register_object(module_name, module)
@@ -98,6 +123,13 @@ def ubus_listener_worker(socket_path, module_name, module):
 
 
 def ubus_all_in_one_worker(socket_path, modules_list):
+    """ This function is used after fork() to register all obects on ubus in a separate process
+
+    :param socket_path: path to ubus socket
+    :type socket_path: str
+    :param modules_list: list of module_name and module
+    :type modules_list: list of (str, module)
+    """
     ubus.connect(socket_path)
     prctl.set_pdeathsig(signal.SIGKILL)
     for module_name, module in modules_list:
@@ -112,6 +144,12 @@ def ubus_all_in_one_worker(socket_path, modules_list):
 class UbusListener(object):
 
     def __init__(self, socket_path):
+        """ Inits object which handle listening on ubus
+
+        :param socket_path: path to ubus socket
+        :type socket_path: str
+        """
+
         logger.debug("Starting to create workers for ubus.")
 
         self.workers = []
@@ -132,6 +170,8 @@ class UbusListener(object):
         logger.debug("Ubus workers successfully initialized.")
 
     def serve_forever(self):
+        """ Start listening on ubus (for all worker processes)
+        """
         logger.debug("Starting to run workers.")
 
         for worker in self.workers:

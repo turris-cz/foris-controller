@@ -32,6 +32,11 @@ class MockAboutHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_device_info(self):
+        """ Returns fake info about the device
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         return {
             "model": "Turris Omnia",
             "board_name": "rtrom01",
@@ -41,14 +46,29 @@ class MockAboutHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_serial(self):
+        """ Returns fake serial number
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         return {"serial": "0000000B00009CD6"}
 
     @logger_wrapper(logger)
     def get_temperature(self):
+        """ Returns fake temperature
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         return {"temperature": {"CPU": 73}}
 
     @logger_wrapper(logger)
     def get_sending_info(self):
+        """ Returns fake sending status
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         choices = ["online", "offline", "unknown"]
         return {
             "firewall_status": {"state": random.choice(choices), "last_check": 1501857960},
@@ -57,13 +77,28 @@ class MockAboutHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_registration_number(self):
+        """ Returns fake registration number
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         return {"registration_number": "%016X" % random.randrange(2 ** 16)}
 
     @logger_wrapper(logger)
     def update_contract_status(self):
+        """ Mock update contract script
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         return {"result": True}
 
     @logger_wrapper(logger)
     def get_contract_status(self):
+        """ Returns fake contract status
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         choices = ["valid", "not_valid", "unknown"]
         return {"contract_status": random.choice(choices)}

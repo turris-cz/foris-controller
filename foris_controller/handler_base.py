@@ -25,9 +25,10 @@ class HandlerFunctionNotImplemented(BaseException):
 
 
 def wrap_required_functions(required_functions):
-    """
-    param base_class: base class
-    type base_class: type
+    """ make sure that wrapped class contains required functions
+
+    param required_functions: list of names of required functions
+    type required_functions: list of str
     """
     def wrapped(base_class):
         class MetaClass(type):
@@ -47,10 +48,6 @@ def wrap_required_functions(required_functions):
         return MetaClass(base_class.__name__, base_class.__bases__, body)
 
     return wrapped
-
-
-class BaseHandler(object):
-    pass
 
 
 class BaseOpenwrtHandler(object):

@@ -18,20 +18,37 @@
 #
 
 
-class UnknownAction(Exception):
-    pass
-
-
 class BackendCommandFailed(Exception):
     def __init__(self, retval, args):
+        """ exception which indicates the command failed
+
+        :param args: argumenst of the command
+        :type args: iterable
+        :param retval: reval of the commend
+        :type output: int
+        """
         super(BackendCommandFailed, self).__init__("Retval=%d for %s" % (retval, args))
 
 
 class FailedToParseCommandOutput(Exception):
     def __init__(self, args, output):
+        """ exception which indicates the output of the cmd was somehow incorrect
+
+        :param args: argumenst of the command
+        :type args: iterable
+        :param output: program output
+        :type output: str
+        """
         super(FailedToParseCommandOutput, self).__init__("%s: %s" % (args, output))
 
 
 class FailedToParseFileContent(Exception):
     def __init__(self, path, content):
+        """ exception which inicates the there's something wrong with the content of a file
+
+        :param path: path to file
+        :type path: str
+        :param content: the content of the file
+        :type content: str
+        """
         super(FailedToParseFileContent, self).__init__("%s: %s" % (path, content))

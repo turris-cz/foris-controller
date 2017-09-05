@@ -32,6 +32,11 @@ app_info = {
 
 
 def set_app_info(program_options):
+    """ updates app_info variable according to cmd line options
+
+    :param program_options: cmd line parameters
+    :type program_options: argparse.Namespace
+    """
     global app_info
     app_info["bus"] = program_options.bus
     app_info["debug"] = program_options.debug
@@ -47,6 +52,11 @@ def set_app_info(program_options):
 
 
 def prepare_app_modules(base_handler_class):
+    """ updates app_info dictionary with loaded foris-controller modules
+
+    :param base_handler_class: handler class to be used to initialize the moudles
+    :type base_handler_class: class
+    """
     app_info["modules"] = {}
 
     # use root schema dir

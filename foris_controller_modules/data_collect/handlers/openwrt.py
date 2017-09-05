@@ -37,4 +37,13 @@ class OpenwrtDataCollectHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_registered(self, email, language):
+        """ Tries to obtain info whether the user was registered
+
+        :param email: email which will be used during the server query
+        :type email: str
+        :param language: language which will be used during the server query
+        :type language: str
+        :returns: result
+        :rtype: dict
+        """
         return OpenwrtDataCollectHandler.registered_cmds.get_registered(email, language)

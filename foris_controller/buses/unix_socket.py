@@ -41,10 +41,14 @@ logger = logging.getLogger("buses.unix_socket")
 class UnixSocketHandler(BaseRequestHandler):
 
     def setup(self):
+        """ Connection initialization
+        """
         logger.debug("Client connected.")
         self.router = Router()
 
     def handle(self):
+        """ Main handler
+        """
         logger.debug("Handling request")
         while True:
             try:
@@ -76,12 +80,19 @@ class UnixSocketHandler(BaseRequestHandler):
         logger.debug("Handling finished.")
 
     def finish(self):
+        """ Connection closing
+        """
         logger.debug("Client diconnected.")
 
 
 class UnixSocketListener(ThreadingMixIn, UnixStreamServer):
 
     def __init__(self, socket_path):
+        """ Init listener project
+
+        :param socket_path: path to ubus socket
+        :type socket_path: str
+        """
 
         try:
             os.unlink(socket_path)

@@ -32,6 +32,14 @@ server_uplink_lock = RWLock(app_info["lock_backend"])
 
 class BaseFile(object):
     def _file_content(self, path):
+        """ Returns a content of a file
+
+        :param path: path to the file
+        :type path: str
+
+        :returns: file content
+        :rtype: str
+        """
         logger.debug("Trying to read file '%s'" % path)
         with open(path) as f:
             content = f.read()
@@ -40,6 +48,18 @@ class BaseFile(object):
         return content
 
     def _read_and_parse(self, path, regex, groups=(1, )):
+        """ Reads and parses a content of the file by regex,
+            raises an exception when the output doesn't match regex
+
+        :param path: path to the file
+        :type path: str
+        :param regex: regular expression to match
+        :type regex: str
+        :param groups: groups which will be returned from the matching regex
+        :type groups: tuple of int
+        :returns: matching strings
+        :rtype: tuple
+        """
         content = self._file_content(path)
         match = re.search(regex, content)
         if not match:
@@ -58,6 +78,11 @@ class SendingFiles(BaseFile):
 
     @readlock(file_lock, logger)
     def get_sending_info(self):
+        """ Returns sending info
+
+        :returns: sending info
+        :rtype: dict
+        """
         result = {
             'firewall_status': {"state": SendingFiles.STATE_UNKNOWN, "last_check": 0},
             'ucollect_status': {"state": SendingFiles.STATE_UNKNOWN, "last_check": 0},
@@ -102,14 +127,29 @@ class SystemInfoFiles(BaseFile):
 
     @readlock(file_lock, logger)
     def get_os_version(self):
+        """ Returns turris os version
+
+        :returns: os version
+        :rtype: str
+        """
         return self._read_and_parse(SystemInfoFiles.OS_RELEASE_PATH, r'^([0-9]+\.[0-9]+)$', (1, ))
 
     @readlock(file_lock, logger)
     def get_model(self):
+        """ Returns model of the device
+
+        :returns: model
+        :rtype: str
+        """
         return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r'^(\w+ \w+).*$', (1, ))
 
     @readlock(file_lock, logger)
     def get_board_name(self):
+        """ Returns board name
+
+        :returns: board name
+        :rtype: str
+        """
         return self._read_and_parse(SystemInfoFiles.BOARD_NAME_PATH, r'^(\w+).*$', (1, ))
 
 
@@ -119,6 +159,11 @@ class ServerUplinkFiles(BaseFile):
 
     @readlock(server_uplink_lock, logger)
     def get_registration_number(self):
+        """ Returns registration number
+
+        :returns: registration number
+        :rtype: str
+        """
         try:
             res = self._read_and_parse(ServerUplinkFiles.REGNUM_PATH, r'^([a-zA-Z0-9]{16})$', (1, ))
         except:
@@ -129,6 +174,11 @@ class ServerUplinkFiles(BaseFile):
 
     @readlock(server_uplink_lock, logger)
     def get_contract_status(self):
+        """ Returns contract status
+
+        :returns: contract status
+        :rtype: str
+        """
         try:
             res = self._read_and_parse(ServerUplinkFiles.CONTRACT_PATH, r'^(\w+)$', (1, ))
             res = "not_valid" if res != "valid" else "valid"

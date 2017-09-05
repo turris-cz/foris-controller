@@ -17,15 +17,31 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .exceptions import UnknownAction
+
+class UnknownAction(Exception):
+    pass
 
 
 class BaseModule(object):
 
     def __init__(self, handler):
+        """ Inits base module (sets the handler)
+
+        :param handler: handler to be set
+        :type handler: handler instance
+        """
         self.handler = handler
 
     def perform_action(self, action, data):
+        """ Perfoms the specified action a returns result
+
+        :param action: actions to be performed
+        :type action: str
+        :param data: data of the action
+        :type data: dict
+        :returns: response to action and data
+        :rtype: dict
+        """
         action_function = getattr(self, "action_%s" % action)
         if not action_function:
             self.logger.error("Unkown action '%s'!" % action)

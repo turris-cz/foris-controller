@@ -27,6 +27,12 @@ class DataCollectModule(BaseModule):
     logger = logging.getLogger("modules.data_collect")
 
     def action_get_registered(self, data):
+        """ Obtains information whether a user(email) appears to have this device registered.
+        :param data: {email:..., language:...}
+        :type data: dict
+        :returns: status and sometimes url to register the device
+        :rtype: dict
+        """
         return self.handler.get_registered(data["email"], data["language"])
 
 

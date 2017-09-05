@@ -44,6 +44,11 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_device_info(self):
+        """ Obtains info about the device
+
+        :returns: result
+        :rtype: dict
+        """
         return {
             "model": self.system_info_files.get_model(),
             "board_name": self.system_info_files.get_board_name(),
@@ -53,27 +58,57 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_serial(self):
+        """ Obtains serial number
+
+        :returns: result
+        :rtype: dict
+        """
         return {"serial": self.atsha_cmds.get_serial()}
 
     @logger_wrapper(logger)
     def get_temperature(self):
+        """ Obtains temperature
+
+        :returns: result
+        :rtype: dict
+        """
         return {
             "temperature": {"CPU": self.temperature_cmds.get_cpu_temperature()},
         }
 
     @logger_wrapper(logger)
     def get_sending_info(self):
+        """ Obtains info whether the router is sending data to our servers
+
+        :returns: result
+        :rtype: dict
+        """
         return self.sending_files.get_sending_info()
 
     @logger_wrapper(logger)
     def get_registration_number(self):
+        """ Obtains registration number
+
+        :returns: result
+        :rtype: dict
+        """
         return {"registration_number": self.server_uplink_files.get_registration_number()}
 
     @logger_wrapper(logger)
     def get_contract_status(self):
+        """ Obtains the contract status
+
+        :returns: result
+        :rtype: dict
+        """
         return {"contract_status": self.server_uplink_files.get_contract_status()}
 
     @logger_wrapper(logger)
     def update_contract_status(self):
+        """ Calls a script which updates the contract status
+
+        :returns: result
+        :rtype: dict
+        """
         self.server_uplink_cmds.update_contract_status()
         return {"result": True}

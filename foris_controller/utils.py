@@ -26,6 +26,9 @@ from functools import wraps
 
 
 class RWLock(object):
+    """ Custom implementation of RWLock
+        it can use lock for Processes as well as lock for threads
+    """
 
     class ReadLock(object):
         def __init__(self, parent):
@@ -70,6 +73,10 @@ class RWLock(object):
             self.parent._writer_lock.release()
 
     def __init__(self, lock_module):
+        """ Initializes RWLock
+
+        :param lock_module: module which is used as locking backend - multiprocessing/threading
+        """
         self._counter = 0
         self._writer_lock = lock_module.Lock()
         self._new_readers = lock_module.Lock()
@@ -79,6 +86,11 @@ class RWLock(object):
 
 
 def logger_wrapper(logger):
+    """ Wraps funcion with some debug outputs of the logger
+
+    :param logger: logger which will be used to trigger debug outputs
+    :type logger: logging.Logger
+    """
     def outer(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -93,6 +105,14 @@ def logger_wrapper(logger):
 
 
 def readlock(lock, logger):
+    """ Make sure that this fuction is called after the read lock is obtained and
+        wraps funcion with some debug outputs
+
+    :param lock: lock which will be used
+    :type lock: foris_controller.utils.RWLock
+    :param logger: logger which will be used to trigger debug outputs
+    :type logger: logging.Logger
+    """
     def outer(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -105,6 +125,14 @@ def readlock(lock, logger):
 
 
 def writelock(lock, logger):
+    """ Make sure that this fuction is called after the write lock is obtained and
+        wraps funcion with some debug outputs
+
+    :param lock: lock which will be used
+    :type lock: foris_controller.utils.RWLock
+    :param logger: logger which will be used to trigger debug outputs
+    :type logger: logging.Logger
+    """
     def outer(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -117,6 +145,12 @@ def writelock(lock, logger):
 
 
 def get_modules(filter_modules):
+    """ Returns a list of modules that can be used
+
+    :param filter_modules: use only modules which names are specified in this list
+    :type filter_modules: list of str
+    :returns: list of (module_name, module)
+    """
     res = []
     modules = importlib.import_module("foris_controller_modules")
     for _, mod_name, _ in pkgutil.iter_modules(modules.__path__):
@@ -129,6 +163,13 @@ def get_modules(filter_modules):
 
 
 def get_handler(module, base_handler_class):
+    """ Instanciates a specific handler based on the module and base_handler class
+    :param module: module which should be used
+    :type module: module
+    :param base_handler_class: base of the class which should be Openwrt/Mock/...
+    :type base_handler_class: class
+    :returns: handler instace or None
+    """
     handlers_path = os.path.join(module.__path__[0], "handlers")
     for _, handler_name, _ in pkgutil.iter_modules([handlers_path]):
         # load <module>.handlers module

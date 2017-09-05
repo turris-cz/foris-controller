@@ -30,6 +30,15 @@ logger = logging.getLogger("message_router")
 
 class Router(object):
     def _build_error_msg(self, orig_msg, errors):
+        """ prepare error response
+
+        :param orig_msg: original message
+        :type orig_msg: dict
+        :param errors: list of errors
+        :type errors: list of str
+        :returns: error message
+        :rtype: dict
+        """
         return {
             "module": orig_msg.get("module", "?"),
             "kind": orig_msg.get("kind", "?"),
@@ -38,12 +47,27 @@ class Router(object):
         }
 
     def validate(self, message):
+        """ validates whether the message fits current schema and tries to obtain
+            more verbose info if it does not
+
+        :param message: message to be validated
+        :type message: dict
+        """
+
         try:
             app_info["validator"].validate(message)
         except ValidationError:
             app_info["validator"].validate_verbose(message)
 
     def process_message(self, message):
+        """ handles the incomming message, makes sure that msg content is validated,
+            routes message to corresponding module, validates output and returns reply
+
+        :param message: incomming message
+        :type message: dict
+        :returns: reply to incomming message
+        :rtype: dict
+        """
         # validate input message
         logger.debug("Starting to validate input message.")
         try:

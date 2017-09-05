@@ -27,6 +27,13 @@ class AboutModule(BaseModule):
     logger = logging.getLogger("modules.about")
 
     def action_get(self, data):
+        """ Performs get action to obtain data from the device
+
+        :param data: input data (supposed to be {})
+        :type data: dict
+        :returns: response to request
+        :rtype: dict
+        """
         res = {}
         res.update(self.handler.get_device_info())
         res.update(self.handler.get_serial())
@@ -35,12 +42,33 @@ class AboutModule(BaseModule):
         return res
 
     def action_get_registration_number(self, data):
+        """ Obtains registration number
+
+        :param data: input data (supposed to be {})
+        :type data: dict
+        :returns: registration_number or False
+        :rtype: dict
+        """
         return self.handler.get_registration_number()
 
     def action_update_contract_status(self, data):
+        """ Call a script which updates contract status
+
+        :param data: input data (supposed to be {})
+        :type data: dict
+        :returns: result if the program has started (doesn't wait for it to finish)
+        :rtype: dict
+        """
         return self.handler.update_contract_status()
 
     def action_get_contract_status(self, data):
+        """ Obtains a status of the contract
+
+        :param data: input data (supposed to be {})
+        :type data: dict
+        :returns: contract status
+        :rtype: dict
+        """
         return self.handler.get_contract_status()
 
 

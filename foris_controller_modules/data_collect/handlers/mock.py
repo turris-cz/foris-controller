@@ -32,6 +32,16 @@ class MockDataCollectHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_registered(self, email, language):
+        """ Mocks registration info
+
+        :param email: email which was used during the registration
+        :type email: str
+        :param language: language which will be used in the server query (iso2)
+        :type language: str
+
+        :returns: Mocked result
+        :rtype: dict
+        """
         registration_code = "%016X" % random.randrange(0x10000000000000000)
         return random.choice([
             {
