@@ -1,0 +1,10 @@
+{
+    "user": "stepan",
+    "access": {
+        "foris-controller-data_collect": {
+            "methods": [ "get_registered" ]
+        }
+    },
+    "publish": [ "foris-controller-data_collect" ],
+    "subscribe": [ "foris-controller-data_collect" ]
+}
