@@ -27,7 +27,7 @@ def test_get_registered(infrastructure, ubusd_test):
     })
 
     assert "errors" in res["data"].keys()
-    assert "Incorrect input." in res["data"]["errors"]
+    assert "Incorrect input." in res["data"]["errors"][0]["description"]
 
     res = infrastructure.process_message({
         "module": "data_collect",
@@ -37,7 +37,7 @@ def test_get_registered(infrastructure, ubusd_test):
         }
     })
     assert "errors" in res["data"].keys()
-    assert "Incorrect input." in res["data"]["errors"]
+    assert "Incorrect input." in res["data"]["errors"][0]["description"]
 
     res = infrastructure.process_message({
         "module": "data_collect",

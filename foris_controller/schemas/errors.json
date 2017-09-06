@@ -1,4 +1,15 @@
 {
+    "definitions": {
+        "internal_error": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string"},
+                "stacktrace": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["name"]
+        }
+    },
     "oneOf": [
         {
             "description": "Generic error responses.",
@@ -11,7 +22,7 @@
                     "properties": {
                         "errors": {
                             "type": "array",
-                            "items": {"type": "string"}
+                            "items": {"$ref": "#/definitions/internal_error"}
                         }
                     },
                     "additionalProperties": false,

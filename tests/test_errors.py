@@ -26,12 +26,12 @@ def test_wrong_input_data(infrastructure, ubusd_test):
         "kind": "request",
         "data": {"extra": "data"},
     })
-    assert res == {
-        u'action': u'get',
-        u'data': {u'errors': [u'Incorrect input.']},
-        u'kind': u'request',
-        u'module': u'about'
-    }
+    assert res["action"] == u"get"
+    assert res["kind"] == u"request"
+    assert res["module"] == u"about"
+    assert "errors" in res["data"]
+    assert "Incorrect input." in res["data"]["errors"][0]["description"]
+
 
 def test_wrong_input_kind(infrastructure_unix_socket, ubusd_test):
     res = infrastructure_unix_socket.process_message({
@@ -52,9 +52,9 @@ def test_wrong_input_kind(infrastructure_unix_socket, ubusd_test):
     assert res == {
             u'action': u'get',
             u'data': {
-                u'errors': [
-                    u'Wrong message kind (only request are allowed).'
-                ]
+                u'errors': [{
+                    u'description': u'Wrong message kind (only request are allowed).'
+                }]
             },
             u'kind': u'reply',
             u'module': u'about'
@@ -66,12 +66,11 @@ def test_wrong_input_action(infrastructure_unix_socket, ubusd_test):
         "action": "non-exiting",
         "kind": "request",
     })
-    assert res == {
-        u'action': u'non-exiting',
-        u'data': {u'errors': [u'Incorrect input.']},
-        u'kind': u'request',
-        u'module': u'about'
-    }
+    assert res["action"] == u"non-exiting"
+    assert res["kind"] == u"request"
+    assert res["module"] == u"about"
+    assert "errors" in res["data"]
+    assert "Incorrect input." in res["data"]["errors"][0]["description"]
 
 def test_wrong_input_module(infrastructure_unix_socket, ubusd_test):
     res = infrastructure_unix_socket.process_message({
@@ -79,9 +78,8 @@ def test_wrong_input_module(infrastructure_unix_socket, ubusd_test):
         "action": "get",
         "kind": "request",
     })
-    assert res == {
-        u'action': u'get',
-        u'data': {u'errors': [u'Incorrect input.']},
-        u'kind': u'request',
-        u'module': u'non-exiting',
-    }
+    assert res["action"] == u"get"
+    assert res["kind"] == u"request"
+    assert res["module"] == u"non-exiting"
+    assert "errors" in res["data"]
+    assert "Incorrect input." in res["data"]["errors"][0]["description"]
