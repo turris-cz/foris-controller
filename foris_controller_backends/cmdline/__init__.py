@@ -28,7 +28,7 @@ from foris_controller.utils import RWLock, writelock
 from foris_controller_backends.files import server_uplink_lock
 
 
-logger = logging.getLogger("backends.cmdline")
+logger = logging.getLogger(__name__)
 
 i2c_lock = RWLock(app_info["lock_backend"])
 

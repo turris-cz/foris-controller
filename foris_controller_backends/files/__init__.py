@@ -25,7 +25,7 @@ from foris_controller.app import app_info
 from foris_controller.exceptions import FailedToParseFileContent
 from foris_controller.utils import readlock, RWLock
 
-logger = logging.getLogger("backends.files")
+logger = logging.getLogger(__name__)
 
 server_uplink_lock = RWLock(app_info["lock_backend"])
 

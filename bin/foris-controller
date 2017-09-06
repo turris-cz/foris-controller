@@ -26,7 +26,7 @@ from logging.handlers import SysLogHandler
 
 from foris_controller.app import set_app_info, prepare_app_modules
 
-logger = logging.getLogger("main")
+logger = logging.getLogger("foris_controller")
 
 
 if __name__ == "__main__":

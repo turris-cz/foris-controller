@@ -24,7 +24,7 @@ from foris_controller.handler_base import wrap_required_functions
 
 
 class DataCollectModule(BaseModule):
-    logger = logging.getLogger("modules.data_collect")
+    logger = logging.getLogger(__name__)
 
     def action_get_registered(self, data):
         """ Obtains information whether a user(email) appears to have this device registered.

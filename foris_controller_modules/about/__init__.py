@@ -24,7 +24,7 @@ from foris_controller.handler_base import wrap_required_functions
 
 
 class AboutModule(BaseModule):
-    logger = logging.getLogger("modules.about")
+    logger = logging.getLogger(__name__)
 
     def action_get(self, data):
         """ Performs get action to obtain data from the device

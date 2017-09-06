@@ -27,7 +27,7 @@ from foris_controller_backends.sample import SampleCmds
 
 from .. import Handler
 
-logger = logging.getLogger("sample.handlers.mock")
+logger = logging.getLogger(__name__)
 
 
 class OpenwrtSampleHandler(Handler, BaseOpenwrtHandler):

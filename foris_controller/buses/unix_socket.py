@@ -35,7 +35,7 @@ else:
 
 from foris_controller.message_router import Router
 
-logger = logging.getLogger("buses.unix_socket")
+logger = logging.getLogger(__name__)
 
 
 class UnixSocketHandler(BaseRequestHandler):

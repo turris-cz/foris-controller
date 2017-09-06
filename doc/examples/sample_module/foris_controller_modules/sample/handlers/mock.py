@@ -24,7 +24,7 @@ from foris_controller.utils import logger_wrapper
 
 from .. import Handler
 
-logger = logging.getLogger("sample.handlers.mock")
+logger = logging.getLogger(__name__)
 
 
 class MockSampleHandler(Handler, BaseMockHandler):

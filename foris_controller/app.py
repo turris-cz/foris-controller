@@ -25,7 +25,7 @@ from foris_schema import ForisValidator
 from foris_controller.utils import get_modules, get_handler
 
 
-logger = logging.getLogger("app")
+logger = logging.getLogger(__name__)
 
 app_info = {
 }

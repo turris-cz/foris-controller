@@ -2,7 +2,7 @@ import logging
 
 from foris_controller_backends.cmdline import BaseCmdLine
 
-logger = logging.getLogger("backends.sample")
+logger = logging.getLogger(__name__)
 
 
 class SampleCmds(BaseCmdLine):

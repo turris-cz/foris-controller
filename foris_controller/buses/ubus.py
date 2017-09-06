@@ -26,7 +26,7 @@ import prctl
 import signal
 import multiprocessing
 
-logger = logging.getLogger("buses.ubus")
+logger = logging.getLogger(__name__)
 
 from foris_controller.message_router import Router
 from foris_controller.app import app_info

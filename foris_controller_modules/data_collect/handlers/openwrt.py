@@ -28,7 +28,7 @@ from foris_controller_backends.cmdline import (
 
 from .. import Handler
 
-logger = logging.getLogger("data_collect.handlers.openwrt")
+logger = logging.getLogger(__name__)
 
 
 class OpenwrtDataCollectHandler(Handler, BaseOpenwrtHandler):

@@ -29,7 +29,7 @@ from foris_controller_backends.files import SendingFiles, SystemInfoFiles, Serve
 
 from .. import Handler
 
-logger = logging.getLogger("about.handlers.openwrt")
+logger = logging.getLogger(__name__)
 
 
 class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):

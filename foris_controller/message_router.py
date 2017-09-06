@@ -25,7 +25,7 @@ from jsonschema import ValidationError
 
 from foris_controller.app import app_info
 
-logger = logging.getLogger("message_router")
+logger = logging.getLogger(__name__)
 
 
 class Router(object):

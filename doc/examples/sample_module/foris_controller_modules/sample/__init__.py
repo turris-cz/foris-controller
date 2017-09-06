@@ -24,7 +24,7 @@ from foris_controller.handler_base import wrap_required_functions
 
 
 class SampleModule(BaseModule):
-    logger = logging.getLogger("modules.sample")
+    logger = logging.getLogger(__name__)
 
     def action_get(self, data):
         res = {}
