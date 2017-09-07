@@ -64,10 +64,13 @@ if __name__ == "__main__":
     else:
         logging.basicConfig()
 
-    # setup syslog
-    handler = SysLogHandler("/dev/log")
-    handler.setFormatter(logging.Formatter('foris-controller: %(message)s'))
-    logging.getLogger().addHandler(handler)
+    # setup syslog (best effort)
+    try:
+        handler = SysLogHandler("/dev/log")
+        handler.setFormatter(logging.Formatter('foris-controller: %(message)s'))
+        logging.getLogger().addHandler(handler)
+    except:
+        logger.warning("Failed to initialize syslog handler.")
 
     logger.info("Foris controller is starting.")
     if options.backend == "openwrt":
