@@ -52,3 +52,15 @@ class FailedToParseFileContent(Exception):
         :type content: str
         """
         super(FailedToParseFileContent, self).__init__("%s: %s" % (path, content))
+
+
+class UciException(Exception):
+    def __init__(self, cmdline_args, stderr):
+        """ exception which is raise when an uci cmd fails
+
+        :param cmdline_args: cmd line arguments
+        :type cmdline_args: str
+        :param stderr: error output
+        :type stderr: str
+        """
+        super(UciException, self).__init__("%s: command failed (%s)" % (cmdline_args, stderr))

@@ -22,14 +22,16 @@ import json
 import os
 import pytest
 import socket
+import shutil
+import struct
 import subprocess
 import time
-import struct
 
 from foris_controller.utils import RWLock
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
+UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 
 
 class Locker(object):
@@ -160,3 +162,58 @@ def locker_instance(request):
         output = manager.list()
         locker = Locker(multiprocessing, multiprocessing.Process, output)
     yield locker
+
+@pytest.fixture(params=["threading", "multiprocessing"], scope="function")
+def lock_backend(request):
+    if request.param == "threading":
+        import threading
+        yield threading
+    elif request.param == "multiprocessing":
+        import multiprocessing
+        yield multiprocessing
+
+
+@pytest.fixture(scope="function")
+def uci_config_dir():
+    shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)
+    try:
+        os.makedirs(UCI_CONFIG_DIR_PATH)
+    except IOError:
+        pass
+
+    with open(os.path.join(UCI_CONFIG_DIR_PATH, 'test1'), 'w+'):
+        pass
+
+    with open(os.path.join(UCI_CONFIG_DIR_PATH, 'test2'), 'w+') as f:
+        f.write("""
+config anonymous
+
+config anonymous
+	option option1 'aeb bb'
+	option option2 'xxx'
+	list list1 'single item'
+	list list2 'item 1'
+	list list2 'item 2'
+	list list2 'item 3'
+	list list2 'item 4'
+    list list3 'itema'
+    list list3 'itemb'
+
+config named 'named1'
+
+config named 'named2'
+	option option1 'aeb bb'
+	option option2 'xxx'
+	list list1 'single item'
+	list list2 'item 1'
+	list list2 'item 2'
+	list list2 'item 3'
+	list list2 'item 4'
+    list list3 'itema'
+    list list3 'itemb'
+"""
+        )
+
+    yield UCI_CONFIG_DIR_PATH
+
+    shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)

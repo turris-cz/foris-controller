@@ -1,0 +1,307 @@
+#
+# foris-controller
+# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+#
+
+import pytest
+import logging
+import subprocess
+import re
+
+from collections import OrderedDict
+
+from foris_controller.exceptions import UciException
+
+from .fixtures import lock_backend, uci_config_dir
+
+def get_uci_backend_class(lock_backend):
+    from foris_controller.app import app_info
+    app_info["lock_backend"] = lock_backend
+    from foris_controller_backends.uci import UciBackend
+    return UciBackend
+
+
+def show(config_dir):
+    process = subprocess.Popen(["uci", "-c", config_dir, "show"], stdout=subprocess.PIPE)
+    stdout, _ = process.communicate()
+    return stdout
+
+
+def test_init(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    with backend_class(uci_config_dir) as backend:
+        pass
+
+
+def test_add_named_section(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.named1=named" in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        res1 = backend.add_section("test1", "test_section", "named1")
+        res2 = backend.add_section("test2", "named", "named1")
+
+    assert res1 is None
+    assert res2 is None
+    assert "test1.named1=test_section" in show(uci_config_dir)
+    assert "test2.named1=named" in show(uci_config_dir)
+
+
+def test_add_anonymous_section(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    with backend_class(uci_config_dir) as backend:
+        name = backend.add_section("test1", "test_section")
+
+    name = name.strip()
+    assert re.search(r"^cfg[0-9a-f]{6}$", name)
+
+    assert "test1.@test_section[0]=test_section" in show(uci_config_dir)
+
+
+def test_del_named_section(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.named2=named" in show(uci_config_dir)
+    assert "test2.named3=named" not in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        backend.del_section("test2", "named2")
+        with pytest.raises(UciException):
+            backend.del_section("test2", "named3")
+
+    assert "test2.named2=named" not in show(uci_config_dir)
+    assert "test2.named3=named" not in show(uci_config_dir)
+
+
+def test_del_anonymous_section(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
+    assert "test2.@anonymous[2]=anonymous" not in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        with pytest.raises(UciException):
+            backend.del_section("test2", "@anonymous[2]")
+        backend.del_section("test2", "@anonymous[1]")
+
+    assert "test2.@anonymous[1]=anonymous" not in show(uci_config_dir)
+    assert "test2.@anonymous[2]=anonymous" not in show(uci_config_dir)
+
+
+def test_set_option(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
+    assert "test2.named2=named" in show(uci_config_dir)
+    assert "test2.@anonymous[1].option1='aeb bb'" in show(uci_config_dir)
+    assert "test2.named2.option1='aeb bb'" in show(uci_config_dir)
+    assert "test2.named3.option1='non-existing'" not in show(uci_config_dir)
+    assert "test3.named3.option1='non-existing'" not in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        backend.set_option("test2", "@anonymous[1]", "new_option", "val 1")
+        backend.set_option("test2", "named2", "new_option", "val 2")
+        backend.set_option("test2", "@anonymous[1]", "option1", "val 1")
+        backend.set_option("test2", "named2", "option1", "val 2")
+        with pytest.raises(UciException):
+            backend.set_option("test2", "named3", "option1", "non-existing")
+        with pytest.raises(UciException):
+            backend.set_option("test3", "named3", "option1", "non-existing")
+
+    assert "test2.@anonymous[1].new_option='val 1'" in show(uci_config_dir)
+    assert "test2.named2.new_option='val 2'" in show(uci_config_dir)
+    assert "test2.@anonymous[1].option1='val 1'" in show(uci_config_dir)
+    assert "test2.named2.option1='val 2'" in show(uci_config_dir)
+    assert "test2.named3.option1='non-existing'" not in show(uci_config_dir)
+    assert "test3.named3.option1='non-existing'" not in show(uci_config_dir)
+
+
+def test_del_option(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.@anonymous[1].option2='xxx'" in show(uci_config_dir)
+    assert "test2.named2.option2='xxx'" in show(uci_config_dir)
+    assert "test2.named3.option2='xxx'" not in show(uci_config_dir)
+    assert "test3.named3.option2='xxx'" not in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        backend.del_option("test2", "@anonymous[1]", "option2")
+        backend.del_option("test2", "named2", "option2")
+        with pytest.raises(UciException):
+            backend.del_option("test2", "named3", "option2")
+        with pytest.raises(UciException):
+            backend.del_option("test3", "named3", "option2")
+
+    assert "test2.@anonymous[1].option2='xxx'" not in show(uci_config_dir)
+    assert "test2.named2.option2='xxx'" not in show(uci_config_dir)
+    assert "test2.named3.option2='xxx'" not in show(uci_config_dir)
+    assert "test3.named3.option2='xxx'" not in show(uci_config_dir)
+
+
+def test_add_to_list(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.@anonymous[0].new_list" not in show(uci_config_dir)
+    assert "test2.named1.new_list" not in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1='single item'" in show(uci_config_dir)
+    assert "test2.named2.list1='single item'" in show(uci_config_dir)
+    assert "test2.named3.list1='non' 'existing'" not in show(uci_config_dir)
+    assert "test3.named3.list1='existing' 'non'" not in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        backend.add_to_list("test2", "@anonymous[0]", "new_list", ["1 2", "3 4", "5 6"])
+        backend.add_to_list("test2", "named1", "new_list", ["2 1", "4 3", "6 5"])
+        backend.add_to_list("test2", "@anonymous[1]", "list1", ["3 4", "5 6"])
+        backend.add_to_list("test2", "named2", "list1", ["4 3", "6 5"])
+        with pytest.raises(UciException):
+            backend.add_to_list("test2", "named3", "list1", ["non", "existing"])
+        with pytest.raises(UciException):
+            backend.add_to_list("test3", "named3", "list1", ["existing", "non"])
+
+    assert "test2.@anonymous[0].new_list='1 2' '3 4' '5 6'" in show(uci_config_dir)
+    assert "test2.named1.new_list='2 1' '4 3' '6 5'" in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1='single item' '3 4' '5 6'" in show(uci_config_dir)
+    assert "test2.named2.list1='single item' '4 3' '6 5'" in show(uci_config_dir)
+    assert "test2.named3.list1='non' 'existing'" not in show(uci_config_dir)
+    assert "test3.named3.list1='existing' 'non'" not in show(uci_config_dir)
+
+
+def test_del_from_list(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.@anonymous[1].list1='single item'" in show(uci_config_dir)
+    assert "test2.named2.list2='item 1' 'item 2' 'item 3' 'item 4'" in show(uci_config_dir)
+    assert "test2.named2.list3='itema' 'itemb'" in show(uci_config_dir)
+    assert "test2.named2.non_existing" not in show(uci_config_dir)
+    assert "test2.non_existing.non_existing" not in show(uci_config_dir)
+    assert "test3.non_existing.non_existing" not in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        backend.del_from_list("test2", "@anonymous[1]", "list1", ["single item"])
+        backend.del_from_list("test2", "named2", "list2", ["item 2", "item 4", "item 6"])
+        backend.del_from_list("test2", "named2", "list3")
+        with pytest.raises(UciException):
+            backend.del_from_list("test2", "named2", "non_existing")
+        with pytest.raises(UciException):
+            backend.del_from_list("test2", "non_existing", "non_existing")
+        with pytest.raises(UciException):
+            backend.del_from_list("test3", "non_existing", "non_existing")
+
+    assert "test2.@anonymous[1].list1" not in show(uci_config_dir)
+    assert "test2.named2.list2='item 1' 'item 3'" in show(uci_config_dir)
+    assert "test2.named2.list3" not in show(uci_config_dir)
+    assert "test2.named2.non_existing" not in show(uci_config_dir)
+    assert "test2.non_existing.non_existing" not in show(uci_config_dir)
+    assert "test3.non_existing.non_existing" not in show(uci_config_dir)
+
+
+def test_replace_session(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1" in show(uci_config_dir)
+    assert "test2.named2=named" in show(uci_config_dir)
+    assert "test2.named2.list1" in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        backend.del_section("test2", "named2")
+        backend.add_section("test2", "named", "named2")
+        backend.set_option("test2", "named2", "new_option", "value1")
+        backend.add_to_list("test2", "named2", "new_list", ["val1", "val2", "val3"])
+
+        backend.del_section("test2", "@anonymous[1]")
+        a_name = backend.add_section("test2", "anonymous").strip()
+        backend.set_option("test2", a_name, "new_option", "valuea")
+        backend.add_to_list("test2", a_name, "new_list", ["vala", "valb", "valc"])
+
+    assert "test2.@anonymous[1].list1" not in show(uci_config_dir)
+    assert "test2.named2.list1" not in show(uci_config_dir)
+    assert "test2.named2=named" in show(uci_config_dir)
+    assert "test2.named2.new_option='value1'" in show(uci_config_dir)
+    assert "test2.named2.new_list='val1' 'val2' 'val3'" in show(uci_config_dir)
+    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
+    assert "test2.@anonymous[1].new_option='valuea'" in show(uci_config_dir)
+    assert "test2.@anonymous[1].new_list='vala' 'valb' 'valc'" in show(uci_config_dir)
+
+
+def test_read(lock_backend, uci_config_dir):
+    backend_class = get_uci_backend_class(lock_backend)
+
+    with backend_class(uci_config_dir) as backend:
+        res1 = backend.read('test1')
+        res2 = backend.read('test2')
+        res3 = backend.read()
+        with pytest.raises(UciException):
+            backend.read('non-existing')
+
+    assert res1 == {"test1": []}
+    assert res2 == {
+        'test2': [
+            {'data': OrderedDict(), 'type': 'anonymous', 'name': None},
+            {
+                'data': OrderedDict([
+                    ('option1', 'aeb bb'),
+                    ('option2', 'xxx'),
+                    ('list1', ['single item']),
+                    ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
+                    ('list3', ['itema', 'itemb']),
+                ]),
+                'type': 'anonymous', 'name': None
+            },
+            {'data': OrderedDict(), 'type': 'named', 'name': 'named1'},
+            {
+                'data': OrderedDict([
+                    ('option1', 'aeb bb'),
+                    ('option2', 'xxx'),
+                    ('list1', ['single item']),
+                    ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
+                    ('list3', ['itema', 'itemb']),
+                ]),
+                'type': 'named', 'name': 'named2'
+            }
+        ]
+    }
+    assert res3 == {
+        'test1': [],
+        'test2': [
+            {'data': OrderedDict(), 'type': 'anonymous', 'name': None},
+            {
+                'data': OrderedDict([
+                    ('option1', 'aeb bb'),
+                    ('option2', 'xxx'),
+                    ('list1', ['single item']),
+                    ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
+                    ('list3', ['itema', 'itemb']),
+                ]),
+                'type': 'anonymous', 'name': None
+            },
+            {'data': OrderedDict(), 'type': 'named', 'name': 'named1'},
+            {
+                'data': OrderedDict([
+                    ('option1', 'aeb bb'),
+                    ('option2', 'xxx'),
+                    ('list1', ['single item']),
+                    ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
+                    ('list3', ['itema', 'itemb']),
+                ]),
+                'type': 'named', 'name': 'named2'
+            }
+        ]
+    }

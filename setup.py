@@ -35,6 +35,7 @@ setup(
         'foris_controller_backends',
         'foris_controller_backends.cmdline',
         'foris_controller_backends.files',
+        'foris_controller_backends.uci',
         'foris_controller_modules',
         'foris_controller_modules.about',
         'foris_controller_modules.about.handlers',
@@ -59,7 +60,7 @@ setup(
         'pytest-runner',
     ],
     tests_require=[
-        'pytest'
+        'pytest',
     ],
     include_package_data=True,
     zip_safe=False,
