@@ -22,7 +22,7 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
-from foris_controller_backends.cmdline import (
+from foris_controller_backends.data_collect import (
     RegisteredCmds
 )
 

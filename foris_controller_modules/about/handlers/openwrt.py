@@ -22,10 +22,10 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
-from foris_controller_backends.cmdline import (
-    AtshaCmds, SystemInfoCmds, TemperatureCmds, ServerUplinkCmds
+from foris_controller_backends.about import (
+    AtshaCmds, SystemInfoCmds, TemperatureCmds, ServerUplinkCmds,
+    SendingFiles, SystemInfoFiles, ServerUplinkFiles
 )
-from foris_controller_backends.files import SendingFiles, SystemInfoFiles, ServerUplinkFiles
 
 from .. import Handler
 
