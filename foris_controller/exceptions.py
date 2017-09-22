@@ -64,3 +64,16 @@ class UciException(Exception):
         :type stderr: str
         """
         super(UciException, self).__init__("%s: command failed (%s)" % (cmdline_args, stderr))
+
+
+class UciTypeException(Exception):
+    def __init__(self, value, required_types):
+        """ exception which is raised when a values are incorrectly parsed from uci
+        :param value: value that was matched
+        :type value: str
+        :param required_types: types which were required
+        :type required_types: list of strings
+        """
+        super(UciTypeException, self).__init__(
+            "'%s' doesn't match any of required types %s" % (value, required_types)
+        )

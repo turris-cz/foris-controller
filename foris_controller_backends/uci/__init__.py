@@ -26,9 +26,17 @@ import subprocess
 from foris_controller.utils import RWLock
 
 from foris_controller.app import app_info
-from foris_controller.exceptions import UciException
+from foris_controller.exceptions import UciException, UciTypeException
 
 logger = logging.getLogger(__name__)
+
+
+def parse_bool(value):
+    if value in ("1", "on", "true", "yes", "enabled"):
+        return True
+    elif value in ("0", "off", "false", "no", "disabled"):
+        return False
+    raise UciTypeException(value, ['bool'])
 
 
 class UciBackend(object):
