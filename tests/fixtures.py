@@ -23,6 +23,7 @@ import os
 import pytest
 import socket
 import shutil
+import stat
 import struct
 import subprocess
 import time
@@ -32,6 +33,7 @@ from foris_controller.utils import RWLock
 SOCK_PATH = "/tmp/foris-controller-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
+SERVICE_SCRIPT_DIR_PATH = "/tmp/test_init/"
 
 
 class Locker(object):
@@ -217,3 +219,35 @@ config named 'named2'
     yield UCI_CONFIG_DIR_PATH
 
     shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)
+
+@pytest.fixture(scope="module")
+def service_scripts():
+    shutil.rmtree(SERVICE_SCRIPT_DIR_PATH, ignore_errors=True)
+    try:
+        os.makedirs(SERVICE_SCRIPT_DIR_PATH)
+    except IOError:
+        pass
+
+    fail_file = os.path.join(SERVICE_SCRIPT_DIR_PATH, 'fail')
+    with open(fail_file, 'w+') as f:
+        f.write("""#!/bin/sh
+echo failed $1 > %s
+echo FAILED 1>&2
+exit 1
+""" % os.path.join(SERVICE_SCRIPT_DIR_PATH, "result")
+        )
+    os.chmod(fail_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+    pass_file = os.path.join(SERVICE_SCRIPT_DIR_PATH, 'pass')
+    with open(pass_file, 'w+') as f:
+        f.write("""#!/bin/sh
+echo passed $1 > %s
+echo PASS
+exit 0
+""" % os.path.join(SERVICE_SCRIPT_DIR_PATH, "result")
+        )
+    os.chmod(pass_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+    yield SERVICE_SCRIPT_DIR_PATH
+
+    shutil.rmtree(SERVICE_SCRIPT_DIR_PATH, ignore_errors=True)

@@ -77,3 +77,16 @@ class UciTypeException(Exception):
         super(UciTypeException, self).__init__(
             "'%s' doesn't match any of required types %s" % (value, required_types)
         )
+
+
+class ServiceCmdFailed(Exception):
+    def __init__(self, service, cmd):
+        """ exception which is raised during service cmd
+
+        :param service: the name of the service
+        :type service: str
+        :param cmd: service command
+        :type cmd: str
+        """
+        super(ServiceCmdFailed, self).__init__(
+            "Calling '%s' for service '%s' failed." % (service, cmd))
