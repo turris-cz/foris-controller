@@ -1,0 +1,95 @@
+{
+    "oneOf": [
+        {
+            "description": "Get current language set in the web gui",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_language"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to get language",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_language"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "language": { "$def": "#/definitions/iso2country" }
+                    },
+                    "additionalProperties": false,
+                    "required": ["language"]
+                }
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Set language in the web gui",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["set_language"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "language": { "$def": "#/definitions/iso2country" }
+                    },
+                    "additionalProperties": false,
+                    "required": ["language"]
+                }
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to set language",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["set_language"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "List languages",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["list_languages"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to list languages",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["list_languages"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "languages": {
+                            "type": "array",
+                            "items": { "$def": "#/definitions/iso2country" },
+                            "minItems": 1
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["languages"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}

@@ -1,9 +1,4 @@
 {
-    "definitions": {
-        "iso2country": {
-            "type": "string", "minlength": 2, "maxlength": 2
-        }
-    },
     "oneOf": [
         {
             "description": "Get information whether specified user has registered the router",

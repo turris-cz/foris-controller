@@ -1,0 +1,7 @@
+{
+    "definitions": {
+        "iso2country": {
+            "type": "string", "minlength": 2, "maxlength": 2
+        }
+    }
+}

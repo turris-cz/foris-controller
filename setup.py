@@ -39,16 +39,22 @@ setup(
         'foris_controller_backends.files',
         'foris_controller_backends.services',
         'foris_controller_backends.uci',
+        'foris_controller_backends.web',
         'foris_controller_modules',
         'foris_controller_modules.about',
         'foris_controller_modules.about.handlers',
         'foris_controller_modules.data_collect',
         'foris_controller_modules.data_collect.handlers',
+        'foris_controller_modules.web',
+        'foris_controller_modules.web.handlers',
     ],
     package_data={
-        'foris_controller': ['schemas', 'schemas/*.json'],
+        'foris_controller': [
+            'schemas', 'schemas/*.json', 'schemas/definitions', "schemas/definitions/*.json"
+        ],
         'foris_controller_modules.about': ['schema', 'schema/*.json'],
         'foris_controller_modules.data_collect': ['schema', 'schema/*.json'],
+        'foris_controller_modules.web': ['schema', 'schema/*.json'],
     },
     scripts=['bin/foris-controller'],
     url='https://gitlab.labs.nic.cz/turris/foris-controller',
