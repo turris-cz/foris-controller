@@ -57,7 +57,12 @@ class OpenwrtServices(object):
         """
         script_path = os.path.join(self.service_scripts_path, service_name)
         logger.debug("Starting to call '%s %s'" % (script_path, cmd))
-        process = subprocess.Popen(script_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            process = subprocess.Popen(
+                [script_path, cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except OSError as e:
+            raise ServiceCmdFailed(
+                service_name, cmd, "unable to call '%s %s'" % (script_path, cmd))
         stdout, stderr = process.communicate()
         logger.debug("'%s %s' was finished" % (script_path, cmd))
         logger.debug("retcode: %d" % process.returncode)

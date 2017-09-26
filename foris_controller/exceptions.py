@@ -79,8 +79,36 @@ class UciTypeException(Exception):
         )
 
 
+class UciRecordNotFound(Exception):
+    def __init__(self, config, section=None, section_type=None, section_idx=None, option=None):
+        """ excecption which is raised when a field is not found within uci config
+
+        :param config: config name
+        :type config: str
+        :param section: uci section
+        :type section: str or None
+        :param section_type: uci section type
+        :type section_type: str or None
+        :param section_idx: uci section index
+        :type section_idx: int or None
+        :param option: uci section
+        :type option: str or None
+        """
+        uci_path = config
+        if section:
+            uci_path += ".%s" % section
+        elif section_type:
+            uci_path += ".@%s" % section_type
+            if section_idx is not None:
+                uci_path += "[%d]" % section_idx
+        if option:
+            uci_path += ".%s" % option
+
+        super(UciRecordNotFound, self).__init__("Uci record was not found '%s'." % uci_path)
+
+
 class ServiceCmdFailed(Exception):
-    def __init__(self, service, cmd):
+    def __init__(self, service, cmd, explanation=None):
         """ exception which is raised during service cmd
 
         :param service: the name of the service
@@ -88,5 +116,6 @@ class ServiceCmdFailed(Exception):
         :param cmd: service command
         :type cmd: str
         """
+        explanation = " (%s)" % explanation if explanation else ""
         super(ServiceCmdFailed, self).__init__(
-            "Calling '%s' for service '%s' failed." % (service, cmd))
+            "Calling '%s' for service '%s' failed.%s" % (cmd, service, explanation))

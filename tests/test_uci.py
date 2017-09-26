@@ -23,7 +23,7 @@ import re
 
 from collections import OrderedDict
 
-from foris_controller.exceptions import UciException, UciTypeException
+from foris_controller.exceptions import UciException, UciTypeException, UciRecordNotFound
 
 from .fixtures import lock_backend, uci_config_dir
 
@@ -307,13 +307,62 @@ def test_read(lock_backend, uci_config_dir):
     }
 
 
-def test_parse_bool(uci_config_dir):
+def test_bool(lock_backend, uci_config_dir):
+    TRUE = ["1", "on", "true", "yes", "enabled"]
+    FALSE = ["0", "off", "false", "no", "disabled"]
     uci = get_uci_module(lock_backend)
-    for value in ("1", "on", "true", "yes", "enabled"):
+    for value in TRUE:
         assert True is uci.parse_bool(value)
-    for value in ("0", "off", "false", "no", "disabled"):
+    for value in FALSE:
         assert False is uci.parse_bool(value)
 
     for value in ("", "adf", "ON", "OFF"):
         with pytest.raises(UciTypeException):
             uci.parse_bool(value)
+
+    for value in TRUE + FALSE:
+        uci.store_bool(value) == value
+
+    assert uci.store_bool(True) == "1"
+    assert uci.store_bool(False) == "0"
+
+
+def test_parse_read_data(lock_backend, uci_config_dir):
+    uci = get_uci_module(lock_backend)
+
+    backend_class = get_uci_module(lock_backend).UciBackend
+    with backend_class(uci_config_dir) as backend:
+        res1 = backend.read('test1')
+        res2 = backend.read('test2')
+
+    assert uci.get_config(res1, 'test1') == []
+    assert uci.get_section(res2,'test2', 'named1') == {'data': OrderedDict(), 'type': 'named', 'name': 'named1'}
+    assert uci.get_option_named(res2, 'test2', 'named2', 'option2') == 'xxx'
+    assert uci.get_sections_by_type(res2, 'test2', 'anonymous') == [
+        {'data': OrderedDict(), 'type': 'anonymous', 'name': None},
+        {
+            'data': OrderedDict([
+                ('option1', 'aeb bb'),
+                ('option2', 'xxx'),
+                ('list1', ['single item']),
+                ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
+                ('list3', ['itema', 'itemb']),
+            ]),
+            'type': 'anonymous', 'name': None
+        },
+    ]
+    assert uci.get_section_idx(res2, 'test2', 'anonymous', 0) == {'data': OrderedDict(), 'type': 'anonymous', 'name': None}
+    assert uci.get_option_anonymous(res2, 'test2', 'anonymous', 1, 'option2') == 'xxx'
+
+    with pytest.raises(UciRecordNotFound):
+        uci.get_config(res1, 'non_existing')
+    with pytest.raises(UciRecordNotFound):
+        uci.get_section(res2,'test2', 'non_existing')
+    with pytest.raises(UciRecordNotFound):
+        uci.get_option_named(res2, 'test2', 'named2', 'non_existing')
+    with pytest.raises(UciRecordNotFound):
+        uci.get_sections_by_type(res2, 'test2', 'non_existing')
+    with pytest.raises(UciRecordNotFound):
+        uci.get_section_idx(res2, 'test2', 'anonymous', 99)
+    with pytest.raises(UciRecordNotFound):
+        uci.get_option_anonymous(res2, 'test2', 'anonymous', 1, 'non_existing')

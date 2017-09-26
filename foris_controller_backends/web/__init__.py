@@ -21,8 +21,8 @@ import logging
 import glob
 import os
 
-from foris_controller_backends.uci import UciBackend
-from foris_controller.exceptions import UciException
+from foris_controller_backends.uci import UciBackend, get_option_named
+from foris_controller.exceptions import UciException, UciRecordNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +36,10 @@ class WebUciCommands(object):
         with UciBackend() as backend:
             data = backend.read("foris")
 
-        filtered = [
-            e for e in data["foris"]
-            if e["type"] == "config" and e["name"] == "settings" and 'lang' in e["data"]
-        ]
-        if filtered:
-            return filtered[0]["data"]["lang"]
-
-        return DEFAULT_LANGUAGE
+        try:
+            return get_option_named(data, "foris", "settings", "lang")
+        except UciRecordNotFound:
+            return DEFAULT_LANGUAGE
 
     def set_language(self, language):
         if language not in Languages.list_languages():

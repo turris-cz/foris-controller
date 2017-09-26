@@ -26,7 +26,7 @@ import subprocess
 from foris_controller.utils import RWLock
 
 from foris_controller.app import app_info
-from foris_controller.exceptions import UciException, UciTypeException
+from foris_controller.exceptions import UciException, UciTypeException, UciRecordNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,75 @@ def parse_bool(value):
     elif value in ("0", "off", "false", "no", "disabled"):
         return False
     raise UciTypeException(value, ['bool'])
+
+
+def store_bool(value):
+    if isinstance(value, bool):
+        return "1" if value else "0"
+    parse_bool(value)  # just perform type checking
+    return value
+
+
+def get_config(data, config):
+    if config not in data:
+        raise UciRecordNotFound(config=config)
+    return data[config]
+
+
+def get_section(data, config, section):
+    """
+    named section
+    """
+    res = get_config(data, config)
+    res = [
+        e for e in res
+        if e["name"] == section
+    ]
+    if not res:
+        raise UciRecordNotFound(config, section=section)
+
+    return res[0]  # only one section can be present (uci backend feature)
+
+
+def get_option_named(data, config, section, option):
+    res = get_section(data, config, section)
+    try:
+        res = res["data"][option]
+    except KeyError:
+        raise UciRecordNotFound(config, section=section, option=option)
+    return res
+
+
+def get_sections_by_type(data, config, section_type):
+    """
+    anonymous section
+    """
+    res = get_config(data, config)
+    res = [
+        e for e in data[config]
+        if e["type"] == section_type
+    ]
+    if not res:
+        raise UciRecordNotFound(config, section_type=section_type)
+    return res
+
+
+def get_section_idx(data, config, section_type, idx):
+    res = get_sections_by_type(data, config, section_type)
+    try:
+        res = res[idx]
+    except IndexError:
+        raise UciRecordNotFound(config, section_type=section_type, section_idx=idx)
+    return res
+
+
+def get_option_anonymous(data, config, section_type, idx, option):
+    res = get_section_idx(data, config, section_type, idx)
+    try:
+        res = res["data"][option]
+    except KeyError:
+        raise UciRecordNotFound(config, section_type=section_type, section_idx=idx, option=option)
+    return res
 
 
 class UciBackend(object):
