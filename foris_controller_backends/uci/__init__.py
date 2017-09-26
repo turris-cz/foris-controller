@@ -65,7 +65,6 @@ class UciBackend(object):
         return self
 
     def __exit__(self, exc_type, value, traceback):
-        logger.debug("UCI lock released.")
         if exc_type is None:
             if self.affected_configs:
                 self.commit()
@@ -73,6 +72,7 @@ class UciBackend(object):
         else:
             logger.error("Uci transaction terminated.")
         UciBackend.uci_lock.writelock.release()
+        logger.debug("UCI lock released.")
 
     def _run_uci_command(self, *args, **kwargs):
         """
