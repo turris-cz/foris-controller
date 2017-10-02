@@ -1,3 +1,11 @@
+0.5 (2017-10-02)
+----------------
+
+* dns module (several option regarding dns)
+* web module (language switch)
+* wrapper around system services (start, stop, reload, ...)
+* wrapper around uci command
+
 0.4 (2017-09-06)
 ----------------
 
