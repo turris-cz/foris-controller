@@ -45,9 +45,6 @@ class DnsModule(BaseModule):
         return {'result': self.handler.update_settings(**data)}
 
 
-Class = DnsModule
-
-
 @wrap_required_functions([
     'get_settings',
     'update_settings',

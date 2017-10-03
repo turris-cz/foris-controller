@@ -30,12 +30,12 @@ logger = logging.getLogger(__name__)
 
 from foris_controller.message_router import Router
 from foris_controller.app import app_info
-from foris_controller.utils import get_modules
+from foris_controller.utils import get_modules, get_module_class
 
 
 def _get_method_names_from_module(module):
-    """ Reads python module, checks for Class variable and reads all names of class functions
-        which starts with action_*
+    """ Reads python module, checks for a valid foris-controller module class
+        and reads all names of class functions which starts with action_*
 
     :param module: module to be examine
     :type module: module
@@ -43,10 +43,9 @@ def _get_method_names_from_module(module):
     :rtype: list of str
     """
 
-    module_class = getattr(module, "Class", None)
+    module_class = get_module_class(module)
 
     if not module_class:
-        # Class not found
         return None
 
     # read all names fucntions which starts with action_

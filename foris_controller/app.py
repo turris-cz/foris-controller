@@ -21,7 +21,7 @@ import os
 import logging
 
 
-from foris_controller.utils import get_modules, get_handler
+from foris_controller.utils import get_modules, get_handler, get_module_class
 
 
 logger = logging.getLogger(__name__)
@@ -73,12 +73,18 @@ def prepare_app_modules(base_handler_class):
         handler = get_handler(module, base_handler_class)
         if not handler:
             logger.error(
-                "Failed to find handler '%s' for base '%s'. Skipping module."
+                "Failed to find a handler '%s' for base '%s'. Skipping module."
                 % (module_name, base_handler_class.__name__)
             )
             continue
+        module_class = get_module_class(module)
+        if not module_class:
+            logger.error(
+                "Failed to find a module class for module '%s'. Skipping module." % (module_name)
+            )
+            continue
 
-        app_info["modules"][module_name] = module.Class(handler)
+        app_info["modules"][module_name] = module_class(handler)
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     logger.debug("Modules loaded %s." % app_info["modules"].keys())

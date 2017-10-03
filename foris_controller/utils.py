@@ -24,6 +24,8 @@ import pkgutil
 
 from functools import wraps
 
+from .module_base import BaseModule
+
 
 class RWLock(object):
     """ Custom implementation of RWLock
@@ -157,8 +159,7 @@ def get_modules(filter_modules):
         if filter_modules and mod_name not in filter_modules:
             continue
         module = importlib.import_module("foris_controller_modules.%s" % mod_name)
-        if hasattr(module, "Class"):
-            res.append((mod_name, module))
+        res.append((mod_name, module))
     return res
 
 
@@ -181,3 +182,14 @@ def get_handler(module, base_handler_class):
             if handler_class is not base_handler_class and \
                     issubclass(handler_class, base_handler_class):
                 return handler_class()
+
+
+def get_module_class(module):
+    """ Returns class of the foris-controller module.
+        When a multiple suitable classes are present the first one is returned
+
+    :param module: module which should be examined
+    """
+    for _, module_class in inspect.getmembers(module, inspect.isclass):
+        if module_class is not BaseModule and issubclass(module_class, BaseModule):
+            return module_class

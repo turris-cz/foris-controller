@@ -36,9 +36,6 @@ class DataCollectModule(BaseModule):
         return self.handler.get_registered(data["email"], data["language"])
 
 
-Class = DataCollectModule
-
-
 @wrap_required_functions([
     'get_registered',
 ])

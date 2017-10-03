@@ -54,9 +54,6 @@ class WebModule(BaseModule):
         return {'languages': self.handler.list_languages()}
 
 
-Class = WebModule
-
-
 @wrap_required_functions([
     'get_language',
     'set_language',

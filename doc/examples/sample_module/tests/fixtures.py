@@ -68,7 +68,8 @@ class Infrastructure(object):
             kwargs['stdout'] = devnull
 
         self.server = subprocess.Popen([
-            "foris-controller", "-d", "-b", backend_name, name, "--path", self.sock_path
+            "foris-controller", "-d", "-m", "sample", "-b",
+            backend_name, name, "--path", self.sock_path
         ], **kwargs)
 
     def exit(self):

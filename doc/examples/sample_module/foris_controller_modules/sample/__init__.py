@@ -32,9 +32,6 @@ class SampleModule(BaseModule):
         return res
 
 
-Class = SampleModule
-
-
 @wrap_required_functions([
     'get_sample',
 ])

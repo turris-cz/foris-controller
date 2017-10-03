@@ -72,9 +72,6 @@ class AboutModule(BaseModule):
         return self.handler.get_contract_status()
 
 
-Class = AboutModule
-
-
 @wrap_required_functions([
     'get_device_info',
     'get_serial',
