@@ -1,0 +1,99 @@
+digraph G{
+	newrank=true;
+	rankdir=LR;
+	label="Foris controller - Data flow";
+	labelloc="t";
+	compound=true;
+
+
+	subgraph clusterA {
+		label="Buses";
+		ubus;
+	};
+	message_router[label="Message Router"];
+
+	subgraph clusterB {
+		label="Foris Schema";
+		schema1[label="dns.json", style=filled, fillcolor="lightgreen"];
+		schema2[label="about.json", style=filled, fillcolor="lightblue"];
+	};
+
+	subgraph clusterC {
+		label="Modules";
+		subgraph clusterD {
+			label="";
+			style=filled;
+			fillcolor="lightgreen";
+			module1[label="dns"];
+			subgraph clusterDA {
+				label="Handlers";
+				openwrt1[label="OpenWRT"];
+				debian1[label="Debian"];
+			}
+			module1->openwrt1;
+			module1->debian1;
+		};
+		subgraph clusterE {
+			label="";
+			style=filled;
+			fillcolor="lightblue";
+			module2[label="about"];
+			subgraph clusterDB {
+				label="Handlers";
+				openwrt2[label="OpenWRT"];
+				debian2[label="Debian"];
+			};
+			module2->openwrt2;
+			module2->debian2;
+		};
+	};
+
+	subgraph clusterF {
+		label="Backends";
+		cmdline;
+		file;
+		uci;
+		augeas;
+		systemd;
+		init_d[label="init.d"];
+		backend1[label="dns", style=filled, fillcolor="lightgreen"];
+		backend2[label="about", style=filled, fillcolor="lightblue"];
+	};
+
+	bus_msg[label="foris-controller-about.get \l{'data': {}}\l", shape="box"];
+	router_msg[label="{\l  'module': 'about',\l  'kind': 'request',\l  'action':  'get', \l  'data': {} \l}\l", shape="box"]
+	module_msg[label="{\l  'action': 'get', \l  'data': {} \l}\l", shape="box"]
+	backend_msg[label="get_temperature() \lget_serial_number()\l ...\l", shape="box"]
+	module_msg_back[label="{\l  'action': 'get', \l  'data': { \l     'temperature': 28, \l     'serial_number': 'XXX', \l     ...\l  } \l}\l", shape="box"]
+	router_msg_back[label="{\l  'module': 'about',\l  'kind': 'reply',\l  'action': 'get', \l  'data': { \l     'temperature': 28, \l     'serial_number': 'XXX', \l     ...\l  } \l}\l", shape="box"]
+	bus_msg_back[label="foris-controller-about.get \l{\l  'data': {\l    'temperature': 28, \l    'serial_number': 'XXX', \l    ...\l  }\l}\l", shape="box"];
+	
+	bus_msg -> router_msg;
+	router_msg -> module_msg;
+	module_msg -> backend_msg;
+	backend_msg -> module_msg_back;
+	module_msg_back -> router_msg_back;
+	router_msg_back -> bus_msg_back;
+
+	client -> ubus;
+	ubus -> message_router;
+	schema2 -> message_router[ltail=clusterB];
+	{rank=same schema1 schema2 message_router}
+	message_router->module1;
+	message_router->module2;
+	openwrt1->backend1;
+	debian1->backend1;
+	openwrt2->backend2;
+	debian2->backend2;
+	backend1 -> uci;
+	backend1 -> augeas;
+	backend1 -> systemd;
+	backend1 -> init_d;
+	backend2 -> file;
+	backend2 -> cmdline;
+
+	{rank=same bus_msg ubus bus_msg_back}
+	{rank=same router_msg message_router router_msg_back}
+	{rank=same module_msg module1 module2 module_msg_back}
+	{rank=same backend_msg backend1 backend2}
+}
