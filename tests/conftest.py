@@ -25,9 +25,9 @@ def pytest_addoption(parser):
         help=("Set test backend here. available values = (mock, openwrt)")
     )
     parser.addoption(
-        "--suppress-output", action="store_true",
+        "--debug-output", action="store_true",
         default=False,
-        help=("Whether to suppress the output of foris-controller cmd")
+        help=("Whether show output of foris-controller cmd")
     )
 
 

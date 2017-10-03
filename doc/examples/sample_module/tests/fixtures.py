@@ -42,7 +42,7 @@ def ubusd_test():
 
 
 class Infrastructure(object):
-    def __init__(self, name, backend_name, suppress_output=False):
+    def __init__(self, name, backend_name, debug_output=False):
         try:
             os.unlink(SOCK_PATH)
         except:
@@ -62,7 +62,7 @@ class Infrastructure(object):
                 time.sleep(0.3)
 
         kwargs = {}
-        if suppress_output:
+        if not debug_output:
             devnull = open(os.devnull, 'wb')
             kwargs['stderr'] = devnull
             kwargs['stdout'] = devnull
@@ -115,7 +115,7 @@ def backend(backend_param):
 @pytest.fixture(params=["unix-socket", "ubus"], scope="module")
 def infrastructure(request, backend):
     instance = Infrastructure(
-        request.param, backend, request.config.getoption("--suppress-output"))
+        request.param, backend, request.config.getoption("--debug-output"))
     yield instance
     instance.exit()
 
@@ -123,6 +123,6 @@ def infrastructure(request, backend):
 @pytest.fixture(scope="module")
 def infrastructure_unix_socket(request, backend):
     instance = Infrastructure(
-        "unix-socket", backend, request.config.getoption("--suppress-output"))
+        "unix-socket", backend, request.config.getoption("--debug-output"))
     yield instance
     instance.exit()
