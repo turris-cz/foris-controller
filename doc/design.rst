@@ -1,7 +1,14 @@
 Foris Controller
 ================
 Read messages from message bus.
-Stores and obtains data from backends (uci/augeas).
+And performs operation based on these commands.
+e.g. updating dns settings, calling updater
+
+Goals
+-----
+* replacible message bus (ubus, dbus, ...)
+* replacible backend (uci, augeas, ...)
+* modularity (making python packages as modules)
 
 Language
 --------
@@ -10,10 +17,10 @@ Python (2/3 or both)
 Componets
 ---------
 
-Listener
-########
-* listens to bus and recieves/sends messages back to bus
-* should be replacible ubus/dbus ...
+Bus
+###
+* listens to bus and recieves/sends messages
+* replacible
 * it might change to content of the message (e.g. add / remove unique messsage-id)
 
 Message Router
@@ -32,7 +39,7 @@ Modules
 Handlers
 ########
 * system dependent (openwrt/mock)
-* provide interface between modules and backend system
+* calls appropriate backend functions
 
 Backends
 ########
