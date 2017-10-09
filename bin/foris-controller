@@ -24,7 +24,7 @@ import logging
 
 from logging.handlers import SysLogHandler
 
-from foris_controller.app import set_app_info, prepare_app_modules
+from foris_controller.app import set_app_info, prepare_app_modules, prepare_notification_sender
 
 logger = logging.getLogger("foris_controller")
 
@@ -42,6 +42,8 @@ if __name__ == "__main__":
     )
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
     unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
+    unix_parser.add_argument(
+        "--notifications-path", default='/tmp/foris-controller-notifications.soc')
 
     parser.add_argument(
         "-b", "--backend", type=str, choices=["mock", "openwrt"],
@@ -73,6 +75,20 @@ if __name__ == "__main__":
         logger.warning("Failed to initialize syslog handler.")
 
     logger.info("Foris controller is starting.")
+    if options.bus == "ubus":
+        from foris_controller.buses.ubus import UbusListener, UbusNotificationSender
+        logger.info("Using ubus to recieve commands.")
+        server = UbusListener(options.path)
+        prepare_notification_sender(UbusNotificationSender, options.path)
+
+    elif options.bus == "unix-socket":
+        from foris_controller.buses.unix_socket import (
+            UnixSocketListener, UnixSocketNotificationSender
+        )
+        logger.info("Using unix-socket to recieve commands.")
+        server = UnixSocketListener(options.path)
+        prepare_notification_sender(UnixSocketNotificationSender, options.notifications_path)
+
     if options.backend == "openwrt":
         from foris_controller.handler_base import BaseOpenwrtHandler
         logger.info("Using OpenWRT config backend.")
@@ -83,16 +99,6 @@ if __name__ == "__main__":
         prepare_app_modules(BaseMockHandler)
     else:
         raise NotImplementedError("Backend '%s' is not implemented" % options.backend)
-
-    if options.bus == "ubus":
-        from foris_controller.buses.ubus import UbusListener
-        logger.info("Using ubus to recieve commands.")
-        server = UbusListener(options.path)
-
-    elif options.bus == "unix-socket":
-        from foris_controller.buses.unix_socket import UnixSocketListener
-        logger.info("Using unix-socket to recieve commands.")
-        server = UnixSocketListener(options.path)
 
     logger.debug("Entering main loop.")
     server.serve_forever()

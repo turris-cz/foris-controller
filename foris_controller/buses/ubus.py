@@ -111,7 +111,10 @@ def ubus_listener_worker(socket_path, module_name, module):
     :param module: the module which will be handled in this function
     :type module: module
     """
-    ubus.connect(socket_path)
+    if not ubus.get_connected():
+        logger.debug("Connecting to ubus.")
+        ubus.connect(socket_path)
+
     prctl.set_pdeathsig(signal.SIGKILL)
     _register_object(module_name, module)
     try:
@@ -129,7 +132,9 @@ def ubus_all_in_one_worker(socket_path, modules_list):
     :param modules_list: list of module_name and module
     :type modules_list: list of (str, module)
     """
-    ubus.connect(socket_path)
+    if not ubus.get_connected():
+        logger.debug("Connecting to ubus.")
+        ubus.connect(socket_path)
     prctl.set_pdeathsig(signal.SIGKILL)
     for module_name, module in modules_list:
         _register_object(module_name, module)
@@ -183,3 +188,45 @@ class UbusListener(object):
             worker.join()
 
         logger.warning("All workers finished.")
+
+
+class UbusNotificationSender(object):
+
+    def __init__(self, socket_path):
+        """ Inits object which handles sending notification via ubus
+
+        :param socket_path: path to ubus socket
+        :type socket_path: str
+        """
+        self.socket_path = socket_path
+
+    def _validate(self, msg, validator):
+        logger.debug("Starting to validate notification.")
+        from jsonschema import ValidationError
+        try:
+            validator.validate(msg)
+        except ValidationError:
+            validator.validate_verbose(msg)
+        logger.debug("Notification validation passed.")
+
+    def notify(self, module, action, data, validator=None):
+        if not ubus.get_connected():
+            logger.debug("Connecting to ubus.")
+            ubus.connect(self.socket_path)
+
+        object_name = 'foris-controller-%s' % module
+        logger.debug(
+            "Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data))
+
+        if validator:
+            self._validate(
+                {
+                    "module": module,
+                    "kind": "notification",
+                    "action": action,
+                    "data": data,
+                },
+                validator,
+            )
+
+        ubus.send(object_name, {"action": action, "data": data})

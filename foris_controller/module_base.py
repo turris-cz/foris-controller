@@ -17,6 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import types
+
 
 class UnknownAction(Exception):
     pass
@@ -24,13 +26,17 @@ class UnknownAction(Exception):
 
 class BaseModule(object):
 
-    def __init__(self, handler):
+    def __init__(self, handler, notify):
         """ Inits base module (sets the handler)
 
         :param handler: handler to be set
         :type handler: handler instance
+        :param notify: a function to send notifications back to bus
+        :type notify: callable
         """
         self.handler = handler
+        # Add a bound method (first arg of the callable should be the instance)
+        self.notify = types.MethodType(notify, self)
 
     def perform_action(self, action, data):
         """ Perfoms the specified action a returns result

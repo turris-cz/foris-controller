@@ -60,7 +60,7 @@ setup(
         'foris_controller_modules.dns': ['schema', 'schema/*.json'],
         'foris_controller_modules.web': ['schema', 'schema/*.json'],
     },
-    scripts=['bin/foris-controller'],
+    scripts=['bin/foris-controller', "bin/foris-notify"],
     url='https://gitlab.labs.nic.cz/turris/foris-controller',
     license='COPYING',
     description=DESCRIPTION,

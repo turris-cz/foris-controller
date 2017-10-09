@@ -28,9 +28,12 @@ import struct
 import subprocess
 import time
 
+from multiprocessing import Process, Queue, Value, Lock
+
 from foris_controller.utils import RWLock
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
+NOTIFICATION_SOCK_PATH = "/tmp/foris-controller-notifications-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 SERVICE_SCRIPT_DIR_PATH = "/tmp/test_init/"
@@ -64,6 +67,71 @@ def ubusd_test():
         pass
 
 
+def ubus_notification_listener(state, notification_queue, notification_queue_lock):
+    import prctl
+    import signal
+    prctl.set_pdeathsig(signal.SIGKILL)
+    import ubus
+    ubus.connect(UBUS_PATH)
+
+    def handler(module, data):
+        module_name = module.lstrip("foris-controller-")
+        with notification_queue_lock:
+            notification_queue.put({
+                "module": module_name,
+                "kind": "notification",
+                "action": data["action"],
+                "data": data["data"],
+            })
+
+    ubus.listen(("foris-controller-*", handler))
+    first = True
+    while True:
+        ubus.loop(200)
+        if first:
+            with state.get_lock():
+                if state.value == 0:
+                    state.value = 1
+            first = False
+
+        if state.value == 2:
+            break
+
+        # obtain lock to avoid starvation
+        with notification_queue_lock:
+            pass
+
+
+def unix_notification_listener(state, notification_queue, notification_queue_lock):
+    import prctl
+    import signal
+    prctl.set_pdeathsig(signal.SIGKILL)
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        os.unlink(NOTIFICATION_SOCK_PATH)
+    except OSError:
+        if os.path.exists(NOTIFICATION_SOCK_PATH):
+            raise
+    sock.bind(NOTIFICATION_SOCK_PATH)
+    sock.listen(1)
+    with state.get_lock():
+        if state.value == 0:
+            state.value = 1
+    while True:
+        connection, client_address = sock.accept()
+        while True:
+            length_raw = connection.recv(4)
+            if len(length_raw) != 4:
+                continue
+            length = struct.unpack("I", length_raw)[0]
+            data = connection.recv(length)
+            with notification_queue_lock:
+                notification_queue.put(json.loads(data))
+
+        if state.value == 2:
+            break
+
+
 class Infrastructure(object):
     def __init__(self, name, backend_name, debug_output=False):
         try:
@@ -90,14 +158,48 @@ class Infrastructure(object):
             kwargs['stderr'] = devnull
             kwargs['stdout'] = devnull
 
-        self.server = subprocess.Popen([
+        self._state = Value('i', 0)
+        self._state.value = 0
+        self._notification_queue = Queue()
+        self._notification_queue_lock = Lock()
+
+        if name == "unix-socket":
+            self.listener = Process(
+                target=unix_notification_listener, args=(
+                    self._state, self._notification_queue, self._notification_queue_lock
+                )
+            )
+            self.listener.start()
+        elif name == "ubus":
+            self.listener = Process(
+                target=ubus_notification_listener, args=(
+                    self._state, self._notification_queue, self._notification_queue_lock
+                )
+            )
+            self.listener.start()
+
+        while True:
+            if self._state.value == 1:
+                break
+            time.sleep(0.05)
+
+        args = [
             "bin/foris-controller",
             "-m", ",".join(["about", "data_collect", "web", "dns"]),
             "-d", "-b", backend_name, name, "--path", self.sock_path
-        ], **kwargs)
+        ]
+
+        if name == "unix-socket":
+            args.append("--notifications-path")
+            args.append(NOTIFICATION_SOCK_PATH)
+
+        self.server = subprocess.Popen(args, **kwargs)
 
     def exit(self):
         self.server.kill()
+        with self._state.get_lock():
+            self._state.value = 2
+        self.listener.terminate()
 
     def process_message(self, data):
         if self.name == "unix-socket":
@@ -129,6 +231,15 @@ class Infrastructure(object):
             return res[0]
 
         raise NotImplementedError()
+
+    def last_notification(self):
+        while True:
+            try:
+                with self._notification_queue_lock:
+                    data = self._notification_queue.get(timeout=0.2)
+                    return data
+            except:
+                pass
 
 
 @pytest.fixture(scope="module")
@@ -164,6 +275,7 @@ def locker_instance(request):
         output = manager.list()
         locker = Locker(multiprocessing, multiprocessing.Process, output)
     yield locker
+
 
 @pytest.fixture(params=["threading", "multiprocessing"], scope="function")
 def lock_backend(request):

@@ -42,6 +42,9 @@ class DnsModule(BaseModule):
         :returns: result of the update {'result': '..'}
         :rtype: dict
         """
+        res = self.handler.update_settings(**data)
+        if res:
+            self.notify("update_settings", data)
         return {'result': self.handler.update_settings(**data)}
 
 

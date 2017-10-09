@@ -90,6 +90,23 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Notification to set language",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["set_language"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "language": { "$def": "#/definitions/iso2country" }
+                    },
+                    "additionalProperties": false,
+                    "required": ["language"]
+                }
+            },
+            "additionalProperties": false
         }
     ]
 }

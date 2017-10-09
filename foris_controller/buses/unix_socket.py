@@ -20,6 +20,7 @@
 import json
 import logging
 import os
+import socket
 import struct
 import sys
 
@@ -100,3 +101,39 @@ class UnixSocketListener(ThreadingMixIn, UnixStreamServer):
             pass
 
         UnixStreamServer.__init__(self, socket_path, UnixSocketHandler)
+
+
+class UnixSocketNotificationSender(object):
+
+    def __init__(self, socket_path):
+        """ Inits object which handles sending notification via unix-socket
+
+        :param socket_path: path to ubus socket
+        :type socket_path: str
+        """
+        self.socket_path = socket_path
+        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.socket.connect(socket_path)
+
+    def _validate(self, msg, validator):
+        logger.debug("Starting to validate notification.")
+        from jsonschema import ValidationError
+        try:
+            validator.validate(msg)
+        except ValidationError:
+            validator.validate_verbose(msg)
+        logger.debug("Notification validation passed.")
+
+    def notify(self, module, action, data, validator=None):
+        msg = {
+            "module": module,
+            "kind": "notification",
+            "action": action,
+            "data": data,
+        }
+        if validator:
+            self._validate(msg, validator)
+        notification = json.dumps(msg).encode("utf8")
+        notification_length = struct.pack("I", len(notification))
+        logger.debug("Sending notification (len=%d) %s" % (len(notification), str(notification)))
+        self.socket.send(notification_length + notification)

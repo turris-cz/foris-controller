@@ -42,7 +42,10 @@ class WebModule(BaseModule):
         :returns: current language {'result': true}
         :rtype: dict
         """
-        return {'result': self.handler.set_language(data['language'])}
+        res = self.handler.set_language(data['language'])
+        if res:
+            self.notify("set_language", data)
+        return {'result': res}
 
     def action_list_languages(self, data):
         """ Returns a list of available languages

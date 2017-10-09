@@ -193,3 +193,25 @@ def get_module_class(module):
     for _, module_class in inspect.getmembers(module, inspect.isclass):
         if module_class is not BaseModule and issubclass(module_class, BaseModule):
             return module_class
+
+
+def get_validator_dirs(filter_modules):
+    """ Returns schema and definition dirs for validator
+    :param filter_modules: use only modules present in this list
+    """
+
+    # use root schema dir
+    schema_dirs = [
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas"),
+    ]
+
+    # and global definitions
+    definition_dirs = [
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions"),
+    ]
+
+    # load modules dirs
+    for module_name, module in get_modules(filter_modules):
+        schema_dirs.append(os.path.join(module.__path__[0], "schema"))
+
+    return schema_dirs, definition_dirs

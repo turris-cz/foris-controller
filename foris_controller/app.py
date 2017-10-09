@@ -21,7 +21,7 @@ import os
 import logging
 
 
-from foris_controller.utils import get_modules, get_handler, get_module_class
+from foris_controller.utils import get_modules, get_handler, get_module_class, get_validator_dirs
 
 
 logger = logging.getLogger(__name__)
@@ -50,10 +50,20 @@ def set_app_info(program_options):
         app_info["ubus_single_process"] = program_options.single
 
 
+def _gen_notify(module_name):
+    """ Generator for notify function which wrapps module name inside the notify call
+    """
+    def notify(self, action, data):
+        self.logger.debug(
+            "New notification (module=%s, action=%s, data=%s)" % (module_name, action, data))
+        app_info["notification_sender"].notify(module_name, action, data, app_info["validator"])
+    return notify
+
+
 def prepare_app_modules(base_handler_class):
     """ updates app_info dictionary with loaded foris-controller modules
 
-    :param base_handler_class: handler class to be used to initialize the moudles
+    :param base_handler_class: handler class to be used to initialize the modules
     :type base_handler_class: class
     """
     app_info["modules"] = {}
@@ -84,9 +94,33 @@ def prepare_app_modules(base_handler_class):
             )
             continue
 
-        app_info["modules"][module_name] = module_class(handler)
+        app_info["modules"][module_name] = module_class(handler, _gen_notify(module_name))
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     logger.debug("Modules loaded %s." % app_info["modules"].keys())
     from foris_schema import ForisValidator
     app_info["validator"] = ForisValidator(schema_dirs, definition_dirs)
+
+
+def set_validator(filter_modules):
+    """ updates app_info variable with validator object
+    :param filter_modules: use only specific modules in the validator
+    :type filter_modules: list of str
+    """
+    global app_info
+    from foris_schema import ForisValidator
+    app_info["validator"] = ForisValidator(*get_validator_dirs(filter_modules))
+
+
+def prepare_notification_sender(sender_class, *args, **kwargs):
+    """ adds notification sender to app_info variable
+
+    :param sender_class: class which will be used for sending notification
+    :type sender_class: type
+    :param args: positional arguments
+    :type args: iterable
+    :param kwargs: named arguments
+    :type kwargs: dict
+    """
+    global app_info
+    app_info["notification_sender"] = sender_class(*args, **kwargs)
