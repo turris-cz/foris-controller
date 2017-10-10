@@ -230,3 +230,7 @@ class UbusNotificationSender(object):
             )
 
         ubus.send(object_name, {"action": action, "data": data})
+
+    def disconnect(self):
+        logger.debug("Disconnecting from ubus")
+        ubus.disconnect()

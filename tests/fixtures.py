@@ -26,7 +26,14 @@ import shutil
 import stat
 import struct
 import subprocess
+import sys
 import time
+
+if sys.version_info < (3, 0):
+    import SocketServer
+else:
+    import socketserver
+    SocketServer = socketserver
 
 from multiprocessing import Process, Queue, Value, Lock
 
@@ -105,31 +112,36 @@ def ubus_notification_listener(state, notification_queue, notification_queue_loc
 def unix_notification_listener(state, notification_queue, notification_queue_lock):
     import prctl
     import signal
+    from threading import Lock
+    lock = Lock()
     prctl.set_pdeathsig(signal.SIGKILL)
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
     try:
         os.unlink(NOTIFICATION_SOCK_PATH)
     except OSError:
         if os.path.exists(NOTIFICATION_SOCK_PATH):
             raise
-    sock.bind(NOTIFICATION_SOCK_PATH)
-    sock.listen(1)
+
+    class Server(SocketServer.ThreadingMixIn, SocketServer.UnixStreamServer):
+        pass
+
+    class Handler(SocketServer.StreamRequestHandler):
+        def handle(self):
+            while True:
+                length_raw = self.rfile.read(4)
+                if len(length_raw) != 4:
+                    break
+                length = struct.unpack("I", length_raw)[0]
+                data = self.rfile.read(length)
+                with lock:
+                    with notification_queue_lock:
+                        notification_queue.put(json.loads(data))
+
+    server = Server(NOTIFICATION_SOCK_PATH, Handler)
     with state.get_lock():
         if state.value == 0:
             state.value = 1
-    while True:
-        connection, client_address = sock.accept()
-        while True:
-            length_raw = connection.recv(4)
-            if len(length_raw) != 4:
-                continue
-            length = struct.unpack("I", length_raw)[0]
-            data = connection.recv(length)
-            with notification_queue_lock:
-                notification_queue.put(json.loads(data))
-
-        if state.value == 2:
-            break
+    server.serve_forever()
 
 
 class Infrastructure(object):
@@ -192,6 +204,9 @@ class Infrastructure(object):
         if name == "unix-socket":
             args.append("--notifications-path")
             args.append(NOTIFICATION_SOCK_PATH)
+            self.notification_sock_path = NOTIFICATION_SOCK_PATH
+        else:
+            self.notification_sock_path = self.sock_path
 
         self.server = subprocess.Popen(args, **kwargs)
 
@@ -233,13 +248,21 @@ class Infrastructure(object):
         raise NotImplementedError()
 
     def last_notification(self):
+        counter = 0
         while True:
+            counter += 1
             try:
                 with self._notification_queue_lock:
                     data = self._notification_queue.get(timeout=0.2)
                     return data
             except:
                 pass
+            if counter > 30:
+                break
+
+    def notification_empty(self):
+        with self._notification_queue_lock:
+                return self._notification_queue.empty()
 
 
 @pytest.fixture(scope="module")

@@ -46,6 +46,14 @@ def test_set(infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'web'
     }
+    assert infrastructure.last_notification() == {
+        u"module": u"web",
+        u"action": u"set_language",
+        u"kind": u"notification",
+        u"data": {
+            u"language": u"cs",
+        }
+    }
 
     res = infrastructure.process_message({
         "module": "web",

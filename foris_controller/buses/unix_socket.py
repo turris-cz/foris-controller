@@ -137,3 +137,8 @@ class UnixSocketNotificationSender(object):
         notification_length = struct.pack("I", len(notification))
         logger.debug("Sending notification (len=%d) %s" % (len(notification), str(notification)))
         self.socket.send(notification_length + notification)
+
+
+    def disconnect(self):
+        logger.debug("Disconnecting from unix socket")
+        self.socket.close()

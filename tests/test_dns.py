@@ -106,6 +106,16 @@ def test_update_and_get_settings(infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
+    assert infrastructure.last_notification() == {
+        u"module": u"dns",
+        u"action": u"update_settings",
+        u"kind": u"notification",
+        u"data": {
+            u"forwarding_enabled": False,
+            u"dnssec_enabled": False,
+            u"dns_from_dhcp_enabled": False,
+        }
+    }
     res = infrastructure.process_message({
         "module": "dns",
         "action": "get_settings",
@@ -125,6 +135,17 @@ def test_update_and_get_settings(infrastructure, ubusd_test):
             "dns_from_dhcp_domain": "test",
         }
     })
+    assert infrastructure.last_notification() == {
+        u"module": u"dns",
+        u"action": u"update_settings",
+        u"kind": u"notification",
+        u"data": {
+            u"forwarding_enabled": True,
+            u"dnssec_enabled": True,
+            u"dns_from_dhcp_enabled": True,
+            u"dns_from_dhcp_domain": u"test",
+        }
+    }
     assert res == {
         u'action': u'update_settings',
         u'data': {u'result': True},
