@@ -29,6 +29,7 @@ class SampleModule(BaseModule):
     def action_get(self, data):
         res = {}
         res.update(self.handler.get_sample())
+        self.notify("get", {"msg": "get triggered"})
         return res
 
 

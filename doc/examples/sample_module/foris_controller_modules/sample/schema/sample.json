@@ -26,6 +26,24 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Notification in get action in sample module",
+            "properties": {
+                "module": {"enum": ["sample"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["get"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "msg": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["msg"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }
