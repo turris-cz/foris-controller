@@ -69,5 +69,6 @@ class Languages(object):
         """
 
         return [DEFAULT_LANGUAGE] + [
-            os.path.basename(e).rstrip(".py") for e in glob.glob(Languages.INSTALLED_LANG_MATCH)
+            os.path.basename(e)[:len(".py") + 1]
+            for e in glob.glob(Languages.INSTALLED_LANG_MATCH)
         ]

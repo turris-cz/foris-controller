@@ -56,7 +56,7 @@ def _get_method_names_from_module(module):
     ]
 
     # remove action_ prefix
-    return [e.lstrip("action_") for e in res]
+    return [e[len("action_"):] for e in res]
 
 
 def _register_object(module_name, module):

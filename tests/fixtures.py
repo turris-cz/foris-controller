@@ -82,7 +82,7 @@ def ubus_notification_listener(state, notification_queue, notification_queue_loc
     ubus.connect(UBUS_PATH)
 
     def handler(module, data):
-        module_name = module.lstrip("foris-controller-")
+        module_name = module[len("foris-controller-"):]
         with notification_queue_lock:
             notification_queue.put({
                 "module": module_name,
