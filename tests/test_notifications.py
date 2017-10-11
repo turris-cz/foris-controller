@@ -63,11 +63,13 @@ def notify_api(infrastructure):
 
 
 def test_notify_cmd(infrastructure, ubusd_test):
+    notifications = infrastructure.get_notifications()
     retval, stdout, stderr = notify_cmd(
         infrastructure, "web", "set_language", {"language": "en"}, True)
     assert retval == 0
 
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
         u"kind": u"notification",
@@ -78,13 +80,14 @@ def test_notify_cmd(infrastructure, ubusd_test):
         infrastructure, "web", "set_language", {"language": "en", "invalid": True}, True)
     assert retval == 1
     assert u"ValidationError" in stderr
-    assert infrastructure.notification_empty()
+    assert notifications == infrastructure.get_notifications()
 
     retval, stdout, stderr = notify_cmd(
         infrastructure, "web", "set_language", {"language": "en", "invalid": True}, False)
     assert retval == 0
 
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
         u"kind": u"notification",
@@ -93,11 +96,11 @@ def test_notify_cmd(infrastructure, ubusd_test):
 
 
 def test_notify_api(infrastructure, ubusd_test, notify_api):
-    import time
     notify = notify_api
+    notifications = infrastructure.get_notifications()
     notify("web", "set_language", {"language": "en"}, True)
-    time.sleep(0.2)
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
         u"kind": u"notification",
@@ -107,10 +110,11 @@ def test_notify_api(infrastructure, ubusd_test, notify_api):
     from jsonschema import ValidationError
     with pytest.raises(ValidationError):
         notify("web", "set_language", {"language": "en", "invalid": True}, True)
+    assert notifications == infrastructure.get_notifications()
 
     notify("web", "set_language", {"language": "en", "invalid": True}, False)
-    time.sleep(0.2)
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
         u"kind": u"notification",

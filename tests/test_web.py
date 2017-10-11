@@ -34,6 +34,7 @@ def test_get(infrastructure, ubusd_test):
 
 
 def test_set(infrastructure, ubusd_test):
+    old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "web",
         "action": "set_language",
@@ -46,7 +47,7 @@ def test_set(infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'web'
     }
-    assert infrastructure.last_notification() == {
+    assert infrastructure.get_notifications(old_notifications)[-1] == {
         u"module": u"web",
         u"action": u"set_language",
         u"kind": u"notification",

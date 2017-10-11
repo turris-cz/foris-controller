@@ -33,6 +33,7 @@ def test_get_settings(infrastructure, ubusd_test):
 
 
 def test_update_settings(infrastructure, ubusd_test):
+    notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
         "action": "update_settings",
@@ -49,7 +50,8 @@ def test_update_settings(infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",
         u"kind": u"notification",
@@ -70,7 +72,8 @@ def test_update_settings(infrastructure, ubusd_test):
             "dns_from_dhcp_domain": "test",
         }
     })
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",
         u"kind": u"notification",
@@ -90,6 +93,7 @@ def test_update_settings(infrastructure, ubusd_test):
 
 
 def test_update_and_get_settings(infrastructure, ubusd_test):
+    notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
         "action": "update_settings",
@@ -106,7 +110,8 @@ def test_update_and_get_settings(infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",
         u"kind": u"notification",
@@ -135,7 +140,8 @@ def test_update_and_get_settings(infrastructure, ubusd_test):
             "dns_from_dhcp_domain": "test",
         }
     })
-    assert infrastructure.last_notification() == {
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",
         u"kind": u"notification",
