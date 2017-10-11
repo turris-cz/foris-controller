@@ -55,6 +55,10 @@ if __name__ == "__main__":
         help="use only modules from this comma separated list",
         metavar="MODULE1[,MODULE2[,...]]]"
     )
+    parser.add_argument(
+        "-l", "--log-file", default=None,
+        help="file where the logs will we appended", required=False
+    )
 
     options = parser.parse_args()
 
@@ -65,6 +69,13 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig()
+
+    if options.log_file:
+        handler = logging.FileHandler(options.log_file)
+        if options.debug:
+            handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter("[%(created)f]" + logging.BASIC_FORMAT))
+        logging.getLogger().addHandler(handler)
 
     # setup syslog (best effort)
     try:
