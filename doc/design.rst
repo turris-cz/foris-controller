@@ -19,9 +19,12 @@ Componets
 
 Bus
 ###
-* listens to bus and recieves/sends messages
 * replacible
 * it might change to content of the message (e.g. add / remove unique messsage-id)
+* each bus has two parts:
+
+  * Listener -  listens to bus and recieves requests + sends replies
+  * Sender - sends notification to connected clients
 
 Message Router
 ##############
@@ -35,6 +38,7 @@ Modules
 * independent
 * each module contains an json schema which describes a schema of the incomming messages
 * each module is able to translate recieved messages to handler functions
+* each module should be able to initialize the notification sending procedure
 
 Handlers
 ########
@@ -106,4 +110,5 @@ Message Router
 <<< {"module": "wifi", "action":"set", "data": {"result": "OK"}}
 Listener
 <<< {"id": "2345", "kind": "reply", "module": "wifi", "action":"set", "data": {"result": "OK"}} (send as a reply)
+Sender
 <<< {"id": "3456", "kind": "notification", "module": "wifi", "action": "set"} (send as a notification - clients can reload page)
