@@ -1,3 +1,12 @@
+0.6 (2017-10-20)
+----------------
+
+* support for sending notifications added (+docs +tests)
+* added an option to put logging output into a file
+* some fixes
+* some code cleanup
+* some documentation added
+
 0.5 (2017-10-02)
 ----------------
 
