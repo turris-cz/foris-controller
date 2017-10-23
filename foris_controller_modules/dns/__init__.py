@@ -45,7 +45,7 @@ class DnsModule(BaseModule):
         res = self.handler.update_settings(**data)
         if res:
             self.notify("update_settings", data)
-        return {'result': self.handler.update_settings(**data)}
+        return {"result": res}
 
 
 @wrap_required_functions([
