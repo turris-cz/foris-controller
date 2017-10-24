@@ -19,18 +19,31 @@
 
 import logging
 import re
-
 import subprocess
+
+from tempfile import TemporaryFile
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import BackendCommandFailed, FailedToParseCommandOutput
-from foris_controller.utils import RWLock, writelock
-from foris_controller_backends.files import server_uplink_lock
+from foris_controller.utils import RWLock
 
 
 logger = logging.getLogger(__name__)
 
 i2c_lock = RWLock(app_info["lock_backend"])
+
+
+def handle_command(*args, **kwargs):
+    with TemporaryFile() as stdout, TemporaryFile() as stderr:
+        kwargs["stderr"] = stderr
+        kwargs["stdout"] = stdout
+        process = subprocess.Popen(args, **kwargs)
+        process.communicate()
+        stdout.seek(0)
+        stdout = stdout.read()
+        stderr.seek(0)
+        stderr = stderr.read()
+    return process.returncode, stdout, stderr
 
 
 class BaseCmdLine(object):
@@ -55,13 +68,12 @@ class BaseCmdLine(object):
         """
 
         logger.debug("Command '%s' is starting." % str(args))
-        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
+        retval, stdout, stderr = handle_command(*args)
         logger.debug("Command '%s' finished." % str(args))
-        logger.debug("retcode: %d" % process.returncode)
+        logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)
         logger.debug("stderr: %s" % stderr)
-        return process.returncode, stdout, stderr
+        return retval, stdout, stderr
 
     def _trigger_and_parse(self, args, regex, groups=(1, )):
         """ Runs command and parses the output by regex,

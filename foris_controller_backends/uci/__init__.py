@@ -28,6 +28,8 @@ from foris_controller.utils import RWLock
 from foris_controller.app import app_info
 from foris_controller.exceptions import UciException, UciTypeException, UciRecordNotFound
 
+from foris_controller_backends.cmdline import handle_command
+
 logger = logging.getLogger(__name__)
 
 
@@ -154,12 +156,11 @@ class UciBackend(object):
             "uci", "-c", self.config_dir, changes_path_option, UciBackend.CHANGES_DIR
         ] + list(args)
         logger.debug("uci cmd '%s'" % str(args))
-        process = subprocess.Popen(cmdline_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        logger.debug("retcode: %d" % process.returncode)
+        retval, stdout, stderr = handle_command(*cmdline_args)
+        logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)
         logger.debug("stderr: %s" % stderr)
-        if fail_on_error and process.returncode:
+        if fail_on_error and retval:
             raise UciException(cmdline_args, stderr)
         return stdout
 

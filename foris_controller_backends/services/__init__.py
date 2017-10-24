@@ -25,6 +25,8 @@ from foris_controller.app import app_info
 from foris_controller.exceptions import ServiceCmdFailed
 from foris_controller.utils import RWLock
 
+from foris_controller_backends.cmdline import handle_command
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,18 +60,17 @@ class OpenwrtServices(object):
         script_path = os.path.join(self.service_scripts_path, service_name)
         logger.debug("Starting to call '%s %s'" % (script_path, cmd))
         try:
-            process = subprocess.Popen(
-                [script_path, cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            retval, stdout, stderr = handle_command(script_path, cmd)
+
         except OSError as e:
             raise ServiceCmdFailed(
                 service_name, cmd, "unable to call '%s %s'" % (script_path, cmd))
-        stdout, stderr = process.communicate()
         logger.debug("'%s %s' was finished" % (script_path, cmd))
-        logger.debug("retcode: %d" % process.returncode)
+        logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)
         logger.debug("stderr: %s" % stderr)
 
-        if fail_on_error and process.returncode != 0:
+        if fail_on_error and retval != 0:
             raise ServiceCmdFailed(service_name, cmd)
 
     def start(self, service_name, fail_on_error=True):
