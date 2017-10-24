@@ -1,3 +1,9 @@
+0.6.1 (2017-10-24)
+----------------
+
+* dns module reload fix
+* calling external programs should be faster
+
 0.6 (2017-10-20)
 ----------------
 
