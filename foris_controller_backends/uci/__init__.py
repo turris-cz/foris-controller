@@ -172,6 +172,7 @@ class UciBackend(object):
         retval = None
         if section_name is None:
             retval = self._run_uci_command("add", config, section_type, fail_on_error=False)
+            retval = retval.strip()
         else:
             self._run_uci_command(
                 "set", "%s.%s=%s" % (config, section_name, section_type))
