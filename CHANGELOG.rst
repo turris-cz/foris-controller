@@ -1,5 +1,11 @@
+0.6.2 (2017-10-31)
+------------------
+
+* uci backend fix
+* web module - language switch fix
+
 0.6.1 (2017-10-24)
-----------------
+------------------
 
 * dns module reload fix
 * calling external programs should be faster
