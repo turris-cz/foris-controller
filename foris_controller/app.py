@@ -60,6 +60,13 @@ def _gen_notify(module_name):
     return notify
 
 
+def _reset_notify(self):
+    """ Resets current connection for notification sender
+    """
+    self.logger.debug("Resetting notification sender")
+    app_info["notification_sender"].reset()
+
+
 def prepare_app_modules(base_handler_class):
     """ updates app_info dictionary with loaded foris-controller modules
 
@@ -94,7 +101,8 @@ def prepare_app_modules(base_handler_class):
             )
             continue
 
-        app_info["modules"][module_name] = module_class(handler, _gen_notify(module_name))
+        app_info["modules"][module_name] = module_class(
+            handler, _gen_notify(module_name), _reset_notify)
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     logger.debug("Modules loaded %s." % app_info["modules"].keys())

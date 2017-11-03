@@ -232,5 +232,14 @@ class UbusNotificationSender(object):
         ubus.send(object_name, {"action": action, "data": data})
 
     def disconnect(self):
+        """ Disconnects from ubus
+        """
         logger.debug("Disconnecting from ubus")
         ubus.disconnect()
+
+    def reset(self):
+        """ Resets the connection
+        """
+        logger.debug("Resetting the ubus connection.")
+        # don't deregister objects from ubus just disconnect
+        ubus.disconnect(deregister=False)

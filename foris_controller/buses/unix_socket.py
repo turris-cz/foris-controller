@@ -138,7 +138,12 @@ class UnixSocketNotificationSender(object):
         logger.debug("Sending notification (len=%d) %s" % (len(notification), str(notification)))
         self.socket.send(notification_length + notification)
 
-
     def disconnect(self):
         logger.debug("Disconnecting from unix socket")
         self.socket.close()
+
+    def reset(self):
+        logger.debug("Resetting the unix-socket connection")
+        self.socket.close()
+        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.socket.connect(self.socket_path)

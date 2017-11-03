@@ -19,7 +19,6 @@
 
 import logging
 import os
-import subprocess
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import ServiceCmdFailed

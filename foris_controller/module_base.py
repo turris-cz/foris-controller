@@ -26,17 +26,20 @@ class UnknownAction(Exception):
 
 class BaseModule(object):
 
-    def __init__(self, handler, notify):
+    def __init__(self, handler, notify, reset_notify):
         """ Inits base module (sets the handler)
 
         :param handler: handler to be set
         :type handler: handler instance
         :param notify: a function to send notifications back to bus
         :type notify: callable
+        :param reset_notify: a function which resets the notification connection
+        :type reset_notify: callable
         """
         self.handler = handler
-        # Add a bound method (first arg of the callable should be the instance)
+        # Add a bound methods (first arg of the callable should be the instance)
         self.notify = types.MethodType(notify, self)
+        self.reset_notify = types.MethodType(reset_notify, self)
 
     def perform_action(self, action, data):
         """ Perfoms the specified action a returns result

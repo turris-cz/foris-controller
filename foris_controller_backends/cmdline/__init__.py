@@ -19,9 +19,16 @@
 
 import logging
 import re
+import json
+import multiprocessing
+import prctl
+import random
+import signal
 import subprocess
+import threading
 
 from tempfile import TemporaryFile
+from collections import OrderedDict
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import BackendCommandFailed, FailedToParseCommandOutput
@@ -97,3 +104,197 @@ class BaseCmdLine(object):
             logger.error("Failed to parse output of %s." % str(args))
             raise FailedToParseCommandOutput(args, stdout)
         return match.group(*groups)
+
+
+class AsyncProcessData(object):
+    def __init__(self, manager):
+        """ Initializes async process data instance.
+        Note that these data will be shared between two processes using shared memory
+
+        :param manager: multiprocessing manager
+        :type manager: multiprocessing.managers.SyncManager
+        """
+        self.lock = manager.Lock()
+        self.id = "%016x" % random.randrange(2**64)
+        self._data = manager.list()
+        self._retval = manager.Value(int, 0)
+        self._exitted = manager.Value(bool, False)
+
+    def read_all_data(self):
+        """ Reads and returns all data which were stored by the process
+        :returns: process data
+        :rtype: dict
+        """
+        with self.lock:
+            return [json.loads(e) for e in self._data]
+
+    def append_data(self, record):
+        """ Appends a record to process data
+        :returns: process data
+        :rtype: dict
+        """
+
+        with self.lock:
+            # data needed to be stored in string
+            # (shared memory migth be inconsistent when more complex types are used)
+            self._data.append(json.dumps(record))
+
+    def set_retval(self, retval):
+        """ Set the return value of the process
+        :param retval: process return value
+        :type retval: int
+        """
+        self._retval.set(retval)
+
+    def get_retval(self):
+        """ Returns the return value of the process.
+        Should be used only after get_exitted() returns True
+        :returns: retval of the process
+        :rtype: int
+        """
+        return self._retval.get()
+
+    def set_exitted(self):
+        """ Sets the the process exitted
+        """
+        self._exitted.set(True)
+
+    def get_exitted(self):
+        """ returns whether the process exitted
+        :returns: True if process exitted False if the process is still running
+        :rtype: bool
+        """
+        return self._exitted.get()
+
+
+class AsyncCommand(object):
+    PROCESS_BUFFER = 20
+
+    manager = multiprocessing.Manager()
+
+    def __init__(self):
+        self.lock = RWLock(app_info["lock_backend"])
+        self.processes = OrderedDict()
+
+    @staticmethod
+    def _command_worker(args, reset_notify, handler_list, handler_exit, process_data, ready):
+        """ Watch over an external command
+
+        :param args: arguments of the external commands
+        :type args: list[str]
+        :param handler_list: list of tuples [(regex, handler(matched, process_data)), ...]
+        :type handler_list: list[tuple]
+        :param handler_exit: handler which is called when process finishes - handler(process_data)
+        :type handler_exit: callable
+        :param reset_notify: function which is call to reset notification connection
+        :type reset_notify: callable
+        :param process_data: place where the data between the worker and the parent process
+                             are shared
+        :type process_data: AsyncProcessData
+        :param ready: event synchronization with parent process
+                      (tells parent process that it may continue)
+        """
+
+        logger.debug("Async process started.")
+
+        # precompile regexes
+        handler_list = [(re.compile(regex), handler) for regex, handler in handler_list]
+
+        # exit when parent thread dies
+        prctl.set_pdeathsig(signal.SIGKILL)
+
+        # we are in another process so it might be necessary to repopen the connection
+        if reset_notify:
+            reset_notify()
+
+        # the parent may continue
+        ready.set()
+
+        logger.debug("Starting monitored process: %s" % args)
+        process = subprocess.Popen(
+            args, preexec_fn=lambda: prctl.set_pdeathsig(signal.SIGKILL),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True,
+            universal_newlines=True,
+        )
+
+        def process_output_line():
+            line = process.stdout.readline()[:-1]  # remove \n
+            logger.debug("Processing output line of the monitored file: '%s'" % line)
+            for regex, handler in handler_list:
+                match = regex.match(line)
+                if match:
+                    # Run the handler
+                    handler(match, process_data)
+
+        while process.poll() is None:
+            process_output_line()
+        process_output_line()  # program ended, but there ca be some output left
+
+        process_data.set_retval(process.returncode)
+        process_data.set_exitted()
+        if handler_exit:
+            handler_exit(process_data)
+        logger.debug("Async process finished.")
+
+    def start_process(self, args, handler_list, handler_exit, reset_notify_function):
+        """ Starts a thread which starts a process which monitors external command.
+
+        A new process is started because ubus doesn't allow you to listen and send notification
+        at once.
+
+        :param args: arguments of the external commands
+        :type args: list[str]
+        :param handler_list: list of tuples [(regex, handler(matched, process_data)), ...]
+        :type handler_list: list[tuple]
+        :param handler_exit: handler which is called when process finishes - handler(process_data)
+        :type handler_exit: callable
+        :param reset_notify_function: function which is call to reset notification connection
+        :type reset_notify_function: callable
+
+        :returns: A new process identifier
+        :rtype: str
+        """
+
+        new_data_process = AsyncProcessData(self.manager)
+        process_started = threading.Event()
+
+        # process is started in another thread
+        # prctl kills the child process when parent thread dies
+        # and this code might be called from some handler thread which dies
+        # after response is delivered
+        def worker_thread(process_started):
+
+            import logging
+            logger = logging.getLogger(__name__)
+
+            # Prepare ready event to wait for the process to be initialized
+            ready = multiprocessing.Event()
+            ready.clear()
+
+            logger.debug("Preparing async worker process.")
+            process = multiprocessing.Process(target=AsyncCommand._command_worker, args=(
+                args, reset_notify_function, handler_list, handler_exit,
+                new_data_process, ready
+            ))
+
+            with self.lock.writelock:
+                # test whether there is still space in buffer and remove midd
+                while len(self.processes) >= self.PROCESS_BUFFER:
+                    self.processes.popitem(False)
+                self.processes[new_data_process.id] = new_data_process
+
+            logger.debug("Starting async worker process.")
+            process.start()
+            ready.wait()
+            process_started.set()
+            process.join()
+            logger.debug("Async worker process finished.")
+
+        work_thread = threading.Thread(target=worker_thread, args=(process_started, ))
+        work_thread.daemon = True
+        work_thread.start()
+
+        # Wait for the process
+        process_started.wait()
+
+        return new_data_process.id
