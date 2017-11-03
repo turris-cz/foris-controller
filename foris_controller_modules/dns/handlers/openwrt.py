@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.dns import DnsUciCommands
+from foris_controller_backends.dns import DnsUciCommands, DnsTestCommands
 
 from .. import Handler
 
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
     uci_dns_cmds = DnsUciCommands()
+    test_dns_cmds = DnsTestCommands()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -59,3 +60,29 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
         return OpenwrtDnsHandler.uci_dns_cmds.update_settings(
             forwarding_enabled, dnssec_enabled, dns_from_dhcp_enabled, dns_from_dhcp_domain
         )
+
+    @logger_wrapper(logger)
+    def connection_test_trigger(
+            self, notify_function, exit_notify_function, reset_notify_function):
+        """ Triggering of the connection test
+        :param notify_function: function for sending notifications
+        :type notify_function: callable
+        :param exit_notify_function: function for sending notification when a test finishes
+        :type exit_notify_function: callable
+        :param reset_notify_function: function to reconnect to the notification bus
+        :type reset_notify_function: callable
+        :returns: generated_test_id
+        :rtype: str
+        """
+        return OpenwrtDnsHandler.test_dns_cmds.connection_test_trigger(
+            notify_function, exit_notify_function, reset_notify_function)
+
+    @logger_wrapper(logger)
+    def connection_test_status(self, test_id):
+        """ Connection test status
+        :param test_id: id of the test to display
+        :type test_id: str
+        :returns: connection test status + test data
+        :rtype: dict
+        """
+        return OpenwrtDnsHandler.test_dns_cmds.connection_test_status(test_id)

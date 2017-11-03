@@ -2,7 +2,7 @@
     "user": "stepan",
     "access": {
         "foris-controller-dns": {
-            "methods": [ "get_settings", "update_settings" ]
+            "methods": [ "get_settings", "update_settings", "connection_test_trigger", "connection_test_status" ]
         }
     },
     "publish": [ "foris-controller-dns" ],

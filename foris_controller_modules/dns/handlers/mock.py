@@ -22,6 +22,8 @@ import logging
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
 
+import random
+
 from .. import Handler
 
 logger = logging.getLogger(__name__)
@@ -32,6 +34,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
     dnssec_enabled = True
     dns_from_dhcp_enabled = False
     dns_from_dhcp_domain = None
+    test_id_set = set()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -63,7 +66,8 @@ class MockDnsHandler(Handler, BaseMockHandler):
         :type dns_from_dhcp_enabled: bool
         :param dns_from_dhcp_domain: set whether dns from dhcp is enabled
         :type dns_from_dhcp_domain: str
-        :rtype: str
+        :returns: True if update passes
+        :rtype: bool
         """
         MockDnsHandler.forwarding_enabled = forwarding_enabled
         MockDnsHandler.dnssec_enabled = dnssec_enabled
@@ -71,3 +75,33 @@ class MockDnsHandler(Handler, BaseMockHandler):
         if dns_from_dhcp_domain is not None:
             MockDnsHandler.dns_from_dhcp_domain = dns_from_dhcp_domain
         return True
+
+    @logger_wrapper(logger)
+    def connection_test_trigger(
+            self, notify_function, exit_notify_function, reset_notify_function):
+        """ Mocks triggering of the connection test
+        :param notify_function: function to publish notifications
+        :type notify_function: callable
+        :param exit_notify_function: function for sending notification when a test finishes
+        :type exit_notify_function: callable
+        :param reset_notify_function: function to reconnect to the notification bus
+        :type reset_notify_function: callable
+        :returns: generated_test_id
+        :rtype: str
+        """
+        new_test_id = "%032X" % random.randrange(2**32)
+        MockDnsHandler.test_id_set.add(new_test_id)
+        return new_test_id
+
+    @logger_wrapper(logger)
+    def connection_test_status(self, test_id):
+        """ Mocks connection test status
+        :param test_id: id of the test to display
+        :type test_id: str
+        :returns: connection test status + test data
+        :rtype: dict
+        """
+        if test_id in MockDnsHandler.test_id_set:
+            return {'status': 'running', 'data': {'ipv4': True, 'ipv6': False}}
+        else:
+            return {'status': 'not_found'}

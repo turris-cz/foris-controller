@@ -167,3 +167,37 @@ def test_update_and_get_settings(infrastructure, ubusd_test):
     assert res['data']["dnssec_enabled"] is True
     assert res['data']["dns_from_dhcp_enabled"] is True
     assert res['data']["dns_from_dhcp_domain"] == "test"
+
+
+def test_connection_test(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "dns",
+        "action": "connection_test_status",
+        "kind": "request",
+        "data": {
+            "test_id": "non-existing",
+        }
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert res['data'] == {u'status': u'not_found'}
+
+    res = infrastructure.process_message({
+        "module": "dns",
+        "action": "connection_test_trigger",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "test_id" in res["data"].keys()
+
+    test_id = res["data"]["test_id"]
+    res = infrastructure.process_message({
+        "module": "dns",
+        "action": "connection_test_status",
+        "kind": "request",
+        "data": {
+            "test_id": test_id,
+        }
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert res['data']['status'] in ["running", "finished"]
+    assert "data" in res['data']
