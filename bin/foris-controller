@@ -74,7 +74,7 @@ if __name__ == "__main__":
         handler = logging.FileHandler(options.log_file)
         if options.debug:
             handler.setLevel(logging.DEBUG)
-        handler.setFormatter(logging.Formatter("[%(created)f]" + logging.BASIC_FORMAT))
+        handler.setFormatter(logging.Formatter("[%(created)f:%(process)d]" + logging.BASIC_FORMAT))
         logging.getLogger().addHandler(handler)
 
     # setup syslog (best effort)
