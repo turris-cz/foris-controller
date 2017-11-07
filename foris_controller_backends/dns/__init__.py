@@ -95,14 +95,10 @@ class DnsTestCommands(AsyncCommand):
 
         exitted = process_data.get_exitted()
 
-        data = {e: False for e in DnsTestCommands.FIELDS if e not in ['dnssec']} \
-            if exitted else {}
+        data = {e: False for e in DnsTestCommands.FIELDS} if exitted else {}
         for record in process_data.read_all_data():
             for option, res in record["data"].items():
                 data[option] = res or data.get(option, False)
-
-        if exitted and "dnssec" not in data:
-            data["dnssec"] = True
 
         return {'status': "finished" if process_data.get_exitted() else "running", "data": data}
 
@@ -127,9 +123,10 @@ class DnsTestCommands(AsyncCommand):
         logger.debug("Starting connection test.")
 
         # generate a notification handler
-        def handler_gen(regex, option, result):
+        def handler_gen(regex, option):
             def handler(matched, process_data):
-                res = {"test_id": process_data.id, "data": {option: result}}
+                passed = matched.group(1) == "OK"
+                res = {"test_id": process_data.id, "data": {option: passed}}
                 process_data.append_data(res)
                 notify_function(res)
 
@@ -137,11 +134,10 @@ class DnsTestCommands(AsyncCommand):
 
         # handler which will be called when the test exits
         def handler_exit(process_data):
-            data = {e: False for e in DnsTestCommands.FIELDS if e not in ['dnssec']}
+            data = {e: False for e in DnsTestCommands.FIELDS}
             for record in process_data.read_all_data():
                 for option, res in record["data"].items():
                     data[option] = res or data.get(option, False)
-            data["dnssec"] = data.get("dnssec", True)
             exit_notify_function({
                 "test_id": process_data.id, "data": data,
                 "passed": process_data.get_retval() == 0}
@@ -149,14 +145,14 @@ class DnsTestCommands(AsyncCommand):
             logger.debug("Connection test finished: (retval=%d)" % process_data.get_retval())
 
         process_id = self.start_process(
-            ["/usr/bin/nuci-helper-checkconn"],
+            ["/sbin/check_connection"],
             [
-                handler_gen(r"V6", "ipv6", True),
-                handler_gen(r"GATE6", "ipv6_gateway", True),
-                handler_gen(r"V4", "ipv4", True),
-                handler_gen(r"GATE4", "ipv4_gateway", True),
-                handler_gen(r"DNS", "dns", True),
-                handler_gen(r"BADSEC", "dnssec", False),
+                handler_gen(r"^IPv6: (\w+)", "ipv6"),
+                handler_gen(r"^IPv6 Gateway: (\w+)", "ipv6_gateway"),
+                handler_gen(r"^IPv4: (\w+)", "ipv4"),
+                handler_gen(r"^IPv4 Gateway: (\w+)", "ipv4_gateway"),
+                handler_gen(r"DNS: (\w+)", "dns"),
+                handler_gen(r"DNSSEC: (\w+)", "dnssec"),
             ],
             handler_exit,
             reset_notify_function
