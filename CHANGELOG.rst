@@ -1,3 +1,9 @@
+0.7 (2017-11-07)
+----------------
+
+* added backend to handle async commands
+* dns module - connection check handling
+
 0.6.2 (2017-10-31)
 ------------------
 
