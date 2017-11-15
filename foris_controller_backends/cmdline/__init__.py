@@ -17,12 +17,13 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
-import re
 import json
+import logging
 import multiprocessing
+import os
 import prctl
 import random
+import re
 import signal
 import subprocess
 import threading
@@ -218,8 +219,15 @@ class AsyncCommand(object):
         ready.set()
 
         logger.debug("Starting monitored process: %s" % args)
+
+        def preexec():
+            # make sure that program dies when parent is terminated
+            prctl.set_pdeathsig(signal.SIGKILL)
+            # for python programs this will force that stdout/stderr are flushed immediatelly
+            os.environ['PYTHONUNBUFFERED'] = "1"
+
         process = subprocess.Popen(
-            args, preexec_fn=lambda: prctl.set_pdeathsig(signal.SIGKILL),
+            args, preexec_fn=preexec,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True,
             universal_newlines=True,
         )
