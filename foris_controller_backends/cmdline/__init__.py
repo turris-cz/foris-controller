@@ -220,7 +220,7 @@ class AsyncCommand(object):
         logger.debug("Starting monitored process: %s" % args)
         process = subprocess.Popen(
             args, preexec_fn=lambda: prctl.set_pdeathsig(signal.SIGKILL),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True,
             universal_newlines=True,
         )
 
