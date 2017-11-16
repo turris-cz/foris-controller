@@ -1,3 +1,10 @@
+0.7.1 (2017-11-07)
+------------------
+
+* async commands - python buffer fixes
+* async commands - match stderr as well
+* uci - added replace_list function
+
 0.7 (2017-11-07)
 ----------------
 
