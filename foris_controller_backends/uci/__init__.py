@@ -21,7 +21,6 @@ import collections
 import logging
 import os
 import re
-import subprocess
 
 from foris_controller.utils import RWLock
 
@@ -216,6 +215,18 @@ class UciBackend(object):
                     "del_list", "%s.%s.%s=%s" % (config, section_name, list_name, value))
         else:
             self._run_uci_command("delete", "%s.%s.%s" % (config, section_name, list_name))
+        self.affected_configs.add(config)
+
+    def replace_list(self, config, section_name, list_name, values):
+        """
+        replaces all list items (list may not be present)
+        """
+        try:
+            self._run_uci_command("delete", "%s.%s.%s" % (config, section_name, list_name))
+        except UciException:
+            pass  # option is missing
+
+        self.add_to_list(config, section_name, list_name, values)
         self.affected_configs.add(config)
 
     def commit(self):

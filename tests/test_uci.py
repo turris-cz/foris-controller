@@ -212,6 +212,34 @@ def test_del_from_list(lock_backend, uci_config_dir):
     assert "non_existing.non_existing.non_existing" not in show(uci_config_dir)
 
 
+def test_replace_list(lock_backend, uci_config_dir):
+    backend_class = get_uci_module(lock_backend).UciBackend
+
+    assert "test2.@anonymous[1].list1='single item'" in show(uci_config_dir)
+    assert "test2.named2.list1='single item'" in show(uci_config_dir)
+    assert "test2.named2.list2='item 1' 'item 2' 'item 3' 'item 4'" in show(uci_config_dir)
+    assert "test2.named2.non_existing" not in show(uci_config_dir)
+    assert "test2.named2.new_list" not in show(uci_config_dir)
+    assert "test2.non_existing.non_existing" not in show(uci_config_dir)
+    assert "non_existing.non_existing.non_existing" not in show(uci_config_dir)
+
+    with backend_class(uci_config_dir) as backend:
+        backend.replace_list("test2", "@anonymous[1]", "list1", ["my items", "are", "brand new"])
+        backend.replace_list("test2", "named2", "list2", ["item 2", "item 3", "item 5"])
+        backend.replace_list("test2", "named2", "list1", [])
+        backend.replace_list("test2", "named2", "non_existing", [])
+        backend.replace_list("test2", "named2", "new_list", ["new 1", "new 2", "new 3"])
+        with pytest.raises(UciException):
+            backend.replace_list("test2", "non_existing", "new_list", ["new 2", "new 3"])
+        with pytest.raises(UciException):
+            backend.replace_list("non_existing", "non_existing", "new_list", ["new 3"])
+
+    assert "test2.@anonymous[1].list1='my items' 'are' 'brand new'" in show(uci_config_dir)
+    assert "test2.named2.list2='item 2' 'item 3' 'item 5'" in show(uci_config_dir)
+    assert "test2.named2.list1" not in show(uci_config_dir)
+    assert "test2.named2.non_existing2" not in show(uci_config_dir)
+    assert "test2.named2.new_list='new 1' 'new 2' 'new 3'" in show(uci_config_dir)
+
 def test_replace_session(lock_backend, uci_config_dir):
     backend_class = get_uci_module(lock_backend).UciBackend
 
