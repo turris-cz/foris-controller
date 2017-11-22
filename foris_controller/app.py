@@ -40,8 +40,8 @@ def set_app_info(program_options):
     app_info["bus"] = program_options.bus
     app_info["debug"] = program_options.debug
     app_info["backend"] = program_options.backend
-    app_info["filter_modules"] = program_options.modules.split(",") \
-        if program_options.modules else None
+    app_info["filter_modules"] = [e[0] for e in program_options.module] \
+        if program_options.module else None
 
     import multiprocessing
     import threading

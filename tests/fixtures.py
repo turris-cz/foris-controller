@@ -193,7 +193,7 @@ class Infrastructure(object):
 
         args = [
             "bin/foris-controller",
-            "-m", ",".join(["about", "data_collect", "web", "dns"]),
+            "-m", "about", "-m", "data_collect", "-m", "web", "-m", "dns",
             "-d", "-b", backend_name, name, "--path", self.sock_path
         ]
 

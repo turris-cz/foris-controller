@@ -51,9 +51,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("-d", "--debug", action="store_true", default=False)
     parser.add_argument(
-        "-m", "--modules", default=None,
-        help="use only modules from this comma separated list",
-        metavar="MODULE1[,MODULE2[,...]]]"
+        "-m", "--module", nargs=1, action='append',
+        help="use only following modules",
     )
     parser.add_argument(
         "-l", "--log-file", default=None,

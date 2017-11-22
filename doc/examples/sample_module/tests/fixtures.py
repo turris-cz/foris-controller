@@ -169,7 +169,7 @@ class Infrastructure(object):
 
         args = [
             "foris-controller",
-            "-m", ",".join(["sample"]),
+            "-m", "sample",
             "-d", "-b", backend_name, name, "--path", self.sock_path
         ]
 
