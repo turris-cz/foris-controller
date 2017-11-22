@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import imp
 import importlib
 import inspect
 import os
@@ -146,20 +147,38 @@ def writelock(lock, logger):
     return outer
 
 
-def get_modules(filter_modules):
+def get_modules(filter_modules, module_paths=[]):
     """ Returns a list of modules that can be used
 
     :param filter_modules: use only modules which names are specified in this list
+    :param module_paths: extra paths to dir containing modules
     :type filter_modules: list of str
     :returns: list of (module_name, module)
     """
     res = []
+
     modules = importlib.import_module("foris_controller_modules")
+
     for _, mod_name, _ in pkgutil.iter_modules(modules.__path__):
         if filter_modules and mod_name not in filter_modules:
             continue
         module = importlib.import_module("foris_controller_modules.%s" % mod_name)
         res.append((mod_name, module))
+
+    for modules_path in module_paths:
+        # dir base name will be module name
+        modules_path = modules_path.rstrip("/")
+        name = os.path.basename(modules_path)
+        fp, pathname, description = imp.find_module(name, [os.path.dirname(modules_path)])
+        try:
+            res.append((
+                name,
+                imp.load_module("foris_controller_modules.%s" % name, fp, pathname, description)
+            ))
+        finally:
+            if fp:
+                fp.close()
+
     return res
 
 
@@ -195,9 +214,10 @@ def get_module_class(module):
             return module_class
 
 
-def get_validator_dirs(filter_modules):
+def get_validator_dirs(filter_modules, module_paths=[]):
     """ Returns schema and definition dirs for validator
     :param filter_modules: use only modules present in this list
+    :param module_paths: extra paths to dir containing modules
     """
 
     # use root schema dir
@@ -211,7 +231,7 @@ def get_validator_dirs(filter_modules):
     ]
 
     # load modules dirs
-    for module_name, module in get_modules(filter_modules):
+    for module_name, module in get_modules(filter_modules, module_paths):
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     return schema_dirs, definition_dirs

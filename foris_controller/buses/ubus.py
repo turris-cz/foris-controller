@@ -160,11 +160,14 @@ class UbusListener(object):
         if app_info["ubus_single_process"]:
             worker = multiprocessing.Process(
                 name="all-in-one", target=ubus_all_in_one_worker,
-                args=(socket_path, get_modules(app_info["filter_modules"]), )
+                args=(socket_path, get_modules(
+                    app_info["filter_modules"], app_info["extra_module_paths"])
+                )
             )
             self.workers.append(worker)
         else:
-            for module_name, module in get_modules(app_info["filter_modules"]):
+            modules = get_modules(app_info["filter_modules"], app_info["extra_module_paths"])
+            for module_name, module in modules:
                 worker = multiprocessing.Process(
                     name=module_name, target=ubus_listener_worker,
                     args=(socket_path, module_name, module)

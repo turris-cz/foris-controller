@@ -51,12 +51,16 @@ if __name__ == "__main__":
     )
     parser.add_argument("-d", "--debug", action="store_true", default=False)
     parser.add_argument(
-        "-m", "--module", nargs=1, action='append',
+        "-m", "--module", nargs=1, action='append', default=[],
         help="use only following modules",
     )
     parser.add_argument(
         "-l", "--log-file", default=None,
         help="file where the logs will we appended", required=False
+    )
+    parser.add_argument(
+        '--extra-module-path', nargs=1, action='append', default=[],
+        help="set extra path to module (e.g. /path/module_name)", required=False
     )
 
     options = parser.parse_args()
@@ -102,11 +106,11 @@ if __name__ == "__main__":
     if options.backend == "openwrt":
         from foris_controller.handler_base import BaseOpenwrtHandler
         logger.info("Using OpenWRT config backend.")
-        prepare_app_modules(BaseOpenwrtHandler)
+        prepare_app_modules(BaseOpenwrtHandler, [e[0] for e in options.extra_module_path])
     elif options.backend == "mock":
         from foris_controller.handler_base import BaseMockHandler
         logger.info("Using Mock config backend.")
-        prepare_app_modules(BaseMockHandler)
+        prepare_app_modules(BaseMockHandler, [e[0] for e in options.extra_module_path])
     else:
         raise NotImplementedError("Backend '%s' is not implemented" % options.backend)
 

@@ -55,6 +55,10 @@ if __name__ == "__main__":
         "notification", metavar='NOTIFICATION', nargs="+", type=str,
         help="notification to be sent (in json format)"
     )
+    parser.add_argument(
+        '--extra-module-path', nargs=1, action='append', default=[],
+        help="set extra path to module", required=False
+    )
 
     options = parser.parse_args()
     notifications = [json.loads(e) for e in options.notification]
@@ -86,7 +90,9 @@ if __name__ == "__main__":
     if not options.no_validation:
         logger.debug("Validation will be performed.")
         from foris_schema import ForisValidator
-        validator = ForisValidator(*get_validator_dirs([options.module]))
+        validator = ForisValidator(
+            *get_validator_dirs([options.module], [e[0] for e in options.extra_module_path])
+        )
     else:
         logger.debug("No validation")
         validator = None

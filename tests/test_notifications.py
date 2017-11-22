@@ -25,7 +25,7 @@ from foris_schema import ForisValidator
 
 from foris_controller.utils import get_validator_dirs
 
-from .fixtures import backend, infrastructure, ubusd_test
+from .fixtures import backend, infrastructure, ubusd_test, EXTRA_MODULE_PATHS
 
 
 def notify_cmd(infras, module, action, data, validate=True):
@@ -53,7 +53,7 @@ def notify_api(infrastructure):
 
     def notify(module, action, notification, validate=True):
         if validate:
-            validator = ForisValidator(*get_validator_dirs([module]))
+            validator = ForisValidator(*get_validator_dirs([module], EXTRA_MODULE_PATHS))
         else:
             validator = None
         sender.notify(module, action, notification, validator)

@@ -42,6 +42,7 @@ def set_app_info(program_options):
     app_info["backend"] = program_options.backend
     app_info["filter_modules"] = [e[0] for e in program_options.module] \
         if program_options.module else None
+    app_info["extra_module_paths"] = [e[0] for e in program_options.extra_module_path]
 
     import multiprocessing
     import threading
@@ -67,11 +68,12 @@ def _reset_notify(self):
     app_info["notification_sender"].reset()
 
 
-def prepare_app_modules(base_handler_class):
+def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
     """ updates app_info dictionary with loaded foris-controller modules
 
     :param base_handler_class: handler class to be used to initialize the modules
     :type base_handler_class: class
+    :param extra_modules_paths: extra paths to dir containing modules
     """
     app_info["modules"] = {}
 
@@ -85,7 +87,7 @@ def prepare_app_modules(base_handler_class):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions"),
     ]
 
-    for module_name, module in get_modules(app_info["filter_modules"]):
+    for module_name, module in get_modules(app_info["filter_modules"], extra_modules_paths):
         logger.debug("Trying to load module '%s'." % module_name)
         handler = get_handler(module, base_handler_class)
         if not handler:

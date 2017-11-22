@@ -18,6 +18,7 @@
 #
 
 
+import itertools
 import json
 import os
 import pytest
@@ -46,6 +47,13 @@ UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 SERVICE_SCRIPT_DIR_PATH = "/tmp/test_init/"
 
+
+EXTRA_MODULE_PATHS = [
+    # os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "<name>")
+]
+USED_MODULES = [
+    "about", "data_collect", "web", "dns",
+]
 
 notifications_lock = Lock()
 
@@ -191,9 +199,13 @@ class Infrastructure(object):
             self.listener = Process(target=ubus_notification_listener, args=(self._exiting, ))
             self.listener.start()
 
+        modules = list(itertools.chain.from_iterable([("-m", e) for e in USED_MODULES]))
+        extra_paths = list(itertools.chain.from_iterable(
+            [("--extra-module-path", e) for e in EXTRA_MODULE_PATHS]))
+
         args = [
             "bin/foris-controller",
-            "-m", "about", "-m", "data_collect", "-m", "web", "-m", "dns",
+        ] + modules + extra_paths + [
             "-d", "-b", backend_name, name, "--path", self.sock_path
         ]
 
