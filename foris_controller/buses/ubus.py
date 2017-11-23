@@ -19,6 +19,7 @@
 
 from __future__ import absolute_import
 
+import json
 import logging
 import ubus
 import inspect
@@ -30,7 +31,24 @@ logger = logging.getLogger(__name__)
 
 from foris_controller.message_router import Router
 from foris_controller.app import app_info
-from foris_controller.utils import get_modules, get_module_class
+from foris_controller.utils import get_modules, get_module_class, LOGGER_MAX_LEN
+
+
+class RequestStorage(object):
+    """ Storage for multipart requests"""
+    data = {}
+
+    @staticmethod
+    def append(request_id, data):
+        """ Appends data into storage
+        """
+        RequestStorage.data[request_id] = RequestStorage.data.get(request_id, "") + data
+
+    @staticmethod
+    def pickup(request_id):
+        """ Reads and removes data from the storage.
+        """
+        return RequestStorage.data.pop(request_id)
 
 
 def _get_method_names_from_module(module):
@@ -76,25 +94,50 @@ def _register_object(module_name, module):
 
     def handler_gen(module, action):
         def handler(handler, data):
-            logger.debug("Handling request")
-            logger.debug("Data received '%s'." % str(data))
+            logger.debug(
+                "Handling request '%s' (multipart=%s)" % (data["request_id"], data["multipart"]))
+            logger.debug("Data received '%s'." % str(data)[:LOGGER_MAX_LEN])
             router = Router()
             data["module"] = module
             data["action"] = action
             data["kind"] = "request"
+
+            # handle multipart message
+            if data["multipart"]:
+                RequestStorage.append(data["request_id"], data["multipart_data"])
+                logger.debug("Multipart stored for '%s'" % data["request_id"])
+                if data["final"]:
+                    logger.debug("Parsing multipart data.")
+                    data["data"] = json.loads(RequestStorage.pickup(data["request_id"]))
+                else:
+                    return  # return no response
+
+            del data["multipart"]
+            del data["multipart_data"]
+            del data["final"]
+            del data["request_id"]
+
             if not data["data"]:
                 del data["data"]
             response = router.process_message(data)
-            logger.debug("Sending response %s" % str(response))
+            logger.debug("Sending response %s" % str(response)[:LOGGER_MAX_LEN])
+            dumped_response = json.dumps(response)
+            for i in range(0, len(dumped_response), 512 * 1024):
+                handler.reply({"data": dumped_response[i: i + 512 * 1024]})
+                logger.debug("Part %d was sent." % (i / (512 * 1024) + 1))
             logger.debug("Handling finished.")
-            handler.reply(response)
+
         return handler
 
     ubus.add(
         object_name,
         {
             method_name: {"method": handler_gen(module_name, method_name), "signature": {
-                "data": ubus.BLOBMSG_TYPE_TABLE
+                "data": ubus.BLOBMSG_TYPE_TABLE,
+                "request_id": ubus.BLOBMSG_TYPE_STRING,  # unique request id
+                "final": ubus.BLOBMSG_TYPE_BOOL,  # final part?
+                "multipart": ubus.BLOBMSG_TYPE_BOOL,  # more parts present
+                "multipart_data": ubus.BLOBMSG_TYPE_STRING,  # more parts present
             }} for method_name in methods
         }
     )

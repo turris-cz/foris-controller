@@ -35,6 +35,7 @@ else:
         pass
 
 from foris_controller.message_router import Router
+from foris_controller.utils import LOGGER_MAX_LEN
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,14 @@ class UnixSocketHandler(BaseRequestHandler):
                 length = struct.unpack("I", length_data)[0]
                 logger.debug("Length received '%s'." % str(length))
                 received_data = self.request.recv(length)
-                logger.debug("Data received '%s'." % str(received_data))
+                received_data_len = len(received_data)
+                logger.debug("Data recieved len %d", received_data_len)
+                while received_data_len < length:
+                    received_data += self.request.recv(length - received_data_len)
+                    received_data_len = len(received_data)
+                    logger.debug("Data recieved len %d", received_data_len)
+
+                logger.debug("Data received '%s'." % str(received_data)[:LOGGER_MAX_LEN])
                 try:
                     parsed = json.loads(received_data.decode("utf8"))
                 except ValueError:
@@ -71,8 +79,10 @@ class UnixSocketHandler(BaseRequestHandler):
                 response = self.router.process_message(parsed)
                 response = json.dumps(response).encode("utf8")
                 response_length = struct.pack("I", len(response))
-                logger.debug("Sending response (len=%d) %s" % (len(response), str(response)))
-                self.request.send(response_length + response)
+                logger.debug("Sending response (len=%d) %s" % (
+                    len(response), str(response)[:LOGGER_MAX_LEN]
+                ))
+                self.request.sendall(response_length + response)
 
             except:
                 logger.debug("Connection closed.")
@@ -135,8 +145,10 @@ class UnixSocketNotificationSender(object):
             self._validate(msg, validator)
         notification = json.dumps(msg).encode("utf8")
         notification_length = struct.pack("I", len(notification))
-        logger.debug("Sending notification (len=%d) %s" % (len(notification), str(notification)))
-        self.socket.send(notification_length + notification)
+        logger.debug("Sending notification (len=%d) %s" % (
+            len(notification), str(notification)[:LOGGER_MAX_LEN]
+        ))
+        self.socket.sendall(notification_length + notification)
 
     def disconnect(self):
         logger.debug("Disconnecting from unix socket")

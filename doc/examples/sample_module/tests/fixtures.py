@@ -26,6 +26,7 @@ import subprocess
 import time
 import struct
 import sys
+import uuid
 
 from multiprocessing import Process, Value, Lock
 
@@ -203,6 +204,10 @@ class Infrastructure(object):
 
             length = struct.unpack("I", sock.recv(4))[0]
             received = sock.recv(length)
+            recv_len = len(received)
+            while recv_len < length:
+                received += sock.recv(length)
+                recv_len = len(received)
 
             return json.loads(received.decode("utf8"))
 
@@ -216,9 +221,28 @@ class Infrastructure(object):
                 ubus.connect(self.sock_path)
             function = data.get("action", "?")
             inner_data = data.get("data", {})
-            res = ubus.call(module, function, {"data": inner_data})
+            dumped_data = json.dumps(inner_data)
+            request_id = str(uuid.uuid4())
+            if len(dumped_data) > 512 * 1024:
+                for data in chunks(dumped_data, 512 * 1024):
+                    ubus.call(module, function, {
+                        "data": {}, "final": False, "multipart": True,
+                        "request_id": request_id, "multipart_data": data,
+                    })
+
+                res = ubus.call(module, function, {
+                        "data": {}, "final": True, "multipart": True,
+                        "request_id": request_id, "multipart_data": "",
+                    })
+
+            else:
+                res = ubus.call(module, function, {
+                    "data": inner_data, "final": True, "multipart": False,
+                    "request_id": request_id, "multipart_data": "",
+                })
+
             ubus.disconnect()
-            return res[0]
+            return json.loads("".join([e["data"] for e in res]))
 
         raise NotImplementedError()
 

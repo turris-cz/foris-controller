@@ -28,6 +28,9 @@ from functools import wraps
 from .module_base import BaseModule
 
 
+LOGGER_MAX_LEN = 10000
+
+
 class RWLock(object):
     """ Custom implementation of RWLock
         it can use lock for Processes as well as lock for threads

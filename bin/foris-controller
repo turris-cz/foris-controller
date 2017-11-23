@@ -25,6 +25,7 @@ import logging
 from logging.handlers import SysLogHandler
 
 from foris_controller.app import set_app_info, prepare_app_modules, prepare_notification_sender
+from foris_controller.utils import LOGGER_MAX_LEN
 
 logger = logging.getLogger("foris_controller")
 
@@ -68,10 +69,11 @@ if __name__ == "__main__":
     # Store app info
     set_app_info(options)
 
+    logging_format = "%(levelname)s:%(name)s:%(message)." + str(LOGGER_MAX_LEN) + "s"
     if options.debug:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format=logging_format)
     else:
-        logging.basicConfig()
+        logging.basicConfig(format=logging_format)
 
     if options.log_file:
         handler = logging.FileHandler(options.log_file)
