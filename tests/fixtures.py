@@ -272,16 +272,16 @@ class Infrastructure(object):
             dumped_data = json.dumps(inner_data)
             request_id = str(uuid.uuid4())
             if len(dumped_data) > 512 * 1024:
-                for data in chunks(dumped_data, 512 * 1024):
+                for data_part in chunks(dumped_data, 512 * 1024):
                     ubus.call(module, function, {
                         "data": {}, "final": False, "multipart": True,
-                        "request_id": request_id, "multipart_data": data,
+                        "request_id": request_id, "multipart_data": data_part,
                     })
 
                 res = ubus.call(module, function, {
-                        "data": {}, "final": True, "multipart": True,
-                        "request_id": request_id, "multipart_data": "",
-                    })
+                    "data": {}, "final": True, "multipart": True,
+                    "request_id": request_id, "multipart_data": "",
+                })
 
             else:
                 res = ubus.call(module, function, {
@@ -290,7 +290,12 @@ class Infrastructure(object):
                 })
 
             ubus.disconnect()
-            return json.loads("".join([e["data"] for e in res]))
+            return {
+                u"module": data["module"],
+                u"action": data["action"],
+                u"kind": u"reply",
+                u"data": json.loads("".join([e["data"] for e in res])),
+            }
 
         raise NotImplementedError()
 
@@ -303,13 +308,16 @@ class Infrastructure(object):
         if not ubus.get_connected():
             ubus.connect(self.sock_path)
         function = data.get("action", "?")
-        inner_data = data.get("data", {})
         res = ubus.call(module, function, {
             "data": data, "final": final, "multipart": multipart,
             "request_id": request_id, "multipart_data": multipart_data,
         })
-        res = "".join([e["data"] for e in res])
-        return json.loads(res) if res else None
+        return {
+            u"module": data["module"],
+            u"action": data["action"],
+            u"kind": u"reply",
+            u"data": json.loads("".join([e["data"] for e in res])),
+        } if res else None
 
     def get_notifications(self, old_data=None):
         while not os.path.exists(NOTIFICATIONS_OUTPUT_PATH):

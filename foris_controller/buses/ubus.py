@@ -113,16 +113,12 @@ def _register_object(module_name, module):
                         data["data"] = json.loads(multi_data)
                         logger.debug("Failed to parse multipart message.")
                     except ValueError:
-                        del data["multipart"]
-                        del data["multipart_data"]
-                        del data["final"]
-                        del data["request_id"]
-                        data["data"] = {
+                        res = {
                             "errors": [{
                                 "description": "failed to parse multipart", "stacktrace": ""
                             }]
                         }
-                        handler.reply({"data": json.dumps(data)})
+                        handler.reply({"data": json.dumps(res)})
                         return
                 else:
                     return  # return no response
@@ -136,9 +132,9 @@ def _register_object(module_name, module):
                 del data["data"]
             response = router.process_message(data)
             logger.debug("Sending response %s" % str(response)[:LOGGER_MAX_LEN])
-            dumped_response = json.dumps(response)
-            for i in range(0, len(dumped_response), 512 * 1024):
-                handler.reply({"data": dumped_response[i: i + 512 * 1024]})
+            dumped_data = json.dumps(response["data"])
+            for i in range(0, len(dumped_data), 512 * 1024):
+                handler.reply({"data": dumped_data[i: i + 512 * 1024]})
                 logger.debug("Part %d was sent." % (i / (512 * 1024) + 1))
             logger.debug("Handling finished.")
 

@@ -27,7 +27,7 @@ def test_wrong_input_data(infrastructure, ubusd_test):
         "data": {"extra": "data"},
     })
     assert res["action"] == u"get"
-    assert res["kind"] == u"request"
+    assert res["kind"] == u"reply"
     assert res["module"] == u"about"
     assert "errors" in res["data"]
     assert "Incorrect input." in res["data"]["errors"][0]["description"]
@@ -67,7 +67,7 @@ def test_wrong_input_action(infrastructure_unix_socket, ubusd_test):
         "kind": "request",
     })
     assert res["action"] == u"non-exiting"
-    assert res["kind"] == u"request"
+    assert res["kind"] == u"reply"
     assert res["module"] == u"about"
     assert "errors" in res["data"]
     assert "Incorrect input." in res["data"]["errors"][0]["description"]
@@ -79,7 +79,7 @@ def test_wrong_input_module(infrastructure_unix_socket, ubusd_test):
         "kind": "request",
     })
     assert res["action"] == u"get"
-    assert res["kind"] == u"request"
+    assert res["kind"] == u"reply"
     assert res["module"] == u"non-exiting"
     assert "errors" in res["data"]
     assert "Incorrect input." in res["data"]["errors"][0]["description"]

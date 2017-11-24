@@ -44,6 +44,11 @@ NOTIFICATIONS_OUTPUT_PATH = "/tmp/foris-controller-notifications-test.json"
 notifications_lock = Lock()
 
 
+def chunks(data, size):
+    for i in range(0, len(data), size):
+        yield data[i:i + size]
+
+
 @pytest.fixture(scope="session")
 def ubusd_test():
     ubusd_instance = subprocess.Popen(["ubusd", "-A", "tests/ubus-acl", "-s", UBUS_PATH])
@@ -224,16 +229,16 @@ class Infrastructure(object):
             dumped_data = json.dumps(inner_data)
             request_id = str(uuid.uuid4())
             if len(dumped_data) > 512 * 1024:
-                for data in chunks(dumped_data, 512 * 1024):
+                for data_part in chunks(dumped_data, 512 * 1024):
                     ubus.call(module, function, {
                         "data": {}, "final": False, "multipart": True,
-                        "request_id": request_id, "multipart_data": data,
+                        "request_id": request_id, "multipart_data": data_part,
                     })
 
                 res = ubus.call(module, function, {
-                        "data": {}, "final": True, "multipart": True,
-                        "request_id": request_id, "multipart_data": "",
-                    })
+                    "data": {}, "final": True, "multipart": True,
+                    "request_id": request_id, "multipart_data": "",
+                })
 
             else:
                 res = ubus.call(module, function, {
@@ -242,7 +247,12 @@ class Infrastructure(object):
                 })
 
             ubus.disconnect()
-            return json.loads("".join([e["data"] for e in res]))
+            return {
+                u"module": data["module"],
+                u"action": data["action"],
+                u"kind": u"reply",
+                u"data": json.loads("".join([e["data"] for e in res])),
+            }
 
         raise NotImplementedError()
 

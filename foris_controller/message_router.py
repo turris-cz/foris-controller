@@ -41,7 +41,7 @@ class Router(object):
         """
         return {
             "module": orig_msg.get("module", "?"),
-            "kind": orig_msg.get("kind", "?"),
+            "kind": "reply",
             "action": orig_msg.get("action", "?"),
             "data": {"errors": errors},
         }
