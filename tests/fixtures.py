@@ -97,6 +97,8 @@ def ubus_notification_listener(exiting):
     import signal
     prctl.set_pdeathsig(signal.SIGKILL)
     import ubus
+    if ubus.get_connected():
+        ubus.disconnect(False)
     ubus.connect(UBUS_PATH)
     global notifications_lock
 
@@ -232,6 +234,11 @@ class Infrastructure(object):
             os.unlink(NOTIFICATIONS_OUTPUT_PATH)
         except OSError:
             pass
+        try:
+            import ubus  # disconnect from ubus if connected
+            ubus.disconnect()
+        except:
+            pass
 
     def process_message(self, data):
         if self.name == "unix-socket":
@@ -287,6 +294,23 @@ class Infrastructure(object):
 
         raise NotImplementedError()
 
+    def process_message_ubus_raw(self, data, request_id, final, multipart, multipart_data):
+        import ubus
+        module = "foris-controller-%s" % data.get("module", "?")
+        wait_process = subprocess.Popen(
+            ["ubus", "wait_for", module, "-s", self.sock_path])
+        wait_process.wait()
+        if not ubus.get_connected():
+            ubus.connect(self.sock_path)
+        function = data.get("action", "?")
+        inner_data = data.get("data", {})
+        res = ubus.call(module, function, {
+            "data": data, "final": final, "multipart": multipart,
+            "request_id": request_id, "multipart_data": multipart_data,
+        })
+        res = "".join([e["data"] for e in res])
+        return json.loads(res) if res else None
+
     def get_notifications(self, old_data=None):
         while not os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
             time.sleep(0.2)
@@ -320,6 +344,14 @@ def infrastructure(request, backend):
 def infrastructure_unix_socket(request, backend):
     instance = Infrastructure(
         "unix-socket", backend, request.config.getoption("--debug-output"))
+    yield instance
+    instance.exit()
+
+
+@pytest.fixture(scope="module")
+def infrastructure_ubus(request, backend):
+    instance = Infrastructure(
+        "ubus", backend, request.config.getoption("--debug-output"))
     yield instance
     instance.exit()
 

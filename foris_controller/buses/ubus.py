@@ -108,7 +108,22 @@ def _register_object(module_name, module):
                 logger.debug("Multipart stored for '%s'" % data["request_id"])
                 if data["final"]:
                     logger.debug("Parsing multipart data.")
-                    data["data"] = json.loads(RequestStorage.pickup(data["request_id"]))
+                    try:
+                        multi_data = RequestStorage.pickup(data["request_id"])
+                        data["data"] = json.loads(multi_data)
+                        logger.debug("Failed to parse multipart message.")
+                    except ValueError:
+                        del data["multipart"]
+                        del data["multipart_data"]
+                        del data["final"]
+                        del data["request_id"]
+                        data["data"] = {
+                            "errors": [{
+                                "description": "failed to parse multipart", "stacktrace": ""
+                            }]
+                        }
+                        handler.reply({"data": json.dumps(data)})
+                        return
                 else:
                     return  # return no response
 

@@ -20,8 +20,9 @@
 import pytest
 import random
 import string
+import uuid
 
-from .fixtures import backend, infrastructure, ubusd_test
+from .fixtures import backend, infrastructure, infrastructure_ubus, ubusd_test
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))
@@ -36,3 +37,95 @@ def test_long_messsages(infrastructure, ubusd_test, chars_len):
         "data": {"request_msg": data}
     })
     assert res["data"]["reply_msg"] == data
+
+
+def test_ubus_malformed_multipart_resend(infrastructure_ubus, ubusd_test):
+    # First lets test whether the multipart is working
+    request_id = str(uuid.uuid4())
+    res = infrastructure_ubus.process_message_ubus_raw(
+        data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
+        request_id=request_id,
+        multipart=True,
+        multipart_data='{',
+        final=False,
+    )
+    assert res == None
+    res = infrastructure_ubus.process_message_ubus_raw(
+        data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
+        request_id=request_id,
+        multipart=True,
+        multipart_data='"request_msg": {"xx": "yy"}}',
+        final=True,
+    )
+    assert res == {
+        "module": "echo",
+        "action": "echo",
+        "kind": "reply",
+        "data": {"reply_msg": {"xx": "yy"}}
+    }
+
+    # resend last message
+    res = infrastructure_ubus.process_message_ubus_raw(
+        data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
+        request_id=request_id,
+        multipart=True,
+        multipart_data='"request_msg": {"xx": "yy"}}',
+        final=True,
+    )
+    assert res == {
+        u'action': u'echo',
+        u'data': {
+            u'errors': [{u'description': u'failed to parse multipart', u'stacktrace': u''}]
+        },
+        u'kind': u'request',
+        u'module': u'echo'
+    }
+
+
+def test_ubus_malformed_multipart_one(infrastructure_ubus, ubusd_test):
+    # resend wrong json in one multipart
+    request_id = str(uuid.uuid4())
+    res = infrastructure_ubus.process_message_ubus_raw(
+        data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
+        request_id=request_id,
+        multipart=True,
+        multipart_data='"request_msg": {"xx": "yy"',
+        final=True,
+    )
+    assert res == {
+        u'action': u'echo',
+        u'data': {
+            u'errors': [{u'description': u'failed to parse multipart', u'stacktrace': u''}]
+        },
+        u'kind': u'request',
+        u'module': u'echo'
+    }
+
+
+def test_ubus_malformed_multipart_two(infrastructure_ubus, ubusd_test):
+    # resend wrong json in two multiparts
+    request_id = str(uuid.uuid4())
+    res = infrastructure_ubus.process_message_ubus_raw(
+        data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
+        request_id=request_id,
+        multipart=True,
+        multipart_data='{',
+        final=False,
+    )
+    assert res is None
+    res = infrastructure_ubus.process_message_ubus_raw(
+        data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
+        request_id=request_id,
+        multipart=True,
+        multipart_data='"request_msg": {"xx": "yy"}}_wrong',
+        final=True,
+    )
+
+    assert res == {
+        u'action': u'echo',
+        u'data': {
+            u'errors': [{u'description': u'failed to parse multipart', u'stacktrace': u''}]
+        },
+        u'kind': u'request',
+        u'module': u'echo'
+    }
