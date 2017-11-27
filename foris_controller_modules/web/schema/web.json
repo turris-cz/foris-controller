@@ -24,7 +24,8 @@
                     "required": ["language"]
                 }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "Set language in the web gui",
@@ -41,7 +42,8 @@
                     "required": ["language"]
                 }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "Reply to set language",
@@ -58,7 +60,8 @@
                     "required": ["result"]
                 }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "List languages",
@@ -106,7 +109,8 @@
                     "required": ["language"]
                 }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

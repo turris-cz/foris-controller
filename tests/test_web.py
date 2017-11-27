@@ -79,3 +79,12 @@ def test_list(infrastructure, ubusd_test):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert u"languages" in res["data"].keys()
     assert set(res["data"]["languages"]) == {'en', 'cs', 'de'}
+
+
+def test_missing_data(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "web",
+        "action": "set_language",
+        "kind": "request",
+    })
+    assert "errors" in res["data"]
