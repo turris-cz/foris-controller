@@ -40,9 +40,9 @@ class DnsUciCommands(object):
         forwarding_enabled = parse_bool(
             get_option_named(resolver_data, "resolver", "common", "forward_upstream"))
         dnssec_enabled = not parse_bool(
-            get_option_named(resolver_data, "resolver", "common", "ignore_root_key"))
+            get_option_named(resolver_data, "resolver", "common", "ignore_root_key", "0"))
         dns_from_dhcp_enabled = parse_bool(
-            get_option_named(resolver_data, "resolver", "common", "dynamic_domains"))
+            get_option_named(resolver_data, "resolver", "common", "dynamic_domains", "0"))
         res = {
             "forwarding_enabled": forwarding_enabled, "dnssec_enabled": dnssec_enabled,
             "dns_from_dhcp_enabled": dns_from_dhcp_enabled
