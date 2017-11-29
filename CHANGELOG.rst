@@ -1,4 +1,10 @@
-0.7.1 (2017-11-07)
+0.7.2 (2017-11-29)
+------------------
+
+* dns module - use default value when an option is not present in uci
+* uci - default argument to get_{named,anonymous}_option
+
+0.7.1 (2017-11-16)
 ------------------
 
 * async commands - python buffer fixes
