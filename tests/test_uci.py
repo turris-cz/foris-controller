@@ -240,6 +240,7 @@ def test_replace_list(lock_backend, uci_config_dir):
     assert "test2.named2.non_existing2" not in show(uci_config_dir)
     assert "test2.named2.new_list='new 1' 'new 2' 'new 3'" in show(uci_config_dir)
 
+
 def test_replace_session(lock_backend, uci_config_dir):
     backend_class = get_uci_module(lock_backend).UciBackend
 
@@ -364,7 +365,7 @@ def test_parse_read_data(lock_backend, uci_config_dir):
         res2 = backend.read('test2')
 
     assert uci.get_config(res1, 'test1') == []
-    assert uci.get_section(res2,'test2', 'named1') == {'data': OrderedDict(), 'type': 'named', 'name': 'named1'}
+    assert uci.get_section(res2, 'test2', 'named1') == {'data': OrderedDict(), 'type': 'named', 'name': 'named1'}
     assert uci.get_option_named(res2, 'test2', 'named2', 'option2') == 'xxx'
     assert uci.get_sections_by_type(res2, 'test2', 'anonymous') == [
         {'data': OrderedDict(), 'type': 'anonymous', 'name': None},
@@ -385,12 +386,15 @@ def test_parse_read_data(lock_backend, uci_config_dir):
     with pytest.raises(UciRecordNotFound):
         uci.get_config(res1, 'non_existing')
     with pytest.raises(UciRecordNotFound):
-        uci.get_section(res2,'test2', 'non_existing')
+        uci.get_section(res2, 'test2', 'non_existing')
     with pytest.raises(UciRecordNotFound):
         uci.get_option_named(res2, 'test2', 'named2', 'non_existing')
+    assert "def1" == uci.get_option_named(res2, 'test2', 'named2', 'non_existing', default="def1")
     with pytest.raises(UciRecordNotFound):
         uci.get_sections_by_type(res2, 'test2', 'non_existing')
     with pytest.raises(UciRecordNotFound):
         uci.get_section_idx(res2, 'test2', 'anonymous', 99)
     with pytest.raises(UciRecordNotFound):
         uci.get_option_anonymous(res2, 'test2', 'anonymous', 1, 'non_existing')
+    assert "def2" == uci.get_option_anonymous(
+        res2, 'test2', 'anonymous', 1, 'non_existing', default="def2")

@@ -68,12 +68,15 @@ def get_section(data, config, section):
     return res[0]  # only one section can be present (uci backend feature)
 
 
-def get_option_named(data, config, section, option):
+def get_option_named(data, config, section, option, default=None):
     res = get_section(data, config, section)
     try:
         res = res["data"][option]
     except KeyError:
-        raise UciRecordNotFound(config, section=section, option=option)
+        if default is None:
+            raise UciRecordNotFound(config, section=section, option=option)
+        else:
+            res = default
     return res
 
 
@@ -100,12 +103,16 @@ def get_section_idx(data, config, section_type, idx):
     return res
 
 
-def get_option_anonymous(data, config, section_type, idx, option):
+def get_option_anonymous(data, config, section_type, idx, option, default=None):
     res = get_section_idx(data, config, section_type, idx)
     try:
         res = res["data"][option]
     except KeyError:
-        raise UciRecordNotFound(config, section_type=section_type, section_idx=idx, option=option)
+        if default is None:
+            raise UciRecordNotFound(
+                config, section_type=section_type, section_idx=idx, option=option)
+        else:
+            res = default
     return res
 
 
