@@ -1,0 +1,10 @@
+{
+    "user": "stepan",
+    "access": {
+        "foris-controller-maintain": {
+            "methods": [ "reboot" ]
+        }
+    },
+    "publish": [ "foris-controller-maintain" ],
+    "subscribe": [ "foris-controller-maintain" ]
+}

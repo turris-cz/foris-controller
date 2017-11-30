@@ -63,7 +63,7 @@ class BaseCmdLine(object):
         :param args: cmd and its arguments
         :type args: tuple
         """
-        logger.debug("Starting Command '%s' is starting." % str(args))
+        logger.debug("Starting Command '%s' is starting in background." % str(args))
         subprocess.Popen(args)
 
     def _run_command(self, *args):
