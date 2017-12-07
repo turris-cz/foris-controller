@@ -44,10 +44,21 @@ i2c_lock = RWLock(app_info["lock_backend"])
 
 def handle_command(*args, **kwargs):
     with TemporaryFile() as stdout, TemporaryFile() as stderr:
-        kwargs["stderr"] = stderr
-        kwargs["stdout"] = stdout
-        process = subprocess.Popen(args, **kwargs)
-        process.communicate()
+        popen_kwargs = {}
+        input_data = kwargs.pop("input_data", None)
+
+        popen_kwargs["stderr"] = stderr
+        popen_kwargs["stdout"] = stdout
+        if input_data:
+            popen_kwargs["stdin"] = subprocess.PIPE
+
+        process = subprocess.Popen(args, **popen_kwargs)
+
+        if input_data:
+            process.communicate(input_data)
+        else:
+            process.communicate()
+
         stdout.seek(0)
         stdout = stdout.read()
         stderr.seek(0)
@@ -66,7 +77,7 @@ class BaseCmdLine(object):
         logger.debug("Starting Command '%s' is starting in background." % str(args))
         subprocess.Popen(args)
 
-    def _run_command(self, *args):
+    def _run_command(self, *args, **kwargs):
         """ Executes command and waits till it's finished
 
         :param args: cmd and its arguments
@@ -79,7 +90,7 @@ class BaseCmdLine(object):
         logger.debug("Command '%s' is starting." % str(args))
 
         try:
-            retval, stdout, stderr = handle_command(*args)
+            retval, stdout, stderr = handle_command(*args, **kwargs)
         except (OSError, IOError) as e:
             raise BackendCommandFailed(e.errno, args, e.strerror)
 
