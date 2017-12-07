@@ -1,27 +1,28 @@
 {
     "oneOf": [
         {
-            "description": "Get current language set in the web gui",
+            "description": "Request to get data which are necessary for the web gui",
             "properties": {
                 "module": {"enum": ["web"]},
                 "kind": {"enum": ["request"]},
-                "action": {"enum": ["get_language"]}
+                "action": {"enum": ["get_data"]}
             },
             "additionalProperties": false
         },
         {
-            "description": "Reply to get language",
+            "description": "Reply to get data which are required for the web gui",
             "properties": {
                 "module": {"enum": ["web"]},
                 "kind": {"enum": ["reply"]},
-                "action": {"enum": ["get_language"]},
+                "action": {"enum": ["get_data"]},
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": { "$def": "#/definitions/iso2country" }
+                        "language": { "$def": "#/definitions/iso2country" },
+                        "reboot_required": {"type": "boolean"}
                     },
                     "additionalProperties": false,
-                    "required": ["language"]
+                    "required": ["language", "reboot_required"]
                 }
             },
             "additionalProperties": false,

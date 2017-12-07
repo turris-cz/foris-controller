@@ -60,3 +60,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         :rtype: list
         """
         return MockWebHandler.language_list[:]
+
+    @logger_wrapper(logger)
+    def reboot_required(self):
+        return False

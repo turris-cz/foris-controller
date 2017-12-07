@@ -26,14 +26,17 @@ from foris_controller.handler_base import wrap_required_functions
 class WebModule(BaseModule):
     logger = logging.getLogger(__name__)
 
-    def action_get_language(self, data):
-        """ Get current language of the web gui
+    def action_get_data(self, data):
+        """ Get data required by the the web gui
         :param data: supposed to be {}
         :type data: dict
-        :returns: current language {'language': '..'}
+        :returns: current data {'language': '..'}
         :rtype: dict
         """
-        return {'language': self.handler.get_language()}
+        return {
+            'language': self.handler.get_language(),
+            'reboot_required': self.handler.reboot_required(),
+        }
 
     def action_set_language(self, data):
         """ Sets language of the web gui
@@ -61,6 +64,7 @@ class WebModule(BaseModule):
     'get_language',
     'set_language',
     'list_languages',
+    'reboot_required',
 ])
 class Handler(object):
     pass

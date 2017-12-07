@@ -18,6 +18,7 @@
 #
 
 import logging
+import os
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named
@@ -47,6 +48,8 @@ class MaintainUci(object):
 
 
 class MaintainCommands(BaseCmdLine):
+    REBOOT_INDICATOR_PATH = '/tmp/device-reboot-required'
+
 
     def reboot(self):
         args = ("/bin/sh", "-c", "reboot -d 5 &")  # 5 seconds before reboot
@@ -78,3 +81,6 @@ class MaintainCommands(BaseCmdLine):
         logger.debug("Marking that the reboot is required.")
         cmd = "/usr/bin/maintain-reboot-needed"
         self._run_command(cmd)  # best effort no need to check it any further
+
+    def reboot_required(self):
+        return os.path.exists(MaintainCommands.REBOOT_INDICATOR_PATH)

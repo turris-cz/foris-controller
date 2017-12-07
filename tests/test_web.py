@@ -23,12 +23,12 @@ from .fixtures import backend, infrastructure, ubusd_test
 def test_get(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
-        "action": "get_language",
+        "action": "get_data",
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
-        u"language",
+        u"language", u"reboot_required",
     }
     assert len(res["data"]["language"]) == 2
 

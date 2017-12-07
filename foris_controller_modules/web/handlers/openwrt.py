@@ -23,6 +23,7 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.web import WebUciCommands, Languages
+from foris_controller_backends.maintain import MaintainCommands
 
 from .. import Handler
 
@@ -32,6 +33,7 @@ logger = logging.getLogger(__name__)
 class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
     web_uci_cmds = WebUciCommands()
     langs = Languages()
+    maintain_cms = MaintainCommands()
 
     @logger_wrapper(logger)
     def get_language(self):
@@ -59,3 +61,11 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         :rtype: list
         """
         return self.langs.list_languages()
+
+    @logger_wrapper(logger)
+    def reboot_required(self):
+        """ Is reboot required indicator
+        :returns: True if reboot is required False otherwise
+        :rtype: bool
+        """
+        return self.maintain_cms.reboot_required()
