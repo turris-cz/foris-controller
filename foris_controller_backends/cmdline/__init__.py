@@ -77,7 +77,12 @@ class BaseCmdLine(object):
         """
 
         logger.debug("Command '%s' is starting." % str(args))
-        retval, stdout, stderr = handle_command(*args)
+
+        try:
+            retval, stdout, stderr = handle_command(*args)
+        except (OSError, IOError) as e:
+            raise BackendCommandFailed(e.errno, args, e.strerror)
+
         logger.debug("Command '%s' finished." % str(args))
         logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)

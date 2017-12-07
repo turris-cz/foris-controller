@@ -19,15 +19,21 @@
 
 
 class BackendCommandFailed(Exception):
-    def __init__(self, retval, args):
+    def __init__(self, retval, args, strerr=None):
         """ exception which indicates the command failed
 
         :param args: argumenst of the command
         :type args: iterable
         :param retval: reval of the commend
         :type output: int
+        :param strerr: extra string
+        :type strerr: str
         """
-        super(BackendCommandFailed, self).__init__("Retval=%d for %s" % (retval, args))
+        if strerr:
+            msg = "Retval=%d(%s) for %s" % (retval, strerr, args)
+        else:
+            msg = "Retval=%d for %s" % (retval, args)
+        super(BackendCommandFailed, self).__init__(msg)
 
 
 class FailedToParseCommandOutput(Exception):
