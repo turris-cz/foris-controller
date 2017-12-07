@@ -143,7 +143,7 @@ class SystemInfoFiles(BaseFile):
         :returns: model
         :rtype: str
         """
-        return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r'^(\w+ \w+).*$', (1, ))
+        return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r'^(\w+.*)$', (1, ))
 
     @readlock(file_lock, logger)
     def get_board_name(self):
