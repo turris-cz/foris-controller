@@ -61,7 +61,7 @@
             "required": ["data"]
         },
         {
-            "description": "Store backup action request",
+            "description": "Generate backup action request",
             "properties": {
                 "module": {"enum": ["maintain"]},
                 "kind": {"enum": ["request"]},
@@ -70,7 +70,7 @@
             "additionalProperties": false
         },
         {
-            "description": "Store backup action reply",
+            "description": "Generate backup action reply",
             "properties": {
                 "module": {"enum": ["maintain"]},
                 "kind": {"enum": ["reply"]},
@@ -88,6 +88,53 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Restore backup action request",
+            "properties": {
+                "module": {"enum": ["maintain"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["restore_backup"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "backup": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["backup"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Restore backup action reply",
+            "properties": {
+                "module": {"enum": ["maintain"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["restore_backup"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that reboot is required",
+            "properties": {
+                "module": {"enum": ["maintain"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["reboot_required"]}
+            },
+            "additionalProperties": false
         }
     ]
 }

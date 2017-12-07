@@ -64,3 +64,17 @@ class MaintainCommands(BaseCmdLine):
             logger.error("Cmd which generates the backup '%s' failed." % str(cmd))
             raise BackendCommandFailed(retval, [cmd])
         return stdout.strip()  # output should be base64 encoded string
+
+    def restore_backup(self, backup):
+        logger.debug("Starting to restore the backup.")
+        cmd = "/usr/bin/maintain-config-restore"
+        retval, _, _ = self._run_command(cmd, input_data=backup)
+        if retval != 0:
+            logger.error("Cmd to restore the backup '%s' failed." % str(cmd))
+            return False
+        return True
+
+    def mark_reboot_required(self):
+        logger.debug("Marking that the reboot is required.")
+        cmd = "/usr/bin/maintain-reboot-needed"
+        self._run_command(cmd)  # best effort no need to check it any further

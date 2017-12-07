@@ -48,10 +48,27 @@ class MaintainModule(BaseModule):
         """
         return {"backup": self.handler.generate_backup()}
 
+    def action_restore_backup(self, data):
+        """ Restores backup (overrides current configuration with the backup)
+
+        :param data: should contain the backup in base64 encoding ({"backup": "..."})
+        :type data: dict
+        :returns: {result: True/False}
+        :rtype: dict
+        """
+        res = self.handler.restore_backup(data["backup"])
+        if res:
+            # mark that a reboot is required
+            self.handler.mark_reboot_required()
+            self.notify("reboot_required", None)
+        return {"result": res}
+
 
 @wrap_required_functions([
     'reboot',
     'generate_backup',
+    'restore_backup',
+    'mark_reboot_required',
 ])
 class Handler(object):
     pass
