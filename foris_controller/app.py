@@ -54,7 +54,7 @@ def set_app_info(program_options):
 def _gen_notify(module_name):
     """ Generator for notify function which wrapps module name inside the notify call
     """
-    def notify(self, action, data):
+    def notify(self, action, data=None):
         self.logger.debug(
             "New notification (module=%s, action=%s, data=%s)" % (module_name, action, data))
         app_info["notification_sender"].notify(module_name, action, data, app_info["validator"])

@@ -134,13 +134,14 @@ class UnixSocketNotificationSender(object):
             validator.validate_verbose(msg)
         logger.debug("Notification validation passed.")
 
-    def notify(self, module, action, data, validator=None):
+    def notify(self, module, action, data=None, validator=None):
         msg = {
             "module": module,
             "kind": "notification",
             "action": action,
-            "data": data,
         }
+        if data is not None:
+            msg["data"] = data
         if validator:
             self._validate(msg, validator)
         notification = json.dumps(msg).encode("utf8")

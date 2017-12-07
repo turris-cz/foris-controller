@@ -113,13 +113,16 @@ def ubus_notification_listener(exiting):
 
         def handler(module, data):
             module_name = module[len("foris-controller-"):]
+            msg = {
+                "module": module_name,
+                "kind": "notification",
+                "action": data["action"],
+            }
+            if "data" in data:
+                msg["data"] = data["data"]
+
             with notifications_lock:
-                f.write(json.dumps({
-                    "module": module_name,
-                    "kind": "notification",
-                    "action": data["action"],
-                    "data": data["data"],
-                }) + "\n")
+                f.write(json.dumps(msg) + "\n")
                 f.flush()
 
         ubus.listen(("foris-controller-*", handler))

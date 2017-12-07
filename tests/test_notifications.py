@@ -51,7 +51,7 @@ def notify_api(infrastructure):
         sender = UnixSocketNotificationSender(infrastructure.notification_sock_path)
 
 
-    def notify(module, action, notification, validate=True):
+    def notify(module, action, notification=None, validate=True):
         if validate:
             validator = ForisValidator(*get_validator_dirs([module], EXTRA_MODULE_PATHS))
         else:
@@ -119,4 +119,12 @@ def test_notify_api(infrastructure, ubusd_test, notify_api):
         u"action": u"set_language",
         u"kind": u"notification",
         u"data": {u"language": u"en", u"invalid": True},
+    }
+
+    notify("echo", "echo")
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
+        u"module": u"echo",
+        u"action": u"echo",
+        u"kind": u"notification",
     }

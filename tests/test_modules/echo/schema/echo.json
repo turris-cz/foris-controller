@@ -32,6 +32,14 @@
                 }
             },
             "additionalProperties": false
+        },
+        {
+            "properties": {
+                "module": {"enum": ["echo"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["echo"]}
+            },
+            "additionalProperties": false
         }
     ]
 }

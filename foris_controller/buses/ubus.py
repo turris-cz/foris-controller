@@ -266,27 +266,29 @@ class UbusNotificationSender(object):
             validator.validate_verbose(msg)
         logger.debug("Notification validation passed.")
 
-    def notify(self, module, action, data, validator=None):
+    def notify(self, module, action, data=None, validator=None):
         if not ubus.get_connected():
             logger.debug("Connecting to ubus.")
             ubus.connect(self.socket_path)
+
+        msg = {
+            "module": module,
+            "kind": "notification",
+            "action": action,
+        }
+        if data is not None:
+            msg["data"] = data
 
         object_name = 'foris-controller-%s' % module
         logger.debug(
             "Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data))
 
         if validator:
-            self._validate(
-                {
-                    "module": module,
-                    "kind": "notification",
-                    "action": action,
-                    "data": data,
-                },
-                validator,
-            )
+            self._validate(msg, validator)
 
-        ubus.send(object_name, {"action": action, "data": data})
+        ubus_msg = {"action": msg["action"], "data": msg["data"]} if "data" in msg \
+            else {"action": msg["action"]}
+        ubus.send(object_name, ubus_msg)
 
     def disconnect(self):
         """ Disconnects from ubus
