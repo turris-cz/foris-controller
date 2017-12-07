@@ -59,6 +59,35 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Store backup action request",
+            "properties": {
+                "module": {"enum": ["maintain"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["generate_backup"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Store backup action reply",
+            "properties": {
+                "module": {"enum": ["maintain"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["generate_backup"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "backup": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["backup"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import base64
 
 from .fixtures import backend, infrastructure, ubusd_test
 
@@ -31,3 +32,13 @@ def test_reboot(infrastructure, ubusd_test):
     assert "new_ips" in res["data"].keys()
     notifications = infrastructure.get_notifications(notifications)
     assert "new_ips" in notifications[-1]["data"].keys()
+
+
+def test_generate_backup(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "maintain",
+        "action": "generate_backup",
+        "kind": "request",
+    })
+    assert "backup" in res["data"].keys()
+    base64.b64decode(res["data"]["backup"])

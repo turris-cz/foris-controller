@@ -2,7 +2,7 @@
     "user": "stepan",
     "access": {
         "foris-controller-maintain": {
-            "methods": [ "reboot" ]
+            "methods": [ "reboot", "generate_backup" ]
         }
     },
     "publish": [ "foris-controller-maintain" ],

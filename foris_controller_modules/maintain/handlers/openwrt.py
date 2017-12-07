@@ -45,3 +45,7 @@ class OpenwrtMaintainHandler(Handler, BaseOpenwrtHandler):
         self.cmds.reboot()
 
         return ips
+
+    @logger_wrapper(logger)
+    def generate_backup(self):
+        return self.cmds.generate_backup()

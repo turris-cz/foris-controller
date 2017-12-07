@@ -18,6 +18,7 @@
 #
 
 import logging
+import base64
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -40,3 +41,7 @@ class MockMaintainHandler(Handler, BaseMockHandler):
             "192.168.1.1",
             "2001:1488:fffe:6:2a92:4aff:fecc:a3e",
         ]
+
+    @logger_wrapper(logger)
+    def generate_backup(self):
+        return base64.b64encode("This is backup!!!")

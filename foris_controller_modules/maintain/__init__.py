@@ -38,9 +38,20 @@ class MaintainModule(BaseModule):
         self.notify("reboot", msg)
         return msg
 
+    def action_generate_backup(self, data):
+        """ Which calls a command which returns a backup of curret system
+
+        :param data: input data (supposed to be {})
+        :type data: dict
+        :returns: dict contianing the backup in base64 encoding
+        :rtype: dict
+        """
+        return {"backup": self.handler.generate_backup()}
+
 
 @wrap_required_functions([
     'reboot',
+    'generate_backup',
 ])
 class Handler(object):
     pass
