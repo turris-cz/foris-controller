@@ -1,3 +1,12 @@
+0.8 (2017-12-13)
+----------------
+
+* web module api updates
+* maintain module added
+* support for long messages (>1MB)
+* --extra-module-path (set extra modules from cmdline)
+* cmdline changes `-m mod1,mod2` -> `-m mod1 -m mod2`
+
 0.7.3 (2017-12-07)
 ------------------
 
