@@ -117,7 +117,7 @@ class BaseCmdLine(object):
         if not retval == 0:
             logger.error("Command %s failed." % str(args))
             raise BackendCommandFailed(retval, args)
-        match = re.search(regex, stdout)
+        match = re.search(regex, stdout, re.MULTILINE)
         if not match:
             logger.error("Failed to parse output of %s." % str(args))
             raise FailedToParseCommandOutput(args, stdout)

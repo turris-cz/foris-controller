@@ -61,7 +61,7 @@ class BaseFile(object):
         :rtype: tuple
         """
         content = self._file_content(path)
-        match = re.search(regex, content)
+        match = re.search(regex, content, re.MULTILINE)
         if not match:
             logger.error("Failed to parse content of '%s'." % path)
             raise FailedToParseFileContent(path, content)
