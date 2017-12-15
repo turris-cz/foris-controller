@@ -134,7 +134,8 @@ class SystemInfoFiles(BaseFile):
         :returns: os version
         :rtype: str
         """
-        return self._read_and_parse(SystemInfoFiles.OS_RELEASE_PATH, r'^([0-9]+\.[0-9]+)$', (1, ))
+        return self._read_and_parse(
+            SystemInfoFiles.OS_RELEASE_PATH, r'^([0-9]+(\.[0-9]+)*)$', (1, ))
 
     @readlock(file_lock, logger)
     def get_model(self):
