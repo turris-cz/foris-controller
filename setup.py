@@ -39,6 +39,7 @@ setup(
         'foris_controller_backends.data_collect',
         'foris_controller_backends.files',
         'foris_controller_backends.maintain',
+        'foris_controller_backends.password',
         'foris_controller_backends.services',
         'foris_controller_backends.uci',
         'foris_controller_backends.web',
@@ -51,6 +52,8 @@ setup(
         'foris_controller_modules.dns.handlers',
         'foris_controller_modules.maintain',
         'foris_controller_modules.maintain.handlers',
+        'foris_controller_modules.password',
+        'foris_controller_modules.password.handlers',
         'foris_controller_modules.web',
         'foris_controller_modules.web.handlers',
     ],
@@ -63,6 +66,7 @@ setup(
         'foris_controller_modules.dns': ['schema', 'schema/*.json'],
         'foris_controller_modules.maintain': ['schema', 'schema/*.json'],
         'foris_controller_modules.web': ['schema', 'schema/*.json'],
+        'foris_controller_modules.password': ['schema', 'schema/*.json'],
     },
     scripts=['bin/foris-controller', "bin/foris-notify"],
     url='https://gitlab.labs.nic.cz/turris/foris-controller',
@@ -72,6 +76,7 @@ setup(
     requires=[
         'foris_schema',
         'prctl',
+        'pbkdf2',
     ],
     setup_requires=[
         'pytest-runner',
