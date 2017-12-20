@@ -1,3 +1,10 @@
+0.8.1 (2017-12-20)
+------------------
+
+* new password module added
+* cmdline backend multiline fixes
+* about module version parsing fixes
+
 0.8 (2017-12-13)
 ----------------
 
