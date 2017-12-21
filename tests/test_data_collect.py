@@ -19,6 +19,7 @@
 
 from .fixtures import backend, infrastructure, ubusd_test
 
+
 def test_get_registered(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "data_collect",
@@ -49,3 +50,12 @@ def test_get_registered(infrastructure, ubusd_test):
         }
     })
     assert "status" in res["data"].keys()
+
+
+def test_get(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "get",
+        "kind": "request"
+    })
+    assert "agreed" in res["data"].keys()

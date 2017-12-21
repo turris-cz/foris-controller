@@ -20,6 +20,9 @@
 import re
 
 from foris_controller_backends.cmdline import BaseCmdLine
+from foris_controller_backends.uci import (
+    UciBackend, UciRecordNotFound, parse_bool, get_option_named
+)
 
 
 class RegisteredCmds(BaseCmdLine):
@@ -70,3 +73,14 @@ class RegisteredCmds(BaseCmdLine):
             }
 
         return {"status": "unknown"}
+
+
+class DataCollectUci(object):
+    def get_agreed(self):
+        with UciBackend() as backend:
+            foris_data = backend.read("foris")
+
+        try:
+            return parse_bool(get_option_named(foris_data, "foris", "eula", "agreed_collect"))
+        except UciRecordNotFound:
+            return False

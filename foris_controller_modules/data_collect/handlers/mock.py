@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockDataCollectHandler(Handler, BaseMockHandler):
+    agreed = False
 
     @logger_wrapper(logger)
     def get_registered(self, email, language):
@@ -66,3 +67,11 @@ class MockDataCollectHandler(Handler, BaseMockHandler):
                 "status": "owned",
             },
         ])
+
+    @logger_wrapper(logger)
+    def get_agreed(self):
+        """ Mock getting information whether the user agreed with datacollect
+        :returns: True if user agreed, False otherwise
+        :rtype: boolean
+        """
+        return self.agreed

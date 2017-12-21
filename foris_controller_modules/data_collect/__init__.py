@@ -35,9 +35,19 @@ class DataCollectModule(BaseModule):
         """
         return self.handler.get_registered(data["email"], data["language"])
 
+    def action_get(self, data):
+        """ Get information whether user allowd to collect data
+        :param data: {}
+        :type data: dict
+        :returns: info about data collecting
+        :rtype: dict
+        """
+        return {"agreed": self.handler.get_agreed()}
+
 
 @wrap_required_functions([
     'get_registered',
+    'get_agreed',
 ])
 class Handler(object):
     pass

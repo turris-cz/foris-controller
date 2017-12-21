@@ -2,7 +2,7 @@
     "user": "stepan",
     "access": {
         "foris-controller-data_collect": {
-            "methods": [ "get_registered" ]
+            "methods": [ "get_registered", "get" ]
         }
     },
     "publish": [ "foris-controller-data_collect" ],

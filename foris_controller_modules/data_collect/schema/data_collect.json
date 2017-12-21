@@ -50,7 +50,35 @@
                     ]
                 }
             },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to get information whether about data collect",
+            "properties": {
+                "module": {"enum": ["data_collect"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get"]}
+            },
             "additionalProperties": false
+        },
+        {
+            "description": "Response to get information whether about data collect",
+            "properties": {
+                "module": {"enum": ["data_collect"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "agreed": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["agreed"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

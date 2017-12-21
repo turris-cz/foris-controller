@@ -23,7 +23,7 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.data_collect import (
-    RegisteredCmds
+    RegisteredCmds, DataCollectUci
 )
 
 from .. import Handler
@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 class OpenwrtDataCollectHandler(Handler, BaseOpenwrtHandler):
 
     registered_cmds = RegisteredCmds()
+    uci = DataCollectUci()
 
     @logger_wrapper(logger)
     def get_registered(self, email, language):
@@ -47,3 +48,11 @@ class OpenwrtDataCollectHandler(Handler, BaseOpenwrtHandler):
         :rtype: dict
         """
         return OpenwrtDataCollectHandler.registered_cmds.get_registered(email, language)
+
+    @logger_wrapper(logger)
+    def get_agreed(self):
+        """ Get information whether the user agreed with datacollect
+        :returns: True if user agreed, False otherwise
+        :rtype: boolean
+        """
+        return self.uci.get_agreed()
