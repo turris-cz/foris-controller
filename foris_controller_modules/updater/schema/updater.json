@@ -1,0 +1,51 @@
+{
+    "oneOf": [
+        {
+            "description": "request to get updater settings",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_settings"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "request to get updater settings",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "user_lists": {
+                            "type": "array",
+                            "items": {"type": "string", "minLength": 1}
+                        },
+                        "required_languages": {
+                            "type": "array",
+                            "items": {"$def": "#/definitions/iso2country"}
+                        },
+                        "approvals": {
+                            "type": "object",
+                            "properties": {
+                                "status": {"enum": ["off", "delayed", "on"]},
+                                "delay": {"type": "integer", "minimum": 1, "maximum": 168}
+                            },
+                            "additionalProperties": false,
+                            "required": ["status"]
+                        },
+                        "enabled": {"type": "boolean"},
+                        "branch": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "user_lists", "required_languages", "approvals", "enabled", "branch"
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}
