@@ -21,7 +21,7 @@ import re
 
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.uci import (
-    UciBackend, UciRecordNotFound, parse_bool, get_option_named
+    UciBackend, UciRecordNotFound, parse_bool, get_option_named, store_bool
 )
 
 
@@ -84,3 +84,10 @@ class DataCollectUci(object):
             return parse_bool(get_option_named(foris_data, "foris", "eula", "agreed_collect"))
         except UciRecordNotFound:
             return False
+
+    def set_agreed(self, agreed):
+        with UciBackend() as backend:
+            backend.add_section("foris", "config", "eula")
+            backend.set_option("foris", "eula", "agreed_collect", store_bool(agreed))
+
+        return True

@@ -44,10 +44,23 @@ class DataCollectModule(BaseModule):
         """
         return {"agreed": self.handler.get_agreed()}
 
+    def action_set(self, data):
+        """ Update configuration of data collect
+        :param data: {"agreed": True/False}
+        :type data: dict
+        :returns: {"result": True / False}
+        :rtype: dict
+        """
+        res = self.handler.set_agreed(data["agreed"])
+        if res:
+            self.notify("set", data)
+        return {"result": res}
+
 
 @wrap_required_functions([
     'get_registered',
     'get_agreed',
+    'set_agreed',
 ])
 class Handler(object):
     pass

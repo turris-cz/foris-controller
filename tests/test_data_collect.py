@@ -59,3 +59,50 @@ def test_get(infrastructure, ubusd_test):
         "kind": "request"
     })
     assert "agreed" in res["data"].keys()
+
+
+def test_set(infrastructure, ubusd_test):
+
+    def set_agreed(agreed):
+        notifications = infrastructure.get_notifications()
+        res = infrastructure.process_message({
+            "module": "data_collect",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "agreed": agreed
+            }
+        })
+        assert res == {
+            u'action': u'set',
+            u'data': {u'result': True},
+            u'kind': u'reply',
+            u'module': u'data_collect'
+        }
+        notifications = infrastructure.get_notifications(notifications)
+        assert notifications[-1] == {
+            u"module": u"data_collect",
+            u"action": u"set",
+            u"kind": u"notification",
+            u"data": {
+                u"agreed": agreed,
+            }
+        }
+        res = infrastructure.process_message({
+            "module": "data_collect",
+            "action": "get",
+            "kind": "request"
+        })
+        assert res == {
+            u"module": u"data_collect",
+            u"action": u"get",
+            u"kind": u"reply",
+            u"data": {
+                u"agreed": agreed,
+            }
+        }
+
+    set_agreed(True)
+    set_agreed(False)
+    set_agreed(True)
+    set_agreed(False)

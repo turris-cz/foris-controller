@@ -70,8 +70,17 @@ class MockDataCollectHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_agreed(self):
-        """ Mock getting information whether the user agreed with datacollect
+        """ Mock getting information whether the user agreed with data collect
         :returns: True if user agreed, False otherwise
         :rtype: boolean
         """
         return self.agreed
+
+    @logger_wrapper(logger)
+    def set_agreed(self, agreed):
+        """ Mock setting information whether the user agreed with data collect
+        :returns: True
+        :rtype: boolean
+        """
+        self.agreed = agreed
+        return True

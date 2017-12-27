@@ -51,8 +51,18 @@ class OpenwrtDataCollectHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_agreed(self):
-        """ Get information whether the user agreed with datacollect
+        """ Get information whether the user agreed with data collect
         :returns: True if user agreed, False otherwise
         :rtype: boolean
         """
         return self.uci.get_agreed()
+
+    @logger_wrapper(logger)
+    def set_agreed(self, agreed):
+        """ Mock setting information whether the user agreed with data collect
+        :param agreed: user agreed with data collect (True/False)
+        :type agreed: boolean
+        :returns: True
+        :rtype: boolean
+        """
+        return self.uci.set_agreed(agreed)
