@@ -20,6 +20,7 @@
 import re
 
 from foris_controller_backends.cmdline import BaseCmdLine
+from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.uci import (
     UciBackend, UciRecordNotFound, parse_bool, get_option_named, store_bool
 )
@@ -76,6 +77,9 @@ class RegisteredCmds(BaseCmdLine):
 
 
 class DataCollectUci(object):
+    MINIPOTS = {"23tcp", "2323tcp", "8123tcp", "8080tcp", "80tcp", "3128tcp"}
+    LOG_CREDENTIALS_DEFAULT = False
+
     def get_agreed(self):
         with UciBackend() as backend:
             foris_data = backend.read("foris")
@@ -89,5 +93,49 @@ class DataCollectUci(object):
         with UciBackend() as backend:
             backend.add_section("foris", "config", "eula")
             backend.set_option("foris", "eula", "agreed_collect", store_bool(agreed))
+
+        return True
+
+    def get_honeypots(self):
+        with UciBackend() as backend:
+            ucollect_data = backend.read("ucollect")
+
+        try:
+            log_credentials = parse_bool(get_option_named(
+                ucollect_data, "ucollect", "fakes", "log_credentials",
+                self.LOG_CREDENTIALS_DEFAULT
+            ))
+        except UciRecordNotFound:
+            log_credentials = self.LOG_CREDENTIALS_DEFAULT
+
+        # all minipots seems to be enabled by default
+        minipots = {e: True for e in self.MINIPOTS}
+        try:
+            disabled_minipots = get_option_named(
+                ucollect_data, "ucollect", "fakes", "disable", [])
+            for disabled in set(disabled_minipots).intersection(self.MINIPOTS):
+                minipots[disabled] = False
+
+        except UciRecordNotFound:
+            pass
+
+        return {
+            "log_credentials": log_credentials,
+            "minipots": minipots,
+        }
+
+    def set_honeypots(self, honeypot_data):
+        disabled_minipots = [k for k, v in honeypot_data["minipots"].items() if not v]
+
+        with UciBackend() as backend:
+            backend.add_section("ucollect", "fakes", "fakes")
+            backend.replace_list("ucollect", "fakes", "disable", disabled_minipots)
+            backend.set_option(
+                "ucollect", "fakes", "log_credentials",
+                store_bool(honeypot_data["log_credentials"]),
+            )
+
+        with OpenwrtServices() as services:
+            services.restart("ucollect")
 
         return True

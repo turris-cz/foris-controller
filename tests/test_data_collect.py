@@ -106,3 +106,83 @@ def test_set(infrastructure, ubusd_test):
     set_agreed(False)
     set_agreed(True)
     set_agreed(False)
+
+
+def test_get_honeypots(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "get_honeypots",
+        "kind": "request"
+    })
+    assert {"minipots", "log_credentials"} == set(res["data"].keys())
+
+
+def test_set_honeypots(infrastructure, ubusd_test):
+
+    def set_honeypots(result):
+        notifications = infrastructure.get_notifications()
+        res = infrastructure.process_message({
+            "module": "data_collect",
+            "action": "set_honeypots",
+            "kind": "request",
+            "data": {
+                "minipots": {
+                    "23tcp": result,
+                    "2323tcp": result,
+                    "80tcp": result,
+                    "3128tcp": result,
+                    "8123tcp": result,
+                    "8080tcp": result,
+                },
+                "log_credentials": result,
+            }
+        })
+        assert res == {
+            u'action': u'set_honeypots',
+            u'data': {u'result': True},
+            u'kind': u'reply',
+            u'module': u'data_collect'
+        }
+        notifications = infrastructure.get_notifications(notifications)
+        assert notifications[-1] == {
+            u"module": u"data_collect",
+            u"action": u"set_honeypots",
+            u"kind": u"notification",
+            u"data": {
+                "minipots": {
+                    "23tcp": result,
+                    "2323tcp": result,
+                    "80tcp": result,
+                    "3128tcp": result,
+                    "8123tcp": result,
+                    "8080tcp": result,
+                },
+                "log_credentials": result,
+            }
+        }
+        res = infrastructure.process_message({
+            "module": "data_collect",
+            "action": "get_honeypots",
+            "kind": "request"
+        })
+        assert res == {
+            u"module": u"data_collect",
+            u"action": u"get_honeypots",
+            u"kind": u"reply",
+            u"data": {
+                "minipots": {
+                    "23tcp": result,
+                    "2323tcp": result,
+                    "80tcp": result,
+                    "3128tcp": result,
+                    "8123tcp": result,
+                    "8080tcp": result,
+                },
+                "log_credentials": result,
+            }
+        }
+
+    set_honeypots(True)
+    set_honeypots(False)
+    set_honeypots(True)
+    set_honeypots(False)

@@ -30,6 +30,15 @@ logger = logging.getLogger(__name__)
 
 class MockDataCollectHandler(Handler, BaseMockHandler):
     agreed = False
+    log_credentials = False
+    minipots = {
+        "23tcp": False,
+        "2323tcp": False,
+        "80tcp": False,
+        "3128tcp": False,
+        "8123tcp": False,
+        "8080tcp": False,
+    }
 
     @logger_wrapper(logger)
     def get_registered(self, email, language):
@@ -83,4 +92,28 @@ class MockDataCollectHandler(Handler, BaseMockHandler):
         :rtype: boolean
         """
         self.agreed = agreed
+        return True
+
+    @logger_wrapper(logger)
+    def get_honeypots(self):
+        """ Mock getting configuration of the honeypots
+        :returns: {"minipots": {...}, "log_credentials": True/False}
+        :rtype: dict
+        """
+        return {
+            "minipots": self.minipots,
+            "log_credentials": self.log_credentials,
+        }
+
+    @logger_wrapper(logger)
+    def set_honeypots(self, honepot_settings):
+        """ Mock setting configuration of the honeypots
+        :param honepot_settings: {"minipots": {...}, "log_credentials": True/False}
+        :type honepot_settings: dict
+
+        :returns: True
+        :rtype: boolean
+        """
+        self.log_credentials = honepot_settings["log_credentials"]
+        self.minipots = honepot_settings["minipots"]
         return True

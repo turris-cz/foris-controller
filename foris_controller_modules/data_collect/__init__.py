@@ -56,11 +56,34 @@ class DataCollectModule(BaseModule):
             self.notify("set", data)
         return {"result": res}
 
+    def action_get_honeypots(self, data):
+        """ Get configuration of honeypots
+        :param data: {}
+        :type data: dict
+        :returns: {"minipots": {...}, "log_credentials": True/False}
+        :rtype: dict
+        """
+        return self.handler.get_honeypots()
+
+    def action_set_honeypots(self, data):
+        """ Update configuration of honeypots
+        :param data: {"minipots": {...}, "log_credentials": True/False}
+        :type data: dict
+        :returns: {"result": True / False}
+        :rtype: dict
+        """
+        res = self.handler.set_honeypots(data)
+        if res:
+            self.notify("set_honeypots", data)
+        return {"result": res}
+
 
 @wrap_required_functions([
     'get_registered',
     'get_agreed',
     'set_agreed',
+    'get_honeypots',
+    'set_honeypots',
 ])
 class Handler(object):
     pass

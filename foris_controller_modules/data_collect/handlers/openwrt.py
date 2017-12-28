@@ -66,3 +66,22 @@ class OpenwrtDataCollectHandler(Handler, BaseOpenwrtHandler):
         :rtype: boolean
         """
         return self.uci.set_agreed(agreed)
+
+    @logger_wrapper(logger)
+    def get_honeypots(self):
+        """ Get configuration of the honeypots
+        :returns: {"minipots": {...}, "log_credentials": True/False}
+        :rtype: dict
+        """
+        return self.uci.get_honeypots()
+
+    @logger_wrapper(logger)
+    def set_honeypots(self, honepot_settings):
+        """ Set configuration of the honeypots
+        :param honepot_settings: {"minipots": {...}, "log_credentials": True/False}
+        :type honepot_settings: dict
+
+        :returns: True
+        :rtype: boolean
+        """
+        return self.uci.set_honeypots(honepot_settings)
