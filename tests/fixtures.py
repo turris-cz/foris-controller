@@ -53,7 +53,7 @@ EXTRA_MODULE_PATHS = [
     os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
 ]
 USED_MODULES = [
-    "about", "data_collect", "web", "dns", "maintain", "password", "updater"
+    "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan"
 ]
 
 notifications_lock = Lock()
