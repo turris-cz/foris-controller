@@ -55,28 +55,33 @@ class LanUci(object):
     def get_guest_network_settings(self, network_data, firewall_data, dhcp_data, sqm_data):
         guest = {}
         guest["enabled"] = self.get_guest_enabled(network_data, firewall_data, dhcp_data)
-        if guest["enabled"]:
+
+        try:
             guest["ip"] = get_option_named(
                 network_data, "network", "guest_turris", "ipaddr", self.DEFAULT_GUEST_ADDRESS)
             guest["netmask"] = get_option_named(
                 network_data, "network", "guest_turris", "netmask", self.DEFAULT_GUEST_NETMASK)
-            try:
-                guest["qos"] = {}
-                guest["qos"]["enabled"] = parse_bool(
-                    get_option_named(sqm_data, "sqm", "guest_limit_turris", "enabled", False))
-                if guest["qos"]["enabled"]:
-                    # upload is actually download limit nad vice versa
-                    guest["qos"]["upload"] = int(get_option_named(
-                        sqm_data, "sqm", "guest_limit_turris", "download", 1024))
-                    guest["qos"]["download"] = int(get_option_named(
-                        sqm_data, "sqm", "guest_limit_turris", "upload", 1024))
-            except UciRecordNotFound:
-                # default if qos is missing
-                guest["qos"] = {
-                    "enabled": False,
-                    "upload": 1024,
-                    "download": 1024,
-                }
+        except UciRecordNotFound:
+            guest["ip"] = self.DEFAULT_GUEST_ADDRESS
+            guest["netmask"] = self.DEFAULT_GUEST_NETMASK
+
+        try:
+            guest["qos"] = {}
+            guest["qos"]["enabled"] = parse_bool(
+                get_option_named(sqm_data, "sqm", "guest_limit_turris", "enabled", False))
+            # upload is actually download limit nad vice versa
+            guest["qos"]["upload"] = int(get_option_named(
+                sqm_data, "sqm", "guest_limit_turris", "download", 1024))
+            guest["qos"]["download"] = int(get_option_named(
+                sqm_data, "sqm", "guest_limit_turris", "upload", 1024))
+
+        except UciRecordNotFound:
+            # default if qos is missing
+            guest["qos"] = {
+                "enabled": False,
+                "upload": 1024,
+                "download": 1024,
+            }
 
         return guest
 
@@ -96,11 +101,10 @@ class LanUci(object):
         dhcp = {}
         dhcp["enabled"] = not parse_bool(
             get_option_named(dhcp_data, "dhcp", "lan", "ignore", False))
-        if dhcp["enabled"]:
-            dhcp["start"] = int(get_option_named(
-                dhcp_data, "dhcp", "lan", "start", self.DEFAULT_DHCP_START))
-            dhcp["limit"] = int(get_option_named(
-                dhcp_data, "dhcp", "lan", "limit", self.DEFAULT_DHCP_LIMIT))
+        dhcp["start"] = int(get_option_named(
+            dhcp_data, "dhcp", "lan", "start", self.DEFAULT_DHCP_START))
+        dhcp["limit"] = int(get_option_named(
+            dhcp_data, "dhcp", "lan", "limit", self.DEFAULT_DHCP_LIMIT))
 
         guest = self.get_guest_network_settings(network_data, firewall_data, dhcp_data, sqm_data)
 

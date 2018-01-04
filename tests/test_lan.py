@@ -342,8 +342,16 @@ def test_get_settings(lan_uci_configs, infrastructure, ubusd_test):
     assert "netmask" in res["data"].keys()
     assert "dhcp" in res["data"].keys()
     assert "enabled" in res["data"]["dhcp"].keys()
+    assert "start" in res["data"]["dhcp"].keys()
+    assert "limit" in res["data"]["dhcp"].keys()
     assert "guest_network" in res["data"].keys()
     assert "enabled" in res["data"]["guest_network"].keys()
+    assert "ip" in res["data"]["guest_network"].keys()
+    assert "netmask" in res["data"]["guest_network"].keys()
+    assert "qos" in res["data"]["guest_network"].keys()
+    assert "enabled" in res["data"]["guest_network"]["qos"].keys()
+    assert "upload" in res["data"]["guest_network"]["qos"].keys()
+    assert "download" in res["data"]["guest_network"]["qos"].keys()
 
 
 def test_update_settings(lan_uci_configs, infrastructure, ubusd_test):
@@ -574,3 +582,55 @@ def test_guest_openwrt_backend(
 
     with pytest.raises(UciRecordNotFound):
         assert uci.get_option_named(data, "sqm", "guest_limit_turris", "enabled")
+
+
+def test_wrong_update(lan_uci_configs, infrastructure, ubusd_test):
+
+    def update(data):
+        notifications = infrastructure.get_notifications()
+        res = infrastructure.process_message({
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": data
+        })
+        assert "errors" in res["data"]
+
+    update({
+        u"ip": u"10.1.0.3",
+        u"netmask": u"255.255.0.0",
+        u"dhcp": {
+            u"enabled": False,
+            u"start": 10,
+            u"limit": 50,
+        },
+        u"guest_network": {u"enabled": False},
+    })
+    update({
+        u"ip": u"10.2.0.3",
+        u"netmask": u"255.255.0.0",
+        u"dhcp": {u"enabled": False},
+        u"guest_network": {
+            u"enabled": False,
+            u"ip": u"192.168.8.1",
+            u"netmask": u"255.255.255.0",
+            u"qos": {
+                u"enabled": False,
+            },
+        },
+    })
+    update({
+        u"ip": u"10.3.0.3",
+        u"netmask": u"255.255.0.0",
+        u"dhcp": {u"enabled": False},
+        u"guest_network": {
+            u"enabled": True,
+            u"ip": u"192.168.9.1",
+            u"netmask": u"255.255.255.0",
+            u"qos": {
+                u"enabled": False,
+                u"download": 1200,
+                u"upload": 1000,
+            },
+        },
+    })
