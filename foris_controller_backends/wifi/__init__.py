@@ -31,7 +31,7 @@ class WifiUci(object):
     @staticmethod
     def get_wifi_devices(backend):
         try:
-            wifi_data = backend.read("wifi")
+            wifi_data = backend.read("wireless")
             return get_sections_by_type(wifi_data, "wireless", "wifi-device")
         except (UciException, UciRecordNotFound):
             return []  # no wifi sections -> no gest wifi is running -> we're done
@@ -45,4 +45,4 @@ class WifiUci(object):
         for i, _ in enumerate(WifiUci.get_wifi_devices(backend), 0):
             section_name = "guest_iface_%d" % i
             backend.add_section("wireless", "wifi-iface", section_name)
-            backend.add_option("wireless", section_name, "disabled", store_bool(True))
+            backend.set_option("wireless", section_name, "disabled", store_bool(True))

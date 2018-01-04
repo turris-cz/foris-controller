@@ -366,6 +366,12 @@ def infrastructure_ubus(request, backend):
     yield instance
     instance.exit()
 
+@pytest.fixture(params=["unix-socket", "ubus"], scope="module")
+def infrastructure_openwrt_backend(request, backend):
+    instance = Infrastructure(
+        request.param, "openwrt", request.config.getoption("--debug-output"))
+    yield instance
+    instance.exit()
 
 @pytest.fixture(params=["threading", "multiprocessing"], scope="function")
 def locker_instance(request):

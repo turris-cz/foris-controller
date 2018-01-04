@@ -194,7 +194,7 @@ class LanUci(object):
                 backend.set_option("sqm", "guest_limit_turris", "qdisc", "fq_codel")
                 backend.set_option("sqm", "guest_limit_turris", "script", "simple.qos")
                 backend.set_option("sqm", "guest_limit_turris", "link_layer", "none")
-                backend.set_option("sqm", "guest_limit_turris", "verbosity", "3")
+                backend.set_option("sqm", "guest_limit_turris", "verbosity", "5")
                 backend.set_option("sqm", "guest_limit_turris", "debug_logging", "1")
                 # We need to swap dowload and upload
                 # "upload" means upload to the guest network
