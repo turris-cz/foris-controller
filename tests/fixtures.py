@@ -342,6 +342,12 @@ class Infrastructure(object):
 def backend(backend_param):
     return backend_param
 
+@pytest.fixture(autouse=True)
+def only_backends(request, backend):
+    if request.node.get_marker('only_backends'):
+        if backend not in request.node.get_marker('only_backends').args[0]:
+            pytest.skip("unsupported backend '%s'" % backend)
+
 
 @pytest.fixture(params=["unix-socket", "ubus"], scope="module")
 def infrastructure(request, backend):
