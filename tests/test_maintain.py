@@ -19,7 +19,7 @@
 
 import base64
 
-from .fixtures import backend, infrastructure, ubusd_test
+from .fixtures import backend, message_bus, infrastructure, ubusd_test
 
 BACKUP = """QlpoOTFBWSZTWfUFIisAAoz/nMywAQBAh//wSA+IEf/v//AIAQAEAAIAGGAGnwydud6crndoUFAO
 hWGSaTEYpqn6bVM01HqmxPVHqaMgwBGmm1BpoSZoTIkg9Qeo0AAABk0AGqnieUgyHpDAgAyAZNDI

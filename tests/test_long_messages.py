@@ -22,7 +22,7 @@ import random
 import string
 import uuid
 
-from .fixtures import backend, infrastructure, infrastructure_ubus, ubusd_test
+from .fixtures import backend, message_bus, only_message_buses, infrastructure, ubusd_test
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))
@@ -39,10 +39,11 @@ def test_long_messsages(infrastructure, ubusd_test, chars_len):
     assert res["data"]["reply_msg"] == data
 
 
-def test_ubus_malformed_multipart_resend(infrastructure_ubus, ubusd_test):
+@pytest.mark.only_message_buses(['ubus'])
+def test_ubus_malformed_multipart_resend(infrastructure, ubusd_test):
     # First lets test whether the multipart is working
     request_id = str(uuid.uuid4())
-    res = infrastructure_ubus.process_message_ubus_raw(
+    res = infrastructure.process_message_ubus_raw(
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,
@@ -50,7 +51,7 @@ def test_ubus_malformed_multipart_resend(infrastructure_ubus, ubusd_test):
         final=False,
     )
     assert res is None
-    res = infrastructure_ubus.process_message_ubus_raw(
+    res = infrastructure.process_message_ubus_raw(
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,
@@ -65,7 +66,7 @@ def test_ubus_malformed_multipart_resend(infrastructure_ubus, ubusd_test):
     }
 
     # resend last message
-    res = infrastructure_ubus.process_message_ubus_raw(
+    res = infrastructure.process_message_ubus_raw(
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,
@@ -82,10 +83,11 @@ def test_ubus_malformed_multipart_resend(infrastructure_ubus, ubusd_test):
     }
 
 
-def test_ubus_malformed_multipart_one(infrastructure_ubus, ubusd_test):
+@pytest.mark.only_message_buses(['ubus'])
+def test_ubus_malformed_multipart_one(infrastructure, ubusd_test):
     # resend wrong json in one multipart
     request_id = str(uuid.uuid4())
-    res = infrastructure_ubus.process_message_ubus_raw(
+    res = infrastructure.process_message_ubus_raw(
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,
@@ -102,10 +104,11 @@ def test_ubus_malformed_multipart_one(infrastructure_ubus, ubusd_test):
     }
 
 
-def test_ubus_malformed_multipart_two(infrastructure_ubus, ubusd_test):
+@pytest.mark.only_message_buses(['ubus'])
+def test_ubus_malformed_multipart_two(infrastructure, ubusd_test):
     # resend wrong json in two multiparts
     request_id = str(uuid.uuid4())
-    res = infrastructure_ubus.process_message_ubus_raw(
+    res = infrastructure.process_message_ubus_raw(
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,
@@ -113,7 +116,7 @@ def test_ubus_malformed_multipart_two(infrastructure_ubus, ubusd_test):
         final=False,
     )
     assert res is None
-    res = infrastructure_ubus.process_message_ubus_raw(
+    res = infrastructure.process_message_ubus_raw(
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,

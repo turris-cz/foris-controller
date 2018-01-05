@@ -17,7 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import backend, infrastructure, infrastructure_unix_socket, ubusd_test
+import pytest
+
+from .fixtures import backend, message_bus, only_message_buses, infrastructure, ubusd_test
+
 
 def test_wrong_input_data(infrastructure, ubusd_test):
     res = infrastructure.process_message({
@@ -33,8 +36,9 @@ def test_wrong_input_data(infrastructure, ubusd_test):
     assert "Incorrect input." in res["data"]["errors"][0]["description"]
 
 
-def test_wrong_input_kind(infrastructure_unix_socket, ubusd_test):
-    res = infrastructure_unix_socket.process_message({
+@pytest.mark.only_message_buses(['unix-socket'])
+def test_wrong_input_kind(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
         "module": "about",
         "action": "get",
         "kind": "reply",
@@ -60,8 +64,9 @@ def test_wrong_input_kind(infrastructure_unix_socket, ubusd_test):
             u'module': u'about'
     }
 
-def test_wrong_input_action(infrastructure_unix_socket, ubusd_test):
-    res = infrastructure_unix_socket.process_message({
+@pytest.mark.only_message_buses(['unix-socket'])
+def test_wrong_input_action(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
         "module": "about",
         "action": "non-exiting",
         "kind": "request",
@@ -72,8 +77,10 @@ def test_wrong_input_action(infrastructure_unix_socket, ubusd_test):
     assert "errors" in res["data"]
     assert "Incorrect input." in res["data"]["errors"][0]["description"]
 
-def test_wrong_input_module(infrastructure_unix_socket, ubusd_test):
-    res = infrastructure_unix_socket.process_message({
+
+@pytest.mark.only_message_buses(['unix-socket'])
+def test_wrong_input_module(infrastructure, ubusd_test):
+    res = infrastructure.process_message({
         "module": "non-exiting",
         "action": "get",
         "kind": "request",

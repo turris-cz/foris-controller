@@ -340,44 +340,41 @@ class Infrastructure(object):
 
 @pytest.fixture(scope="module")
 def backend(backend_param):
+    """ The backend name obtained via cmd line args"""
     return backend_param
+
 
 @pytest.fixture(autouse=True)
 def only_backends(request, backend):
+    """ Set which backends should be used (others will be skipped)
+    """
     if request.node.get_marker('only_backends'):
         if backend not in request.node.get_marker('only_backends').args[0]:
-            pytest.skip("unsupported backend '%s'" % backend)
+            pytest.skip("unsupported backend for this test '%s'" % backend)
 
 
 @pytest.fixture(params=["unix-socket", "ubus"], scope="module")
-def infrastructure(request, backend):
-    instance = Infrastructure(
-        request.param, backend, request.config.getoption("--debug-output"))
-    yield instance
-    instance.exit()
+def message_bus(request, backend):
+    """ Message bus name (parametrized fixture) """
+    return request.param
+
+
+@pytest.fixture(autouse=True)
+def only_message_buses(request, message_bus):
+    """ Set which message buses should be used (others will be skipped)
+    """
+    if request.node.get_marker('only_message_buses'):
+        if message_bus not in request.node.get_marker('only_message_buses').args[0]:
+            pytest.skip("unsupported message bus for this test '%s'" % message_bus)
 
 
 @pytest.fixture(scope="module")
-def infrastructure_unix_socket(request, backend):
+def infrastructure(request, backend, message_bus):
     instance = Infrastructure(
-        "unix-socket", backend, request.config.getoption("--debug-output"))
+        message_bus, backend, request.config.getoption("--debug-output"))
     yield instance
     instance.exit()
 
-
-@pytest.fixture(scope="module")
-def infrastructure_ubus(request, backend):
-    instance = Infrastructure(
-        "ubus", backend, request.config.getoption("--debug-output"))
-    yield instance
-    instance.exit()
-
-@pytest.fixture(params=["unix-socket", "ubus"], scope="module")
-def infrastructure_openwrt_backend(request, backend):
-    instance = Infrastructure(
-        request.param, "openwrt", request.config.getoption("--debug-output"))
-    yield instance
-    instance.exit()
 
 @pytest.fixture(params=["threading", "multiprocessing"], scope="function")
 def locker_instance(request):

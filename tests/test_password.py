@@ -21,7 +21,7 @@ import base64
 import random
 import string
 
-from .fixtures import backend, infrastructure, ubusd_test
+from .fixtures import backend, message_bus, infrastructure, ubusd_test
 
 
 def test_set_and_check_system(infrastructure, ubusd_test):

@@ -23,8 +23,7 @@ import pytest
 from foris_controller.exceptions import UciRecordNotFound
 
 from .fixtures import (
-    backend, only_backends, infrastructure, ubusd_test, infrastructure_openwrt_backend,
-    lock_backend
+    backend, message_bus, only_backends, infrastructure, ubusd_test, lock_backend
 )
 from .test_uci import get_uci_module
 from .utils import match_subdict
@@ -441,12 +440,12 @@ def test_update_settings(lan_uci_configs, infrastructure, ubusd_test):
 
 @pytest.mark.only_backends(['openwrt'])
 def test_guest_openwrt_backend(
-        lan_uci_configs, lock_backend, infrastructure_openwrt_backend, ubusd_test):
+        lan_uci_configs, lock_backend, infrastructure, ubusd_test):
 
     uci = get_uci_module(lock_backend)
 
     def update(data):
-        res = infrastructure_openwrt_backend.process_message({
+        res = infrastructure.process_message({
             "module": "lan",
             "action": "update_settings",
             "kind": "request",

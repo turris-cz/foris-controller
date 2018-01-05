@@ -17,7 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import backend, infrastructure, ubusd_test
+from .fixtures import backend, message_bus, infrastructure, ubusd_test
 
 
 def test_get(infrastructure, ubusd_test):
