@@ -17,6 +17,9 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+# load common fixtures
+from .fixtures import controller_modules, extra_module_paths, message_bus, backend
+
 
 def pytest_addoption(parser):
     parser.addoption(

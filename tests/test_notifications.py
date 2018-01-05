@@ -18,6 +18,7 @@
 #
 
 import json
+import os
 import pytest
 import subprocess
 
@@ -25,8 +26,16 @@ from foris_schema import ForisValidator
 
 from foris_controller.utils import get_validator_dirs
 
-from .fixtures import backend, message_bus, infrastructure, ubusd_test, EXTRA_MODULE_PATHS
+from .fixtures import infrastructure, ubusd_test
 
+
+@pytest.fixture(scope="module")
+def extra_module_paths():
+    """ Override of extra module paths fixture
+    """
+    return [
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
+    ]
 
 def notify_cmd(infras, module, action, data, validate=True):
     args = [
@@ -41,7 +50,7 @@ def notify_cmd(infras, module, action, data, validate=True):
 
 
 @pytest.fixture(scope="module")
-def notify_api(infrastructure):
+def notify_api(extra_module_paths, infrastructure):
     if infrastructure.name == "ubus":
         from foris_controller.buses.ubus import UbusNotificationSender
         sender = UbusNotificationSender(infrastructure.notification_sock_path)
@@ -53,7 +62,7 @@ def notify_api(infrastructure):
 
     def notify(module, action, notification=None, validate=True):
         if validate:
-            validator = ForisValidator(*get_validator_dirs([module], EXTRA_MODULE_PATHS))
+            validator = ForisValidator(*get_validator_dirs([module], extra_module_paths))
         else:
             validator = None
         sender.notify(module, action, notification, validator)

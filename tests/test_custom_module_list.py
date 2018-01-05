@@ -17,19 +17,32 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import infrastructure, ubusd_test
+import pytest
+
+from .fixtures import only_message_buses, infrastructure
 
 
-def test_get_settings(infrastructure, ubusd_test):
+@pytest.fixture(scope="module")
+def controller_modules():
+    """ Overriding controller. This is a basically a test for test in which we check,
+        whether test module filtering works properly
+    """
+    # enable only about module
+    return ["about"]
+
+
+@pytest.mark.only_message_buses(['unix-socket'])
+def test_call_existing_and_non_existing(infrastructure):
     res = infrastructure.process_message({
-        "module": "updater",
-        "action": "get_settings",
+        "module": "about",
+        "action": "get",
         "kind": "request",
     })
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "enabled" in res["data"].keys()
-    assert "required_languages" in res["data"].keys()
-    assert "user_lists" in res["data"].keys()
-    assert "approvals" in res["data"].keys()
-    assert "status" in res["data"]["approvals"].keys()
-    assert "branch" in res["data"].keys()
+    assert "errors" not in res["data"]
+
+    res = infrastructure.process_message({
+        "module": "web",
+        "action": "get_data",
+        "kind": "request",
+    })
+    assert "errors" in res["data"]

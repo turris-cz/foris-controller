@@ -46,13 +46,6 @@ UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 
 
-EXTRA_MODULE_PATHS = [
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
-]
-USED_MODULES = [
-    "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan"
-]
-
 notifications_lock = Lock()
 
 
@@ -155,7 +148,7 @@ def unix_notification_listener():
 
 
 class Infrastructure(object):
-    def __init__(self, name, backend_name, debug_output=False):
+    def __init__(self, name, backend_name, modules, extra_module_paths, debug_output=False):
         try:
             os.unlink(SOCK_PATH)
         except:
@@ -190,9 +183,9 @@ class Infrastructure(object):
             self.listener = Process(target=ubus_notification_listener, args=(self._exiting, ))
             self.listener.start()
 
-        modules = list(itertools.chain.from_iterable([("-m", e) for e in USED_MODULES]))
+        modules = list(itertools.chain.from_iterable([("-m", e) for e in modules]))
         extra_paths = list(itertools.chain.from_iterable(
-            [("--extra-module-path", e) for e in EXTRA_MODULE_PATHS]))
+            [("--extra-module-path", e) for e in extra_module_paths]))
 
         args = [
             "bin/foris-controller",
@@ -349,9 +342,28 @@ def only_message_buses(request, message_bus):
 
 
 @pytest.fixture(scope="module")
-def infrastructure(request, backend, message_bus):
+def controller_modules():
+    """ List of used modules. Note the if you want to limit module list,
+        you can easilly override this fixture.
+    """
+    return [
+        "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan"
+    ]
+
+
+@pytest.fixture(scope="module")
+def extra_module_paths():
+    """ List of extra modules paths, (--extra-modules-paths) argument
+    """
+    return []  # by default return an empty list test should override this fixture
+
+
+@pytest.fixture(scope="module")
+def infrastructure(request, backend, message_bus, controller_modules, extra_module_paths):
     instance = Infrastructure(
-        message_bus, backend, request.config.getoption("--debug-output"))
+        message_bus, backend, controller_modules, extra_module_paths,
+        request.config.getoption("--debug-output")
+    )
     yield instance
     instance.exit()
 

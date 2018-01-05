@@ -22,9 +22,7 @@ import pytest
 
 from foris_controller.exceptions import UciRecordNotFound
 
-from .fixtures import (
-    backend, message_bus, only_backends, infrastructure, ubusd_test, lock_backend
-)
+from .fixtures import only_backends, infrastructure, ubusd_test, lock_backend
 from .test_uci import get_uci_module
 from .utils import match_subdict
 

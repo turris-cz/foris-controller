@@ -17,12 +17,22 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import os
 import pytest
 import random
 import string
 import uuid
 
-from .fixtures import backend, message_bus, only_message_buses, infrastructure, ubusd_test
+from .fixtures import only_message_buses, infrastructure, ubusd_test
+
+
+@pytest.fixture(scope="module")
+def extra_module_paths():
+    """ Override of extra module paths fixture
+    """
+    return [
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
+    ]
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))
