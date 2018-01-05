@@ -69,10 +69,10 @@ def get_section(data, config, section):
 
 
 def get_option_named(data, config, section, option, default=None):
-    res = get_section(data, config, section)
     try:
+        res = get_section(data, config, section)
         res = res["data"][option]
-    except KeyError:
+    except (KeyError, UciRecordNotFound):
         if default is None:
             raise UciRecordNotFound(config, section=section, option=option)
         else:
@@ -98,14 +98,14 @@ def get_section_idx(data, config, section_type, idx):
     res = get_sections_by_type(data, config, section_type)
     try:
         res = res[idx]
-    except IndexError:
+    except (IndexError, UciRecordNotFound):
         raise UciRecordNotFound(config, section_type=section_type, section_idx=idx)
     return res
 
 
 def get_option_anonymous(data, config, section_type, idx, option, default=None):
-    res = get_section_idx(data, config, section_type, idx)
     try:
+        res = get_section_idx(data, config, section_type, idx)
         res = res["data"][option]
     except KeyError:
         if default is None:
@@ -121,7 +121,11 @@ class UciBackend(object):
     DEFAULT_CONFIG_DIR = "/etc/config/"
     uci_lock = RWLock(app_info["lock_backend"])
 
-    def __init__(self, config_dir=DEFAULT_CONFIG_DIR):
+    def __init__(self, config_dir=None):
+        if not config_dir:
+            config_dir = os.environ.get("DEFAULT_UCI_CONFIG_DIR", UciBackend.DEFAULT_CONFIG_DIR)
+        logger.debug("Using uci config dir '%s'" % config_dir)
+
         self.affected_configs = set()
         self.config_dir = config_dir
 

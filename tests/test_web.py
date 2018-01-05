@@ -17,10 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import infrastructure, ubusd_test
+from .fixtures import uci_configs_init, infrastructure, ubusd_test
 
 
-def test_get(infrastructure, ubusd_test):
+def test_get(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "get_data",
@@ -33,7 +33,7 @@ def test_get(infrastructure, ubusd_test):
     assert len(res["data"]["language"]) == 2
 
 
-def test_set(infrastructure, ubusd_test):
+def test_set(uci_configs_init, infrastructure, ubusd_test):
     old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "web",
@@ -70,7 +70,7 @@ def test_set(infrastructure, ubusd_test):
     }
 
 
-def test_list(infrastructure, ubusd_test):
+def test_list(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "list_languages",
@@ -81,7 +81,7 @@ def test_list(infrastructure, ubusd_test):
     assert set(res["data"]["languages"]) == {'en', 'cs', 'de'}
 
 
-def test_missing_data(infrastructure, ubusd_test):
+def test_missing_data(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "set_language",

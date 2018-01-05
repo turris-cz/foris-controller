@@ -17,10 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import infrastructure, ubusd_test
+from .fixtures import infrastructure, uci_configs_init, ubusd_test
 
 
-def test_get_registered(infrastructure, ubusd_test):
+def test_get_registered(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "data_collect",
         "action": "get_registered",
@@ -52,7 +52,7 @@ def test_get_registered(infrastructure, ubusd_test):
     assert "status" in res["data"].keys()
 
 
-def test_get(infrastructure, ubusd_test):
+def test_get(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "data_collect",
         "action": "get",

@@ -17,10 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import infrastructure, ubusd_test
+from .fixtures import infrastructure, uci_configs_init, ubusd_test
 
 
-def test_get_settings(infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "dns",
         "action": "get_settings",
@@ -32,7 +32,7 @@ def test_get_settings(infrastructure, ubusd_test):
     assert "dns_from_dhcp_enabled" in res["data"].keys()
 
 
-def test_update_settings(infrastructure, ubusd_test):
+def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
@@ -92,7 +92,7 @@ def test_update_settings(infrastructure, ubusd_test):
     }
 
 
-def test_update_and_get_settings(infrastructure, ubusd_test):
+def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
@@ -169,7 +169,7 @@ def test_update_and_get_settings(infrastructure, ubusd_test):
     assert res['data']["dns_from_dhcp_domain"] == "test"
 
 
-def test_connection_test(infrastructure, ubusd_test):
+def test_connection_test(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "dns",
         "action": "connection_test_status",

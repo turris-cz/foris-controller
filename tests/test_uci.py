@@ -20,14 +20,20 @@
 import pytest
 import subprocess
 import re
+import os
 
 from collections import OrderedDict
 
 from foris_controller.exceptions import UciException, UciTypeException, UciRecordNotFound
 
-from .fixtures import lock_backend, uci_config_dir
+from .fixtures import lock_backend, uci_configs_init
+
+CONFIG_PATH = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "uci_configs", "uci_tests"
+)
 
 
+@pytest.mark.uci_config_path(CONFIG_PATH)
 def get_uci_module(lock_backend):
     from foris_controller.app import app_info
     app_info["lock_backend"] = lock_backend
@@ -35,87 +41,100 @@ def get_uci_module(lock_backend):
     return uci
 
 
+@pytest.mark.uci_config_path(CONFIG_PATH)
 def show(config_dir):
     process = subprocess.Popen(["uci", "-c", config_dir, "show"], stdout=subprocess.PIPE)
     stdout, _ = process.communicate()
     return stdout
 
 
-def test_init(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_init(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    with backend_class(uci_config_dir):
+    with backend_class(config_dir):
         pass
 
 
-def test_add_named_section(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_add_named_section(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.named1=named" in show(uci_config_dir)
+    assert "test2.named1=named" in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         res1 = backend.add_section("test1", "test_section", "named1")
         res2 = backend.add_section("test2", "named", "named1")
 
     assert res1 is None
     assert res2 is None
-    assert "test1.named1=test_section" in show(uci_config_dir)
-    assert "test2.named1=named" in show(uci_config_dir)
+    assert "test1.named1=test_section" in show(config_dir)
+    assert "test2.named1=named" in show(config_dir)
 
 
-def test_add_anonymous_section(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_add_anonymous_section(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         name = backend.add_section("test1", "test_section")
 
     name = name.strip()
     assert re.search(r"^cfg[0-9a-f]{6}$", name)
 
-    assert "test1.@test_section[0]=test_section" in show(uci_config_dir)
+    assert "test1.@test_section[0]=test_section" in show(config_dir)
 
 
-def test_del_named_section(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_del_named_section(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.named2=named" in show(uci_config_dir)
-    assert "test2.named3=named" not in show(uci_config_dir)
+    assert "test2.named2=named" in show(config_dir)
+    assert "test2.named3=named" not in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         backend.del_section("test2", "named2")
         with pytest.raises(UciException):
             backend.del_section("test2", "named3")
 
-    assert "test2.named2=named" not in show(uci_config_dir)
-    assert "test2.named3=named" not in show(uci_config_dir)
+    assert "test2.named2=named" not in show(config_dir)
+    assert "test2.named3=named" not in show(config_dir)
 
 
-def test_del_anonymous_section(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_del_anonymous_section(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
-    assert "test2.@anonymous[2]=anonymous" not in show(uci_config_dir)
+    assert "test2.@anonymous[1]=anonymous" in show(config_dir)
+    assert "test2.@anonymous[2]=anonymous" not in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         with pytest.raises(UciException):
             backend.del_section("test2", "@anonymous[2]")
         backend.del_section("test2", "@anonymous[1]")
 
-    assert "test2.@anonymous[1]=anonymous" not in show(uci_config_dir)
-    assert "test2.@anonymous[2]=anonymous" not in show(uci_config_dir)
+    assert "test2.@anonymous[1]=anonymous" not in show(config_dir)
+    assert "test2.@anonymous[2]=anonymous" not in show(config_dir)
 
 
-def test_set_option(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_set_option(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
-    assert "test2.named2=named" in show(uci_config_dir)
-    assert "test2.@anonymous[1].option1='aeb bb'" in show(uci_config_dir)
-    assert "test2.named2.option1='aeb bb'" in show(uci_config_dir)
-    assert "test2.named3.option1='non-existing'" not in show(uci_config_dir)
-    assert "non_existing.named3.option1='non-existing'" not in show(uci_config_dir)
+    assert "test2.@anonymous[1]=anonymous" in show(config_dir)
+    assert "test2.named2=named" in show(config_dir)
+    assert "test2.@anonymous[1].option1='aeb bb'" in show(config_dir)
+    assert "test2.named2.option1='aeb bb'" in show(config_dir)
+    assert "test2.named3.option1='non-existing'" not in show(config_dir)
+    assert "non_existing.named3.option1='non-existing'" not in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         backend.set_option("test2", "@anonymous[1]", "new_option", "val 1")
         backend.set_option("test2", "named2", "new_option", "val 2")
         backend.set_option("test2", "@anonymous[1]", "option1", "val 1")
@@ -125,23 +144,25 @@ def test_set_option(lock_backend, uci_config_dir):
         with pytest.raises(UciException):
             backend.set_option("non_existing", "named3", "option1", "non-existing")
 
-    assert "test2.@anonymous[1].new_option='val 1'" in show(uci_config_dir)
-    assert "test2.named2.new_option='val 2'" in show(uci_config_dir)
-    assert "test2.@anonymous[1].option1='val 1'" in show(uci_config_dir)
-    assert "test2.named2.option1='val 2'" in show(uci_config_dir)
-    assert "test2.named3.option1='non-existing'" not in show(uci_config_dir)
-    assert "non_existing.named3.option1='non-existing'" not in show(uci_config_dir)
+    assert "test2.@anonymous[1].new_option='val 1'" in show(config_dir)
+    assert "test2.named2.new_option='val 2'" in show(config_dir)
+    assert "test2.@anonymous[1].option1='val 1'" in show(config_dir)
+    assert "test2.named2.option1='val 2'" in show(config_dir)
+    assert "test2.named3.option1='non-existing'" not in show(config_dir)
+    assert "non_existing.named3.option1='non-existing'" not in show(config_dir)
 
 
-def test_del_option(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_del_option(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.@anonymous[1].option2='xxx'" in show(uci_config_dir)
-    assert "test2.named2.option2='xxx'" in show(uci_config_dir)
-    assert "test2.named3.option2='xxx'" not in show(uci_config_dir)
-    assert "non_existing.named3.option2='xxx'" not in show(uci_config_dir)
+    assert "test2.@anonymous[1].option2='xxx'" in show(config_dir)
+    assert "test2.named2.option2='xxx'" in show(config_dir)
+    assert "test2.named3.option2='xxx'" not in show(config_dir)
+    assert "non_existing.named3.option2='xxx'" not in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         backend.del_option("test2", "@anonymous[1]", "option2")
         backend.del_option("test2", "named2", "option2")
         with pytest.raises(UciException):
@@ -149,23 +170,25 @@ def test_del_option(lock_backend, uci_config_dir):
         with pytest.raises(UciException):
             backend.del_option("non_existing", "named3", "option2")
 
-    assert "test2.@anonymous[1].option2='xxx'" not in show(uci_config_dir)
-    assert "test2.named2.option2='xxx'" not in show(uci_config_dir)
-    assert "test2.named3.option2='xxx'" not in show(uci_config_dir)
-    assert "non_existing.named3.option2='xxx'" not in show(uci_config_dir)
+    assert "test2.@anonymous[1].option2='xxx'" not in show(config_dir)
+    assert "test2.named2.option2='xxx'" not in show(config_dir)
+    assert "test2.named3.option2='xxx'" not in show(config_dir)
+    assert "non_existing.named3.option2='xxx'" not in show(config_dir)
 
 
-def test_add_to_list(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_add_to_list(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.@anonymous[0].new_list" not in show(uci_config_dir)
-    assert "test2.named1.new_list" not in show(uci_config_dir)
-    assert "test2.@anonymous[1].list1='single item'" in show(uci_config_dir)
-    assert "test2.named2.list1='single item'" in show(uci_config_dir)
-    assert "test2.named3.list1='non' 'existing'" not in show(uci_config_dir)
-    assert "non_existing.named3.list1='existing' 'non'" not in show(uci_config_dir)
+    assert "test2.@anonymous[0].new_list" not in show(config_dir)
+    assert "test2.named1.new_list" not in show(config_dir)
+    assert "test2.@anonymous[1].list1='single item'" in show(config_dir)
+    assert "test2.named2.list1='single item'" in show(config_dir)
+    assert "test2.named3.list1='non' 'existing'" not in show(config_dir)
+    assert "non_existing.named3.list1='existing' 'non'" not in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         backend.add_to_list("test2", "@anonymous[0]", "new_list", ["1 2", "3 4", "5 6"])
         backend.add_to_list("test2", "named1", "new_list", ["2 1", "4 3", "6 5"])
         backend.add_to_list("test2", "@anonymous[1]", "list1", ["3 4", "5 6"])
@@ -175,25 +198,27 @@ def test_add_to_list(lock_backend, uci_config_dir):
         with pytest.raises(UciException):
             backend.add_to_list("non_existing", "named3", "list1", ["existing", "non"])
 
-    assert "test2.@anonymous[0].new_list='1 2' '3 4' '5 6'" in show(uci_config_dir)
-    assert "test2.named1.new_list='2 1' '4 3' '6 5'" in show(uci_config_dir)
-    assert "test2.@anonymous[1].list1='single item' '3 4' '5 6'" in show(uci_config_dir)
-    assert "test2.named2.list1='single item' '4 3' '6 5'" in show(uci_config_dir)
-    assert "test2.named3.list1='non' 'existing'" not in show(uci_config_dir)
-    assert "non_existing.named3.list1='existing' 'non'" not in show(uci_config_dir)
+    assert "test2.@anonymous[0].new_list='1 2' '3 4' '5 6'" in show(config_dir)
+    assert "test2.named1.new_list='2 1' '4 3' '6 5'" in show(config_dir)
+    assert "test2.@anonymous[1].list1='single item' '3 4' '5 6'" in show(config_dir)
+    assert "test2.named2.list1='single item' '4 3' '6 5'" in show(config_dir)
+    assert "test2.named3.list1='non' 'existing'" not in show(config_dir)
+    assert "non_existing.named3.list1='existing' 'non'" not in show(config_dir)
 
 
-def test_del_from_list(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_del_from_list(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.@anonymous[1].list1='single item'" in show(uci_config_dir)
-    assert "test2.named2.list2='item 1' 'item 2' 'item 3' 'item 4'" in show(uci_config_dir)
-    assert "test2.named2.list3='itema' 'itemb'" in show(uci_config_dir)
-    assert "test2.named2.non_existing" not in show(uci_config_dir)
-    assert "test2.non_existing.non_existing" not in show(uci_config_dir)
-    assert "non_existing.non_existing.non_existing" not in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1='single item'" in show(config_dir)
+    assert "test2.named2.list2='item 1' 'item 2' 'item 3' 'item 4'" in show(config_dir)
+    assert "test2.named2.list3='itema' 'itemb'" in show(config_dir)
+    assert "test2.named2.non_existing" not in show(config_dir)
+    assert "test2.non_existing.non_existing" not in show(config_dir)
+    assert "non_existing.non_existing.non_existing" not in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         backend.del_from_list("test2", "@anonymous[1]", "list1", ["single item"])
         backend.del_from_list("test2", "named2", "list2", ["item 2", "item 4", "item 6"])
         backend.del_from_list("test2", "named2", "list3")
@@ -204,26 +229,28 @@ def test_del_from_list(lock_backend, uci_config_dir):
         with pytest.raises(UciException):
             backend.del_from_list("non_existing", "non_existing", "non_existing")
 
-    assert "test2.@anonymous[1].list1" not in show(uci_config_dir)
-    assert "test2.named2.list2='item 1' 'item 3'" in show(uci_config_dir)
-    assert "test2.named2.list3" not in show(uci_config_dir)
-    assert "test2.named2.non_existing" not in show(uci_config_dir)
-    assert "test2.non_existing.non_existing" not in show(uci_config_dir)
-    assert "non_existing.non_existing.non_existing" not in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1" not in show(config_dir)
+    assert "test2.named2.list2='item 1' 'item 3'" in show(config_dir)
+    assert "test2.named2.list3" not in show(config_dir)
+    assert "test2.named2.non_existing" not in show(config_dir)
+    assert "test2.non_existing.non_existing" not in show(config_dir)
+    assert "non_existing.non_existing.non_existing" not in show(config_dir)
 
 
-def test_replace_list(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_replace_list(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.@anonymous[1].list1='single item'" in show(uci_config_dir)
-    assert "test2.named2.list1='single item'" in show(uci_config_dir)
-    assert "test2.named2.list2='item 1' 'item 2' 'item 3' 'item 4'" in show(uci_config_dir)
-    assert "test2.named2.non_existing" not in show(uci_config_dir)
-    assert "test2.named2.new_list" not in show(uci_config_dir)
-    assert "test2.non_existing.non_existing" not in show(uci_config_dir)
-    assert "non_existing.non_existing.non_existing" not in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1='single item'" in show(config_dir)
+    assert "test2.named2.list1='single item'" in show(config_dir)
+    assert "test2.named2.list2='item 1' 'item 2' 'item 3' 'item 4'" in show(config_dir)
+    assert "test2.named2.non_existing" not in show(config_dir)
+    assert "test2.named2.new_list" not in show(config_dir)
+    assert "test2.non_existing.non_existing" not in show(config_dir)
+    assert "non_existing.non_existing.non_existing" not in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         backend.replace_list("test2", "@anonymous[1]", "list1", ["my items", "are", "brand new"])
         backend.replace_list("test2", "named2", "list2", ["item 2", "item 3", "item 5"])
         backend.replace_list("test2", "named2", "list1", [])
@@ -234,22 +261,24 @@ def test_replace_list(lock_backend, uci_config_dir):
         with pytest.raises(UciException):
             backend.replace_list("non_existing", "non_existing", "new_list", ["new 3"])
 
-    assert "test2.@anonymous[1].list1='my items' 'are' 'brand new'" in show(uci_config_dir)
-    assert "test2.named2.list2='item 2' 'item 3' 'item 5'" in show(uci_config_dir)
-    assert "test2.named2.list1" not in show(uci_config_dir)
-    assert "test2.named2.non_existing2" not in show(uci_config_dir)
-    assert "test2.named2.new_list='new 1' 'new 2' 'new 3'" in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1='my items' 'are' 'brand new'" in show(config_dir)
+    assert "test2.named2.list2='item 2' 'item 3' 'item 5'" in show(config_dir)
+    assert "test2.named2.list1" not in show(config_dir)
+    assert "test2.named2.non_existing2" not in show(config_dir)
+    assert "test2.named2.new_list='new 1' 'new 2' 'new 3'" in show(config_dir)
 
 
-def test_replace_session(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_replace_session(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
-    assert "test2.@anonymous[1].list1" in show(uci_config_dir)
-    assert "test2.named2=named" in show(uci_config_dir)
-    assert "test2.named2.list1" in show(uci_config_dir)
+    assert "test2.@anonymous[1]=anonymous" in show(config_dir)
+    assert "test2.@anonymous[1].list1" in show(config_dir)
+    assert "test2.named2=named" in show(config_dir)
+    assert "test2.named2.list1" in show(config_dir)
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         backend.del_section("test2", "named2")
         backend.add_section("test2", "named", "named2")
         backend.set_option("test2", "named2", "new_option", "value1")
@@ -260,20 +289,22 @@ def test_replace_session(lock_backend, uci_config_dir):
         backend.set_option("test2", a_name, "new_option", "valuea")
         backend.add_to_list("test2", a_name, "new_list", ["vala", "valb", "valc"])
 
-    assert "test2.@anonymous[1].list1" not in show(uci_config_dir)
-    assert "test2.named2.list1" not in show(uci_config_dir)
-    assert "test2.named2=named" in show(uci_config_dir)
-    assert "test2.named2.new_option='value1'" in show(uci_config_dir)
-    assert "test2.named2.new_list='val1' 'val2' 'val3'" in show(uci_config_dir)
-    assert "test2.@anonymous[1]=anonymous" in show(uci_config_dir)
-    assert "test2.@anonymous[1].new_option='valuea'" in show(uci_config_dir)
-    assert "test2.@anonymous[1].new_list='vala' 'valb' 'valc'" in show(uci_config_dir)
+    assert "test2.@anonymous[1].list1" not in show(config_dir)
+    assert "test2.named2.list1" not in show(config_dir)
+    assert "test2.named2=named" in show(config_dir)
+    assert "test2.named2.new_option='value1'" in show(config_dir)
+    assert "test2.named2.new_list='val1' 'val2' 'val3'" in show(config_dir)
+    assert "test2.@anonymous[1]=anonymous" in show(config_dir)
+    assert "test2.@anonymous[1].new_option='valuea'" in show(config_dir)
+    assert "test2.@anonymous[1].new_list='vala' 'valb' 'valc'" in show(config_dir)
 
 
-def test_read(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_read(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     backend_class = get_uci_module(lock_backend).UciBackend
 
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         res1 = backend.read('test1')
         res2 = backend.read('test2')
         res3 = backend.read()
@@ -336,7 +367,9 @@ def test_read(lock_backend, uci_config_dir):
     }
 
 
-def test_bool(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_bool(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     TRUE = ["1", "on", "true", "yes", "enabled"]
     FALSE = ["0", "off", "false", "no", "disabled"]
     uci = get_uci_module(lock_backend)
@@ -356,11 +389,13 @@ def test_bool(lock_backend, uci_config_dir):
     assert uci.store_bool(False) == "0"
 
 
-def test_parse_read_data(lock_backend, uci_config_dir):
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_parse_read_data(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
     uci = get_uci_module(lock_backend)
 
     backend_class = get_uci_module(lock_backend).UciBackend
-    with backend_class(uci_config_dir) as backend:
+    with backend_class(config_dir) as backend:
         res1 = backend.read('test1')
         res2 = backend.read('test2')
 

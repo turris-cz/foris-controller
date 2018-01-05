@@ -18,6 +18,7 @@
 #
 
 
+import glob
 import itertools
 import json
 import os
@@ -148,11 +149,15 @@ def unix_notification_listener():
 
 
 class Infrastructure(object):
-    def __init__(self, name, backend_name, modules, extra_module_paths, debug_output=False):
+    def __init__(
+        self, name, backend_name, modules, extra_module_paths, uci_config_dir, debug_output=False
+            ):
         try:
             os.unlink(SOCK_PATH)
         except:
             pass
+
+        os.environ["DEFAULT_UCI_CONFIG_DIR"] = uci_config_dir
 
         self.name = name
         self.backend_name = backend_name
@@ -361,7 +366,7 @@ def extra_module_paths():
 @pytest.fixture(scope="module")
 def infrastructure(request, backend, message_bus, controller_modules, extra_module_paths):
     instance = Infrastructure(
-        message_bus, backend, controller_modules, extra_module_paths,
+        message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
         request.config.getoption("--debug-output")
     )
     yield instance
@@ -378,47 +383,31 @@ def lock_backend(request):
         yield multiprocessing
 
 
-@pytest.fixture(scope="function")
-def uci_config_dir():
+@pytest.fixture(autouse=True, scope="function")
+def uci_configs_init(request):
+    """ Sets directory from where the uci configs should be looaded
+        yields path to modified directory and path to original directory
+    """
+    if request.node.get_marker('uci_config_path'):
+        dir_path = request.node.get_marker('uci_config_path').args[0]
+    else:
+        dir_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
+        )
+
+    # remove target dir
     shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)
     try:
         os.makedirs(UCI_CONFIG_DIR_PATH)
     except IOError:
         pass
 
-    with open(os.path.join(UCI_CONFIG_DIR_PATH, 'test1'), 'w+'):
-        pass
+    # copy all the content of a directory
+    for path in glob.glob("%s/*" % dir_path):
+        shutil.copy(path, UCI_CONFIG_DIR_PATH)
 
-    with open(os.path.join(UCI_CONFIG_DIR_PATH, 'test2'), 'w+') as f:
-        f.write("""
-config anonymous
+    # yield paths
+    yield UCI_CONFIG_DIR_PATH, dir_path
 
-config anonymous
-	option option1 'aeb bb'
-	option option2 'xxx'
-	list list1 'single item'
-	list list2 'item 1'
-	list list2 'item 2'
-	list list2 'item 3'
-	list list2 'item 4'
-    list list3 'itema'
-    list list3 'itemb'
-
-config named 'named1'
-
-config named 'named2'
-	option option1 'aeb bb'
-	option option2 'xxx'
-	list list1 'single item'
-	list list2 'item 1'
-	list list2 'item 2'
-	list list2 'item 3'
-	list list2 'item 4'
-    list list3 'itema'
-    list list3 'itemb'
-"""
-        )
-
-    yield UCI_CONFIG_DIR_PATH
-
+    # cleanup
     shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)

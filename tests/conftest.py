@@ -18,7 +18,9 @@
 #
 
 # load common fixtures
-from .fixtures import controller_modules, extra_module_paths, message_bus, backend
+from .fixtures import (
+    controller_modules, extra_module_paths, message_bus, backend
+)
 
 
 def pytest_addoption(parser):

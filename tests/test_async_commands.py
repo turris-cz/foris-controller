@@ -21,7 +21,7 @@ import os
 import pytest
 import time
 
-from .fixtures import lock_backend, uci_config_dir
+from .fixtures import lock_backend
 
 NOTIFICATION_PATH = "/tmp/async-notification.txt"
 RESET_PATH = "/tmp/async-reset.txt"

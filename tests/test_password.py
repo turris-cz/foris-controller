@@ -21,10 +21,10 @@ import base64
 import random
 import string
 
-from .fixtures import infrastructure, ubusd_test
+from .fixtures import uci_configs_init, infrastructure, ubusd_test
 
 
-def test_set_and_check_system(infrastructure, ubusd_test):
+def test_set_and_check_system(uci_configs_init, infrastructure, ubusd_test):
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
@@ -56,7 +56,7 @@ def test_set_and_check_system(infrastructure, ubusd_test):
     assert res["data"]["status"] != u"good"
 
 
-def test_set_and_check_foris(infrastructure, ubusd_test):
+def test_set_and_check_foris(uci_configs_init, infrastructure, ubusd_test):
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({

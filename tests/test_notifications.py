@@ -26,7 +26,7 @@ from foris_schema import ForisValidator
 
 from foris_controller.utils import get_validator_dirs
 
-from .fixtures import infrastructure, ubusd_test
+from .fixtures import uci_configs_init, infrastructure, ubusd_test
 
 
 @pytest.fixture(scope="module")
@@ -71,7 +71,7 @@ def notify_api(extra_module_paths, infrastructure):
     sender.disconnect()
 
 
-def test_notify_cmd(infrastructure, ubusd_test):
+def test_notify_cmd(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     retval, stdout, stderr = notify_cmd(
         infrastructure, "web", "set_language", {"language": "en"}, True)
@@ -104,7 +104,7 @@ def test_notify_cmd(infrastructure, ubusd_test):
     }
 
 
-def test_notify_api(infrastructure, ubusd_test, notify_api):
+def test_notify_api(uci_configs_init, infrastructure, ubusd_test, notify_api):
     notify = notify_api
     notifications = infrastructure.get_notifications()
     notify("web", "set_language", {"language": "en"}, True)

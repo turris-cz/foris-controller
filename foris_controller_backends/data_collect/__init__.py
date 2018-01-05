@@ -103,7 +103,7 @@ class DataCollectUci(object):
         try:
             log_credentials = parse_bool(get_option_named(
                 ucollect_data, "ucollect", "fakes", "log_credentials",
-                self.LOG_CREDENTIALS_DEFAULT
+                store_bool(self.LOG_CREDENTIALS_DEFAULT)
             ))
         except UciRecordNotFound:
             log_credentials = self.LOG_CREDENTIALS_DEFAULT

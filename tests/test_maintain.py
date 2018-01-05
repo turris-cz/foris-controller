@@ -19,7 +19,7 @@
 
 import base64
 
-from .fixtures import infrastructure, ubusd_test
+from .fixtures import infrastructure, uci_configs_init, ubusd_test
 
 BACKUP = """QlpoOTFBWSZTWfUFIisAAoz/nMywAQBAh//wSA+IEf/v//AIAQAEAAIAGGAGnwydud6crndoUFAO
 hWGSaTEYpqn6bVM01HqmxPVHqaMgwBGmm1BpoSZoTIkg9Qeo0AAABk0AGqnieUgyHpDAgAyAZNDI
@@ -52,7 +52,7 @@ ciVFA8lMq61280Ik4kAn/i7kinChIeoKRFY=
 """
 
 
-def test_reboot(infrastructure, ubusd_test):
+def test_reboot(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "maintain",
@@ -64,7 +64,7 @@ def test_reboot(infrastructure, ubusd_test):
     assert "new_ips" in notifications[-1]["data"].keys()
 
 
-def test_generate_backup(infrastructure, ubusd_test):
+def test_generate_backup(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "maintain",
         "action": "generate_backup",
@@ -74,7 +74,7 @@ def test_generate_backup(infrastructure, ubusd_test):
     base64.b64decode(res["data"]["backup"])
 
 
-def test_restore_backup(infrastructure, ubusd_test):
+def test_restore_backup(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "maintain",
@@ -93,7 +93,7 @@ def test_restore_backup(infrastructure, ubusd_test):
     }
 
 
-def test_generate_and_restore(infrastructure, ubusd_test):
+def test_generate_and_restore(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
 
     res = infrastructure.process_message({
