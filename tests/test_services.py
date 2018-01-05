@@ -19,16 +19,55 @@
 
 import os
 import pytest
+import shutil
+import stat
 
-from .fixtures import lock_backend, service_scripts
+from .fixtures import lock_backend
 
 from foris_controller.exceptions import ServiceCmdFailed
 
-def get_service_module(lock_backend):
+SERVICE_SCRIPT_DIR_PATH = "/tmp/test_init/"
+
+
+@pytest.fixture(scope="module")
+def service_scripts():
+    shutil.rmtree(SERVICE_SCRIPT_DIR_PATH, ignore_errors=True)
+    try:
+        os.makedirs(SERVICE_SCRIPT_DIR_PATH)
+    except IOError:
+        pass
+
+    fail_file = os.path.join(SERVICE_SCRIPT_DIR_PATH, 'fail')
+    with open(fail_file, 'w+') as f:
+        f.write("""#!/bin/sh
+echo failed $1 > %s
+echo FAILED 1>&2
+exit 1
+""" % os.path.join(SERVICE_SCRIPT_DIR_PATH, "result")
+        )
+    os.chmod(fail_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+    pass_file = os.path.join(SERVICE_SCRIPT_DIR_PATH, 'pass')
+    with open(pass_file, 'w+') as f:
+        f.write("""#!/bin/sh
+echo passed $1 > %s
+echo PASS
+exit 0
+""" % os.path.join(SERVICE_SCRIPT_DIR_PATH, "result")
+        )
+    os.chmod(pass_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+    yield SERVICE_SCRIPT_DIR_PATH
+
+    shutil.rmtree(SERVICE_SCRIPT_DIR_PATH, ignore_errors=True)
+
+
+@pytest.fixture
+def service_class(lock_backend):
     from foris_controller.app import app_info
     app_info["lock_backend"] = lock_backend
     from foris_controller_backends import services
-    return services
+    return services.OpenwrtServices
 
 
 def get_results(script_dir):
@@ -37,10 +76,9 @@ def get_results(script_dir):
     return res.split(" ")
 
 
-def test_start(lock_backend, service_scripts):
-    services_class = get_service_module(lock_backend).OpenwrtServices
+def test_start(service_scripts, service_class):
 
-    with services_class(service_scripts) as services:
+    with service_class(service_scripts) as services:
         services.start("pass")
         assert "passed", "start" == get_results(service_scripts)
         with pytest.raises(ServiceCmdFailed):
@@ -50,10 +88,9 @@ def test_start(lock_backend, service_scripts):
         assert "failed", "start" == get_results(service_scripts)
 
 
-def test_stop(lock_backend, service_scripts):
-    services_class = get_service_module(lock_backend).OpenwrtServices
+def test_stop(service_scripts, service_class):
 
-    with services_class(service_scripts) as services:
+    with service_class(service_scripts) as services:
         services.stop("pass")
         assert "passed", "stop" == get_results(service_scripts)
         with pytest.raises(ServiceCmdFailed):
@@ -63,10 +100,9 @@ def test_stop(lock_backend, service_scripts):
         assert "failed", "stop" == get_results(service_scripts)
 
 
-def test_restart(lock_backend, service_scripts):
-    services_class = get_service_module(lock_backend).OpenwrtServices
+def test_restart(service_scripts, service_class):
 
-    with services_class(service_scripts) as services:
+    with service_class(service_scripts) as services:
         services.restart("pass")
         assert "passed", "restart" == get_results(service_scripts)
         with pytest.raises(ServiceCmdFailed):
@@ -76,10 +112,9 @@ def test_restart(lock_backend, service_scripts):
         assert "failed", "restart" == get_results(service_scripts)
 
 
-def test_reload(lock_backend, service_scripts):
-    services_class = get_service_module(lock_backend).OpenwrtServices
+def test_reload(service_scripts, service_class):
 
-    with services_class(service_scripts) as services:
+    with service_class(service_scripts) as services:
         services.reload("pass")
         assert "passed", "reload" == get_results(service_scripts)
         with pytest.raises(ServiceCmdFailed):
@@ -89,10 +124,9 @@ def test_reload(lock_backend, service_scripts):
         assert "failed", "reload" == get_results(service_scripts)
 
 
-def test_enable(lock_backend, service_scripts):
-    services_class = get_service_module(lock_backend).OpenwrtServices
+def test_enable(service_scripts, service_class):
 
-    with services_class(service_scripts) as services:
+    with service_class(service_scripts) as services:
         services.enable("pass")
         assert "passed", "enable" == get_results(service_scripts)
         with pytest.raises(ServiceCmdFailed):
@@ -102,10 +136,9 @@ def test_enable(lock_backend, service_scripts):
         assert "failed", "enable" == get_results(service_scripts)
 
 
-def test_disable(lock_backend, service_scripts):
-    services_class = get_service_module(lock_backend).OpenwrtServices
+def test_disable(service_scripts, service_class):
 
-    with services_class(service_scripts) as services:
+    with service_class(service_scripts) as services:
         services.disable("pass")
         assert "passed", "disable" == get_results(service_scripts)
         with pytest.raises(ServiceCmdFailed):

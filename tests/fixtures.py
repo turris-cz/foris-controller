@@ -24,7 +24,6 @@ import os
 import pytest
 import socket
 import shutil
-import stat
 import struct
 import subprocess
 import sys
@@ -39,14 +38,12 @@ else:
 
 from multiprocessing import Process, Value, Lock
 
-from foris_controller.utils import RWLock
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
 NOTIFICATION_SOCK_PATH = "/tmp/foris-controller-notifications-test.soc"
 NOTIFICATIONS_OUTPUT_PATH = "/tmp/foris-controller-notifications-test.json"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
-SERVICE_SCRIPT_DIR_PATH = "/tmp/test_init/"
 
 
 EXTRA_MODULE_PATHS = [
@@ -59,26 +56,9 @@ USED_MODULES = [
 notifications_lock = Lock()
 
 
-def chunks(data, size):
+def _chunks(data, size):
     for i in range(0, len(data), size):
         yield data[i:i + size]
-
-
-class Locker(object):
-    PLACE_BEGIN = 'B'
-    PLACE_END = 'E'
-    KIND_READ = 'R'
-    KIND_WRITE = 'W'
-
-    def __init__(self, locking_module, entity_object, output):
-        self.lock = RWLock(locking_module)
-        self.output = output
-        self._output_lock = locking_module.Lock()
-        self.entity = entity_object
-
-    def store_log(self, kind, place):
-        with self._output_lock:
-            self.output.append((kind, place))
 
 
 @pytest.fixture(scope="session")
@@ -275,7 +255,7 @@ class Infrastructure(object):
             dumped_data = json.dumps(inner_data)
             request_id = str(uuid.uuid4())
             if len(dumped_data) > 512 * 1024:
-                for data_part in chunks(dumped_data, 512 * 1024):
+                for data_part in _chunks(dumped_data, 512 * 1024):
                     ubus.call(module, function, {
                         "data": {}, "final": False, "multipart": True,
                         "request_id": request_id, "multipart_data": data_part,
@@ -377,20 +357,6 @@ def infrastructure(request, backend, message_bus):
 
 
 @pytest.fixture(params=["threading", "multiprocessing"], scope="function")
-def locker_instance(request):
-    if request.param == "threading":
-        import threading
-        output = []
-        locker = Locker(threading, threading.Thread, output)
-    elif request.param == "multiprocessing":
-        import multiprocessing
-        manager = multiprocessing.Manager()
-        output = manager.list()
-        locker = Locker(multiprocessing, multiprocessing.Process, output)
-    yield locker
-
-
-@pytest.fixture(params=["threading", "multiprocessing"], scope="function")
 def lock_backend(request):
     if request.param == "threading":
         import threading
@@ -444,35 +410,3 @@ config named 'named2'
     yield UCI_CONFIG_DIR_PATH
 
     shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)
-
-@pytest.fixture(scope="module")
-def service_scripts():
-    shutil.rmtree(SERVICE_SCRIPT_DIR_PATH, ignore_errors=True)
-    try:
-        os.makedirs(SERVICE_SCRIPT_DIR_PATH)
-    except IOError:
-        pass
-
-    fail_file = os.path.join(SERVICE_SCRIPT_DIR_PATH, 'fail')
-    with open(fail_file, 'w+') as f:
-        f.write("""#!/bin/sh
-echo failed $1 > %s
-echo FAILED 1>&2
-exit 1
-""" % os.path.join(SERVICE_SCRIPT_DIR_PATH, "result")
-        )
-    os.chmod(fail_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-
-    pass_file = os.path.join(SERVICE_SCRIPT_DIR_PATH, 'pass')
-    with open(pass_file, 'w+') as f:
-        f.write("""#!/bin/sh
-echo passed $1 > %s
-echo PASS
-exit 0
-""" % os.path.join(SERVICE_SCRIPT_DIR_PATH, "result")
-        )
-    os.chmod(pass_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-
-    yield SERVICE_SCRIPT_DIR_PATH
-
-    shutil.rmtree(SERVICE_SCRIPT_DIR_PATH, ignore_errors=True)

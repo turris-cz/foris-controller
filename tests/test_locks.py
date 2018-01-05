@@ -21,7 +21,39 @@ import pytest
 import random
 import time
 
-from .fixtures import locker_instance
+from foris_controller.utils import RWLock
+
+
+class Locker(object):
+    PLACE_BEGIN = 'B'
+    PLACE_END = 'E'
+    KIND_READ = 'R'
+    KIND_WRITE = 'W'
+
+    def __init__(self, locking_module, entity_object, output):
+        self.lock = RWLock(locking_module)
+        self.output = output
+        self._output_lock = locking_module.Lock()
+        self.entity = entity_object
+
+    def store_log(self, kind, place):
+        with self._output_lock:
+            self.output.append((kind, place))
+
+
+@pytest.fixture(params=["threading", "multiprocessing"], scope="function")
+def locker_instance(request):
+    if request.param == "threading":
+        import threading
+        output = []
+        locker = Locker(threading, threading.Thread, output)
+    elif request.param == "multiprocessing":
+        import multiprocessing
+        manager = multiprocessing.Manager()
+        output = manager.list()
+        locker = Locker(multiprocessing, multiprocessing.Process, output)
+    yield locker
+
 
 
 def test_locks_single(locker_instance):
