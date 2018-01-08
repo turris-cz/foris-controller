@@ -26,7 +26,7 @@ from foris_schema import ForisValidator
 
 from foris_controller.utils import get_validator_dirs
 
-from .fixtures import uci_configs_init, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import uci_configs_init, infrastructure, ubusd_test
 
 
 @pytest.fixture(scope="module")

@@ -21,7 +21,7 @@ import base64
 import random
 import string
 
-from .fixtures import uci_configs_init, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import uci_configs_init, infrastructure, ubusd_test
 
 
 def test_set_and_check_system(uci_configs_init, infrastructure, ubusd_test):

@@ -22,7 +22,7 @@ import pytest
 import shutil
 import stat
 
-from .fixtures import lock_backend
+from foris_controller_testtools.fixtures import lock_backend
 
 from foris_controller.exceptions import ServiceCmdFailed
 

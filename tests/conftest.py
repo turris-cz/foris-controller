@@ -17,10 +17,25 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import pytest
+import os
+
 # load common fixtures
-from .fixtures import (
+from foris_controller_testtools.fixtures import (
+    ubusd_acl_path, uci_config_default_path,
     controller_modules, extra_module_paths, message_bus, backend
 )
+
+
+@pytest.fixture(scope="session")
+def ubusd_acl_path():
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "ubus-acl")
+
+@pytest.fixture(scope="session")
+def uci_config_default_path():
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
+    )
 
 
 def pytest_addoption(parser):

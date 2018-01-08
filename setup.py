@@ -92,6 +92,7 @@ setup(
     ],
     tests_require=[
         'pytest',
+        'foris-controller-testtools',
     ],
     include_package_data=True,
     zip_safe=False,

@@ -19,7 +19,7 @@
 
 import pytest
 
-from .fixtures import only_message_buses, infrastructure
+from foris_controller_testtools.fixtures import only_message_buses, infrastructure
 
 
 @pytest.fixture(scope="module")

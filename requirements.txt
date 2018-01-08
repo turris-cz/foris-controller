@@ -3,3 +3,4 @@ pbkdf2
 foris-schema
 pytest
 pytest-runner
+foris-controller-testtools

@@ -17,7 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from .fixtures import infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import infrastructure, ubusd_test
 
 
 def test_get(infrastructure, ubusd_test):

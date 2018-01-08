@@ -19,7 +19,7 @@
 
 import base64
 
-from .fixtures import infrastructure, uci_configs_init, ubusd_test
+from foris_controller_testtools.fixtures import infrastructure, uci_configs_init, ubusd_test
 
 BACKUP = """QlpoOTFBWSZTWfUFIisAAoz/nMywAQBAh//wSA+IEf/v//AIAQAEAAIAGGAGnwydud6crndoUFAO
 hWGSaTEYpqn6bVM01HqmxPVHqaMgwBGmm1BpoSZoTIkg9Qeo0AAABk0AGqnieUgyHpDAgAyAZNDI

@@ -7,10 +7,18 @@ test:
   stage: test
 
   script:
+
     - git clone https://gitlab.labs.nic.cz/turris/foris-schema.git
     - cd foris-schema
     - python setup.py install
     - cd ..
+
     - python setup.py install
+
+    - git clone https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git
+    - cd foris-controller-testtools
+    - python setup.py install
+    - cd ..
+
     - export LD_LIBRARY_PATH=:/usr/local/lib
     - python setup.py test

@@ -23,7 +23,7 @@ import random
 import string
 import uuid
 
-from .fixtures import only_message_buses, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import only_message_buses, infrastructure, ubusd_test
 
 
 @pytest.fixture(scope="module")

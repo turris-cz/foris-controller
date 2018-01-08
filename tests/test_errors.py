@@ -19,7 +19,7 @@
 
 import pytest
 
-from .fixtures import only_message_buses, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import only_message_buses, infrastructure, ubusd_test
 
 
 def test_wrong_input_data(infrastructure, ubusd_test):

@@ -21,9 +21,11 @@ import pytest
 
 from foris_controller.exceptions import UciRecordNotFound
 
-from .fixtures import only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
+from foris_controller_testtools.fixtures import (
+    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
+)
 from .test_uci import get_uci_module
-from .utils import match_subdict
+from foris_controller_testtools.utils import match_subdict
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
