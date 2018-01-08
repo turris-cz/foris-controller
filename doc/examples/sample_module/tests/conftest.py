@@ -1,3 +1,30 @@
+import pytest
+import os
+
+# load common fixtures
+from foris_controller_testtools.fixtures import (
+    ubusd_acl_path, uci_config_default_path,
+    controller_modules, extra_module_paths, message_bus, backend
+)
+
+
+@pytest.fixture(scope="session")
+def ubusd_acl_path():
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "ubus-acl")
+
+
+@pytest.fixture(scope="session")
+def uci_config_default_path():
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "uci_configs"
+    )
+
+
+@pytest.fixture(scope="module")
+def controller_modules():
+    return ["sample"]
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--backend", action="append",

@@ -31,6 +31,7 @@ from foris_controller_testtools.fixtures import (
 def ubusd_acl_path():
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), "ubus-acl")
 
+
 @pytest.fixture(scope="session")
 def uci_config_default_path():
     return os.path.join(

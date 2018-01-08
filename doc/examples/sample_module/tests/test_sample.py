@@ -1,4 +1,4 @@
-from .fixtures import backend, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import backend, infrastructure, ubusd_test
 
 
 def test_api(infrastructure, ubusd_test):

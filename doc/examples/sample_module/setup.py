@@ -32,7 +32,8 @@ setup(
         'pytest-runner',
     ],
     tests_require=[
-        'pytest'
+        'pytest',
+        'foris-controller-testtools',
     ],
     include_package_data=True,
     zip_safe=False,
