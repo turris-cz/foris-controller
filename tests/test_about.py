@@ -17,9 +17,15 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from foris_controller_testtools.fixtures import infrastructure, ubusd_test
+import os
+import pytest
+
+from foris_controller_testtools.fixtures import infrastructure, ubusd_test, file_root_init
+
+FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_about_files")
 
 
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "about",
@@ -39,6 +45,7 @@ def test_get(infrastructure, ubusd_test):
     }
 
 
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_registration_number(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "about",
@@ -50,6 +57,8 @@ def test_get_registration_number(infrastructure, ubusd_test):
             u"registration_number"
     }
 
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_contract_status(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "about",
@@ -62,6 +71,8 @@ def test_get_contract_status(infrastructure, ubusd_test):
     }
     assert res["data"]["contract_status"] in ["valid", "not_valid", "unknown"]
 
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_update_contract_status(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "about",

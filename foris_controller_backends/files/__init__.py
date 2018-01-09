@@ -19,6 +19,7 @@
 
 import logging
 import re
+import os
 
 
 from foris_controller.app import app_info
@@ -28,6 +29,21 @@ from foris_controller.utils import RWLock
 logger = logging.getLogger(__name__)
 
 server_uplink_lock = RWLock(app_info["lock_backend"])
+
+FILE_ROOT = os.environ.get("FORIS_FILE_ROOT", "")
+logger.debug("File root is set to '%s'." % str(FILE_ROOT))
+
+
+def inject_file_root(path):
+    """ merge path with file root if set (path has to be absolute) relative paths are kept
+
+    :param path: path
+    :type path: str
+    """
+    if FILE_ROOT:
+        if os.path.isabs(path):
+            return os.path.join(FILE_ROOT, path.strip("/"))
+    return path
 
 
 class BaseFile(object):
@@ -40,6 +56,7 @@ class BaseFile(object):
         :returns: file content
         :rtype: str
         """
+        path = inject_file_root(path)
         logger.debug("Trying to read file '%s'" % path)
         with open(path) as f:
             content = f.read()
@@ -63,6 +80,6 @@ class BaseFile(object):
         content = self._file_content(path)
         match = re.search(regex, content, re.MULTILINE)
         if not match:
-            logger.error("Failed to parse content of '%s'." % path)
+            logger.error("Failed to parse content of the file.")
             raise FailedToParseFileContent(path, content)
         return match.group(*groups)

@@ -22,7 +22,7 @@ import os
 
 # load common fixtures
 from foris_controller_testtools.fixtures import (
-    ubusd_acl_path, uci_config_default_path,
+    ubusd_acl_path, uci_config_default_path, file_root,
     controller_modules, extra_module_paths, message_bus, backend
 )
 
@@ -41,6 +41,14 @@ def uci_config_default_path():
 
 @pytest.fixture(scope="session")
 def cmdline_script_root():
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "test_root"
+    )
+
+
+@pytest.fixture(scope="session")
+def file_root():
+    # default src dirctory will be the same as for the scripts  (could be override later)
     return os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "test_root"
     )

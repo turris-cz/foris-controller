@@ -37,7 +37,7 @@ class AtshaCmds(BaseCmdLine):
         :rtype: str
         """
         return self._trigger_and_parse(
-            ("atsha204cmd", "serial-number"), r'^([0-9a-fA-F]{16})$', (1, ))
+            ("/usr/bin/atsha204cmd", "serial-number"), r'^([0-9a-fA-F]{16})$', (1, ))
 
 
 class TemperatureCmds(BaseCmdLine):
@@ -49,7 +49,7 @@ class TemperatureCmds(BaseCmdLine):
         :rtype: int
         """
         return int(self._trigger_and_parse(
-            ("thermometer", ), r'^CPU:\s+([0-9]+)$', (1, )))
+            ("/usr/bin/thermometer", ), r'^CPU:\s+([0-9]+)$', (1, )))
 
 
 class SystemInfoCmds(BaseCmdLine):
@@ -59,7 +59,7 @@ class SystemInfoCmds(BaseCmdLine):
         :returns: kernel version
         :rtype: str
         """
-        return self._trigger_and_parse(("uname", "-r"), r'^([^\s]+)$', (1, ))
+        return self._trigger_and_parse(("/bin/uname", "-r"), r'^([^\s]+)$', (1, ))
 
 
 class ServerUplinkCmds(BaseCmdLine):

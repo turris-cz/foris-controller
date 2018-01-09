@@ -19,7 +19,9 @@
 
 import pytest
 
-from foris_controller_testtools.fixtures import only_message_buses, infrastructure
+from foris_controller_testtools.fixtures import (
+    only_message_buses, uci_configs_init, infrastructure
+)
 
 
 @pytest.fixture(scope="module")
@@ -27,15 +29,15 @@ def controller_modules():
     """ Overriding controller. This is a basically a test for test in which we check,
         whether test module filtering works properly
     """
-    # enable only about module
-    return ["about"]
+    # enable only dns module
+    return ["dns"]
 
 
 @pytest.mark.only_message_buses(['unix-socket'])
-def test_call_existing_and_non_existing(infrastructure):
+def test_call_existing_and_non_existing(uci_configs_init, infrastructure):
     res = infrastructure.process_message({
-        "module": "about",
-        "action": "get",
+        "module": "dns",
+        "action": "get_settings",
         "kind": "request",
     })
     assert "errors" not in res["data"]
