@@ -17,13 +17,16 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import pytest
+
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, ubusd_test, init_script_result
+    infrastructure, uci_configs_init, ubusd_test, init_script_result,
+    only_backends,
 )
 from foris_controller_testtools.utils import check_service_result
 
 
-def test_get_settings(uci_configs_init, init_script_result, infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "dns",
         "action": "get_settings",
@@ -35,7 +38,7 @@ def test_get_settings(uci_configs_init, init_script_result, infrastructure, ubus
     assert "dns_from_dhcp_enabled" in res["data"].keys()
 
 
-def test_update_settings(uci_configs_init, init_script_result, infrastructure, ubusd_test):
+def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
@@ -53,7 +56,6 @@ def test_update_settings(uci_configs_init, init_script_result, infrastructure, u
         u'kind': u'reply',
         u'module': u'dns'
     }
-    check_service_result("resolver", True, "restart")
     notifications = infrastructure.get_notifications(notifications)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -76,7 +78,6 @@ def test_update_settings(uci_configs_init, init_script_result, infrastructure, u
             "dns_from_dhcp_domain": "test",
         }
     })
-    check_service_result("resolver", True, "restart")
     notifications = infrastructure.get_notifications(notifications)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -97,9 +98,7 @@ def test_update_settings(uci_configs_init, init_script_result, infrastructure, u
     }
 
 
-def test_update_and_get_settings(
-    uci_configs_init, init_script_result, infrastructure, ubusd_test
-):
+def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
@@ -117,7 +116,6 @@ def test_update_and_get_settings(
         u'kind': u'reply',
         u'module': u'dns'
     }
-    check_service_result("resolver", True, "restart")
     notifications = infrastructure.get_notifications(notifications)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -166,7 +164,6 @@ def test_update_and_get_settings(
         u'kind': u'reply',
         u'module': u'dns'
     }
-    check_service_result("resolver", True, "restart")
     res = infrastructure.process_message({
         "module": "dns",
         "action": "get_settings",
@@ -210,3 +207,20 @@ def test_connection_test(uci_configs_init, infrastructure, ubusd_test):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert res['data']['status'] in ["running", "finished"]
     assert "data" in res['data']
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_update_settings_service_restart(
+        uci_configs_init, init_script_result, infrastructure, ubusd_test):
+
+    res = infrastructure.process_message({
+        "module": "dns",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "forwarding_enabled": False,
+            "dnssec_enabled": False,
+            "dns_from_dhcp_enabled": False,
+        }
+    })
+    check_service_result("resolver", True, "restart")

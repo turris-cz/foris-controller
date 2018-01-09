@@ -17,8 +17,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import pytest
+
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, ubusd_test, init_script_result
+    infrastructure, uci_configs_init, ubusd_test, init_script_result,
+    only_backends,
 )
 from foris_controller_testtools.utils import check_service_result
 
@@ -64,7 +67,7 @@ def test_get(uci_configs_init, infrastructure, ubusd_test):
     assert "agreed" in res["data"].keys()
 
 
-def test_set(infrastructure, init_script_result, ubusd_test):
+def test_set(infrastructure, ubusd_test):
 
     def set_agreed(agreed):
         notifications = infrastructure.get_notifications()
@@ -82,7 +85,6 @@ def test_set(infrastructure, init_script_result, ubusd_test):
             u'kind': u'reply',
             u'module': u'data_collect'
         }
-        check_service_result("ucollect", True, "restart")
         notifications = infrastructure.get_notifications(notifications)
         assert notifications[-1] == {
             u"module": u"data_collect",
@@ -112,6 +114,25 @@ def test_set(infrastructure, init_script_result, ubusd_test):
     set_agreed(False)
 
 
+@pytest.mark.only_backends(['openwrt'])
+def test_set_service_restart(uci_configs_init, init_script_result, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "set",
+        "kind": "request",
+        "data": {
+            "agreed": True
+        }
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'data_collect'
+    }
+    check_service_result("ucollect", True, "restart")
+
+
 def test_get_honeypots(infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "data_collect",
@@ -121,7 +142,7 @@ def test_get_honeypots(infrastructure, ubusd_test):
     assert {"minipots", "log_credentials"} == set(res["data"].keys())
 
 
-def test_set_honeypots(infrastructure, init_script_result, ubusd_test):
+def test_set_honeypots(infrastructure, ubusd_test):
 
     def set_honeypots(result):
         notifications = infrastructure.get_notifications()
@@ -141,7 +162,6 @@ def test_set_honeypots(infrastructure, init_script_result, ubusd_test):
                 "log_credentials": result,
             }
         })
-        check_service_result("ucollect", True, "restart")
         assert res == {
             u'action': u'set_honeypots',
             u'data': {u'result': True},
@@ -191,3 +211,32 @@ def test_set_honeypots(infrastructure, init_script_result, ubusd_test):
     set_honeypots(False)
     set_honeypots(True)
     set_honeypots(False)
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_set_honeypots_service_restart(
+    uci_configs_init, init_script_result, infrastructure, ubusd_test
+):
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "set_honeypots",
+        "kind": "request",
+        "data": {
+            "minipots": {
+                "23tcp": True,
+                "2323tcp": False,
+                "80tcp": True,
+                "3128tcp": False,
+                "8123tcp": True,
+                "8080tcp": False,
+            },
+            "log_credentials": False,
+        }
+    })
+    assert res == {
+        u'action': u'set_honeypots',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'data_collect'
+    }
+    check_service_result("ucollect", True, "restart")
