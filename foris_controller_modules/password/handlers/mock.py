@@ -18,7 +18,6 @@
 #
 
 import logging
-import base64
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -36,35 +35,35 @@ class MockPasswordHandler(Handler, BaseMockHandler):
     def check_foris_password(self, password):
         """ Mocks password checking
 
-        :param password: base 64 encoded password
+        :param password: in plain text password
         :type password: str
         :returns: "good" / "bad" / "unset"
         :rtype: str
         """
         if self.foris_password is None:
             return "unset"
-        return "good" if self.foris_password == base64.b64decode(password) else "bad"
+        return "good" if self.foris_password == password else "bad"
 
     @logger_wrapper(logger)
     def set_foris_password(self, password):
         """ Mocks password setting for foris
 
-        :param password: base 64 encoded password
+        :param password: plain text password
         :type password: str
         :returns: True on success False otherwise
         :rtype: bool
         """
-        self.foris_password = base64.b64decode(password)
+        self.foris_password = password
         return True
 
     @logger_wrapper(logger)
     def set_system_password(self, password):
         """ Mocks password setting for system
 
-        :param password: base 64 encoded password
+        :param password: plain text password
         :type password: str
         :returns: True on success False otherwise
         :rtype: bool
         """
-        self.system_password = base64.b64decode(password)
+        self.system_password = password
         return True

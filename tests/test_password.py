@@ -17,14 +17,35 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+
 import base64
+import os
+import pytest
 import random
 import string
 
-from foris_controller_testtools.fixtures import uci_configs_init, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import (
+    uci_configs_init, infrastructure, ubusd_test, only_backends
+)
+
+PASS_PATH = "/tmp/passwd_input"
+
+@pytest.fixture
+def pass_file():
+    try:
+        os.unlink(PASS_PATH)
+    except:
+        pass
+
+    yield PASS_PATH
+
+    try:
+        os.unlink(PASS_PATH)
+    except:
+        pass
 
 
-def test_set_and_check_system(uci_configs_init, infrastructure, ubusd_test):
+def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd_test):
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
@@ -56,7 +77,7 @@ def test_set_and_check_system(uci_configs_init, infrastructure, ubusd_test):
     assert res["data"]["status"] != u"good"
 
 
-def test_set_and_check_foris(uci_configs_init, infrastructure, ubusd_test):
+def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_test):
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
@@ -91,3 +112,23 @@ def test_set_and_check_foris(uci_configs_init, infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'password'
     }
+
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, ubusd_test):
+    new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
+    res = infrastructure.process_message({
+        "module": "password",
+        "action": "set",
+        "kind": "request",
+        "data": {"password": base64.b64encode(new_pass), "type": "system"},
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'password'
+    }
+    with open(pass_file) as f:
+        assert f.read() == ("%(password)s\n%(password)s\n" % dict(password=new_pass))

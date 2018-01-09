@@ -17,10 +17,13 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from foris_controller_testtools.fixtures import infrastructure, uci_configs_init, ubusd_test
+from foris_controller_testtools.fixtures import (
+    infrastructure, uci_configs_init, ubusd_test, init_script_result
+)
+from foris_controller_testtools.utils import check_service_result
 
 
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, init_script_result, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "dns",
         "action": "get_settings",
@@ -32,7 +35,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "dns_from_dhcp_enabled" in res["data"].keys()
 
 
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_update_settings(uci_configs_init, init_script_result, infrastructure, ubusd_test):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
@@ -50,6 +53,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
+    check_service_result("resolver", True, "restart")
     notifications = infrastructure.get_notifications(notifications)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -72,6 +76,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
             "dns_from_dhcp_domain": "test",
         }
     })
+    check_service_result("resolver", True, "restart")
     notifications = infrastructure.get_notifications(notifications)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -92,7 +97,9 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     }
 
 
-def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_update_and_get_settings(
+    uci_configs_init, init_script_result, infrastructure, ubusd_test
+):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "dns",
@@ -110,6 +117,7 @@ def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
+    check_service_result("resolver", True, "restart")
     notifications = infrastructure.get_notifications(notifications)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -158,6 +166,7 @@ def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
+    check_service_result("resolver", True, "restart")
     res = infrastructure.process_message({
         "module": "dns",
         "action": "get_settings",

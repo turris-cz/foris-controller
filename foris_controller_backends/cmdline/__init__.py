@@ -42,6 +42,22 @@ logger = logging.getLogger(__name__)
 i2c_lock = RWLock(app_info["lock_backend"])
 
 
+CMDLINE_ROOT = os.environ.get("FORIS_CMDLINE_ROOT", "")
+logger.debug("Cmdline root is set to '%s'." % str(CMDLINE_ROOT))
+
+
+def inject_cmdline_root(path):
+    """ merge path with root if set (path has to be absolute) relative paths are kept
+
+    :param path: path
+    :type path: str
+    """
+    if CMDLINE_ROOT:
+        if os.path.isabs(path):
+            return os.path.join(CMDLINE_ROOT, path.strip("/"))
+    return path
+
+
 def handle_command(*args, **kwargs):
     with TemporaryFile() as stdout, TemporaryFile() as stderr:
         popen_kwargs = {}
@@ -74,7 +90,13 @@ class BaseCmdLine(object):
         :param args: cmd and its arguments
         :type args: tuple
         """
+
+        # args[0] should be the script path
+        args = list(args)
+        args[0] = inject_cmdline_root(args[0])
+
         logger.debug("Starting Command '%s' is starting in background." % str(args))
+
         subprocess.Popen(args)
 
     def _run_command(self, *args, **kwargs):
@@ -86,6 +108,10 @@ class BaseCmdLine(object):
         :returns: (retcode, stdout, stderr)
         :rtype: (int, str, str)
         """
+
+        # args[0] should be the script path
+        args = list(args)
+        args[0] = inject_cmdline_root(args[0])
 
         logger.debug("Command '%s' is starting." % str(args))
 
@@ -220,6 +246,10 @@ class AsyncCommand(object):
         """
 
         logger.debug("Async process started.")
+
+        # args[0] should be the script path
+        args = list(args)
+        args[0] = inject_cmdline_root(args[0])
 
         # precompile regexes
         handler_list = [(re.compile(regex), handler) for regex, handler in handler_list]

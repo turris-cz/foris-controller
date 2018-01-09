@@ -38,7 +38,7 @@ class OpenwrtPasswordHandler(Handler, BaseOpenwrtHandler):
     def check_foris_password(self, password):
         """ Checks foris password
 
-        :param password: base 64 encoded password
+        :param password: plain text password
         :type password: str
         :returns: "good" / "bad" / "unset"
         :rtype: str
@@ -52,7 +52,7 @@ class OpenwrtPasswordHandler(Handler, BaseOpenwrtHandler):
     def set_foris_password(self, password):
         """ Sets password for foris
 
-        :param password: base 64 encoded password
+        :param password: plain text password
         :type password: str
         :returns: True on success False otherwise
         :rtype: bool
@@ -63,7 +63,7 @@ class OpenwrtPasswordHandler(Handler, BaseOpenwrtHandler):
     def set_system_password(self, password):
         """ Sets password for the system (root)
 
-        :param password: base 64 encoded password
+        :param password: plain text password
         :type password: str
         :returns: True on success False otherwise
         :rtype: bool

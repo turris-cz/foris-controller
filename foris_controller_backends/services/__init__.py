@@ -24,7 +24,7 @@ from foris_controller.app import app_info
 from foris_controller.exceptions import ServiceCmdFailed
 from foris_controller.utils import RWLock
 
-from foris_controller_backends.cmdline import handle_command
+from foris_controller_backends.cmdline import handle_command, inject_cmdline_root
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class OpenwrtServices(object):
     services_lock = RWLock(app_info["lock_backend"])
 
     def __init__(self, service_scripts_path=DEFAUL_SERVICE_SCRIPTS_PATH):
-        self.service_scripts_path = service_scripts_path
+        self.service_scripts_path = inject_cmdline_root(service_scripts_path)
 
     def __enter__(self):
         logger.debug("Starting interaction with OpenWRT services.")

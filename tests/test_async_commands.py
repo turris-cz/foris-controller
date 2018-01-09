@@ -25,16 +25,7 @@ from foris_controller_testtools.fixtures import lock_backend
 
 NOTIFICATION_PATH = "/tmp/async-notification.txt"
 RESET_PATH = "/tmp/async-reset.txt"
-SCRIPT_PATH = "/tmp/async-script.sh"
-
-SCRIPT = """#!/bin/sh
-echo FIRST $2
-sleep 1
-echo SECOND $3
-sleep 1
-echo THIRD $4
-exit $1
-"""
+SCRIPT_PATH = "/tmp/async-script.sh"  # test root dir will be injected
 
 
 def get_data(old_data=None):
@@ -55,27 +46,23 @@ def async_infrastructure(lock_backend):
     app_info["lock_backend"] = lock_backend
     from foris_controller_backends.cmdline import AsyncCommand
 
-    for path in [NOTIFICATION_PATH, RESET_PATH, SCRIPT_PATH]:
+    for path in [NOTIFICATION_PATH, RESET_PATH]:
         try:
             os.unlink(path)
         except OSError:
             if os.path.exists(path):
                 raise
 
-    with open(SCRIPT_PATH, "w") as f:
-        f.write(SCRIPT)
-        f.flush()
-    os.chmod(SCRIPT_PATH, 0x0777)
-
-
     with open(NOTIFICATION_PATH, "w") as f:
         f.flush()
+
         def notify(text):
             f.write(text + "\n")
             f.flush()
+
         yield notify, AsyncCommand
 
-    for path in [NOTIFICATION_PATH, RESET_PATH, SCRIPT_PATH]:
+    for path in [NOTIFICATION_PATH, RESET_PATH]:
         try:
             os.unlink(path)
         except OSError:
@@ -92,10 +79,9 @@ def test_async_complex(async_infrastructure):
             process_data = self.processes[process_id]
 
             if process_data.get_exitted():
-                return "finished", process_data.get_retval() , process_data.read_all_data()
+                return "finished", process_data.get_retval(), process_data.read_all_data()
             else:
                 return "running", None, process_data.read_all_data()
-
 
         def start(self):
             def handler(matched, process_data):

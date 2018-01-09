@@ -17,7 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from foris_controller_testtools.fixtures import infrastructure, uci_configs_init, ubusd_test
+from foris_controller_testtools.fixtures import (
+    infrastructure, uci_configs_init, ubusd_test, init_script_result
+)
+from foris_controller_testtools.utils import check_service_result
 
 
 def test_get_registered(uci_configs_init, infrastructure, ubusd_test):
@@ -61,7 +64,7 @@ def test_get(uci_configs_init, infrastructure, ubusd_test):
     assert "agreed" in res["data"].keys()
 
 
-def test_set(infrastructure, ubusd_test):
+def test_set(infrastructure, init_script_result, ubusd_test):
 
     def set_agreed(agreed):
         notifications = infrastructure.get_notifications()
@@ -79,6 +82,7 @@ def test_set(infrastructure, ubusd_test):
             u'kind': u'reply',
             u'module': u'data_collect'
         }
+        check_service_result("ucollect", True, "restart")
         notifications = infrastructure.get_notifications(notifications)
         assert notifications[-1] == {
             u"module": u"data_collect",
@@ -117,7 +121,7 @@ def test_get_honeypots(infrastructure, ubusd_test):
     assert {"minipots", "log_credentials"} == set(res["data"].keys())
 
 
-def test_set_honeypots(infrastructure, ubusd_test):
+def test_set_honeypots(infrastructure, init_script_result, ubusd_test):
 
     def set_honeypots(result):
         notifications = infrastructure.get_notifications()
@@ -137,6 +141,7 @@ def test_set_honeypots(infrastructure, ubusd_test):
                 "log_credentials": result,
             }
         })
+        check_service_result("ucollect", True, "restart")
         assert res == {
             u'action': u'set_honeypots',
             u'data': {u'result': True},

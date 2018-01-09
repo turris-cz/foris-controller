@@ -39,6 +39,13 @@ def uci_config_default_path():
     )
 
 
+@pytest.fixture(scope="session")
+def cmdline_script_root():
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "test_root"
+    )
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--backend", action="append",

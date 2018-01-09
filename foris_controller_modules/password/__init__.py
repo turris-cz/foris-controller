@@ -18,6 +18,7 @@
 #
 
 import logging
+import base64
 
 from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
@@ -34,7 +35,7 @@ class PasswordModule(BaseModule):
         :returns: {"result": True / False}
         :rtype: dict
         """
-        return {"status": self.handler.check_foris_password(data["password"])}
+        return {"status": self.handler.check_foris_password(base64.b64decode(data["password"]))}
 
     def action_set(self, data):
         """ Sets the password for foris web interface xor system
@@ -44,10 +45,11 @@ class PasswordModule(BaseModule):
         :returns: {result: True/False}
         :rtype: dict
         """
+        decoded = base64.b64decode(data["password"])
         if data["type"] == "system":
-            res = self.handler.set_system_password(data["password"])
+            res = self.handler.set_system_password(decoded)
         elif data["type"] == "foris":
-            res = self.handler.set_foris_password(data["password"])
+            res = self.handler.set_foris_password(decoded)
         else:
             raise NotImplementedError()
 

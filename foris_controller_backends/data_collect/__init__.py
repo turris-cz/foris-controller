@@ -94,6 +94,9 @@ class DataCollectUci(object):
             backend.add_section("foris", "config", "eula")
             backend.set_option("foris", "eula", "agreed_collect", store_bool(agreed))
 
+        with OpenwrtServices() as services:
+            services.restart("ucollect")
+
         return True
 
     def get_honeypots(self):
