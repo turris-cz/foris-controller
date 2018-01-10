@@ -27,3 +27,4 @@ test:
     - rm -rf {foris-controller,foris-schema,foris-controller-testtools}
     - export LD_LIBRARY_PATH=:/usr/local/lib
     - python setup.py test
+    - python setup.py test --addopts="--backend openwrt"
