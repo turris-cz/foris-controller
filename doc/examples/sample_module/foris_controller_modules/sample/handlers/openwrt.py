@@ -20,6 +20,6 @@ class OpenwrtSampleHandler(Handler, BaseOpenwrtHandler):
     def get_sample(self):
         return {
             "data": {
-                "sample": self.sample_cmds.get_sample(), "atsha": self.atsha_cmds.get_serial()
+                "sample": self.sample.get_sample(), "atsha": self.atsha_cmds.get_serial()
             }
         }
