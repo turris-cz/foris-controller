@@ -20,6 +20,7 @@
 import logging
 import re
 import os
+import glob
 
 
 from foris_controller.app import app_info
@@ -83,3 +84,17 @@ class BaseFile(object):
             logger.error("Failed to parse content of the file.")
             raise FailedToParseFileContent(path, content)
         return match.group(*groups)
+
+
+class BaseMatch(object):
+    @staticmethod
+    def list_files(file_match):
+        """ Reads all files in which matches the requst (glob will be used for matching)
+        :param file match: files to match
+
+        :returns: list of files that matches
+        :rtype: list
+        """
+        match = inject_file_root(file_match)
+        logger.debug("Listing '%s'" % match)
+        return glob.glob(match)

@@ -21,6 +21,7 @@ import logging
 import glob
 import os
 
+from foris_controller_backends.files import BaseMatch
 from foris_controller_backends.uci import UciBackend, get_option_named
 from foris_controller.exceptions import UciException, UciRecordNotFound
 
@@ -70,5 +71,5 @@ class Languages(object):
 
         return [DEFAULT_LANGUAGE] + [
             os.path.basename(e)[:2]
-            for e in glob.glob(Languages.INSTALLED_LANG_MATCH)
+            for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCH)
         ]

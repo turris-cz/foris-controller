@@ -16,11 +16,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
+import os
+import pytest
 
-from foris_controller_testtools.fixtures import uci_configs_init, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import (
+    uci_configs_init, infrastructure, ubusd_test, file_root_init
+)
+
+FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_web_files")
 
 
-def test_get(uci_configs_init, infrastructure, ubusd_test):
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_get(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "get_data",
@@ -33,7 +40,8 @@ def test_get(uci_configs_init, infrastructure, ubusd_test):
     assert len(res["data"]["language"]) == 2
 
 
-def test_set(uci_configs_init, infrastructure, ubusd_test):
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_set(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "web",
@@ -70,7 +78,8 @@ def test_set(uci_configs_init, infrastructure, ubusd_test):
     }
 
 
-def test_list(uci_configs_init, infrastructure, ubusd_test):
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_list(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "list_languages",
@@ -81,7 +90,8 @@ def test_list(uci_configs_init, infrastructure, ubusd_test):
     assert set(res["data"]["languages"]) == {'en', 'cs', 'de'}
 
 
-def test_missing_data(uci_configs_init, infrastructure, ubusd_test):
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_missing_data(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "set_language",
