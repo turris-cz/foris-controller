@@ -84,7 +84,8 @@ def handle_command(*args, **kwargs):
 
 class BaseCmdLine(object):
 
-    def _run_command_in_background(self, *args):
+    @staticmethod
+    def _run_command_in_background(*args):
         """ Executes command in background
 
         :param args: cmd and its arguments
@@ -99,7 +100,8 @@ class BaseCmdLine(object):
 
         subprocess.Popen(args)
 
-    def _run_command(self, *args, **kwargs):
+    @staticmethod
+    def _run_command(*args, **kwargs):
         """ Executes command and waits till it's finished
 
         :param args: cmd and its arguments
@@ -126,7 +128,8 @@ class BaseCmdLine(object):
         logger.debug("stderr: %s" % stderr)
         return retval, stdout, stderr
 
-    def _trigger_and_parse(self, args, regex, groups=(1, )):
+    @staticmethod
+    def _trigger_and_parse(args, regex, groups=(1, )):
         """ Runs command and parses the output by regex,
             raises an exception when the output doesn't match regex
 
@@ -139,7 +142,7 @@ class BaseCmdLine(object):
         :returns: matching strings
         :rtype: tuple
         """
-        retval, stdout, _ = self._run_command(*args)
+        retval, stdout, _ = BaseCmdLine._run_command(*args)
         if not retval == 0:
             logger.error("Command %s failed." % str(args))
             raise BackendCommandFailed(retval, args)

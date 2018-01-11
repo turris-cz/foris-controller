@@ -24,7 +24,7 @@ from foris_controller.app import app_info
 from foris_controller.exceptions import ServiceCmdFailed
 from foris_controller.utils import RWLock
 
-from foris_controller_backends.cmdline import handle_command, inject_cmdline_root
+from foris_controller_backends.cmdline import handle_command, inject_cmdline_root, BaseCmdLine
 
 
 logger = logging.getLogger(__name__)
@@ -72,20 +72,62 @@ class OpenwrtServices(object):
         if fail_on_error and retval != 0:
             raise ServiceCmdFailed(service_name, cmd)
 
-    def start(self, service_name, fail_on_error=True):
-        self._run_service_command(service_name, "start", fail_on_error)
+    def _run_service_command_in_background(self, service_name, cmd, delay):
+        """ Runs service command in background with specified delay
 
-    def stop(self, service_name, fail_on_error=True):
-        self._run_service_command(service_name, "stop", fail_on_error)
+        :param service_name: the name of the service
+        :type service_name: str
+        :param cmd: service command
+        :type cmd: str
+        :param delay: delay after which the services action will be triggered
+        :type delay: int
+        """
+        script_path = os.path.join(self.service_scripts_path, service_name)
+        logger.debug(
+            "Starting to call '%s %s' in background (delay=%d)" % (script_path, cmd, delay))
+        try:
+            BaseCmdLine._run_command(
+                "/bin/sh", "-c", "( sleep %(delay)d; %(script_path)s %(cmd)s ) &" %
+                dict(delay=delay, script_path=script_path, cmd=cmd)
+            )
+        except OSError:
+            raise ServiceCmdFailed(
+                service_name, cmd, "unable to call '%s %s' in background" % (script_path, cmd))
 
-    def restart(self, service_name, fail_on_error=True):
-        self._run_service_command(service_name, "restart", fail_on_error)
+        # as the command is triggered in background the retval can't be check..
 
-    def reload(self, service_name, fail_on_error=True):
-        self._run_service_command(service_name, "reload", fail_on_error)
+    def start(self, service_name, delay=None, fail_on_error=True):
+        if delay:
+            self._run_service_command_in_background(service_name, "start", delay)
+        else:
+            self._run_service_command(service_name, "start", fail_on_error)
 
-    def enable(self, service_name, fail_on_error=True):
-        self._run_service_command(service_name, "enable", fail_on_error)
+    def stop(self, service_name, delay=None, fail_on_error=True):
+        if delay:
+            self._run_service_command_in_background(service_name, "stop", delay)
+        else:
+            self._run_service_command(service_name, "stop", fail_on_error)
 
-    def disable(self, service_name, fail_on_error=True):
-        self._run_service_command(service_name, "disable", fail_on_error)
+    def restart(self, service_name, delay=None, fail_on_error=True):
+        if delay:
+            self._run_service_command_in_background(service_name, "restart", delay)
+        else:
+            self._run_service_command(service_name, "restart", fail_on_error)
+
+    def reload(self, service_name, delay=None, fail_on_error=True):
+        if delay:
+            self._run_service_command_in_background(service_name, "reload", delay)
+        else:
+            self._run_service_command(service_name, "reload", fail_on_error)
+
+    def enable(self, service_name, delay=None, fail_on_error=True):
+        if delay:
+            self._run_service_command_in_background(service_name, "enable", delay)
+        else:
+            self._run_service_command(service_name, "enable", fail_on_error)
+
+    def disable(self, service_name, delay=None, fail_on_error=True):
+        if delay:
+            self._run_service_command_in_background(service_name, "disable", delay)
+        else:
+            self._run_service_command(service_name, "disable", fail_on_error)

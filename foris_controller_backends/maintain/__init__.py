@@ -50,7 +50,6 @@ class MaintainUci(object):
 class MaintainCommands(BaseCmdLine):
     REBOOT_INDICATOR_PATH = '/tmp/device-reboot-required'
 
-
     def reboot(self):
         args = ("/bin/sh", "-c", "reboot -d 5 &")  # 5 seconds before reboot
         self._run_command_in_background(*args)
