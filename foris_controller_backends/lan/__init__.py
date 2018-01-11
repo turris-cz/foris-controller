@@ -24,8 +24,7 @@ from foris_controller_backends.uci import (
 )
 from foris_controller_backends.wifi import WifiUci
 
-#from foris_controller_backends.services import OpenwrtServices
-#from foris_controller_backends.cmdline import AsyncCommand
+from foris_controller_backends.services import OpenwrtServices
 from foris_controller.exceptions import UciRecordNotFound, UciException
 
 logger = logging.getLogger(__name__)
@@ -239,4 +238,5 @@ class LanUci(object):
             # set guest network part
             self.set_guest_network(backend, guest_network)
 
-        #TODO service restart timeout...
+        with OpenwrtServices() as services:
+            services.restart("network", delay=2)

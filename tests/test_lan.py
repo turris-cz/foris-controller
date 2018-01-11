@@ -25,7 +25,7 @@ from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
 )
 from .test_uci import get_uci_module
-from foris_controller_testtools.utils import match_subdict
+from foris_controller_testtools.utils import match_subdict, sh_was_called
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -153,6 +153,7 @@ def test_guest_openwrt_backend(uci_configs_init, lock_backend, infrastructure, u
             u'kind': u'reply',
             u'module': u'lan'
         }
+        assert sh_was_called("/etc/init.d/network", ["restart"])
 
     # test guest network
     update({
