@@ -69,7 +69,7 @@
                         "netmask": { "format": "ipv4" },
                         "qos": {"$ref": "#/definitions/qos_set"}
                     },
-                    "required": ["enabled", "ip", "netmask"],
+                    "required": ["enabled", "ip", "netmask", "qos"],
                     "additionalProperties": false
                 },
                 {

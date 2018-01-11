@@ -309,6 +309,16 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
         u"netmask": u"255.255.0.0",
         u"dhcp": {u"enabled": False},
         u"guest_network": {
+            u"enabled": True,
+            u"ip": u"192.168.8.1",
+            u"netmask": u"255.255.255.0",
+        },
+    }),
+    update({
+        u"ip": u"10.2.0.3",
+        u"netmask": u"255.255.0.0",
+        u"dhcp": {u"enabled": False},
+        u"guest_network": {
             u"enabled": False,
             u"ip": u"192.168.8.1",
             u"netmask": u"255.255.255.0",
