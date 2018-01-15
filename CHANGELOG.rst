@@ -1,3 +1,13 @@
+0.8.2 (2018-01-15)
+------------------
+
+* CI test are using openwrt backend as well as mock backend
+* tests for sample plugin integrated into our CI
+* tests can use a varios kind of overrides of fixtures (mostly to alter files paths)
+* bigger tests refactoring (part of the tests moved to foris-controller-testtools repo)
+* lan module implemented
+* new functionality added to data_collect module
+
 0.8.1 (2017-12-20)
 ------------------
 
