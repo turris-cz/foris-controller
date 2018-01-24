@@ -62,8 +62,13 @@ class OpenwrtServices(object):
             retval, stdout, stderr = handle_command(script_path, cmd)
 
         except OSError as e:
-            raise ServiceCmdFailed(
-                service_name, cmd, "unable to call '%s %s'" % (script_path, cmd))
+            if fail_on_error:
+                raise ServiceCmdFailed(
+                    service_name, cmd, "unable to call '%s %s'" % (script_path, cmd))
+            retval = e.errno
+            stdout = ""
+            stderr = e.strerror
+
         logger.debug("'%s %s' was finished" % (script_path, cmd))
         logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)

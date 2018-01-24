@@ -52,6 +52,9 @@ def test_service(action, custom_cmdline_root, init_script_result, service_class)
         check_service_result("fail", False, action)
         getattr(services, action)("fail", fail_on_error=False)
         check_service_result("fail", False, action)
+        with pytest.raises(ServiceCmdFailed):
+            getattr(services, action)("non-existing")
+        getattr(services, action)("non-existing", fail_on_error=False)
 
 
 @pytest.mark.parametrize("action", ["start", "stop", "restart", "reload", "enable", "disable"])
