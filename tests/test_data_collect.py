@@ -19,8 +19,9 @@
 
 import pytest
 
+from .test_uci import get_uci_module
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, ubusd_test, init_script_result,
+    infrastructure, uci_configs_init, ubusd_test, init_script_result, lock_backend,
     only_backends,
 )
 from foris_controller_testtools.utils import check_service_result
@@ -240,3 +241,53 @@ def test_set_honeypots_service_restart(
         u'module': u'data_collect'
     }
     check_service_result("ucollect", True, "restart")
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_set_agreed_uci(
+        uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test):
+
+    uci = get_uci_module(lock_backend)
+
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "set",
+        "kind": "request",
+        "data": {
+            "agreed": True
+        }
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'data_collect'
+    }
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    assert uci.parse_bool(uci.get_option_named(data, "foris", "eula", "agreed_collect", "0"))
+    user_lists = uci.get_option_named(data, "updater", "pkglists", "lists", [])
+    assert "i_agree_datacollect" in user_lists
+
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "set",
+        "kind": "request",
+        "data": {
+            "agreed": False
+        }
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'data_collect'
+    }
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    assert not uci.parse_bool(uci.get_option_named(data, "foris", "eula", "agreed_collect", "0"))
+    user_lists = uci.get_option_named(data, "updater", "pkglists", "lists", [])
+    assert "i_agree_datacollect" not in user_lists

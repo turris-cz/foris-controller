@@ -94,8 +94,21 @@ class DataCollectUci(object):
             backend.add_section("foris", "config", "eula")
             backend.set_option("foris", "eula", "agreed_collect", store_bool(agreed))
 
+            # TODO this might change in the future
+            updater_data = backend.read("updater")
+            user_lists = get_option_named(updater_data, "updater", "pkglists", "lists", [])
+            if agreed:
+                if 'i_agree_datacollect' not in user_lists:
+                    backend.add_to_list("updater", "pkglists", "lists", ["i_agree_datacollect"])
+            else:
+                if 'i_agree_datacollect' in user_lists:
+                    backend.del_from_list("updater", "pkglists", "lists", ["i_agree_datacollect"])
+
+        # TODO updater should be started...
+
         with OpenwrtServices() as services:
-            services.restart("ucollect")
+            # fail_on_error=False - ucollect might not be installed yet
+            services.restart("ucollect", fail_on_error=False)
 
         return True
 
