@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ setup(
         'foris_controller_backends.password',
         'foris_controller_backends.services',
         'foris_controller_backends.uci',
+        'foris_controller_backends.time',
         'foris_controller_backends.updater',
         'foris_controller_backends.web',
         'foris_controller_backends.wifi',
@@ -59,6 +60,8 @@ setup(
         'foris_controller_modules.maintain.handlers',
         'foris_controller_modules.password',
         'foris_controller_modules.password.handlers',
+        'foris_controller_modules.time',
+        'foris_controller_modules.time.handlers',
         'foris_controller_modules.updater',
         'foris_controller_modules.updater.handlers',
         'foris_controller_modules.web',
@@ -75,6 +78,7 @@ setup(
         'foris_controller_modules.maintain': ['schema', 'schema/*.json'],
         'foris_controller_modules.web': ['schema', 'schema/*.json'],
         'foris_controller_modules.password': ['schema', 'schema/*.json'],
+        'foris_controller_modules.time': ['schema', 'schema/*.json'],
         'foris_controller_modules.updater': ['schema', 'schema/*.json'],
     },
     scripts=['bin/foris-controller', "bin/foris-notify"],
