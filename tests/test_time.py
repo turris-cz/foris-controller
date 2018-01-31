@@ -29,6 +29,8 @@ from foris_controller_testtools.utils import check_service_result
 
 from .test_uci import get_uci_module
 
+NTPDATE_INDICATOR_PATH = "/tmp/foris-controller-ntp-fail"
+
 
 def cmd_mock_gen(path):
     def inner_function():
@@ -56,9 +58,39 @@ def cmd_mock_gen(path):
 
 
 hwclock_mock = pytest.fixture(
-    cmd_mock_gen('/tmp/foris-controller-tests-hwclock-called'), name="hwclock_mock")
+    cmd_mock_gen('/tmp/foris-controller-tests-hwclock-called'), name="hwclock_mock",
+)
 date_mock = pytest.fixture(
-    cmd_mock_gen('/tmp/foris-controller-tests-date-called'), name="date_mock")
+    cmd_mock_gen('/tmp/foris-controller-tests-date-called'), name="date_mock",
+)
+
+
+@pytest.fixture
+def fail_ntpdate():
+    try:
+        os.unlink(NTPDATE_INDICATOR_PATH)
+    except Exception:
+        pass
+
+    with open(NTPDATE_INDICATOR_PATH, "w") as f:
+        f.flush()
+
+    yield NTPDATE_INDICATOR_PATH
+
+    try:
+        os.unlink(NTPDATE_INDICATOR_PATH)
+    except Exception:
+        pass
+
+
+@pytest.fixture
+def pass_ntpdate():
+    try:
+        os.unlink(NTPDATE_INDICATOR_PATH)
+    except Exception:
+        pass
+
+    yield NTPDATE_INDICATOR_PATH
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -231,3 +263,88 @@ def test_openwrt_complex(
 
     assert "2018-01-30" in date_mock()
     assert hwclock_mock()
+
+
+@pytest.mark.only_backends(['mock'])
+def test_ntpdate_trigger_mock(uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "time",
+        "action": "ntpdate_trigger",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "id" in res["data"].keys()
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_ntpdate_trigger_pass_openwrt(
+    uci_configs_init, init_script_result, date_mock, hwclock_mock,
+    cmdline_script_root, infrastructure, ubusd_test, lock_backend,
+    pass_ntpdate
+):
+    notifications = infrastructure.get_notifications()
+    res = infrastructure.process_message({
+        "module": "time",
+        "action": "ntpdate_trigger",
+        "kind": "request",
+    })
+    async_id = res["data"]["id"]
+
+    # get started notification
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
+        u"module": u"time",
+        u"action": u"ntpdate_started",
+        u"kind": u"notification",
+        u"data": {
+            u"id": async_id,
+        }
+    }
+
+    # get finished notification
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1]["action"] == "ntpdate_finished"
+    assert notifications[-1]["data"]["id"] == async_id
+    assert notifications[-1]["data"]["result"]
+    assert "time" in notifications[-1]["data"].keys()
+    assert not date_mock()
+    assert hwclock_mock()
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_ntpdate_trigger_fail_openwrt(
+    uci_configs_init, init_script_result, date_mock, hwclock_mock,
+    cmdline_script_root, infrastructure, ubusd_test, lock_backend,
+    fail_ntpdate
+):
+    notifications = infrastructure.get_notifications()
+    res = infrastructure.process_message({
+        "module": "time",
+        "action": "ntpdate_trigger",
+        "kind": "request",
+    })
+    async_id = res["data"]["id"]
+
+    # get started notification
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
+        u"module": u"time",
+        u"action": u"ntpdate_started",
+        u"kind": u"notification",
+        u"data": {
+            u"id": async_id,
+        }
+    }
+
+    notifications = infrastructure.get_notifications(notifications)
+    assert notifications[-1] == {
+        u"module": u"time",
+        u"action": u"ntpdate_finished",
+        u"kind": u"notification",
+        u"data": {
+            u"id": async_id,
+            u"result": False,
+        }
+    }
+    assert not date_mock()
+    assert not hwclock_mock()

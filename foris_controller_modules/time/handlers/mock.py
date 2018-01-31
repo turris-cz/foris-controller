@@ -18,6 +18,7 @@
 #
 
 import logging
+import random
 
 from datetime import datetime
 
@@ -35,6 +36,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
     timezone = "UTC"
     how_to_set_time = "ntp"
     time = datetime.utcnow()
+    ntpdate_id_set = set()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -77,3 +79,17 @@ class MockTimeHandler(Handler, BaseMockHandler):
         if time is not None:
             self.time = time
         return True
+
+    @logger_wrapper(logger)
+    def ntpdate_trigger(self, exit_notify_function, reset_notify_function):
+        """ Mocks triggering of the ntpdate command
+        :param exit_notify_function: function for sending notification when the cmds finishes
+        :type exit_notify_function: callable
+        :param reset_notify_function: function to reconnect to the notification bus
+        :type reset_notify_function: callable
+        :returns: generated_ntpdate_id
+        :rtype: str
+        """
+        new_ntpdate_id = "%032X" % random.randrange(2**32)
+        self.ntpdate_id_set.add(new_ntpdate_id)
+        return new_ntpdate_id

@@ -69,10 +69,25 @@ class TimeModule(BaseModule):
         # I think that we can safely skip any backend interaction here...
         return {"time": datetime.utcnow().isoformat()}
 
+    def action_ntpdate_trigger(self, data):
+        """ Tries to run ntpdate to update system time
+        """
+
+        def exit_notify(msg):
+            if msg["result"]:
+                # if passed fill in the time
+                msg["time"] = datetime.utcnow().isoformat()
+            self.notify("ntpdate_finished", msg)
+
+        async_id = self.handler.ntpdate_trigger(exit_notify, self.reset_notify)
+        self.notify("ntpdate_started", {"id": async_id})
+        return {"id": async_id}
+
 
 @wrap_required_functions([
     'get_settings',
     'update_settings',
+    'ntpdate_trigger',
 ])
 class Handler(object):
     pass

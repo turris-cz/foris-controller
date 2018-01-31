@@ -147,6 +147,84 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "request to trigger ntpdate",
+            "properties": {
+                "module": {"enum": ["time"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["ntpdate_trigger"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to trigger ntpdate",
+            "properties": {
+                "module": {"enum": ["time"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["ntpdate_trigger"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that ntpdate started",
+            "properties": {
+                "module": {"enum": ["time"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["ntpdate_started"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that ntpdate finished",
+            "properties": {
+                "module": {"enum": ["time"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["ntpdate_finished"]},
+                "data": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "result": {"enum": [true]},
+                                "id": {"type": "string"},
+                                "time": {"type": "string", "format": "date-time"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["id", "result", "time"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "result": {"enum": [false]},
+                                "id": {"type": "string"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["id", "result"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

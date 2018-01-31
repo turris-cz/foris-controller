@@ -24,7 +24,7 @@ from foris_controller_backends.uci import (
     UciBackend, get_option_anonymous, get_option_named, parse_bool, store_bool
 )
 from foris_controller_backends.services import OpenwrtServices
-from foris_controller_backends.cmdline import BaseCmdLine
+from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand
 from foris_controller.utils import writelock, RWLock
 
 
@@ -35,6 +35,15 @@ class SetTimeCommand(BaseCmdLine):
     time_lock = RWLock(app_info["lock_backend"])
 
     @writelock(time_lock, logger)
+    def set_hwclock(self):
+        self._set_hwclock()
+
+    def _set_hwclock(self):
+        # sometimes hwclock fails without an error so let's try to call it twice to be sure
+        self._run_command("/sbin/hwclock", "-u", "-w")
+        self._run_command("/sbin/hwclock", "-u", "-w")
+
+    @writelock(time_lock, logger)
     def set_time(self, time):
         """ Sets current time using date command
         :param time: time to be set
@@ -42,10 +51,8 @@ class SetTimeCommand(BaseCmdLine):
         """
         # don't care about retvals of next command (it should raise an exception on error)
         self._run_command("/bin/date", "-u", "-s", time.strftime("%Y-%m-%d %H:%M:%S"))
+        self._set_hwclock()
 
-        # sometimes hwclock fails without an error so let's try to call it twice to be sure
-        self._run_command("/sbin/hwclock", "-u", "-w")
-        self._run_command("/sbin/hwclock", "-u", "-w")
 
 
 class TimeUciCommands(object):
@@ -94,3 +101,50 @@ class TimeUciCommands(object):
             SetTimeCommand().set_time(time)  # time should be set (thanks to validation)
 
         return True
+
+
+class TimeAsyncCmds(AsyncCommand):
+
+    def ntpdate_trigger(self, exit_notify_function, reset_notify_function):
+        """ Executes ntpdate in async modude
+
+        This means that we don't wait for result, but a async_id will be returned immediatelly.
+        Then we cat watch ntpdate notifications with the same async_id
+
+        :param exit_notify_function: function which is used to send notifications back to client
+                                     when cmd exits
+        :type exit_notify_function: callable
+        :param reset_notify_function: function which resets notification connection
+        :type reset_notify_function: callable
+        :returns: async id
+        :rtype: str
+        """
+        logger.debug("Starting ntpdate.")
+
+        # handler which will be called when the program
+        def handler_exit(process_data):
+            result = process_data.get_retval() == 0
+
+            if result:
+                # try to write data directly into hw
+                # before sending a successful notification
+                SetTimeCommand().set_hwclock()
+
+            exit_notify_function({"id": process_data.id, "result": result})
+            logger.debug("ntpdate finished: (retval=%d)" % process_data.get_retval())
+
+        # get all ntpserver
+        with UciBackend() as backend:
+            system_data = backend.read("system")
+
+        servers = get_option_named(system_data, "system", "ntp", "server", [])
+
+        async_id = self.start_process(
+            ["/usr/sbin/ntpdate"] + servers,
+            [],
+            handler_exit,
+            reset_notify_function,
+        )
+        logger.debug("ntpdate started in async mode '%s'." % async_id)
+
+        return async_id

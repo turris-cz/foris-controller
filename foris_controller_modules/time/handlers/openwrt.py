@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.time import TimeUciCommands
+from foris_controller_backends.time import TimeUciCommands, TimeAsyncCmds
 
 from .. import Handler
 
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
     uci = TimeUciCommands()
+    async = TimeAsyncCmds()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -59,3 +60,15 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         """
 
         return self.uci.update_settings(region, city, timezone, how_to_set_time, time)
+
+    @logger_wrapper(logger)
+    def ntpdate_trigger(self, exit_notify_function, reset_notify_function):
+        """ Triggers the ntpdate command in async mode
+        :param exit_notify_function: function for sending notification when the cmds finishes
+        :type exit_notify_function: callable
+        :param reset_notify_function: function to reconnect to the notification bus
+        :type reset_notify_function: callable
+        :returns: generated_ntpdate_id
+        :rtype: str
+        """
+        return self.async.ntpdate_trigger(exit_notify_function, reset_notify_function)
