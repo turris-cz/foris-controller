@@ -1,3 +1,10 @@
+0.8.3 (2018-02-07)
+------------------
+
+* data_collect fixes
+* services backend fail_on_error fix
+* time module added
+
 0.8.2 (2018-01-15)
 ------------------
 
