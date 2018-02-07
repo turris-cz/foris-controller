@@ -35,7 +35,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
     city = "Prague"
     timezone = "UTC"
     how_to_set_time = "ntp"
-    time = datetime.utcnow()
+    time = datetime.now()
     ntpdate_id_set = set()
 
     @logger_wrapper(logger)

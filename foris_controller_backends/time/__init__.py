@@ -50,7 +50,7 @@ class SetTimeCommand(BaseCmdLine):
         :type time: datetime.datetime
         """
         # don't care about retvals of next command (it should raise an exception on error)
-        self._run_command("/bin/date", "-u", "-s", time.strftime("%Y-%m-%d %H:%M:%S"))
+        self._run_command("/bin/date", "-s", time.strftime("%Y-%m-%d %H:%M:%S"))
         self._set_hwclock()
 
 
@@ -96,6 +96,9 @@ class TimeUciCommands(object):
                 # disable might fail, when sysntpd is already disabled
                 services.disable("sysntpd", fail_on_error=False)
                 services.stop("sysntpd", fail_on_error=False)
+
+            # restart system (update timezones etc)
+            services.restart("system")
 
         if how_to_set_time == "manual":
             SetTimeCommand().set_time(time)  # time should be set (thanks to validation)

@@ -36,7 +36,7 @@ class TimeModule(BaseModule):
         :rtype: dict
         """
         backend_data = self.handler.get_settings()
-        backend_data["time_settings"]["time"] = datetime.utcnow().isoformat()
+        backend_data["time_settings"]["time"] = datetime.now().isoformat()
         return backend_data
 
     def action_update_settings(self, data):
@@ -67,7 +67,7 @@ class TimeModule(BaseModule):
         :rtype: dict
         """
         # I think that we can safely skip any backend interaction here...
-        return {"time": datetime.utcnow().isoformat()}
+        return {"time": datetime.now().isoformat()}
 
     def action_ntpdate_trigger(self, data):
         """ Tries to run ntpdate to update system time
@@ -76,7 +76,7 @@ class TimeModule(BaseModule):
         def exit_notify(msg):
             if msg["result"]:
                 # if passed fill in the time
-                msg["time"] = datetime.utcnow().isoformat()
+                msg["time"] = datetime.now().isoformat()
             self.notify("ntpdate_finished", msg)
 
         async_id = self.handler.ntpdate_trigger(exit_notify, self.reset_notify)
