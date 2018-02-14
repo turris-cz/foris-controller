@@ -56,8 +56,10 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def connection_test_trigger(
-            self, notify_function, exit_notify_function, reset_notify_function):
+            self, test_kinds, notify_function, exit_notify_function, reset_notify_function):
         """ Triggering of the connection test
+        :param test_kinds: which kinds of tests should be run (ipv4, ipv6, dns)
+        :type test_kinds: array of str
         :param notify_function: function for sending notifications
         :type notify_function: callable
         :param exit_notify_function: function for sending notification when a test finishes
@@ -68,7 +70,8 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
         :rtype: str
         """
         return OpenwrtWanHandler.test_cmds.connection_test_trigger(
-            notify_function, exit_notify_function, reset_notify_function)
+            test_kinds, notify_function, exit_notify_function, reset_notify_function
+        )
 
     @logger_wrapper(logger)
     def connection_test_status(self, test_id):

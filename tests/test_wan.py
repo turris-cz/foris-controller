@@ -600,6 +600,7 @@ def test_connection_test(uci_configs_init, infrastructure, ubusd_test):
         "module": "wan",
         "action": "connection_test_trigger",
         "kind": "request",
+        "data": {"test_kinds": ["ipv4", "ipv6", "dns"]},
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "test_id" in res["data"].keys()

@@ -69,7 +69,7 @@ class WanModule(BaseModule):
 
         return {
             "test_id": self.handler.connection_test_trigger(
-                notify, exit_notify, self.reset_notify)
+                data["test_kinds"], notify, exit_notify, self.reset_notify)
         }
 
     def action_connection_test_status(self, data):

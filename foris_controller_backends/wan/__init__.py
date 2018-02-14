@@ -149,6 +149,11 @@ class WanUci(object):
 class WanTestCommands(AsyncCommand):
 
     FIELDS = ("ipv6", "ipv6_gateway", "ipv4", "ipv4_gateway", "dns", "dnssec")
+    TEST_KIND_MAP = {
+        "ipv4": ["IP4GATE", "IP4"],
+        "ipv6": ["IP6GATE", "IP6"],
+        "dns": ["IP4GATE", "IP4", "IP6GATE", "IP6", "DNS", "DNSSEC"],  # IP has to be working
+    }
 
     def connection_test_status(self, process_id):
         """ Get the status of some connection test
@@ -173,12 +178,14 @@ class WanTestCommands(AsyncCommand):
         return {'status': "finished" if process_data.get_exitted() else "running", "data": data}
 
     def connection_test_trigger(
-            self, notify_function, exit_notify_function, reset_notify_function):
+            self, test_kinds, notify_function, exit_notify_function, reset_notify_function):
         """ Executes connection test in asyncronous mode
 
         This means that we don't wait for the test results. Only a test id is returned.
         This id can be used in other queries.
 
+        :param test_kinds: which kinds of tests should be run (ipv4, ipv6, dns)
+        :type test_kinds: array of str
         :param notify_function: function which is used to send notifications back to client
         :type notify_function: callable
         :param exit_notify_function: function which is used to send notifications back to client
@@ -214,8 +221,13 @@ class WanTestCommands(AsyncCommand):
             )
             logger.debug("Connection test finished: (retval=%d)" % process_data.get_retval())
 
+        # prepare test kinds
+        cmd_line_kinds = []
+        for kind in test_kinds:
+            cmd_line_kinds.extend(self.TEST_KIND_MAP[kind])
+
         process_id = self.start_process(
-            ["/sbin/check_connection"],
+            ["/sbin/check_connection"] + list(set(cmd_line_kinds)),
             [
                 handler_gen(r"^IPv6: (\w+)", "ipv6"),
                 handler_gen(r"^IPv6 Gateway: (\w+)", "ipv6_gateway"),

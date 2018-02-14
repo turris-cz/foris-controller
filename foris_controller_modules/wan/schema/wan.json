@@ -1,5 +1,6 @@
 {
     "definitions": {
+        "connection_test_kind": {"enum": ["ipv4", "ipv6", "dns"]},
         "connection_test_id": {"type": "string"},
         "connection_test_data": {
             "type": "object",
@@ -220,9 +221,21 @@
             "properties": {
                 "module": {"enum": ["wan"]},
                 "kind": {"enum": ["request"]},
-                "action": {"enum": ["connection_test_trigger"]}
+                "action": {"enum": ["connection_test_trigger"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "test_kinds": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/connection_test_kind"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["test_kinds"]
+                }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "trigger connection test reply",
