@@ -10,14 +10,14 @@ test:
 
     - git clone https://gitlab.labs.nic.cz/turris/foris-schema.git
     - cd foris-schema
-    - python setup.py install
+    - pip install .
     - cd ..
 
-    - python setup.py install
+    - pip install .
 
     - git clone https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git
     - cd foris-controller-testtools
-    - python setup.py install
+    - pip install .
     - cd ..
 
     - export LD_LIBRARY_PATH=:/usr/local/lib
@@ -25,6 +25,6 @@ test:
     - python setup.py test --addopts="--backend openwrt"
 
     - cd doc/examples/sample_module/
-    - python setup.py install
+    - pip install .
     - python setup.py test
     - python setup.py test --addopts="--backend openwrt"
