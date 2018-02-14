@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.wan import WanUci
+from foris_controller_backends.wan import WanUci, WanTestCommands
 
 from .. import Handler
 
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
     uci = WanUci()
+    test_cmds = WanTestCommands()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -52,3 +53,29 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
         """
         self.uci.update_settings(**new_settings)
         return True
+
+    @logger_wrapper(logger)
+    def connection_test_trigger(
+            self, notify_function, exit_notify_function, reset_notify_function):
+        """ Triggering of the connection test
+        :param notify_function: function for sending notifications
+        :type notify_function: callable
+        :param exit_notify_function: function for sending notification when a test finishes
+        :type exit_notify_function: callable
+        :param reset_notify_function: function to reconnect to the notification bus
+        :type reset_notify_function: callable
+        :returns: generated_test_id
+        :rtype: str
+        """
+        return OpenwrtWanHandler.test_cmds.connection_test_trigger(
+            notify_function, exit_notify_function, reset_notify_function)
+
+    @logger_wrapper(logger)
+    def connection_test_status(self, test_id):
+        """ Connection test status
+        :param test_id: id of the test to display
+        :type test_id: str
+        :returns: connection test status + test data
+        :rtype: dict
+        """
+        return OpenwrtWanHandler.test_cmds.connection_test_status(test_id)

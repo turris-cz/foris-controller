@@ -20,6 +20,8 @@
 import logging
 import copy
 
+import random
+
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
 
@@ -54,6 +56,7 @@ class MockWanHandler(Handler, BaseMockHandler):
     }
     custom_mac_enabled = False
     custom_mac = None
+    test_id_set = set()
 
     def _cleanup(self):
         self.wan_type = "dhcp"
@@ -166,3 +169,33 @@ class MockWanHandler(Handler, BaseMockHandler):
         self.custom_mac = new_settings["mac_settings"].get("custom_mac", None)
 
         return True
+
+    @logger_wrapper(logger)
+    def connection_test_trigger(
+            self, notify_function, exit_notify_function, reset_notify_function):
+        """ Mocks triggering of the connection test
+        :param notify_function: function to publish notifications
+        :type notify_function: callable
+        :param exit_notify_function: function for sending notification when a test finishes
+        :type exit_notify_function: callable
+        :param reset_notify_function: function to reconnect to the notification bus
+        :type reset_notify_function: callable
+        :returns: generated_test_id
+        :rtype: str
+        """
+        new_test_id = "%032X" % random.randrange(2**32)
+        MockWanHandler.test_id_set.add(new_test_id)
+        return new_test_id
+
+    @logger_wrapper(logger)
+    def connection_test_status(self, test_id):
+        """ Mocks connection test status
+        :param test_id: id of the test to display
+        :type test_id: str
+        :returns: connection test status + test data
+        :rtype: dict
+        """
+        if test_id in MockWanHandler.test_id_set:
+            return {'status': 'running', 'data': {'ipv4': True, 'ipv6': False}}
+        else:
+            return {'status': 'not_found'}

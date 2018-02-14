@@ -1,5 +1,18 @@
 {
     "definitions": {
+        "connection_test_id": {"type": "string"},
+        "connection_test_data": {
+            "type": "object",
+            "properties": {
+                "ipv6": {"type": "boolean"},
+                "ipv6_gateway": {"type": "boolean"},
+                "ipv4": {"type": "boolean"},
+                "ipv4_gateway": {"type": "boolean"},
+                "dns": {"type": "boolean"},
+                "dnssec": {"type": "boolean"}
+            },
+            "additionalProperties": false
+        },
         "wan_type": {"enum": ["dhcp", "static", "pppoe"]},
         "wan_dhcp": {
             "type": "object",
@@ -201,6 +214,109 @@
                 }
             },
             "additionalProperties": false
+        },
+        {
+            "description": "request to trigger connection test",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["connection_test_trigger"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "trigger connection test reply",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["connection_test_trigger"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "test_id": {"$ref": "#/definitions/connection_test_id"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["test_id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "get status of connection test request",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["connection_test_status"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "test_id": {"$ref": "#/definitions/connection_test_id"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["test_id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "get status of connection test reply",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["connection_test_status"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "status": {"enum": ["not_found", "running", "finished"]},
+                        "data": {"$ref": "#/definitions/connection_test_data"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["status"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "connection test notification",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["connection_test"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "test_id": {"$ref": "#/definitions/connection_test_id"},
+                        "data": {"$ref": "#/definitions/connection_test_data"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["test_id", "data"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "connection test finished notification",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["connection_test_finished"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "test_id": {"$ref": "#/definitions/connection_test_id"},
+                        "data": {"$ref": "#/definitions/connection_test_data"},
+                        "passed": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["test_id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

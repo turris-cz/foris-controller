@@ -52,10 +52,41 @@ class WanModule(BaseModule):
             self.notify("update_settings", notify_data)
         return {"result": res}
 
+    def action_connection_test_trigger(self, data):
+        """ Triggers connectio test
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: dict containing test id {'test_id': 'xxxx'}
+        :rtype: dict
+        """
+
+        # wrap action into notify function
+        def notify(msg):
+            self.notify("connection_test", msg)
+
+        def exit_notify(msg):
+            self.notify("connection_test_finished", msg)
+
+        return {
+            "test_id": self.handler.connection_test_trigger(
+                notify, exit_notify, self.reset_notify)
+        }
+
+    def action_connection_test_status(self, data):
+        """ Reads connection test data
+        :param data: supposed to be {'test_id': 'xxxx'}
+        :type data: dict
+        :returns: data about connection test {'status': 'xxxx', 'data': {...}}
+        :rtype: dict
+        """
+        return self.handler.connection_test_status(data['test_id'])
+
 
 @wrap_required_functions([
     'get_settings',
     'update_settings',
+    'connection_test_trigger',
+    'connection_test_status',
 ])
 class Handler(object):
     pass

@@ -23,6 +23,7 @@ from foris_controller_backends.uci import (
     UciBackend, get_option_named
 )
 from foris_controller.exceptions import UciException
+from foris_controller_backends.cmdline import AsyncCommand
 from foris_controller_backends.services import OpenwrtServices
 
 
@@ -143,3 +144,89 @@ class WanUci(object):
             services.restart("network", delay=2)
 
         return True
+
+
+class WanTestCommands(AsyncCommand):
+
+    FIELDS = ("ipv6", "ipv6_gateway", "ipv4", "ipv4_gateway", "dns", "dnssec")
+
+    def connection_test_status(self, process_id):
+        """ Get the status of some connection test
+        :param process_id: test process identifier
+        :type process_id: str
+        :returns: data about test process
+        :rtype: dict
+        """
+
+        with self.lock.readlock:
+            if process_id not in self.processes:
+                return {'status': 'not_found'}
+            process_data = self.processes[process_id]
+
+        exitted = process_data.get_exitted()
+
+        data = {e: False for e in WanTestCommands.FIELDS} if exitted else {}
+        for record in process_data.read_all_data():
+            for option, res in record["data"].items():
+                data[option] = res or data.get(option, False)
+
+        return {'status': "finished" if process_data.get_exitted() else "running", "data": data}
+
+    def connection_test_trigger(
+            self, notify_function, exit_notify_function, reset_notify_function):
+        """ Executes connection test in asyncronous mode
+
+        This means that we don't wait for the test results. Only a test id is returned.
+        This id can be used in other queries.
+
+        :param notify_function: function which is used to send notifications back to client
+        :type notify_function: callable
+        :param exit_notify_function: function which is used to send notifications back to client
+                                     when test exits
+        :type exit_notify_function: callable
+        :param reset_notify_function: function which resets notification connection
+        :type reset_notify_function: callable
+        :returns: test id
+        :rtype: str
+
+        """
+        logger.debug("Starting connection test.")
+
+        # generate a notification handler
+        def handler_gen(regex, option):
+            def handler(matched, process_data):
+                passed = matched.group(1) == "OK"
+                res = {"test_id": process_data.id, "data": {option: passed}}
+                process_data.append_data(res)
+                notify_function(res)
+
+            return regex, handler
+
+        # handler which will be called when the test exits
+        def handler_exit(process_data):
+            data = {e: False for e in WanTestCommands.FIELDS}
+            for record in process_data.read_all_data():
+                for option, res in record["data"].items():
+                    data[option] = res or data.get(option, False)
+            exit_notify_function({
+                "test_id": process_data.id, "data": data,
+                "passed": process_data.get_retval() == 0}
+            )
+            logger.debug("Connection test finished: (retval=%d)" % process_data.get_retval())
+
+        process_id = self.start_process(
+            ["/sbin/check_connection"],
+            [
+                handler_gen(r"^IPv6: (\w+)", "ipv6"),
+                handler_gen(r"^IPv6 Gateway: (\w+)", "ipv6_gateway"),
+                handler_gen(r"^IPv4: (\w+)", "ipv4"),
+                handler_gen(r"^IPv4 Gateway: (\w+)", "ipv4_gateway"),
+                handler_gen(r"DNS: (\w+)", "dns"),
+                handler_gen(r"DNSSEC: (\w+)", "dnssec"),
+            ],
+            handler_exit,
+            reset_notify_function
+        )
+
+        logger.debug("Connection test started '%s'." % process_id)
+        return process_id
