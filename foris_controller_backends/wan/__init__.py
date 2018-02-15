@@ -133,6 +133,13 @@ class WanUci(object):
                     if name in wan6_settings["wan6_static"]
                 ]  # dns with higher priority should be added last
                 backend.replace_list("network", "wan6", "dns", dns)
+            else:
+                # remove extra fields (otherwise it will mess with other settings)
+                for field in ["ip6prefix", "ip6addr", "ip6gw"]:
+                    try:
+                        backend.del_option("network", "wan6", field)
+                    except UciException:
+                        pass
 
             # disable/enable ipv6 on wan interface
             if wan6_type == "none":
