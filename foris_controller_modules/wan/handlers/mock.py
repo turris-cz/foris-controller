@@ -201,3 +201,11 @@ class MockWanHandler(Handler, BaseMockHandler):
             return {'status': 'running', 'data': {'ipv4': True, 'ipv6': False}}
         else:
             return {'status': 'not_found'}
+
+    @logger_wrapper(logger)
+    def get_wan_status(self):
+        """ Mocks wan status
+        :returns: {'up': True/False}
+        :rtype: dict
+        """
+        return {'up': random.choice([True, False])}

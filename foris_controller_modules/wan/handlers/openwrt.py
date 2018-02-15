@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.wan import WanUci, WanTestCommands
+from foris_controller_backends.wan import WanUci, WanTestCommands, WanStatusCommands
 
 from .. import Handler
 
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
     uci = WanUci()
     test_cmds = WanTestCommands()
+    status_cmds = WanStatusCommands()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -82,3 +83,11 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
         :rtype: dict
         """
         return OpenwrtWanHandler.test_cmds.connection_test_status(test_id)
+
+    @logger_wrapper(logger)
+    def get_wan_status(self):
+        """ Obtians wan status
+        :returns: {'up': True/False}
+        :rtype: dict
+        """
+        return {'up': self.status_cmds.get_status()["up"]}

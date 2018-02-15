@@ -330,6 +330,33 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "request to get status of wan inteface",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_wan_status"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to get status of wan inteface",
+            "properties": {
+                "module": {"enum": ["wan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_wan_status"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "up": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["up"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

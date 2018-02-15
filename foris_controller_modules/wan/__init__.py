@@ -81,12 +81,22 @@ class WanModule(BaseModule):
         """
         return self.handler.connection_test_status(data['test_id'])
 
+    def action_get_wan_status(self, data):
+        """ Obtains info regarding wan interface status
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: data regarding wan interface status {'up': True/False}
+        :rtype: dict
+        """
+        return self.handler.get_wan_status()
+
 
 @wrap_required_functions([
     'get_settings',
     'update_settings',
     'connection_test_trigger',
     'connection_test_status',
+    'get_wan_status',
 ])
 class Handler(object):
     pass

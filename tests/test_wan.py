@@ -38,6 +38,16 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "mac_settings" in res["data"].keys()
 
 
+def test_get_wan_status(uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "wan",
+        "action": "get_wan_status",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "up" in res["data"].keys()
+
+
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
 
     def update(input_data, output_data, notification_data):

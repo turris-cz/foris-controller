@@ -18,12 +18,15 @@
 #
 
 import logging
+import json
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named
 )
-from foris_controller.exceptions import UciException
-from foris_controller_backends.cmdline import AsyncCommand
+from foris_controller.exceptions import (
+    UciException, BackendCommandFailed, FailedToParseCommandOutput
+)
+from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
 from foris_controller_backends.services import OpenwrtServices
 
 
@@ -242,3 +245,19 @@ class WanTestCommands(AsyncCommand):
 
         logger.debug("Connection test started '%s'." % process_id)
         return process_id
+
+
+class WanStatusCommands(BaseCmdLine):
+
+    def get_status(self):
+        args = ("/bin/ubus", "-S", "call", "network.interface.wan", "status")
+        retval, stdout, _ = self._run_command(*args)
+        if not retval == 0:
+            logger.error("Command %s failed." % str(args))
+            raise BackendCommandFailed(retval, args)
+
+        try:
+            parsed = json.loads(stdout.strip())
+        except ValueError:
+            raise FailedToParseCommandOutput(args, stdout)
+        return parsed
