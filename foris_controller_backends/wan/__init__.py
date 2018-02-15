@@ -21,7 +21,7 @@ import logging
 import json
 
 from foris_controller_backends.uci import (
-    UciBackend, get_option_named
+    UciBackend, get_option_named, store_bool
 )
 from foris_controller.exceptions import (
     UciException, BackendCommandFailed, FailedToParseCommandOutput
@@ -133,6 +133,12 @@ class WanUci(object):
                     if name in wan6_settings["wan6_static"]
                 ]  # dns with higher priority should be added last
                 backend.replace_list("network", "wan6", "dns", dns)
+
+            # disable/enable ipv6 on wan interface
+            if wan6_type == "none":
+                backend.set_option("network", "wan", "ipv6", store_bool(False))
+            else:
+                backend.set_option("network", "wan", "ipv6", store_bool(True))
 
             # MAC
             if mac_settings["custom_mac_enabled"]:
