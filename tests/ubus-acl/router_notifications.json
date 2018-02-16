@@ -1,0 +1,11 @@
+{
+    "user": "stepan",
+    "access": {
+        "foris-controller-router_notifications": {
+            "methods": [ "list" ]
+        }
+    },
+    "publish": [ "foris-controller-router_notifications" ],
+    "subscribe": [ "foris-controller-router_notifications" ]
+}
+

@@ -1,0 +1,59 @@
+{
+    "definitions": {
+        "router_notification_id": {"type": "string", "pattern": "^[1-9][0-9]*-[1-9][0-9]*$"},
+        "router_notification": {
+            "type": "object",
+            "properties": {
+                "lang": {"$def": "#/definitions/iso2country"},
+                "msg": {"type": "string"},
+                "id": {"$def": "#/definitions/router_notification_id"},
+                "created_at": {"type": "string", "format": "date-time"},
+                "displayed": {"type": "boolean"},
+                "severity": {"enum": ["news", "restart", "error", "update"]}
+            },
+            "additionalProperties": false,
+            "required": ["lang", "msg", "id", "displayed", "severity"]
+        }
+    },
+    "oneOf": [
+        {
+            "description": "Request to list all router notifications",
+            "properties": {
+                "module": {"enum": ["router_notifications"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["list"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "lang": {"$def": "#/definitions/iso2country"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["lang"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to list all router notifications",
+            "properties": {
+                "module": {"enum": ["router_notifications"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["list"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "notifications": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/router_notification"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["notifications"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}
