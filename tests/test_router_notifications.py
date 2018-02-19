@@ -101,7 +101,7 @@ STORED_NOTIFICATIONS = [
 ]
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def stored_notifications():
     path = "/tmp/foris-controller-stored-notifications.json"
     try:
@@ -148,3 +148,28 @@ def test_list(stored_notifications, uci_configs_init, infrastructure, ubusd_test
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "notifications" in res["data"].keys()
+
+
+def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructure, ubusd_test):
+    ids = ["1518776436-2598", "1518776436-2628"]
+    res = infrastructure.process_message({
+        "module": "router_notifications",
+        "action": "mark_as_displayed",
+        "kind": "request",
+        "data": {"ids": ids}
+    })
+    assert res == {
+        u"module": u"router_notifications",
+        u"action": u"mark_as_displayed",
+        u"kind": u"reply",
+        u"data": {u"result": True},
+    }
+    res = infrastructure.process_message({
+        "module": "router_notifications",
+        "action": "list",
+        "kind": "request",
+        "data": {"lang": "en"}
+    })
+    assert "notifications" in res["data"].keys()
+    for notification in res["data"]["notifications"]:
+        assert notification["displayed"] == (notification["id"] in ids)

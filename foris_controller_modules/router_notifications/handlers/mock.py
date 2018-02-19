@@ -130,3 +130,10 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
                     raise KeyError(lang)  # this should not happen
             res.append(new)
         return res
+
+    @logger_wrapper(logger)
+    def mark_as_displayed(self, ids):
+        for notification in self.notifications:
+            if notification["id"] in ids:
+                notification["displayed"] = True
+        return True

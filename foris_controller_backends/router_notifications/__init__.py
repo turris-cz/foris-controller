@@ -21,9 +21,7 @@ import json
 import logging
 
 from foris_controller_backends.cmdline import BaseCmdLine
-from foris_controller.exceptions import (
-    BackendCommandFailed, FailedToParseCommandOutput
-)
+from foris_controller.exceptions import FailedToParseCommandOutput
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +46,20 @@ class RouterNotificationsCmds(BaseCmdLine):
         :rtype: list
         """
         args = ("/usr/bin/list_notifications", "-n")
-        retval, stdout, _ = self._run_command(*args)
-        if not retval == 0:
-            logger.error("Command %s failed." % str(args))
-            raise BackendCommandFailed(retval, args)
-
+        stdout, _ = self._run_command_and_check_retval(args, 0)
         try:
             parsed = json.loads(stdout.strip())
         except ValueError:
             raise FailedToParseCommandOutput(args, stdout)
         return parsed
+
+    def mark_as_displayed(self, ids):
+        """ Marks notifications as displayed
+
+        displayed notifications will be removed by cleanup script later
+
+        :param ids: list of notifications to be marked
+        :type data: list
+        """
+        args = ["/usr/bin/user-notify-display"] + ids
+        _, _ = self._run_command_and_check_retval(args, 0)

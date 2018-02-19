@@ -129,6 +129,26 @@ class BaseCmdLine(object):
         return retval, stdout, stderr
 
     @staticmethod
+    def _run_command_and_check_retval(args, expected_retval):
+        """ Runs command and checks its retval.
+
+        :param args: cmd and its arguments
+        :type args: tuple
+        :param expected_retval: expected retval
+        :type expected_retval: int
+
+        :returns: (stdout, stderr)
+        :rtype: (str, str)
+        :raises: BackendCommandFailed
+        """
+        retval, stdout, stderr = BaseCmdLine._run_command(*args)
+        if not retval == expected_retval:
+            logger.error("Command %s unexpected returncode (%d, expected %d)." % (
+                str(args), retval, expected_retval))
+            raise BackendCommandFailed(retval, args)
+        return stdout, stderr
+
+    @staticmethod
     def _trigger_and_parse(args, regex, groups=(1, )):
         """ Runs command and parses the output by regex,
             raises an exception when the output doesn't match regex
@@ -142,10 +162,7 @@ class BaseCmdLine(object):
         :returns: matching strings
         :rtype: tuple
         """
-        retval, stdout, _ = BaseCmdLine._run_command(*args)
-        if not retval == 0:
-            logger.error("Command %s failed." % str(args))
-            raise BackendCommandFailed(retval, args)
+        stdout, _ = BaseCmdLine._run_command_and_check_retval(args, 0)
         match = re.search(regex, stdout, re.MULTILINE)
         if not match:
             logger.error("Failed to parse output of %s." % str(args))

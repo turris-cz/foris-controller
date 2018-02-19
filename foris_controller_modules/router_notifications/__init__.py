@@ -36,9 +36,22 @@ class RouterNotificationsModule(BaseModule):
         """
         return {"notifications": self.handler.list(data["lang"])}
 
+    def action_mark_as_displayed(self, data):
+        """ Marks notifications as displayed
+
+        displayed notifications will be removed by cleanup script later
+
+        :param data: input data (supposed to be {"ids": ["12345678-1234"]})
+        :type data: dict
+        :returns: {"result": True/False}
+        :rtype: dict
+        """
+        return {"result": self.handler.mark_as_displayed(data["ids"])}
+
 
 @wrap_required_functions([
     'list',
+    'mark_as_displayed',
 ])
 class Handler(object):
     pass

@@ -59,3 +59,8 @@ class OpenwrtRouterNotificationsHandler(Handler, BaseOpenwrtHandler):
                     raise KeyError(lang)  # this should not happen
             res.append(new)
         return res
+
+    @logger_wrapper(logger)
+    def mark_as_displayed(self, ids):
+        self.cmds.mark_as_displayed(ids)
+        return True
