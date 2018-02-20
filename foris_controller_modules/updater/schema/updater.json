@@ -24,7 +24,7 @@
                         },
                         "required_languages": {
                             "type": "array",
-                            "items": {"$def": "#/definitions/iso2country"}
+                            "items": {"$ref": "#/definitions/iso2country"}
                         },
                         "approvals": {
                             "type": "object",

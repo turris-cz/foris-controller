@@ -18,7 +18,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": { "$def": "#/definitions/iso2country" },
+                        "language": { "$ref": "#/definitions/iso2country" },
                         "reboot_required": {"type": "boolean"}
                     },
                     "additionalProperties": false,
@@ -37,7 +37,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": { "$def": "#/definitions/iso2country" }
+                        "language": { "$ref": "#/definitions/iso2country" }
                     },
                     "additionalProperties": false,
                     "required": ["language"]
@@ -84,7 +84,7 @@
                     "properties": {
                         "languages": {
                             "type": "array",
-                            "items": { "$def": "#/definitions/iso2country" },
+                            "items": { "$ref": "#/definitions/iso2country" },
                             "minItems": 1
                         }
                     },
@@ -104,7 +104,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": { "$def": "#/definitions/iso2country" }
+                        "language": { "$ref": "#/definitions/iso2country" }
                     },
                     "additionalProperties": false,
                     "required": ["language"]

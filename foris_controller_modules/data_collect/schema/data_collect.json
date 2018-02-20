@@ -25,7 +25,7 @@
                     "type": "object",
                     "properties": {
                         "email": {"type": "string"},
-                        "language": { "$def": "#/definitions/iso2country" }
+                        "language": { "$ref": "#/definitions/iso2country" }
                     },
                     "additionalProperties": false,
                     "required": ["email", "language"]
