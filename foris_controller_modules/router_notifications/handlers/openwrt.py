@@ -24,7 +24,9 @@ from datetime import datetime
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
-from foris_controller_backends.router_notifications import RouterNotificationsCmds
+from foris_controller_backends.router_notifications import (
+    RouterNotificationsCmds, RouterNotificationsUci
+)
 
 from .. import Handler
 
@@ -33,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtRouterNotificationsHandler(Handler, BaseOpenwrtHandler):
     cmds = RouterNotificationsCmds()
+    uci = RouterNotificationsUci()
 
     @logger_wrapper(logger)
     def list(self, lang):
@@ -64,3 +67,11 @@ class OpenwrtRouterNotificationsHandler(Handler, BaseOpenwrtHandler):
     def mark_as_displayed(self, ids):
         self.cmds.mark_as_displayed(ids)
         return True
+
+    @logger_wrapper(logger)
+    def get_settings(self):
+        return self.uci.get_settings()
+
+    @logger_wrapper(logger)
+    def update_settings(self, emails_settings, reboots_settings):
+        return self.uci.update_settings(emails_settings, reboots_settings)

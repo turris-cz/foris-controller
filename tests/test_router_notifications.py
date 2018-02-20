@@ -25,6 +25,8 @@ from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
 )
 
+from foris_controller_testtools.utils import match_subdict
+
 STORED_NOTIFICATIONS = [
     {
         "displayed": False,
@@ -173,3 +175,120 @@ def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructur
     assert "notifications" in res["data"].keys()
     for notification in res["data"]["notifications"]:
         assert notification["displayed"] == (notification["id"] in ids)
+
+
+def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "router_notifications",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "emails" in res["data"].keys()
+    assert "reboots" in res["data"].keys()
+
+
+def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+    def update(data):
+        notifications = infrastructure.get_notifications()
+        res = infrastructure.process_message({
+            "module": "router_notifications",
+            "action": "update_settings",
+            "kind": "request",
+            "data": data
+        })
+        assert res == {
+            u'action': u'update_settings',
+            u'data': {u'result': True},
+            u'kind': u'reply',
+            u'module': u'router_notifications'
+        }
+        notifications = infrastructure.get_notifications(notifications)
+        assert notifications[-1]["module"] == "router_notifications"
+        assert notifications[-1]["action"] == "update_settings"
+        assert notifications[-1]["kind"] == "notification"
+        assert match_subdict(notifications[-1]["data"], data)
+
+        res = infrastructure.process_message({
+            "module": "router_notifications",
+            "action": "get_settings",
+            "kind": "request",
+        })
+        assert match_subdict(data, res["data"])
+
+    update({
+        "emails": {"enabled": False},
+        "reboots": {"delay": 1, "time": "03:30"},
+    })
+
+    update({
+        "emails": {
+            "enabled": True,
+            "common": {
+                "to": ["user1@example.com", "user2@example.com"],
+                "severity_filter": 1,
+                "send_news": False,
+            },
+            "smtp_type": "turris",
+            "smtp_turris": {
+                "sender_name": "name1",
+            }
+        },
+        "reboots": {"delay": 0, "time": "04:20"},
+    })
+    update({
+        "emails": {
+            "enabled": True,
+            "common": {
+                "to": ["user1@example.com", "user2@example.com"],
+                "severity_filter": 1,
+                "send_news": False,
+            },
+            "smtp_type": "turris",
+            "smtp_turris": {
+                "sender_name": "name2",
+            }
+        },
+        "reboots": {"delay": 0, "time": "04:20"},
+    })
+
+    update({
+        "emails": {
+            "enabled": True,
+            "common": {
+                "to": ["user3@example.com", "user2@example.com"],
+                "severity_filter": 2,
+                "send_news": True,
+            },
+            "smtp_type": "custom",
+            "smtp_custom": {
+                "from": "turris1@example.com",
+                "host": "example1.com",
+                "port": 25,
+                "security": "none",
+                "username": "user1",
+                "password": "pass1",
+            }
+        },
+        "reboots": {"delay": 2, "time": "05:10"},
+    })
+    update({
+        "emails": {
+            "enabled": True,
+            "common": {
+                "to": ["user3@example.com", "user2@example.com"],
+                "severity_filter": 2,
+                "send_news": True,
+            },
+            "smtp_type": "custom",
+            "smtp_custom": {
+                "from": "turris2@example.com",
+                "host": "example2.com",
+                "port": 26,
+                "security": "ssl",
+                "username": "user2",
+                "password": "pass2",
+            }
+        },
+        "reboots": {"delay": 2, "time": "05:10"},
+    })

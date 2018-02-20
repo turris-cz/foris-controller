@@ -21,6 +21,9 @@ import json
 import logging
 
 from foris_controller_backends.cmdline import BaseCmdLine
+from foris_controller_backends.uci import (
+    UciBackend, get_option_named, parse_bool, store_bool
+)
 from foris_controller.exceptions import FailedToParseCommandOutput
 
 logger = logging.getLogger(__name__)
@@ -63,3 +66,104 @@ class RouterNotificationsCmds(BaseCmdLine):
         """
         args = ["/usr/bin/user-notify-display"] + ids
         _, _ = self._run_command_and_check_retval(args, 0)
+
+
+class RouterNotificationsUci(object):
+
+    def get_settings(self):
+        with UciBackend() as backend:
+            data = backend.read("user_notify")
+
+        res = {
+            "emails": {
+                "enabled": parse_bool(
+                    get_option_named(data, "user_notify", "smtp", "enable", "0")),
+                "common": {
+                    "to": get_option_named(data, "user_notify", "smtp", "to", []),
+                    "severity_filter": int(
+                        get_option_named(data, "user_notify", "notifications", "severity", "1")),
+                    "send_news": parse_bool(
+                        get_option_named(data, "user_notify", "notifications", "news", "1")),
+                },
+                "smtp_turris": {
+                    "sender_name": get_option_named(
+                        data, "user_notify", "smtp", "sender_name", "turris"),
+                },
+                "smtp_custom": {
+                    "from": get_option_named(
+                        data, "user_notify", "smtp", "from", "router@example.com"),
+                    "host": get_option_named(
+                        data, "user_notify", "smtp", "server", "example.com"),
+                    "port": int(get_option_named(
+                        data, "user_notify", "smtp", "port", "587")),
+                    "username": get_option_named(
+                        data, "user_notify", "smtp", "username", ""),
+                    "password": get_option_named(
+                        data, "user_notify", "smtp", "password", ""),
+                    "security": get_option_named(
+                        data, "user_notify", "smtp", "security", "starttls"),
+                },
+            },
+            "reboots": {
+                "time": get_option_named(data, "user_notify", "reboot", "time"),
+                "delay": int(get_option_named(data, "user_notify", "reboot", "delay")),
+            }
+        }
+        smtp_type = "turris" if parse_bool(get_option_named(
+            data, "user_notify", "smtp", "use_turris_smtp", "1")) else "custom"
+        res["emails"]["smtp_type"] = smtp_type
+
+        return res
+
+    def update_settings(self, emails_settings, reboots_settings):
+        with UciBackend() as backend:
+            if emails_settings["enabled"]:
+                backend.add_section("user_notify", "smtp", "smtp")
+                backend.set_option("user_notify", "smtp", "enable", store_bool(True))
+                if emails_settings["smtp_type"] == "turris":
+                    backend.set_option("user_notify", "smtp", "use_turris_smtp", store_bool(True))
+                    backend.set_option(
+                        "user_notify", "smtp", "sender_name",
+                        emails_settings["smtp_turris"]["sender_name"]
+                    )
+                if emails_settings["smtp_type"] == "custom":
+                    backend.set_option("user_notify", "smtp", "use_turris_smtp", store_bool(False))
+                    backend.set_option(
+                        "user_notify", "smtp", "from", emails_settings["smtp_custom"]["from"])
+                    backend.set_option(
+                        "user_notify", "smtp", "server", emails_settings["smtp_custom"]["host"])
+                    backend.set_option(
+                        "user_notify", "smtp", "port", int(emails_settings["smtp_custom"]["port"]))
+                    backend.set_option(
+                        "user_notify", "smtp", "security",
+                        emails_settings["smtp_custom"]["security"]
+                    )
+                    if emails_settings["smtp_custom"]["username"].strip():
+                        backend.set_option(
+                            "user_notify", "smtp", "username",
+                            emails_settings["smtp_custom"]["username"].strip()
+                        )
+                    if emails_settings["smtp_custom"]["password"]:
+                        backend.set_option(
+                            "user_notify", "smtp", "password",
+                            emails_settings["smtp_custom"]["password"]
+                        )
+                backend.replace_list("user_notify", "smtp", "to", emails_settings["common"]["to"])
+                backend.add_section("user_notify", "notifications", "notifications")
+                backend.set_option(
+                    "user_notify", "notifications", "severity",
+                    emails_settings["common"]["severity_filter"]
+                )
+                backend.set_option(
+                    "user_notify", "notifications", "news",
+                    store_bool(emails_settings["common"]["send_news"])
+                )
+            else:
+                backend.set_option("user_notify", "smtp", "enable", store_bool(False))
+
+            # Set reboots
+            backend.add_section("user_notify", "reboot", "reboot")
+            backend.set_option("user_notify", "reboot", "time", reboots_settings["time"])
+            backend.set_option("user_notify", "reboot", "delay", str(reboots_settings["delay"]))
+
+        return True

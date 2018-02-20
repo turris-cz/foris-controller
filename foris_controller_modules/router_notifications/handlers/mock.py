@@ -18,6 +18,7 @@
 #
 
 import logging
+import collections
 
 from datetime import datetime
 
@@ -105,6 +106,32 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
         }
     ]
 
+    reboots_settings = {
+        "time": "03:00",
+        "delay": 3,
+    }
+
+    emails_settings = {
+        "enabled": False,
+        "common": {
+            "to": [],
+            "severity_filter": 1,
+            "send_news": True
+        },
+        "smtp_type": "turris",
+        "smtp_turris": {
+            "sender_name": "turris"
+        },
+        "smtp_custom": {
+            "from": "turris@example.com",
+            "host": "example.com",
+            "port": 25,
+            "security": "none",
+            "username": "",
+            "password": "",
+        },
+    }
+
     @logger_wrapper(logger)
     def list(self, lang):
         res = []
@@ -136,4 +163,27 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
         for notification in self.notifications:
             if notification["id"] in ids:
                 notification["displayed"] = True
+        return True
+
+    @logger_wrapper(logger)
+    def get_settings(self):
+        return {
+            "emails": self.emails_settings,
+            "reboots": self.reboots_settings,
+        }
+
+    @logger_wrapper(logger)
+    def update_settings(self, emails_settings, reboots_settings):
+
+        # update values
+        def update_dict(d, u):
+            for k, v in u.items():
+                if isinstance(v, collections.Mapping):
+                    update_dict(d.get(k, {}), v)
+                else:
+                    d[k] = v
+
+        update_dict(self.emails_settings, emails_settings)
+        self.reboots_settings = reboots_settings
+
         return True

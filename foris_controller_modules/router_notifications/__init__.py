@@ -48,10 +48,39 @@ class RouterNotificationsModule(BaseModule):
         """
         return {"result": self.handler.mark_as_displayed(data["ids"])}
 
+    def action_get_settings(self, data):
+        """ Get current notification settings
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: current notification settings
+        :rtype: dict
+        """
+        return self.handler.get_settings()
+
+    def action_update_settings(self, data):
+        """ Updates notification settings
+        :param data: new notification settings
+        :type data: dict
+        :returns: result of the update {'result': True/False}
+        :rtype: dict
+        """
+        res = self.handler.update_settings(
+            emails_settings=data["emails"], reboots_settings=data["reboots"])
+        if res:
+            self.notify("update_settings", {
+                "reboots": data["reboots"],
+                "emails": {
+                    "enabled": True, "smtp_type": data["emails"]["smtp_type"]
+                } if data["emails"]["enabled"] else {"enabled": False}
+            })
+        return {"result": res}
+
 
 @wrap_required_functions([
     'list',
     'mark_as_displayed',
+    'get_settings',
+    'update_settings',
 ])
 class Handler(object):
     pass
