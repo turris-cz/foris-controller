@@ -7,7 +7,7 @@ import sys
 
 with open("/tmp/foris-controller-stored-notifications.json", "r") as f:
     data = json.load(f)
-    f.flush()
+
 
 for notification in data["notifications"]:
     if notification["id"] in sys.argv:

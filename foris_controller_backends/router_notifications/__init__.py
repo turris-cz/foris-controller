@@ -67,6 +67,21 @@ class RouterNotificationsCmds(BaseCmdLine):
         args = ["/usr/bin/user-notify-display"] + ids
         _, _ = self._run_command_and_check_retval(args, 0)
 
+    def create_notification(self, msg, severity, immediate):
+        """ Call cmd to create notification
+
+        :param msg: message to be stored
+        :type msg: str
+        :param severity: message severity (news, update, restart, error)
+        :type severity: str
+        :param immediate:
+        :type immediate: bool
+        """
+        args = ["/usr/bin/create_notification"] + (["-t"] if immediate else []) + \
+            ["-s", severity, msg]
+        retval, _, _ = self._run_command(*args)
+        return retval == 0
+
 
 class RouterNotificationsUci(object):
 

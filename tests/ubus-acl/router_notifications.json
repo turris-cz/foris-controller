@@ -2,7 +2,7 @@
     "user": "stepan",
     "access": {
         "foris-controller-router_notifications": {
-            "methods": [ "list", "mark_as_displayed", "get_settings", "update_settings" ]
+            "methods": [ "list", "mark_as_displayed", "get_settings", "update_settings", "create" ]
         }
     },
     "publish": [ "foris-controller-router_notifications" ],

@@ -19,6 +19,7 @@
 
 import logging
 import collections
+import time
 
 from datetime import datetime
 
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockRouterNotificationsHandler(Handler, BaseMockHandler):
+    notification_counter = 0
     notifications = [
         {
             "displayed": False,
@@ -186,4 +188,18 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
         update_dict(self.emails_settings, emails_settings)
         self.reboots_settings = reboots_settings
 
+        return True
+
+    @logger_wrapper(logger)
+    def create(self, msg, severity, immediate):
+        self.notification_counter += 1
+        self.notifications.append({
+            "displayed": False,
+            "id": "%d-%d" % (time.mktime(datetime.utcnow().timetuple()), self.notification_counter),
+            "severity": severity,
+            "messages": {
+                "en": msg,
+                "cs": msg,
+            }
+        })
         return True

@@ -284,6 +284,44 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Request to create notification",
+            "properties": {
+                "module": {"enum": ["router_notifications"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["create"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "severity": {"$ref": "#/definitions/router_notification_severity"},
+                        "immediate": {"type": "boolean", "description": "Email with the notification will be sent instantly"},
+                        "msg": {"type": "string", "description": "Translated message"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["severity", "immediate", "msg"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to create notification",
+            "properties": {
+                "module": {"enum": ["router_notifications"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["create"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

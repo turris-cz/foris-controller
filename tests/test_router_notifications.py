@@ -292,3 +292,54 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
         },
         "reboots": {"delay": 2, "time": "05:10"},
     })
+
+
+def test_create(stored_notifications, uci_configs_init, infrastructure, ubusd_test):
+    def create(message, severity, immediate):
+        res = infrastructure.process_message({
+            "module": "router_notifications",
+            "action": "list",
+            "kind": "request",
+            "data": {"lang": "en"}
+        })
+        assert "notifications" in res["data"].keys()
+        old_ids = [e["id"] for e in res['data']['notifications']]
+
+        res = infrastructure.process_message({
+            "module": "router_notifications",
+            "action": "create",
+            "kind": "request",
+            "data": {
+                "severity": severity,
+                "msg": message,
+                "immediate": immediate,
+            }
+        })
+        assert res == {
+            u"module": u"router_notifications",
+            u"action": u"create",
+            u"kind": u"reply",
+            u"data": {u"result": True},
+        }
+
+        res = infrastructure.process_message({
+            "module": "router_notifications",
+            "action": "list",
+            "kind": "request",
+            "data": {"lang": "en"}
+        })
+
+        assert "notifications" in res["data"].keys()
+        new_ids = [e["id"] for e in res['data']['notifications']]
+        assert len(new_ids) == len(old_ids) + 1
+        new_msg = [
+            e for e in res["data"]["notifications"]
+            if e["id"] in set(new_ids) - set(old_ids)
+        ][0]
+        assert new_msg["severity"] == severity
+        assert new_msg["msg"] == message
+
+    create("msg1", "news", True)
+    create("msg2", "restart", False)
+    create("msg3", "update", False)
+    create("msg4", "error", False)

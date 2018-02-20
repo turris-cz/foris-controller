@@ -75,12 +75,24 @@ class RouterNotificationsModule(BaseModule):
             })
         return {"result": res}
 
+    def action_create(self, data):
+        """ Creates notification
+
+        :param data: {'severity': 'news/update/...', 'message': "TEXT", 'immediate': True/False}
+        :type data: dict
+        :returns: result of the update {'result': True/False}
+        :rtype: dict
+        """
+        # Note that notifications to message bus should be created in the backend command
+        return {"result": self.handler.create(**data)}
+
 
 @wrap_required_functions([
     'list',
     'mark_as_displayed',
     'get_settings',
     'update_settings',
+    'create',
 ])
 class Handler(object):
     pass
