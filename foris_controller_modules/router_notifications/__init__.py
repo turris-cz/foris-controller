@@ -46,6 +46,7 @@ class RouterNotificationsModule(BaseModule):
         :returns: {"result": True/False}
         :rtype: dict
         """
+        # Note that notifications to message bus should be created in the backend command
         return {"result": self.handler.mark_as_displayed(data["ids"])}
 
     def action_get_settings(self, data):

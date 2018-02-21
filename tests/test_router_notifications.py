@@ -24,6 +24,7 @@ import json
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
 )
+from .test_notifications import notify_cmd
 
 from foris_controller_testtools.utils import match_subdict
 
@@ -175,6 +176,43 @@ def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructur
     assert "notifications" in res["data"].keys()
     for notification in res["data"]["notifications"]:
         assert notification["displayed"] == (notification["id"] in ids)
+
+
+def test_mark_as_displayed_notification(uci_configs_init, infrastructure, ubusd_test):
+    # these notifications are meant to be send by external program
+    # to imitate such behavior just call cmd foris-notify
+    def mark_as_displayed_notification(data):
+        notifications = infrastructure.get_notifications()
+        retval, _, _ = notify_cmd(
+            infrastructure, "router_notifications", "mark_as_displayed",
+            data
+        )
+        assert retval == 0
+        notifications = infrastructure.get_notifications(notifications)
+        assert notifications[-1]["module"] == "router_notifications"
+        assert notifications[-1]["action"] == "mark_as_displayed"
+        assert notifications[-1]["kind"] == "notification"
+        assert notifications[-1]["data"] == data
+
+    def mark_as_displayed_notification_failed(data):
+        new_notifications = infrastructure.get_notifications()
+        retval, _, _ = notify_cmd(
+            infrastructure, "router_notifications", "mark_as_displayed",
+            data
+        )
+        assert not retval == 0
+        old_notifications = infrastructure.get_notifications()
+        assert new_notifications == old_notifications
+
+    mark_as_displayed_notification({"ids": ["1518776436-2595"], "new_count": 3})
+    mark_as_displayed_notification({
+        "ids": ["1518776436-2595", "1518776436-2595", "1518776436-2595"], "new_count": 0
+    })
+    mark_as_displayed_notification_failed({"ids": ["1518776436x-2595"], "new_count": 3})
+    mark_as_displayed_notification_failed({
+        "ids": ["1518776436-2595", "1518776436-2595", "1518776436x-2595"], "new_count": 0
+    })
+    mark_as_displayed_notification_failed({"ids": ["1518776436-2595"], "new_count": -1})
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -343,3 +381,22 @@ def test_create(stored_notifications, uci_configs_init, infrastructure, ubusd_te
     create("msg2", "restart", False)
     create("msg3", "update", False)
     create("msg4", "error", False)
+
+
+def test_create_notification(uci_configs_init, infrastructure, ubusd_test):
+    # these notifications are meant to be send by external program
+    # to imitate such behavior just call cmd foris-notify
+    def create_notification(data):
+        notifications = infrastructure.get_notifications()
+        retval, _, _ = notify_cmd(infrastructure, "router_notifications", "create", data)
+        assert retval == 0
+        notifications = infrastructure.get_notifications(notifications)
+        assert notifications[-1]["module"] == "router_notifications"
+        assert notifications[-1]["action"] == "create"
+        assert notifications[-1]["kind"] == "notification"
+        assert notifications[-1]["data"] == data
+
+    create_notification({"severity": "restart", "id": "1518776436-2595", "new_count": 1})
+    create_notification({"severity": "news", "id": "1518776436-2596", "new_count": 2})
+    create_notification({"severity": "update", "id": "1518776436-2597", "new_count": 3})
+    create_notification({"severity": "error", "id": "1518776436-2598", "new_count": 4})

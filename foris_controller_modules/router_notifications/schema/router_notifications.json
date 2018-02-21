@@ -202,6 +202,29 @@
             "required": ["data"]
         },
         {
+            "description": "Notification that router notifications were marked as displayed",
+            "properties": {
+                "module": {"enum": ["router_notifications"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["mark_as_displayed"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "ids": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/router_notification_id"},
+                            "minItems": 1
+                        },
+                        "new_count": {"type": "integer", "minimum": 0}
+                    },
+                    "additionalProperties": false,
+                    "required": ["ids", "new_count"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
             "description": "Request to get notifications settings",
             "properties": {
                 "module": {"enum": ["router_notifications"]},
@@ -318,6 +341,26 @@
                     },
                     "additionalProperties": false,
                     "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that a new router notification was created",
+            "properties": {
+                "module": {"enum": ["router_notifications"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["create"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/router_notification_id"},
+                        "severity": {"$ref": "#/definitions/router_notification_severity"},
+                        "new_count": {"type": "integer", "minimum": 1}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id", "severity", "new_count"]
                 }
             },
             "additionalProperties": false,
