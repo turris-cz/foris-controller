@@ -137,7 +137,7 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def list(self, lang):
         res = []
-        for notification in self.notifications:
+        for notification in MockRouterNotificationsHandler.notifications:
             new = {
                 "id": notification["id"],
                 "displayed": notification["displayed"],
@@ -162,7 +162,7 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def mark_as_displayed(self, ids):
-        for notification in self.notifications:
+        for notification in MockRouterNotificationsHandler.notifications:
             if notification["id"] in ids:
                 notification["displayed"] = True
         return True
@@ -193,7 +193,7 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def create(self, msg, severity, immediate):
         self.notification_counter += 1
-        self.notifications.append({
+        MockRouterNotificationsHandler.notifications.append({
             "displayed": False,
             "id": "%d-%d" % (time.mktime(datetime.utcnow().timetuple()), self.notification_counter),
             "severity": severity,

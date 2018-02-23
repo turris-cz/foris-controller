@@ -19,6 +19,7 @@
 
 import json
 import logging
+import glob
 
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.uci import (
@@ -34,7 +35,8 @@ class RouterNotificationsCmds(BaseCmdLine):
         """ Lists notifications
 
         :returns: list of notifications in following format
-                [
+            {
+                "notifications": [
                     {
                         "id": "1234567-1234",
                         "displayed": True/False,
@@ -46,6 +48,7 @@ class RouterNotificationsCmds(BaseCmdLine):
                     },
                     ...
                 ]
+            }
         :rtype: list
         """
         args = ("/usr/bin/list_notifications", "-n")
@@ -55,6 +58,14 @@ class RouterNotificationsCmds(BaseCmdLine):
         except ValueError:
             raise FailedToParseCommandOutput(args, stdout)
         return parsed
+
+    def active_count(self):
+        """ get active notifications
+        :returns: number of active notifiations
+        :rtype: int
+        """
+        return len(glob.glob("/tmp/user_notify/*-*")) \
+            - len(glob.glob("/tmp/user_notify/*-*/displayed"))
 
     def mark_as_displayed(self, ids):
         """ Marks notifications as displayed

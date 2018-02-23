@@ -36,6 +36,7 @@ class WebModule(BaseModule):
         return {
             'language': self.handler.get_language(),
             'reboot_required': self.handler.reboot_required(),
+            'notification_count': self.handler.get_notification_count(),
         }
 
     def action_set_language(self, data):
@@ -65,6 +66,7 @@ class WebModule(BaseModule):
     'set_language',
     'list_languages',
     'reboot_required',
+    'get_notification_count',
 ])
 class Handler(object):
     pass

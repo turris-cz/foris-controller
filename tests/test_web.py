@@ -35,9 +35,10 @@ def test_get(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
-        u"language", u"reboot_required",
+        u"language", u"reboot_required", "notification_count",
     }
     assert len(res["data"]["language"]) == 2
+    assert res["data"]["notification_count"] >= 0
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)

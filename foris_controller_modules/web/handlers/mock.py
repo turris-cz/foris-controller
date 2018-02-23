@@ -64,3 +64,9 @@ class MockWebHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def reboot_required(self):
         return False
+
+    @logger_wrapper(logger)
+    def get_notification_count(self):
+        from foris_controller_modules.router_notifications.handlers.mock import \
+                MockRouterNotificationsHandler
+        return len([e for e in MockRouterNotificationsHandler.notifications if not e["displayed"]])
