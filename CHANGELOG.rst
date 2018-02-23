@@ -1,3 +1,13 @@
+0.8.4 (2018-02-23)
+------------------
+
+* wan module added
+* CI install updates
+* connection test moved from dns to wan module
+* router_notifications module added
+* some schema fixes
+* notifications count added to web module (get_data)
+
 0.8.3 (2018-02-07)
 ------------------
 
