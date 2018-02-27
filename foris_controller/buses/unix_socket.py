@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,11 @@ import socket
 import struct
 import sys
 
+from foris_controller.message_router import Router
+from foris_controller.utils import LOGGER_MAX_LEN
+
+from .base import BaseNotificationSender
+
 if sys.version_info >= (3, 0):
     from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
 else:
@@ -34,8 +39,6 @@ else:
     class ThreadingMixIn(object, NonObjectThreadingMixIn):
         pass
 
-from foris_controller.message_router import Router
-from foris_controller.utils import LOGGER_MAX_LEN
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +87,7 @@ class UnixSocketHandler(BaseRequestHandler):
                 ))
                 self.request.sendall(response_length + response)
 
-            except:
+            except Exception:
                 logger.debug("Connection closed.")
                 break
 
@@ -113,7 +116,7 @@ class UnixSocketListener(ThreadingMixIn, UnixStreamServer):
         UnixStreamServer.__init__(self, socket_path, UnixSocketHandler)
 
 
-class UnixSocketNotificationSender(object):
+class UnixSocketNotificationSender(BaseNotificationSender):
 
     def __init__(self, socket_path):
         """ Inits object which handles sending notification via unix-socket
@@ -125,25 +128,7 @@ class UnixSocketNotificationSender(object):
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.connect(socket_path)
 
-    def _validate(self, msg, validator):
-        logger.debug("Starting to validate notification.")
-        from jsonschema import ValidationError
-        try:
-            validator.validate(msg)
-        except ValidationError:
-            validator.validate_verbose(msg)
-        logger.debug("Notification validation passed.")
-
-    def notify(self, module, action, data=None, validator=None):
-        msg = {
-            "module": module,
-            "kind": "notification",
-            "action": action,
-        }
-        if data is not None:
-            msg["data"] = data
-        if validator:
-            self._validate(msg, validator)
+    def _send_message(self, msg, module, action, data=None):
         notification = json.dumps(msg).encode("utf8")
         notification_length = struct.pack("I", len(notification))
         logger.debug("Sending notification (len=%d) %s" % (

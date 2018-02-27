@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,11 +27,13 @@ import prctl
 import signal
 import multiprocessing
 
-logger = logging.getLogger(__name__)
-
 from foris_controller.message_router import Router
 from foris_controller.app import app_info
 from foris_controller.utils import get_modules, get_module_class, LOGGER_MAX_LEN
+
+from .base import BaseNotificationSender
+
+logger = logging.getLogger(__name__)
 
 
 class RequestStorage(object):
@@ -247,7 +249,7 @@ class UbusListener(object):
         logger.warning("All workers finished.")
 
 
-class UbusNotificationSender(object):
+class UbusNotificationSender(BaseNotificationSender):
 
     def __init__(self, socket_path):
         """ Inits object which handles sending notification via ubus
@@ -257,34 +259,14 @@ class UbusNotificationSender(object):
         """
         self.socket_path = socket_path
 
-    def _validate(self, msg, validator):
-        logger.debug("Starting to validate notification.")
-        from jsonschema import ValidationError
-        try:
-            validator.validate(msg)
-        except ValidationError:
-            validator.validate_verbose(msg)
-        logger.debug("Notification validation passed.")
-
-    def notify(self, module, action, data=None, validator=None):
+    def _send_message(self, msg, module, action, data=None):
         if not ubus.get_connected():
             logger.debug("Connecting to ubus.")
             ubus.connect(self.socket_path)
 
-        msg = {
-            "module": module,
-            "kind": "notification",
-            "action": action,
-        }
-        if data is not None:
-            msg["data"] = data
-
         object_name = 'foris-controller-%s' % module
         logger.debug(
             "Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data))
-
-        if validator:
-            self._validate(msg, validator)
 
         ubus_msg = {"action": msg["action"], "data": msg["data"]} if "data" in msg \
             else {"action": msg["action"]}
