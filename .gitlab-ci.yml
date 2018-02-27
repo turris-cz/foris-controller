@@ -20,6 +20,13 @@ test:
     - pip install .
     - cd ..
 
+    - pip install .
+
+    - git clone https://gitlab.labs.nic.cz/turris/foris-client.git
+    - cd foris-client
+    - pip install .
+    - cd ..
+
     - export LD_LIBRARY_PATH=:/usr/local/lib
     - python setup.py test
     - python setup.py test --addopts="--backend openwrt"

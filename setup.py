@@ -106,6 +106,9 @@ setup(
         'pytest',
         'foris-controller-testtools',
     ],
+    extras_require={
+        'client-socket': ["foris-client"],
+    },
     include_package_data=True,
     zip_safe=False,
 )

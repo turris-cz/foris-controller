@@ -40,6 +40,23 @@
                 "action": {"enum": ["echo"]}
             },
             "additionalProperties": false
+        },
+        {
+            "properties": {
+                "module": {"enum": ["echo"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["echo2"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "msg": {"type": "string"}
+                    },
+                    "required": ["msg"],
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

@@ -59,7 +59,6 @@ def notify_api(extra_module_paths, infrastructure):
         from foris_controller.buses.unix_socket import UnixSocketNotificationSender
         sender = UnixSocketNotificationSender(infrastructure.notification_sock_path)
 
-
     def notify(module, action, notification=None, validate=True):
         if validate:
             validator = ForisValidator(*get_validator_dirs([module], extra_module_paths))
