@@ -214,7 +214,8 @@
                     "required": ["wan_type", "wan6_type", "custom_mac_enabled"]
                 }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "request to trigger connection test",
