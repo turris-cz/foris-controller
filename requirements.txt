@@ -4,3 +4,4 @@ foris-schema
 pytest
 pytest-runner
 foris-controller-testtools
+updater

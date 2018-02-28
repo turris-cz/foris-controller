@@ -20,10 +20,11 @@
                     "properties": {
                         "language": { "$ref": "#/definitions/iso2country" },
                         "reboot_required": {"type": "boolean"},
+                        "updater_running": {"type": "boolean"},
                         "notification_count": {"type": "integer", "minimum": 0}
                     },
                     "additionalProperties": false,
-                    "required": ["language", "reboot_required"]
+                    "required": ["language", "reboot_required", "notification_count", "updater_running"]
                 }
             },
             "additionalProperties": false,

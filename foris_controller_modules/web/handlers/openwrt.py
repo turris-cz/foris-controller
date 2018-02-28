@@ -22,6 +22,7 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
+from foris_controller_backends.updater import Updater
 from foris_controller_backends.web import WebUciCommands, Languages
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.router_notifications import RouterNotificationsCmds
@@ -36,6 +37,7 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
     langs = Languages()
     maintain_cmds = MaintainCommands()
     notifications_cmds = RouterNotificationsCmds()
+    updater = Updater()
 
     @logger_wrapper(logger)
     def get_language(self):
@@ -80,3 +82,11 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         :rtype: int
          """
         return self.notifications_cmds.active_count()
+
+    @logger_wrapper(logger)
+    def updater_running(self):
+        """ Returns indicator whether the updater is running
+        :returns: True if updater is running False otherwise
+        :rtype: bool
+        """
+        return self.updater.updater_running()

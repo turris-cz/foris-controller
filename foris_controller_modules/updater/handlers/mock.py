@@ -22,7 +22,6 @@ import logging
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
 
-import random
 
 from .. import Handler
 
@@ -36,6 +35,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     approvals_delay = None
     enabled = True
     approvals_status = "off"
+    updater_running = False
 
     @logger_wrapper(logger)
     def get_settings(self):

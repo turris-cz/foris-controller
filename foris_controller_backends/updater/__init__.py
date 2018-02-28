@@ -18,6 +18,7 @@
 #
 
 import logging
+import updater
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool
@@ -59,3 +60,12 @@ class UpdaterUci(object):
             pass
 
         return res
+
+
+class Updater(object):
+    def updater_running(self):
+        """ Returns indicator whether the updater is running
+        :returns: True if updater is running False otherwise
+        :rtype: bool
+        """
+        return updater.is_running()

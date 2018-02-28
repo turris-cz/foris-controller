@@ -36,6 +36,7 @@ class WebModule(BaseModule):
         return {
             'language': self.handler.get_language(),
             'reboot_required': self.handler.reboot_required(),
+            'updater_running': self.handler.updater_running(),
             'notification_count': self.handler.get_notification_count(),
         }
 
@@ -66,6 +67,7 @@ class WebModule(BaseModule):
     'set_language',
     'list_languages',
     'reboot_required',
+    'updater_running',
     'get_notification_count',
 ])
 class Handler(object):

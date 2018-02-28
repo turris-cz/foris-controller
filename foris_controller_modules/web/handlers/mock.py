@@ -66,6 +66,11 @@ class MockWebHandler(Handler, BaseMockHandler):
         return False
 
     @logger_wrapper(logger)
+    def updater_running(self):
+        from foris_controller_modules.updater.handlers.mock import MockUpdaterHandler
+        return MockUpdaterHandler.updater_running
+
+    @logger_wrapper(logger)
     def get_notification_count(self):
         from foris_controller_modules.router_notifications.handlers.mock import \
                 MockRouterNotificationsHandler
