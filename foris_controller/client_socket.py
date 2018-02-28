@@ -123,7 +123,11 @@ class ClientSocketHandler(BaseRequestHandler):
                 received_data_len = len(received_data)
                 logger.debug("Data recieved len %d", received_data_len)
                 while received_data_len < length:
-                    received_data += self.request.recv(length - received_data_len)
+                    recv_data = self.request.recv(length - received_data_len)
+                    if len(recv_data) == 0:
+                        logger.warning("Incomming message is incomplete.")
+                        raise ValueError("Failed to fully obtained the input message.")
+                    received_data += recv_data
                     received_data_len = len(received_data)
                     logger.debug("Data recieved len %d", received_data_len)
 
@@ -150,7 +154,7 @@ class ClientSocketHandler(BaseRequestHandler):
 
             except Exception as exc:
                 logger.warning("Exception occured in message client handler.")
-                logger.error("Error: \n%s", str(exc))
+                logger.debug("Error: \n%s", str(exc))
                 break
 
         logger.debug("Handling finished.")
