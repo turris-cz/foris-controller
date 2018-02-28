@@ -63,6 +63,47 @@ def test_request(infrastructure_with_client_socket, ubusd_test):
     })
 
 
+def test_request_error(infrastructure_with_client_socket, ubusd_test):
+    def request_error(req):
+        with pytest.raises(Exception):
+            # raises exception due to the connection is closed (socket.read(4) returns "")
+            infrastructure_with_client_socket.send_request_via_client_socket(req)
+
+        # reconnect after
+        infrastructure_with_client_socket.client_socket.close()
+        infrastructure_with_client_socket._establish_connection_to_client_socket()
+
+    request_error({
+        "module": "echox",
+        "action": "echo",
+        "kind": "request",
+        "data": {"request_msg": {"text": "testmsg1"}}
+    })
+    request_error({
+        "module": "echo",
+        "action": "echox",
+        "kind": "request",
+        "data": {"request_msg": {"text": "testmsg1"}}
+    })
+    request_error({
+        "module": "echo",
+        "action": "echo",
+        "kind": "requestx",
+        "data": {"request_msg": {"text": "testmsg1"}}
+    })
+    request_error({
+        "module": "echo",
+        "action": "echo",
+        "kind": "request",
+        "data": {"request_msgx": {"text": "testmsg1"}}
+    })
+    request_error({
+        "module": "echo",
+        "action": "echo",
+        "kind": "request",
+    })
+
+
 def test_notification(infrastructure_with_client_socket, ubusd_test):
     def notify(msg):
         notifications = infrastructure_with_client_socket.get_notifications()
@@ -81,4 +122,50 @@ def test_notification(infrastructure_with_client_socket, ubusd_test):
         "action": "echo2",
         "kind": "notification",
         "data": {"msg": "notification text"}
+    })
+
+
+def test_notification_error(infrastructure_with_client_socket, ubusd_test):
+    def notify_error(msg):
+        # send msg and one correct notification and make sure that only the correct
+        # notification is recievd
+        notifications = infrastructure_with_client_socket.get_notifications()
+        old_len = len(notifications)
+        infrastructure_with_client_socket.send_notification_via_client_socket(msg)
+        infrastructure_with_client_socket.client_socket.close()
+        infrastructure_with_client_socket._establish_connection_to_client_socket()
+        infrastructure_with_client_socket.send_notification_via_client_socket({
+            "module": "echo",
+            "action": "echo",
+            "kind": "notification",
+        })
+        notifications = infrastructure_with_client_socket.get_notifications(notifications)
+        assert old_len + 1 == len(notifications)
+        assert notifications[-1] == {
+            "module": "echo",
+            "action": "echo",
+            "kind": "notification",
+        }
+
+    notify_error({
+        "module": "echo",
+        "action": "echox",
+        "kind": "notification",
+    })
+    notify_error({
+        "module": "echox",
+        "action": "echo",
+        "kind": "notification",
+    })
+    notify_error({
+        "module": "echo",
+        "action": "echo",
+        "kind": "notification",
+        "data": {},
+    })
+    notify_error({
+        "module": "echo",
+        "action": "echo2",
+        "kind": "notification",
+        "data": {"msgx": "dafdafda"},
     })

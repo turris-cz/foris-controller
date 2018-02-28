@@ -26,6 +26,7 @@ import json
 import threading
 import struct
 
+from jsonschema import ValidationError
 from foris_controller.utils import LOGGER_MAX_LEN
 
 logger = logging.getLogger(__name__)
@@ -65,14 +66,16 @@ class ClientSocketHandler(BaseRequestHandler):
     def setup(self):
         logger.debug("Client connected.")
 
-    def _check_msg(self, notification):
-        if "module" not in notification or "action" not in notification:
-            logger.warning('Wrong notification "%s"', notification)
-            raise ValueError('Wrong notification "%s"' % notification)
+    def _check_msg(self, msg):
+        logger.debug("Validating input message.")
+        try:
+            self.server.validator.validate(msg)
+        except ValidationError:
+            self.server.validator.validate_verbose(msg)
+        logger.debug("Input message validated.")
 
     def _forward_notification(self, notification):
         logger.debug("Forwarding notification.")
-        self._check_msg(notification)
         with self.server.notification_sender_lock:
             self.server.notification_sender.notify(
                 notification["module"], notification["action"],
@@ -81,14 +84,13 @@ class ClientSocketHandler(BaseRequestHandler):
         logger.debug("Notification forwarded.")
 
     def _reply_to_request(self, request):
-        self._check_msg(request)
-
+        logger.debug("Forwarding request.")
         with self.server.sender_lock:
             msg = self.server.sender.send(
                 request["module"], request["action"], request.get("data", None),
                 timeout=self.server.timeout
             )
-            logger.debug("Request forwarded")
+        logger.debug("Request forwarded and response recieved.")
 
         response = {
             "module": request["module"],
@@ -97,12 +99,14 @@ class ClientSocketHandler(BaseRequestHandler):
             "data": msg,
         }
 
+        logger.debug("Sending msg back to client.")
         response = json.dumps(response).encode("utf8")
         response_length = struct.pack("I", len(response))
         logger.debug("Sending response (len=%d) %s" % (
             len(response), str(response)[:LOGGER_MAX_LEN]
         ))
         self.request.sendall(response_length + response)
+        logger.debug("Message delivered to client.")
 
     def handle(self):
         logger.debug("Handling request")
@@ -124,24 +128,29 @@ class ClientSocketHandler(BaseRequestHandler):
                     logger.debug("Data recieved len %d", received_data_len)
 
                 logger.debug("Data received '%s'." % str(received_data)[:LOGGER_MAX_LEN])
+
+                # parse
                 try:
                     parsed = json.loads(received_data.decode("utf8"))
                 except ValueError:
-                    logger.warning("Wrong data received.")
-                    continue
+                    logger.warning("Recieved data are not in json format.")
+                    break  # close connection
 
+                self._check_msg(parsed)
+
+                # respond
                 kind = parsed.get("kind", None)
                 if kind == "notification":
                     self._forward_notification(parsed)
                 elif kind == "request":
                     self._reply_to_request(parsed)
-                elif kind is None:
-                    logger.warning("Missing kind in recieved message.")
                 else:
-                    logger.warning("Unknown kind '%s'", kind)
+                    # validate message to raise and exception
+                    self.server.validator.validate_verbose(parsed)
 
-            except Exception:
-                logger.debug("Connection closed.")
+            except Exception as exc:
+                logger.warning("Exception occured in message client handler.")
+                logger.error("Error: \n%s", str(exc))
                 break
 
         logger.debug("Handling finished.")
