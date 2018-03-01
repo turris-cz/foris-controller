@@ -18,6 +18,10 @@
 #
 
 import logging
+import random
+import uuid
+
+from datetime import datetime
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -47,12 +51,12 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         result = {
             "user_lists": self.user_lists,
             "required_languages": self.required_languages,
-            "approvals": {"status": self.approvals_status},
+            "approval_settings": {"status": self.approvals_status},
             "enabled": self.enabled,
             "branch": self.branch,
         }
         if self.approvals_delay:
-            result["approvals"]["delay"] = self.approvals_delay
+            result["approval_settings"]["delay"] = self.approvals_delay
         return result
 
     @logger_wrapper(logger)
@@ -80,3 +84,22 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         MockUpdaterHandler.branch = branch
 
         return True
+
+    @logger_wrapper(logger)
+    def get_approval(self):
+        """ Mocks return of current approval
+        :returns: current approval or {"present": False}
+        :rtype: dict
+        """
+        return random.choice([
+            {"present": False},
+            {
+                "present": True,
+                "id": str(uuid.uuid4()),
+                "status": random.choice(["asked", "granted", "denied"]),
+                "time": datetime.now().isoformat(),
+                "install_list": ["package1", "package2"],
+                "remove_list": ["package3", "package4"],
+                "reboot": random.choice([True, False]),
+            }
+        ])

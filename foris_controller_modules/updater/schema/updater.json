@@ -37,11 +37,37 @@
                     "required": ["status"]
                 }
             ]
+        },
+        "updater_approval_id": {"type": "string"},
+        "updater_approval": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "properties": {
+                        "present": {"enum": [true]},
+                        "id": {"$ref": "#/definitions/updater_approval_id"},
+                        "status": {"enum": ["asked", "granted", "denied"]},
+                        "time": {"type": "string", "format": "date-time"},
+                        "install_list": {"type": "array", "items": {"type": "string"}},
+                        "remove_list": {"type": "array", "items": {"type": "string"}},
+                        "reboot": {"type": "boolean", "description": "Flag whether the reboot will be required"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["present", "id", "status", "time", "install_list", "remove_list", "reboot"]
+                },
+                {
+                    "properties": {
+                        "present": {"enum": [false]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["present"]
+                }
+            ]
         }
     },
     "oneOf": [
         {
-            "description": "request to get updater settings",
+            "description": "request to get updater settings and current approval",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["request"]},
@@ -50,7 +76,7 @@
             "additionalProperties": false
         },
         {
-            "description": "request to get updater settings",
+            "description": "reply to get updater settings and current approval",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["reply"]},
@@ -60,13 +86,15 @@
                     "properties": {
                         "user_lists": {"$ref": "#/definitions/updater_user_lists"},
                         "required_languages": {"$ref": "#/definitions/updater_languages"},
-                        "approvals": {"$ref": "#/definitions/updater_approvals_settings_get"},
+                        "approval_settings": {"$ref": "#/definitions/updater_approvals_settings_get"},
                         "enabled": {"type": "boolean"},
-                        "branch": {"type": "string"}
+                        "branch": {"type": "string"},
+                        "approval": {"$ref": "#/definitions/updater_approval"}
                     },
                     "additionalProperties": false,
                     "required": [
-                        "user_lists", "required_languages", "approvals", "enabled", "branch"
+                        "user_lists", "required_languages", "approval_settings", "enabled", "branch",
+                        "approval"
                     ]
                 }
             },
@@ -84,13 +112,13 @@
                     "properties": {
                         "user_lists": {"$ref": "#/definitions/updater_user_lists"},
                         "required_languages": {"$ref": "#/definitions/updater_languages"},
-                        "approvals": {"$ref": "#/definitions/updater_approvals_settings_set"},
+                        "approval_settings": {"$ref": "#/definitions/updater_approvals_settings_set"},
                         "enabled": {"type": "boolean"},
                         "branch": {"type": "string"}
                     },
                     "additionalProperties": false,
                     "required": [
-                        "user_lists", "required_languages", "approvals", "enabled", "branch"
+                        "user_lists", "required_languages", "approval_settings", "enabled", "branch"
                     ]
                 }
             },

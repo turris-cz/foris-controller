@@ -33,7 +33,9 @@ class UpdaterModule(BaseModule):
         :returns: current updater settings
         :rtype: dict
         """
-        return self.handler.get_settings()
+        res = self.handler.get_settings()
+        res["approval"] = self.handler.get_approval()
+        return res
 
     def action_update_settings(self, data):
         """ Updates updater settings
@@ -45,8 +47,8 @@ class UpdaterModule(BaseModule):
         """
         return {
             "result": self.handler.update_settings(
-                data["user_lists"], data["required_languages"], data["approvals"], data["enabled"],
-                data["branch"]
+                data["user_lists"], data["required_languages"], data["approval_settings"],
+                data["enabled"], data["branch"]
             )
         }
 
@@ -54,6 +56,7 @@ class UpdaterModule(BaseModule):
 @wrap_required_functions([
     'get_settings',
     'update_settings',
+    'get_approval',
 ])
 class Handler(object):
     pass

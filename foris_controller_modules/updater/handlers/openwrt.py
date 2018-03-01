@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.updater import UpdaterUci
+from foris_controller_backends.updater import UpdaterUci, Updater
 
 from .. import Handler
 
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
     uci = UpdaterUci()
+    updater = Updater()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -61,3 +62,11 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
             user_lists, required_languages, approvals_settings['status'],
             approvals_settings.get("delay", None), enabled, branch
         )
+
+    @logger_wrapper(logger)
+    def get_approval(self):
+        """ Returns current approval
+        :returns: current approval or {"present": False}
+        :rtype: dict
+        """
+        return self.updater.get_approval()

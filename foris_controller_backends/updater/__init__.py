@@ -42,7 +42,7 @@ class UpdaterUci(object):
             "branch": get_option_named(updater_data, "updater", "override", "branch", ""),
             "user_lists": get_option_named(updater_data, "updater", "pkglists", "lists", []),
             "required_languages": get_option_named(updater_data, "updater", "l10n", "langs", []),
-            "approvals": {
+            "approval_settings": {
                 "status": "on" if parse_bool(
                     get_option_named(updater_data, "updater", "approvals", "need", "0"),
                 ) else "off"
@@ -53,9 +53,9 @@ class UpdaterUci(object):
             delay_seconds = int(get_option_named(
                 updater_data, "updater", "approvals", "auto_grant_seconds"))
             delay_hours = delay_seconds / (60 * 60)
-            res["approvals"]["delay"] = delay_hours
-            if res["approvals"]["status"] == "on":
-                res["approvals"]["status"] = "delayed"
+            res["approval_settings"]["delay"] = delay_hours
+            if res["approval_settings"]["status"] == "on":
+                res["approval_settings"]["status"] = "delayed"
         except UciRecordNotFound:
             pass
 
@@ -111,3 +111,15 @@ class Updater(object):
         :rtype: bool
         """
         return updater.is_running()
+
+    def get_approval(self):
+        """ Returns current approval
+        :returns: approval 
+        :rtype: dict
+        """
+        approval = updater.get_approval()
+        if approval:
+            approval["present"] = True
+            return approval
+        else:
+            return {"present": False}
