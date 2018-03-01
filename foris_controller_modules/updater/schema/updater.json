@@ -1,4 +1,44 @@
 {
+	"definitions": {
+		"updater_user_lists": {
+			"type": "array",
+			"items": {"type": "string", "minLength": 1}
+		},
+		"updater_languages": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/iso2country"}
+        },
+        "updater_approvals_status": {"enum": ["off", "delayed", "on"]},
+        "updater_approvals_settings_get": {
+            "type": "object",
+            "properties": {
+                "status": {"$ref": "#/definitions/updater_approvals_status"},
+                "delay": {"type": "integer", "minimum": 1, "maximum": 168}
+            },
+            "additionalProperties": false,
+            "required": ["status"]
+        },
+        "updater_approvals_settings_set": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "properties": {
+                        "status": {"$ref": "#/definitions/updater_approvals_status", "enum": ["delayed"]},
+                        "delay": {"type": "integer", "minimum": 1, "maximum": 168}
+                    },
+                    "additionalProperties": false,
+                    "required": ["status", "delay"]
+                },
+                {
+                    "properties": {
+                        "status": {"$ref": "#/definitions/updater_approvals_status", "enum": ["off", "on"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["status"]
+                }
+            ]
+        }
+    },
     "oneOf": [
         {
             "description": "request to get updater settings",
@@ -18,23 +58,9 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "user_lists": {
-                            "type": "array",
-                            "items": {"type": "string", "minLength": 1}
-                        },
-                        "required_languages": {
-                            "type": "array",
-                            "items": {"$ref": "#/definitions/iso2country"}
-                        },
-                        "approvals": {
-                            "type": "object",
-                            "properties": {
-                                "status": {"enum": ["off", "delayed", "on"]},
-                                "delay": {"type": "integer", "minimum": 1, "maximum": 168}
-                            },
-                            "additionalProperties": false,
-                            "required": ["status"]
-                        },
+                        "user_lists": {"$ref": "#/definitions/updater_user_lists"},
+                        "required_languages": {"$ref": "#/definitions/updater_languages"},
+                        "approvals": {"$ref": "#/definitions/updater_approvals_settings_get"},
                         "enabled": {"type": "boolean"},
                         "branch": {"type": "string"}
                     },
@@ -42,6 +68,48 @@
                     "required": [
                         "user_lists", "required_languages", "approvals", "enabled", "branch"
                     ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to update updater settings",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "user_lists": {"$ref": "#/definitions/updater_user_lists"},
+                        "required_languages": {"$ref": "#/definitions/updater_languages"},
+                        "approvals": {"$ref": "#/definitions/updater_approvals_settings_set"},
+                        "enabled": {"type": "boolean"},
+                        "branch": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "user_lists", "required_languages", "approvals", "enabled", "branch"
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to get updater settings",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
                 }
             },
             "additionalProperties": false,

@@ -35,9 +35,25 @@ class UpdaterModule(BaseModule):
         """
         return self.handler.get_settings()
 
+    def action_update_settings(self, data):
+        """ Updates updater settings
+
+        :param data: data containing new updater settings
+        :type data: dict
+        :returns: {"result": True/False}
+        :rtype: dict
+        """
+        return {
+            "result": self.handler.update_settings(
+                data["user_lists"], data["required_languages"], data["approvals"], data["enabled"],
+                data["branch"]
+            )
+        }
+
 
 @wrap_required_functions([
     'get_settings',
+    'update_settings',
 ])
 class Handler(object):
     pass

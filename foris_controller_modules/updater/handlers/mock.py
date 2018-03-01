@@ -54,3 +54,29 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         if self.approvals_delay:
             result["approvals"]["delay"] = self.approvals_delay
         return result
+
+    @logger_wrapper(logger)
+    def update_settings(self, user_lists, required_languages, approvals_settings, enabled, branch):
+        """ Mocks update updater settings
+
+        :param user_lists: new user-list set
+        :type user_lists: list
+        :param required_languages: languages which will be installed
+        :type required_languages: list
+        :param approvals_settings: new approval settings
+        :type approvals_settings: dict
+        :param enable: is updater enabled indicator
+        :type enable: bool
+        :param branch: which branch is updater using default("" == "stable")
+        :type enable: string
+        :returns: True on success False otherwise
+        :rtype: bool
+        """
+        MockUpdaterHandler.user_lists = user_lists
+        MockUpdaterHandler.required_languages = required_languages
+        MockUpdaterHandler.approvals_delay = approvals_settings.get("delay", None)
+        MockUpdaterHandler.approvals_status = approvals_settings["status"]
+        MockUpdaterHandler.enabled = enabled
+        MockUpdaterHandler.branch = branch
+
+        return True

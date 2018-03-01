@@ -21,9 +21,9 @@ import logging
 import updater
 
 from foris_controller_backends.uci import (
-    UciBackend, get_option_named, parse_bool
+    UciBackend, get_option_named, parse_bool, store_bool
 )
-from foris_controller.exceptions import UciRecordNotFound
+from foris_controller.exceptions import UciRecordNotFound, UciException
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +60,48 @@ class UpdaterUci(object):
             pass
 
         return res
+
+    def update_settings(
+        self, user_lists, required_languages, approvals_status, approvals_delay, enabled, branch
+    ):
+        with UciBackend() as backend:
+            backend.add_section("updater", "pkglists", "pkglists")
+            backend.replace_list("updater", "pkglists", "lists", user_lists)
+            backend.add_section("updater", "l10n", "l10n")
+            backend.replace_list("updater", "l10n", "langs", required_languages)
+            backend.add_section("updater", "approvals", "approvals")
+            if approvals_status == "off":
+                try:
+                    backend.del_option("updater", "approvals", "auto_grant_seconds")
+                except UciException:
+                    pass
+                backend.set_option("updater", "approvals", "need", store_bool(False))
+            elif approvals_status == "on":
+                try:
+                    backend.del_option("updater", "approvals", "auto_grant_seconds")
+                except UciException:
+                    pass
+                backend.set_option("updater", "approvals", "need", store_bool(True))
+            elif approvals_status == "delayed":
+                backend.set_option(
+                    "updater", "approvals", "auto_grant_seconds", str(approvals_delay * 60 * 60))
+                backend.set_option("updater", "approvals", "need", store_bool(True))
+            else:
+                raise NotImplementedError()
+            backend.add_section("updater", "override", "override")
+            if branch:
+                backend.set_option("updater", "override", "branch", branch)
+            else:
+                try:
+                    backend.del_option("updater", "override", "branch")
+                except UciException:
+                    pass
+
+            backend.set_option("updater", "override", "disable", store_bool(not enabled))
+
+        # TODO start updater...
+
+        return True
 
 
 class Updater(object):
