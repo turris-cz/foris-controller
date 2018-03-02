@@ -129,3 +129,8 @@ class Updater(object):
         """
         return updater.resolve_approval(
             approval_id, True if solution == "grant" else False)
+
+    def run(self, set_reboot_indicator):
+        """ Starts updater run
+        """
+        return updater.run(set_reboot_indicator)

@@ -65,12 +65,23 @@ class UpdaterModule(BaseModule):
             self.notify("resolve_approval", data)
         return {"result": res}
 
+    def action_run(self, data):
+        """ Starts the updater
+
+        :param data: {"set_reboot_indicator": True/False}
+        :type data: dict
+        :returns: {"result": True/False}
+        :rtype: dict
+        """
+        return {"result": self.handler.run(**data)}
+
 
 @wrap_required_functions([
     'get_settings',
     'update_settings',
     'get_approval',
     'resolve_approval',
+    'run',
 ])
 class Handler(object):
     pass

@@ -83,3 +83,13 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :rtype: bool
         """
         return self.updater.resolve_approval(id, solution)
+
+    @logger_wrapper(logger)
+    def run(self, set_reboot_indicator):
+        """ Start updater run
+        :param set_reboot_indicator: should reboot indicator be set after updater finishes
+        :type set_reboot_indicator: bool
+        :returns: True if updater started
+        :rtype: bool
+        """
+        return self.updater.run(set_reboot_indicator)

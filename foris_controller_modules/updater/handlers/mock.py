@@ -109,3 +109,11 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         """ Mocks resovling of the current approval
         """
         return random.choice([True, False])
+
+    @logger_wrapper(logger)
+    def run(self, set_reboot_indicator):
+        """ Mocks updater start
+        :param set_reboot_indicator: should reboot indicator be set after updater finishes
+        :type set_reboot_indicator: bool
+        """
+        return True

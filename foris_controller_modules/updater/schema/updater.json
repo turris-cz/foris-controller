@@ -198,6 +198,67 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "request to start updater",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["run"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "set_reboot_indicator": {"type": "boolean", "description": "sets reboot indicator after updater finishes"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["set_reboot_indicator"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to start updater",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["run"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to start updater",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["run"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "status": {
+                            "enum": [
+                                "initialize", "configuration", "planning", "downloading", "preupdate-hooks",
+                                "unpacking", "checking", "install", "post-install", "removals", "cleanup",
+                                "postupdate-hooks", "exit", "failure"
+                            ]
+                        },
+                        "msg": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["status"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

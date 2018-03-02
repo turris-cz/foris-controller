@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import os
 import pytest
 import uuid
 
@@ -25,11 +26,31 @@ from datetime import datetime
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
+    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
+    infrastructure_with_client_socket, clean_reboot_indicator,
 )
 from foris_controller_testtools.utils import set_approval
 
 from .test_uci import get_uci_module
+
+
+def wait_for_run_finished(notifications, infrastructure):
+    def notification_status_count(notifications, name):
+        return len([
+            e for e in notifications
+            if e["module"] == "updater" and e["action"] == "run" and e["data"]["status"] == name
+        ])
+    # the count of updater run has to be increased
+    before_count = notification_status_count(notifications, "initialize")
+
+    # and instances should finish
+    notifications = infrastructure.get_notifications(notifications)
+    initialize_count = notification_status_count(notifications, "initialize")
+    exit_count = notification_status_count(notifications, "exit")
+    while before_count == initialize_count or initialize_count > exit_count:
+        notifications = infrastructure.get_notifications(notifications)
+        initialize_count = notification_status_count(notifications, "initialize")
+        exit_count = notification_status_count(notifications, "exit")
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -360,3 +381,59 @@ def test_approval_resolve_openwrt(uci_configs_init, infrastructure, ubusd_test):
         {"id": approval_id, "solution": "deny"},
         True
     )
+
+
+def test_run(uci_configs_init, infrastructure_with_client_socket, ubusd_test):
+    res = infrastructure_with_client_socket.process_message({
+        "module": "updater",
+        "action": "run",
+        "kind": "request",
+        "data": {"set_reboot_indicator": True},
+    })
+    assert res == {
+        "module": "updater",
+        "action": "run",
+        "kind": "reply",
+        "data": {"result": True},
+    }
+    res = infrastructure_with_client_socket.process_message({
+        "module": "updater",
+        "action": "run",
+        "kind": "request",
+        "data": {"set_reboot_indicator": False},
+    })
+    assert res == {
+        "module": "updater",
+        "action": "run",
+        "kind": "reply",
+        "data": {"result": True},
+    }
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_run_notifications(uci_configs_init, infrastructure_with_client_socket, ubusd_test):
+
+    try:
+        os.unlink(clean_reboot_indicator)
+    except Exception:
+        pass
+
+    notifications = infrastructure_with_client_socket.get_notifications()
+    res = infrastructure_with_client_socket.process_message({
+        "module": "updater",
+        "action": "run",
+        "kind": "request",
+        "data": {"set_reboot_indicator": False},
+    })
+    assert res["data"]["result"]
+    wait_for_run_finished(notifications, infrastructure_with_client_socket)
+
+    notifications = infrastructure_with_client_socket.get_notifications(notifications)
+    res = infrastructure_with_client_socket.process_message({
+        "module": "updater",
+        "action": "run",
+        "kind": "request",
+        "data": {"set_reboot_indicator": True},
+    })
+    assert res["data"]["result"]
+    wait_for_run_finished(notifications, infrastructure_with_client_socket)
