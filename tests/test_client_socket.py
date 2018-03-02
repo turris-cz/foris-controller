@@ -35,7 +35,7 @@ def extra_module_paths():
 
 def test_request(infrastructure_with_client_socket, ubusd_test):
     def request(req, reply):
-        res = infrastructure_with_client_socket.send_request_via_client_socket(req)
+        res = infrastructure_with_client_socket.client_socket.request(req)
         assert res == reply
 
     request({
@@ -67,11 +67,11 @@ def test_request_error(infrastructure_with_client_socket, ubusd_test):
     def request_error(req):
         with pytest.raises(Exception):
             # raises exception due to the connection is closed (socket.read(4) returns "")
-            infrastructure_with_client_socket.send_request_via_client_socket(req)
+            infrastructure_with_client_socket.client_socket.request(req)
 
         # reconnect after
         infrastructure_with_client_socket.client_socket.close()
-        infrastructure_with_client_socket._establish_connection_to_client_socket()
+        infrastructure_with_client_socket.client_socket.connect()
 
     request_error({
         "module": "echox",
@@ -107,7 +107,7 @@ def test_request_error(infrastructure_with_client_socket, ubusd_test):
 def test_notification(infrastructure_with_client_socket, ubusd_test):
     def notify(msg):
         notifications = infrastructure_with_client_socket.get_notifications()
-        infrastructure_with_client_socket.send_notification_via_client_socket(msg)
+        infrastructure_with_client_socket.client_socket.notification(msg)
         notifications = infrastructure_with_client_socket.get_notifications(notifications)
         assert notifications[-1] == msg
 
@@ -131,10 +131,10 @@ def test_notification_error(infrastructure_with_client_socket, ubusd_test):
         # notification is recievd
         notifications = infrastructure_with_client_socket.get_notifications()
         old_len = len(notifications)
-        infrastructure_with_client_socket.send_notification_via_client_socket(msg)
+        infrastructure_with_client_socket.client_socket.notification(msg)
         infrastructure_with_client_socket.client_socket.close()
-        infrastructure_with_client_socket._establish_connection_to_client_socket()
-        infrastructure_with_client_socket.send_notification_via_client_socket({
+        infrastructure_with_client_socket.client_socket.connect()
+        infrastructure_with_client_socket.client_socket.notification({
             "module": "echo",
             "action": "echo",
             "kind": "notification",
