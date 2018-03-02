@@ -103,3 +103,9 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 "reboot": random.choice([True, False]),
             }
         ])
+
+    @logger_wrapper(logger)
+    def resolve_approval(self, id, solution):
+        """ Mocks resovling of the current approval
+        """
+        return random.choice([True, False])

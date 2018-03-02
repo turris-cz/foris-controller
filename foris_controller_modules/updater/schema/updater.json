@@ -142,6 +142,62 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "request to resolv approval",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["resolve_approval"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/updater_approval_id"},
+                        "solution": {"enum": ["grant", "deny"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id", "solution"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to resolv approval",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["resolve_approval"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that approval was resolved",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["resolve_approval"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/updater_approval_id"},
+                        "solution": {"enum": ["grant", "deny"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id", "solution"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

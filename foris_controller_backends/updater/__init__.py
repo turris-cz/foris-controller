@@ -114,7 +114,7 @@ class Updater(object):
 
     def get_approval(self):
         """ Returns current approval
-        :returns: approval 
+        :returns: approval
         :rtype: dict
         """
         approval = updater.get_approval()
@@ -123,3 +123,9 @@ class Updater(object):
             return approval
         else:
             return {"present": False}
+
+    def resolve_approval(self, approval_id, solution):
+        """ Resolves approval
+        """
+        return updater.resolve_approval(
+            approval_id, True if solution == "grant" else False)

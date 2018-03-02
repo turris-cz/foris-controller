@@ -185,7 +185,7 @@ def test_uci(uci_configs_init, lock_backend, infrastructure, ubusd_test):
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_approvals(uci_configs_init, infrastructure, ubusd_test):
+def test_approval(uci_configs_init, infrastructure, ubusd_test):
     def approval(data):
         set_approval(data)
         res = infrastructure.process_message({
@@ -225,3 +225,138 @@ def test_approvals(uci_configs_init, infrastructure, ubusd_test):
         "remove_list": ['package2', 'package3'],
         "reboot": True,
     })
+
+
+def test_approval_resolve(uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "updater",
+        "action": "resolve_approval",
+        "kind": "request",
+        "data": {
+            "id": str(uuid.uuid4()),
+            "solution": "grant",
+        }
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "result" in res["data"].keys()
+
+    res = infrastructure.process_message({
+        "module": "updater",
+        "action": "resolve_approval",
+        "kind": "request",
+        "data": {
+            "id": str(uuid.uuid4()),
+            "solution": "deny",
+        }
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "result" in res["data"].keys()
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_approval_resolve_openwrt(uci_configs_init, infrastructure, ubusd_test):
+    def resolve(approval_data, query_data, result):
+        set_approval(approval_data)
+        res = infrastructure.process_message({
+            "module": "updater",
+            "action": "resolve_approval",
+            "kind": "request",
+            "data": query_data,
+        })
+        assert res["data"]["result"] == result
+        if res["data"]["result"]:
+            res = infrastructure.process_message({
+                "module": "updater",
+                "action": "get_settings",
+                "kind": "request",
+            })
+            approval = res["data"]["approval"]
+            if query_data["solution"] == "deny":
+                assert approval["status"] == "denied"
+            elif query_data["solution"] == "grant":
+                assert approval["status"] == "granted"
+
+    # No approval
+    set_approval(None)
+    resolve(None, {"id": str(uuid.uuid4()), "solution": "grant"}, False)
+    resolve(None, {"id": str(uuid.uuid4()), "solution": "deny"}, False)
+
+    # Other approval
+    resolve(
+        {
+            "id": str(uuid.uuid4()),
+            "status": "asked",
+            "time": datetime.now().isoformat(),
+            "install_list": [],
+            "remove_list": [],
+            "reboot": False,
+        },
+        {"id": str(uuid.uuid4()), "solution": "grant"},
+        False
+    )
+    resolve(
+        {
+            "id": str(uuid.uuid4()),
+            "status": "asked",
+            "time": datetime.now().isoformat(),
+            "install_list": [],
+            "remove_list": [],
+            "reboot": False,
+        },
+        {"id": str(uuid.uuid4()), "solution": "deny"},
+        False
+    )
+
+    # Incorrect status
+    approval_id = str(uuid.uuid4())
+    resolve(
+        {
+            "id": approval_id,
+            "status": "granted",
+            "time": datetime.now().isoformat(),
+            "install_list": [],
+            "remove_list": [],
+            "reboot": False,
+        },
+        {"id": approval_id, "solution": "grant"},
+        False
+    )
+    resolve(
+        {
+            "id": approval_id,
+            "status": "denied",
+            "time": datetime.now().isoformat(),
+            "install_list": [],
+            "remove_list": [],
+            "reboot": False,
+        },
+        {"id": approval_id, "solution": "deny"},
+        False
+    )
+
+    # Passed
+    approval_id = str(uuid.uuid4())
+    resolve(
+        {
+            "id": approval_id,
+            "status": "asked",
+            "time": datetime.now().isoformat(),
+            "install_list": [],
+            "remove_list": [],
+            "reboot": False,
+        },
+        {"id": approval_id, "solution": "grant"},
+        True
+    )
+    resolve(
+        {
+            "id": approval_id,
+            "status": "asked",
+            "time": datetime.now().isoformat(),
+            "install_list": [],
+            "remove_list": [],
+            "reboot": False,
+        },
+        {"id": approval_id, "solution": "deny"},
+        True
+    )

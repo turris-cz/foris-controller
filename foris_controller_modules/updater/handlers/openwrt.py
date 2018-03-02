@@ -70,3 +70,16 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :rtype: dict
         """
         return self.updater.get_approval()
+
+    @logger_wrapper(logger)
+    def resolve_approval(self, id, solution):
+        """ Resolv current approval
+        :param id: approval id
+        :type id: str
+        :param solution: what to do with the approval grant/deny
+        :type solution: str
+
+        :returns: True on success False otherwise
+        :rtype: bool
+        """
+        return self.updater.resolve_approval(id, solution)

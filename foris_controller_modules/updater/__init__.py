@@ -52,11 +52,25 @@ class UpdaterModule(BaseModule):
             )
         }
 
+    def action_resolve_approval(self, data):
+        """ Resolvs approval
+        :param data: {"id": "...", "solution": "grant/deny"}
+        :type data: dict
+
+        :returns: {"result": True/False}
+        :rtype: dict
+        """
+        res = self.handler.resolve_approval(**data)
+        if res:
+            self.notify("resolve_approval", data)
+        return {"result": res}
+
 
 @wrap_required_functions([
     'get_settings',
     'update_settings',
     'get_approval',
+    'resolve_approval',
 ])
 class Handler(object):
     pass
