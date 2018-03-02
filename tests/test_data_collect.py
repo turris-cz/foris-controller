@@ -20,6 +20,7 @@
 import pytest
 
 from .test_uci import get_uci_module
+from .test_updater import wait_for_updater_run_finished
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, init_script_result, lock_backend,
     only_backends,
@@ -71,7 +72,7 @@ def test_get(uci_configs_init, infrastructure, ubusd_test):
 def test_set(infrastructure, ubusd_test):
 
     def set_agreed(agreed):
-        notifications = infrastructure.get_notifications()
+        old_notifications = infrastructure.get_notifications()
         res = infrastructure.process_message({
             "module": "data_collect",
             "action": "set",
@@ -86,15 +87,15 @@ def test_set(infrastructure, ubusd_test):
             u'kind': u'reply',
             u'module': u'data_collect'
         }
-        notifications = infrastructure.get_notifications(notifications)
-        assert notifications[-1] == {
+        notifications = infrastructure.get_notifications(old_notifications)
+        assert {
             u"module": u"data_collect",
             u"action": u"set",
             u"kind": u"notification",
             u"data": {
                 u"agreed": agreed,
             }
-        }
+        } in notifications[len(old_notifications):]
         res = infrastructure.process_message({
             "module": "data_collect",
             "action": "get",
@@ -116,7 +117,8 @@ def test_set(infrastructure, ubusd_test):
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_set_service_restart(uci_configs_init, init_script_result, infrastructure, ubusd_test):
+def test_set_openwrt(uci_configs_init, init_script_result, infrastructure, ubusd_test):
+    notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "data_collect",
         "action": "set",
@@ -132,6 +134,7 @@ def test_set_service_restart(uci_configs_init, init_script_result, infrastructur
         u'module': u'data_collect'
     }
     check_service_result("ucollect", True, "restart")
+    wait_for_updater_run_finished(notifications, infrastructure)
 
 
 def test_get_honeypots(infrastructure, ubusd_test):

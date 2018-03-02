@@ -22,8 +22,11 @@ import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, ubusd_test, file_root_init
+    infrastructure, uci_configs_init, ubusd_test, file_root_init,
+    only_backends
 )
+
+from .test_updater import wait_for_updater_run_finished
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_maintain_files")
 
@@ -56,6 +59,31 @@ def test_restore_backup(file_root_init, uci_configs_init, infrastructure, ubusd_
     with open(os.path.join("/tmp/foris_files/tmp", "backup.tar.bz2.base64")) as f:
         backup = f.read()
 
+    old_notifications = infrastructure.get_notifications()
+    res = infrastructure.process_message({
+        "module": "maintain",
+        "action": "restore_backup",
+        "kind": "request",
+        "data": {
+            "backup": backup,
+        },
+    })
+    assert res["data"] == {u"result": True}
+    notifications = infrastructure.get_notifications(old_notifications)
+    assert {
+        u"module": u"maintain",
+        u"action": u"reboot_required",
+        u"kind": u"notification",
+    } in notifications[len(old_notifications):]
+
+
+@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+    # read backup
+    with open(os.path.join("/tmp/foris_files/tmp", "backup.tar.bz2.base64")) as f:
+        backup = f.read()
+
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "maintain",
@@ -66,12 +94,7 @@ def test_restore_backup(file_root_init, uci_configs_init, infrastructure, ubusd_
         },
     })
     assert res["data"] == {u"result": True}
-    notifications = infrastructure.get_notifications()
-    assert notifications[-1] == {
-        u"module": u"maintain",
-        u"action": u"reboot_required",
-        u"kind": u"notification",
-    }
+    wait_for_updater_run_finished(notifications, infrastructure)
 
 
 def test_generate_and_restore(uci_configs_init, infrastructure, ubusd_test):

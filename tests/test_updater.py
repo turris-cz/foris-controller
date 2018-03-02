@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,14 +27,14 @@ from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
-    infrastructure_with_client_socket, clean_reboot_indicator,
+    clean_reboot_indicator,
 )
 from foris_controller_testtools.utils import set_approval
 
 from .test_uci import get_uci_module
 
 
-def wait_for_run_finished(notifications, infrastructure):
+def wait_for_updater_run_finished(notifications, infrastructure):
     def notification_status_count(notifications, name):
         return len([
             e for e in notifications
@@ -117,6 +117,25 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
         "user_lists": [],
         "required_languages": [],
     })
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+    notifications = infrastructure.get_notifications()
+    res = infrastructure.process_message({
+        "module": "updater",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "enabled": True,
+            "branch": "",
+            "approval_settings": {"status": "off"},
+            "user_lists": [],
+            "required_languages": [],
+        },
+    })
+    assert res["data"]["result"]
+    wait_for_updater_run_finished(notifications, infrastructure)
 
 
 @pytest.mark.only_backends(['openwrt'])
@@ -383,8 +402,8 @@ def test_approval_resolve_openwrt(uci_configs_init, infrastructure, ubusd_test):
     )
 
 
-def test_run(uci_configs_init, infrastructure_with_client_socket, ubusd_test):
-    res = infrastructure_with_client_socket.process_message({
+def test_run(uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
         "module": "updater",
         "action": "run",
         "kind": "request",
@@ -396,7 +415,7 @@ def test_run(uci_configs_init, infrastructure_with_client_socket, ubusd_test):
         "kind": "reply",
         "data": {"result": True},
     }
-    res = infrastructure_with_client_socket.process_message({
+    res = infrastructure.process_message({
         "module": "updater",
         "action": "run",
         "kind": "request",
@@ -411,29 +430,29 @@ def test_run(uci_configs_init, infrastructure_with_client_socket, ubusd_test):
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_run_notifications(uci_configs_init, infrastructure_with_client_socket, ubusd_test):
+def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
 
     try:
         os.unlink(clean_reboot_indicator)
     except Exception:
         pass
 
-    notifications = infrastructure_with_client_socket.get_notifications()
-    res = infrastructure_with_client_socket.process_message({
+    notifications = infrastructure.get_notifications()
+    res = infrastructure.process_message({
         "module": "updater",
         "action": "run",
         "kind": "request",
         "data": {"set_reboot_indicator": False},
     })
     assert res["data"]["result"]
-    wait_for_run_finished(notifications, infrastructure_with_client_socket)
+    wait_for_updater_run_finished(notifications, infrastructure)
 
-    notifications = infrastructure_with_client_socket.get_notifications(notifications)
-    res = infrastructure_with_client_socket.process_message({
+    notifications = infrastructure.get_notifications(notifications)
+    res = infrastructure.process_message({
         "module": "updater",
         "action": "run",
         "kind": "request",
         "data": {"set_reboot_indicator": True},
     })
     assert res["data"]["result"]
-    wait_for_run_finished(notifications, infrastructure_with_client_socket)
+    wait_for_updater_run_finished(notifications, infrastructure)

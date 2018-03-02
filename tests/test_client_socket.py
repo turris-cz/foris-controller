@@ -21,7 +21,7 @@ import os
 import pytest
 
 
-from foris_controller_testtools.fixtures import infrastructure_with_client_socket, ubusd_test
+from foris_controller_testtools.fixtures import infrastructure, ubusd_test
 
 
 @pytest.fixture(scope="module")
@@ -33,9 +33,9 @@ def extra_module_paths():
     ]
 
 
-def test_request(infrastructure_with_client_socket, ubusd_test):
+def test_request(infrastructure, ubusd_test):
     def request(req, reply):
-        res = infrastructure_with_client_socket.client_socket.request(req)
+        res = infrastructure.client_socket.request(req)
         assert res == reply
 
     request({
@@ -63,15 +63,15 @@ def test_request(infrastructure_with_client_socket, ubusd_test):
     })
 
 
-def test_request_error(infrastructure_with_client_socket, ubusd_test):
+def test_request_error(infrastructure, ubusd_test):
     def request_error(req):
         with pytest.raises(Exception):
             # raises exception due to the connection is closed (socket.read(4) returns "")
-            infrastructure_with_client_socket.client_socket.request(req)
+            infrastructure.client_socket.request(req)
 
         # reconnect after
-        infrastructure_with_client_socket.client_socket.close()
-        infrastructure_with_client_socket.client_socket.connect()
+        infrastructure.client_socket.close()
+        infrastructure.client_socket.connect()
 
     request_error({
         "module": "echox",
@@ -104,11 +104,11 @@ def test_request_error(infrastructure_with_client_socket, ubusd_test):
     })
 
 
-def test_notification(infrastructure_with_client_socket, ubusd_test):
+def test_notification(infrastructure, ubusd_test):
     def notify(msg):
-        notifications = infrastructure_with_client_socket.get_notifications()
-        infrastructure_with_client_socket.client_socket.notification(msg)
-        notifications = infrastructure_with_client_socket.get_notifications(notifications)
+        notifications = infrastructure.get_notifications()
+        infrastructure.client_socket.notification(msg)
+        notifications = infrastructure.get_notifications(notifications)
         assert notifications[-1] == msg
 
     notify({
@@ -125,21 +125,21 @@ def test_notification(infrastructure_with_client_socket, ubusd_test):
     })
 
 
-def test_notification_error(infrastructure_with_client_socket, ubusd_test):
+def test_notification_error(infrastructure, ubusd_test):
     def notify_error(msg):
         # send msg and one correct notification and make sure that only the correct
         # notification is recievd
-        notifications = infrastructure_with_client_socket.get_notifications()
+        notifications = infrastructure.get_notifications()
         old_len = len(notifications)
-        infrastructure_with_client_socket.client_socket.notification(msg)
-        infrastructure_with_client_socket.client_socket.close()
-        infrastructure_with_client_socket.client_socket.connect()
-        infrastructure_with_client_socket.client_socket.notification({
+        infrastructure.client_socket.notification(msg)
+        infrastructure.client_socket.close()
+        infrastructure.client_socket.connect()
+        infrastructure.client_socket.notification({
             "module": "echo",
             "action": "echo",
             "kind": "notification",
         })
-        notifications = infrastructure_with_client_socket.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications)
         assert old_len + 1 == len(notifications)
         assert notifications[-1] == {
             "module": "echo",

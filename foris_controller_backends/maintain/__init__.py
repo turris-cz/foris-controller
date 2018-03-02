@@ -19,6 +19,7 @@
 
 import logging
 import os
+import updater
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named
@@ -74,6 +75,8 @@ class MaintainCommands(BaseCmdLine):
         if retval != 0:
             logger.error("Cmd to restore the backup '%s' failed." % str(cmd))
             return False
+        # start updater
+        updater.run(False)
         return True
 
     def mark_reboot_required(self):

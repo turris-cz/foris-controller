@@ -18,6 +18,7 @@
 #
 
 import re
+import updater
 
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.services import OpenwrtServices
@@ -104,7 +105,7 @@ class DataCollectUci(object):
                 if 'i_agree_datacollect' in user_lists:
                     backend.del_from_list("updater", "pkglists", "lists", ["i_agree_datacollect"])
 
-        # TODO updater should be started...
+        updater.run(False)
 
         with OpenwrtServices() as services:
             # fail_on_error=False - ucollect might not be installed yet
