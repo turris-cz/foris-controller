@@ -297,6 +297,7 @@ def test_approval_resolve(uci_configs_init, infrastructure, ubusd_test):
 def test_approval_resolve_openwrt(uci_configs_init, infrastructure, ubusd_test):
     def resolve(approval_data, query_data, result):
         set_approval(approval_data)
+        notifications = infrastructure.get_notifications()
         res = infrastructure.process_message({
             "module": "updater",
             "action": "resolve_approval",
@@ -315,6 +316,7 @@ def test_approval_resolve_openwrt(uci_configs_init, infrastructure, ubusd_test):
                 assert approval["status"] == "denied"
             elif query_data["solution"] == "grant":
                 assert approval["status"] == "granted"
+                wait_for_updater_run_finished(notifications, infrastructure)
 
     # No approval
     set_approval(None)

@@ -127,8 +127,14 @@ class Updater(object):
     def resolve_approval(self, approval_id, solution):
         """ Resolves approval
         """
-        return updater.resolve_approval(
+        res = updater.resolve_approval(
             approval_id, True if solution == "grant" else False)
+
+        # Run updater after approval was granted
+        if res and solution == "grant":
+            updater.run(False)
+
+        return res
 
     def run(self, set_reboot_indicator):
         """ Starts updater run
