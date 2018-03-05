@@ -52,12 +52,12 @@ if __name__ == "__main__":
         help="disables schema validation (based on foris-controller modules)"
     )
     parser.add_argument(
-        "notification", metavar='NOTIFICATION', nargs="+", type=str,
-        help="notification to be sent (in json format)"
-    )
-    parser.add_argument(
         '--extra-module-path', nargs=1, action='append', default=[],
         help="set extra path to module", required=False
+    )
+    parser.add_argument(
+        "notification", metavar='NOTIFICATION', nargs="+", type=str,
+        help="notification to be sent (in json format)"
     )
 
     options = parser.parse_args()
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         handler = SysLogHandler("/dev/log")
         handler.setFormatter(logging.Formatter('foris-notify: %(message)s'))
         logging.getLogger().addHandler(handler)
-    except:
+    except Exception:
         logger.warning("Failed to initialize syslog handler.")
 
     if options.bus == "ubus":
@@ -98,4 +98,6 @@ if __name__ == "__main__":
         validator = None
 
     for notification in notifications:
-        sender.notify(options.module, options.action, notification, validator)
+        sender.notify(
+            options.module, options.action, notification if notification else None, validator
+        )
