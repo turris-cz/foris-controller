@@ -181,27 +181,28 @@ def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructur
 def test_mark_as_displayed_notification(uci_configs_init, infrastructure, ubusd_test):
     # these notifications are meant to be send by external program
     # to imitate such behavior just call cmd foris-notify
+    filters = [("router_notifications", "mark_as_displayed")]
     def mark_as_displayed_notification(data):
-        notifications = infrastructure.get_notifications()
+        notifications = infrastructure.get_notifications(filters=filters)
         retval, _, _ = notify_cmd(
             infrastructure, "router_notifications", "mark_as_displayed",
             data
         )
         assert retval == 0
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
         assert notifications[-1]["action"] == "mark_as_displayed"
         assert notifications[-1]["kind"] == "notification"
         assert notifications[-1]["data"] == data
 
     def mark_as_displayed_notification_failed(data):
-        new_notifications = infrastructure.get_notifications()
+        new_notifications = infrastructure.get_notifications(filters=filters)
         retval, _, _ = notify_cmd(
             infrastructure, "router_notifications", "mark_as_displayed",
             data
         )
         assert not retval == 0
-        old_notifications = infrastructure.get_notifications()
+        old_notifications = infrastructure.get_notifications(filters=filters)
         assert new_notifications == old_notifications
 
     mark_as_displayed_notification({"ids": ["1518776436-2595"], "new_count": 3})
@@ -227,8 +228,9 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+    filters = [("router_notifications", "update_settings")]
     def update(data):
-        notifications = infrastructure.get_notifications()
+        notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message({
             "module": "router_notifications",
             "action": "update_settings",
@@ -241,7 +243,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
             u'kind': u'reply',
             u'module': u'router_notifications'
         }
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
         assert notifications[-1]["action"] == "update_settings"
         assert notifications[-1]["kind"] == "notification"
@@ -386,11 +388,13 @@ def test_create(stored_notifications, uci_configs_init, infrastructure, ubusd_te
 def test_create_notification(uci_configs_init, infrastructure, ubusd_test):
     # these notifications are meant to be send by external program
     # to imitate such behavior just call cmd foris-notify
+    filters = [("router_notifications", "create")]
+
     def create_notification(data):
-        notifications = infrastructure.get_notifications()
+        notifications = infrastructure.get_notifications(filters=filters)
         retval, _, _ = notify_cmd(infrastructure, "router_notifications", "create", data)
         assert retval == 0
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
         assert notifications[-1]["action"] == "create"
         assert notifications[-1]["kind"] == "notification"

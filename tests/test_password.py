@@ -46,8 +46,9 @@ def pass_file():
 
 
 def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd_test):
+    filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
-    old_notifications = infrastructure.get_notifications()
+    old_notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "password",
         "action": "set",
@@ -60,7 +61,7 @@ def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd
         u'kind': u'reply',
         u'module': u'password'
     }
-    assert infrastructure.get_notifications(old_notifications)[-1] == {
+    assert infrastructure.get_notifications(old_notifications, filters=filters)[-1] == {
         u"module": u"password",
         u"action": u"set",
         u"kind": u"notification",
@@ -78,8 +79,9 @@ def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd
 
 
 def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_test):
+    filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
-    old_notifications = infrastructure.get_notifications()
+    old_notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "password",
         "action": "set",
@@ -92,7 +94,7 @@ def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_
         u'kind': u'reply',
         u'module': u'password'
     }
-    assert infrastructure.get_notifications(old_notifications)[-1] == {
+    assert infrastructure.get_notifications(old_notifications, filters=filters)[-1] == {
         u"module": u"password",
         u"action": u"set",
         u"kind": u"notification",

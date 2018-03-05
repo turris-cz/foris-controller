@@ -106,9 +106,10 @@ def test_request_error(infrastructure, ubusd_test):
 
 def test_notification(infrastructure, ubusd_test):
     def notify(msg):
-        notifications = infrastructure.get_notifications()
+        filters = [("echo", "echo"), ("echo", "echo2")]
+        notifications = infrastructure.get_notifications(filters=filters)
         infrastructure.client_socket.notification(msg)
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1] == msg
 
     notify({
@@ -129,7 +130,8 @@ def test_notification_error(infrastructure, ubusd_test):
     def notify_error(msg):
         # send msg and one correct notification and make sure that only the correct
         # notification is recievd
-        notifications = infrastructure.get_notifications()
+        filters = [("echo", "echo"), ("echo", "echo2")]
+        notifications = infrastructure.get_notifications(filters=filters)
         old_len = len(notifications)
         infrastructure.client_socket.notification(msg)
         infrastructure.client_socket.close()
@@ -139,7 +141,7 @@ def test_notification_error(infrastructure, ubusd_test):
             "action": "echo",
             "kind": "notification",
         })
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert old_len + 1 == len(notifications)
         assert notifications[-1] == {
             "module": "echo",

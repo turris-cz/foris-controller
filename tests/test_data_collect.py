@@ -72,7 +72,8 @@ def test_get(uci_configs_init, infrastructure, ubusd_test):
 def test_set(infrastructure, ubusd_test):
 
     def set_agreed(agreed):
-        old_notifications = infrastructure.get_notifications()
+        filters = [("data_collect", "set")]
+        old_notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message({
             "module": "data_collect",
             "action": "set",
@@ -87,15 +88,15 @@ def test_set(infrastructure, ubusd_test):
             u'kind': u'reply',
             u'module': u'data_collect'
         }
-        notifications = infrastructure.get_notifications(old_notifications)
-        assert {
+        notifications = infrastructure.get_notifications(old_notifications, filters=filters)
+        assert notifications[-1] == {
             u"module": u"data_collect",
             u"action": u"set",
             u"kind": u"notification",
             u"data": {
                 u"agreed": agreed,
             }
-        } in notifications[len(old_notifications):]
+        }
         res = infrastructure.process_message({
             "module": "data_collect",
             "action": "get",
@@ -118,7 +119,8 @@ def test_set(infrastructure, ubusd_test):
 
 @pytest.mark.only_backends(['openwrt'])
 def test_set_openwrt(uci_configs_init, init_script_result, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
+    filters = [("data_collect", "set"), ("updater", "run")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "data_collect",
         "action": "set",
@@ -147,9 +149,10 @@ def test_get_honeypots(infrastructure, ubusd_test):
 
 
 def test_set_honeypots(infrastructure, ubusd_test):
+    filters = [("data_collect", "set_honeypots")]
 
     def set_honeypots(result):
-        notifications = infrastructure.get_notifications()
+        notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message({
             "module": "data_collect",
             "action": "set_honeypots",
@@ -172,7 +175,7 @@ def test_set_honeypots(infrastructure, ubusd_test):
             u'kind': u'reply',
             u'module': u'data_collect'
         }
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1] == {
             u"module": u"data_collect",
             u"action": u"set_honeypots",

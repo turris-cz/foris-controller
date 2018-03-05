@@ -32,14 +32,15 @@ FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test
 
 
 def test_reboot(uci_configs_init, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
+    filters = [("maintain", "reboot")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "maintain",
         "action": "reboot",
         "kind": "request",
     })
     assert "new_ips" in res["data"].keys()
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert "new_ips" in notifications[-1]["data"].keys()
 
 
@@ -59,7 +60,6 @@ def test_restore_backup(file_root_init, uci_configs_init, infrastructure, ubusd_
     with open(os.path.join("/tmp/foris_files/tmp", "backup.tar.bz2.base64")) as f:
         backup = f.read()
 
-    old_notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "maintain",
         "action": "restore_backup",
@@ -69,12 +69,6 @@ def test_restore_backup(file_root_init, uci_configs_init, infrastructure, ubusd_
         },
     })
     assert res["data"] == {u"result": True}
-    notifications = infrastructure.get_notifications(old_notifications)
-    assert {
-        u"module": u"maintain",
-        u"action": u"reboot_required",
-        u"kind": u"notification",
-    } in notifications[len(old_notifications):]
 
 
 @pytest.mark.only_backends(['openwrt'])
@@ -84,7 +78,8 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
     with open(os.path.join("/tmp/foris_files/tmp", "backup.tar.bz2.base64")) as f:
         backup = f.read()
 
-    notifications = infrastructure.get_notifications()
+    filters = [("updater", "run")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "maintain",
         "action": "restore_backup",
@@ -98,8 +93,6 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
 
 
 def test_generate_and_restore(uci_configs_init, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
-
     res = infrastructure.process_message({
         "module": "maintain",
         "action": "generate_backup",
@@ -116,9 +109,3 @@ def test_generate_and_restore(uci_configs_init, infrastructure, ubusd_test):
         },
     })
     assert res["data"] == {u"result": True}
-    notifications = infrastructure.get_notifications()
-    assert notifications[-1] == {
-        u"module": u"maintain",
-        u"action": u"reboot_required",
-        u"kind": u"notification",
-    }

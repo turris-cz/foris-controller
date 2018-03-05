@@ -57,10 +57,6 @@ class MaintainModule(BaseModule):
         :rtype: dict
         """
         res = self.handler.restore_backup(data["backup"])
-        if res:
-            # mark that a reboot is required
-            self.handler.mark_reboot_required()
-            self.notify("reboot_required", None)
         return {"result": res}
 
 

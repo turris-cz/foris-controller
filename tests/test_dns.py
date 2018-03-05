@@ -39,7 +39,8 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
+    filters = [("dns", "update_settings")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "dns",
         "action": "update_settings",
@@ -56,7 +57,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",
@@ -78,7 +79,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
             "dns_from_dhcp_domain": "test",
         }
     })
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",
@@ -99,7 +100,8 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
+    filters = [("dns", "update_settings")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "dns",
         "action": "update_settings",
@@ -116,7 +118,7 @@ def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
         u'kind': u'reply',
         u'module': u'dns'
     }
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",
@@ -146,7 +148,7 @@ def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
             "dns_from_dhcp_domain": "test",
         }
     })
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"dns",
         u"action": u"update_settings",

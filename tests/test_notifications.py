@@ -71,12 +71,13 @@ def notify_api(extra_module_paths, infrastructure):
 
 
 def test_notify_cmd(uci_configs_init, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
+    filters = [("web", "set_language")]
+    notifications = infrastructure.get_notifications(filters=filters)
     retval, stdout, stderr = notify_cmd(
         infrastructure, "web", "set_language", {"language": "en"}, True)
     assert retval == 0
 
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
@@ -88,13 +89,13 @@ def test_notify_cmd(uci_configs_init, infrastructure, ubusd_test):
         infrastructure, "web", "set_language", {"language": "en", "invalid": True}, True)
     assert retval == 1
     assert u"ValidationError" in stderr
-    assert notifications == infrastructure.get_notifications()
+    assert notifications == infrastructure.get_notifications(filters=filters)
 
     retval, stdout, stderr = notify_cmd(
         infrastructure, "web", "set_language", {"language": "en", "invalid": True}, False)
     assert retval == 0
 
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
@@ -104,10 +105,11 @@ def test_notify_cmd(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_notify_api(uci_configs_init, infrastructure, ubusd_test, notify_api):
+    filters = [("web", "set_language"), ("echo", "echo")]
     notify = notify_api
-    notifications = infrastructure.get_notifications()
+    notifications = infrastructure.get_notifications(filters=filters)
     notify("web", "set_language", {"language": "en"}, True)
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
@@ -118,10 +120,10 @@ def test_notify_api(uci_configs_init, infrastructure, ubusd_test, notify_api):
     from jsonschema import ValidationError
     with pytest.raises(ValidationError):
         notify("web", "set_language", {"language": "en", "invalid": True}, True)
-    assert notifications == infrastructure.get_notifications()
+    assert notifications == infrastructure.get_notifications(filters=filters)
 
     notify("web", "set_language", {"language": "en", "invalid": True}, False)
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"web",
         u"action": u"set_language",
@@ -130,7 +132,7 @@ def test_notify_api(uci_configs_init, infrastructure, ubusd_test, notify_api):
     }
 
     notify("echo", "echo")
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"echo",
         u"action": u"echo",

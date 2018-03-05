@@ -109,7 +109,8 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_update_settings(uci_configs_init, init_script_result, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
+    filters = [("time", "update_settings")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "time",
         "action": "update_settings",
@@ -126,7 +127,7 @@ def test_update_settings(uci_configs_init, init_script_result, infrastructure, u
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "result" in res["data"].keys()
     assert res["data"]["result"] is True
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"time",
         u"action": u"update_settings",
@@ -167,7 +168,7 @@ def test_update_settings(uci_configs_init, init_script_result, infrastructure, u
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "result" in res["data"].keys()
     assert res["data"]["result"] is True
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"time",
         u"action": u"update_settings",
@@ -282,7 +283,8 @@ def test_ntpdate_trigger_pass_openwrt(
     cmdline_script_root, infrastructure, ubusd_test, lock_backend,
     pass_ntpdate
 ):
-    notifications = infrastructure.get_notifications()
+    filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "time",
         "action": "ntpdate_trigger",
@@ -291,7 +293,7 @@ def test_ntpdate_trigger_pass_openwrt(
     async_id = res["data"]["id"]
 
     # get started notification
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"time",
         u"action": u"ntpdate_started",
@@ -302,7 +304,7 @@ def test_ntpdate_trigger_pass_openwrt(
     }
 
     # get finished notification
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1]["action"] == "ntpdate_finished"
     assert notifications[-1]["data"]["id"] == async_id
     assert notifications[-1]["data"]["result"]
@@ -317,7 +319,8 @@ def test_ntpdate_trigger_fail_openwrt(
     cmdline_script_root, infrastructure, ubusd_test, lock_backend,
     fail_ntpdate
 ):
-    notifications = infrastructure.get_notifications()
+    filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "time",
         "action": "ntpdate_trigger",
@@ -326,7 +329,7 @@ def test_ntpdate_trigger_fail_openwrt(
     async_id = res["data"]["id"]
 
     # get started notification
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"time",
         u"action": u"ntpdate_started",
@@ -336,7 +339,7 @@ def test_ntpdate_trigger_fail_openwrt(
         }
     }
 
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"time",
         u"action": u"ntpdate_finished",

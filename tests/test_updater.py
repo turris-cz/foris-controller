@@ -35,6 +35,12 @@ from .test_uci import get_uci_module
 
 
 def wait_for_updater_run_finished(notifications, infrastructure):
+    filters = [("updater", "run")]
+    # filter notifications
+    notifications = [
+        e for e in notifications if e["module"] == "updater" and e["action"] == "run"
+    ]
+
     def notification_status_count(notifications, name):
         return len([
             e for e in notifications
@@ -44,11 +50,11 @@ def wait_for_updater_run_finished(notifications, infrastructure):
     before_count = notification_status_count(notifications, "initialize")
 
     # and instances should finish
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     initialize_count = notification_status_count(notifications, "initialize")
     exit_count = notification_status_count(notifications, "exit")
     while before_count == initialize_count or initialize_count > exit_count:
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         initialize_count = notification_status_count(notifications, "initialize")
         exit_count = notification_status_count(notifications, "exit")
 
@@ -121,7 +127,8 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
 
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
-    notifications = infrastructure.get_notifications()
+    filters = [("updater", "run")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "updater",
         "action": "update_settings",
@@ -295,9 +302,10 @@ def test_approval_resolve(uci_configs_init, infrastructure, ubusd_test):
 
 @pytest.mark.only_backends(['openwrt'])
 def test_approval_resolve_openwrt(uci_configs_init, infrastructure, ubusd_test):
+    filters = [("updater", "run")]
     def resolve(approval_data, query_data, result):
         set_approval(approval_data)
-        notifications = infrastructure.get_notifications()
+        notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message({
             "module": "updater",
             "action": "resolve_approval",
@@ -433,13 +441,13 @@ def test_run(uci_configs_init, infrastructure, ubusd_test):
 
 @pytest.mark.only_backends(['openwrt'])
 def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
-
+    filters = [("updater", "run")]
     try:
         os.unlink(clean_reboot_indicator)
     except Exception:
         pass
 
-    notifications = infrastructure.get_notifications()
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "updater",
         "action": "run",
@@ -449,7 +457,7 @@ def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
     assert res["data"]["result"]
     wait_for_updater_run_finished(notifications, infrastructure)
 
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     res = infrastructure.process_message({
         "module": "updater",
         "action": "run",

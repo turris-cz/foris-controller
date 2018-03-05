@@ -52,9 +52,10 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+    filters = [("lan", "update_settings")]
 
     def update(data):
-        notifications = infrastructure.get_notifications()
+        notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message({
             "module": "lan",
             "action": "update_settings",
@@ -67,7 +68,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
             u'kind': u'reply',
             u'module': u'lan'
         }
-        notifications = infrastructure.get_notifications(notifications)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "lan"
         assert notifications[-1]["action"] == "update_settings"
         assert notifications[-1]["kind"] == "notification"

@@ -75,8 +75,8 @@ class MaintainCommands(BaseCmdLine):
         if retval != 0:
             logger.error("Cmd to restore the backup '%s' failed." % str(cmd))
             return False
-        # start updater
-        updater.run(False)
+        # start updater and prepare for reboot
+        updater.run(True)
         return True
 
     def mark_reboot_required(self):
