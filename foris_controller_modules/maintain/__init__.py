@@ -64,7 +64,6 @@ class MaintainModule(BaseModule):
     'reboot',
     'generate_backup',
     'restore_backup',
-    'mark_reboot_required',
 ])
 class Handler(object):
     pass

@@ -53,7 +53,3 @@ class OpenwrtMaintainHandler(Handler, BaseOpenwrtHandler):
     @logger_wrapper(logger)
     def restore_backup(self, backup):
         return self.cmds.restore_backup(backup)
-
-    @logger_wrapper(logger)
-    def mark_reboot_required(self):
-        self.cmds.mark_reboot_required()

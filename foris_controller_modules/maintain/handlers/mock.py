@@ -50,7 +50,3 @@ class MockMaintainHandler(Handler, BaseMockHandler):
     def restore_backup(self, backup):
         base64.b64decode(backup)
         return True
-
-    @logger_wrapper(logger)
-    def mark_reboot_required(self):
-        pass

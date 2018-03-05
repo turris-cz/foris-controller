@@ -79,10 +79,5 @@ class MaintainCommands(BaseCmdLine):
         updater.run(True)
         return True
 
-    def mark_reboot_required(self):
-        logger.debug("Marking that the reboot is required.")
-        cmd = "/usr/bin/maintain-reboot-needed"
-        self._run_command(cmd)  # best effort no need to check it any further
-
     def reboot_required(self):
         return os.path.exists(MaintainCommands.REBOOT_INDICATOR_PATH)
