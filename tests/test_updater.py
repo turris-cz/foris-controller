@@ -76,7 +76,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
-    def update_settings(new_settings):
+    def update_settings(new_settings, expected=None):
         res = infrastructure.process_message({
             "module": "updater",
             "action": "update_settings",
@@ -90,7 +90,31 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
             "kind": "request",
         })
         del res["data"]["approval"]
-        assert res["data"] == new_settings
+        assert res["data"] == (expected if expected else new_settings)
+
+    update_settings({
+        "enabled": True,
+        "branch": "",
+        "approval_settings": {"status": "off"},
+        "user_lists": [],
+        "required_languages": [],
+    })
+
+    update_settings({
+        "enabled": True,
+        "branch": "nightly",
+        "approval_settings": {"status": "on"},
+        "user_lists": ['list1'],
+        "required_languages": ['cs'],
+    })
+
+    update_settings({
+        "enabled": True,
+        "branch": "",
+        "approval_settings": {"status": "delayed", "delay": 24},
+        "user_lists": ['list2'],
+        "required_languages": ['cs', 'de'],
+    })
 
     update_settings({
         "enabled": True,
@@ -102,22 +126,8 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
 
     update_settings({
         "enabled": False,
-        "branch": "nightly",
-        "approval_settings": {"status": "on"},
-        "user_lists": ['list1'],
-        "required_languages": ['cs'],
-    })
-
-    update_settings({
+    }, {
         "enabled": False,
-        "branch": "",
-        "approval_settings": {"status": "delayed", "delay": 24},
-        "user_lists": ['list2'],
-        "required_languages": ['cs', 'de'],
-    })
-
-    update_settings({
-        "enabled": True,
         "branch": "",
         "approval_settings": {"status": "off"},
         "user_lists": [],
@@ -178,7 +188,7 @@ def test_uci(uci_configs_init, lock_backend, infrastructure, ubusd_test):
     assert uci.get_option_named(data, "updater", "l10n", "langs", []) == []
 
     update_settings({
-        "enabled": False,
+        "enabled": True,
         "branch": "nightly",
         "approval_settings": {"status": "on"},
         "user_lists": ['list1'],
@@ -186,7 +196,7 @@ def test_uci(uci_configs_init, lock_backend, infrastructure, ubusd_test):
     })
     with uci.UciBackend() as backend:
         data = backend.read("updater")
-    assert uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
+    assert not uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
     assert uci.get_option_named(data, "updater", "override", "branch") == "nightly"
     with pytest.raises(UciRecordNotFound):
         uci.get_option_named(data, "updater", "approvals", "auto_grant_seconds")
@@ -195,7 +205,7 @@ def test_uci(uci_configs_init, lock_backend, infrastructure, ubusd_test):
     assert uci.get_option_named(data, "updater", "l10n", "langs", []) == ["cs"]
 
     update_settings({
-        "enabled": False,
+        "enabled": True,
         "branch": "",
         "approval_settings": {"status": "delayed", "delay": 24},
         "user_lists": ['list2'],
@@ -203,7 +213,7 @@ def test_uci(uci_configs_init, lock_backend, infrastructure, ubusd_test):
     })
     with uci.UciBackend() as backend:
         data = backend.read("updater")
-    assert uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
+    assert not uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
     with pytest.raises(UciRecordNotFound):
         uci.get_option_named(data, "updater", "override", "branch")
     assert int(uci.get_option_named(data, "updater", "approvals", "auto_grant_seconds")) \
@@ -229,6 +239,13 @@ def test_uci(uci_configs_init, lock_backend, infrastructure, ubusd_test):
     assert not uci.parse_bool(uci.get_option_named(data, "updater", "approvals", "need"))
     assert uci.get_option_named(data, "updater", "pkglists", "lists", []) == []
     assert uci.get_option_named(data, "updater", "l10n", "langs", []) == []
+
+    update_settings({
+        "enabled": False,
+    })
+    with uci.UciBackend() as backend:
+        data = backend.read("updater")
+    assert uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
 
 
 @pytest.mark.only_backends(['openwrt'])

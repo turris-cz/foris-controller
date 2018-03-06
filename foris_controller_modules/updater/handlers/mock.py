@@ -76,12 +76,16 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :returns: True on success False otherwise
         :rtype: bool
         """
-        MockUpdaterHandler.user_lists = user_lists
-        MockUpdaterHandler.required_languages = required_languages
-        MockUpdaterHandler.approvals_delay = approvals_settings.get("delay", None)
-        MockUpdaterHandler.approvals_status = approvals_settings["status"]
+        if user_lists is not None:
+            MockUpdaterHandler.user_lists = user_lists
+        if required_languages is not None:
+            MockUpdaterHandler.required_languages = required_languages
+        if approvals_settings is not None:
+            MockUpdaterHandler.approvals_delay = approvals_settings.get("delay", None)
+            MockUpdaterHandler.approvals_status = approvals_settings["status"]
         MockUpdaterHandler.enabled = enabled
-        MockUpdaterHandler.branch = branch
+        if branch is not None:
+            MockUpdaterHandler.branch = branch
 
         return True
 

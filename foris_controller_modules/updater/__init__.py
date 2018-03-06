@@ -47,8 +47,8 @@ class UpdaterModule(BaseModule):
         """
         return {
             "result": self.handler.update_settings(
-                data["user_lists"], data["required_languages"], data["approval_settings"],
-                data["enabled"], data["branch"]
+                data.get("user_lists", None), data.get("required_languages", None),
+                data.get("approval_settings", None), data["enabled"], data.get("branch", None)
             )
         }
 
