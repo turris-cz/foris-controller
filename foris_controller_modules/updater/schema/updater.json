@@ -66,6 +66,50 @@
                 }
             ]
         },
+        "updater_approval_plan_op": {"enum": ["install", "update", "downgrade", "remove"]},
+        "updater_approval_plan": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "oneOf": [
+                    {
+                        "properties": {
+                            "name": {"type": "string", "minLength": 1},
+                            "op": {
+                                "$ref": "#/definitions/updater_approval_plan_op",
+                                "enum": ["update", "downgrade"]
+                            },
+                            "cur_ver": {"type": "string", "minLength": 1},
+                            "target_ver": {"type": "string", "minLength": 1}
+                        },
+                        "additionalProperties": false,
+                        "required": ["name", "op", "target_ver", "cur_ver"]
+                    },
+                    {
+                        "properties": {
+                            "name": {"type": "string", "minLength": 1},
+                            "op": {
+                                "$ref": "#/definitions/updater_approval_plan_op", "enum": ["install"]
+                            },
+                            "target_ver": {"type": "string", "minLength": 1}
+                        },
+                        "additionalProperties": false,
+                        "required": ["name", "op", "target_ver"]
+                    },
+                    {
+                        "properties": {
+                            "name": {"type": "string", "minLength": 1},
+                            "op": {
+                                "$ref": "#/definitions/updater_approval_plan_op", "enum": ["remove"]
+                            },
+                            "cur_ver": {"type": "string", "minLength": 1}
+                        },
+                        "additionalProperties": false,
+                        "required": ["name", "op", "cur_ver"]
+                    }
+                ]
+            }
+        },
         "updater_approval_hash": {"type": "string"},
         "updater_approval": {
             "type": "object",
@@ -76,12 +120,11 @@
                         "hash": {"$ref": "#/definitions/updater_approval_hash"},
                         "status": {"enum": ["asked", "granted", "denied"]},
                         "time": {"type": "string", "format": "date-time"},
-                        "install_list": {"type": "array", "items": {"type": "string"}},
-                        "remove_list": {"type": "array", "items": {"type": "string"}},
+                        "plan": {"$ref": "#/definitions/updater_approval_plan"},
                         "reboot": {"type": "boolean", "description": "Flag whether the reboot will be required"}
                     },
                     "additionalProperties": false,
-                    "required": ["present", "hash", "status", "time", "install_list", "remove_list", "reboot"]
+                    "required": ["present", "hash", "status", "time", "plan", "reboot"]
                 },
                 {
                     "properties": {

@@ -20,6 +20,7 @@
 import os
 import pytest
 import uuid
+import time
 
 from datetime import datetime
 
@@ -285,6 +286,12 @@ def test_approval(
         approval = res["data"]["approval"]
         if data:
             data["present"] = True
+            data["time"] = datetime.fromtimestamp(data["time"]).isoformat()
+            for record in data["plan"]:
+                if record["target_ver"] is None:
+                    del record["target_ver"]
+                if record["cur_ver"] is None:
+                    del record["cur_ver"]
             assert data == approval
         else:
             assert approval == {"present": False}
@@ -293,25 +300,28 @@ def test_approval(
     approval({
         "hash": str(uuid.uuid4()),
         "status": "asked",
-        "time": datetime.now().isoformat(),
-        "install_list": [],
-        "remove_list": [],
+        "time": int(time.time()),
+        "plan": [],
         "reboot": False,
     })
     approval({
         "hash": str(uuid.uuid4()),
         "status": "granted",
-        "time": datetime.now().isoformat(),
-        "install_list": ['package1'],
-        "remove_list": ['package2'],
+        "time": int(time.time()),
+        "plan": [
+            {"name": "package1", "op": "install", "cur_ver": None, "target_ver": "1.0"},
+            {"name": "package2", "op": "remove", "cur_ver": "2.0", "target_ver": None},
+        ],
         "reboot": True,
     })
     approval({
         "hash": str(uuid.uuid4()),
         "status": "denied",
-        "time": datetime.now().isoformat(),
-        "install_list": ['package1', 'package4'],
-        "remove_list": ['package2', 'package3'],
+        "time": int(time.time()),
+        "plan": [
+            {"name": "package3", "op": "update", "cur_ver": "1.0", "target_ver": "1.1"},
+            {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "target_ver": "2.0"},
+        ],
         "reboot": True,
     })
 
@@ -349,6 +359,7 @@ def test_approval_resolve_openwrt(
     updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
 ):
     filters = [("updater", "run")]
+
     def resolve(approval_data, query_data, result):
         set_approval(approval_data)
         notifications = infrastructure.get_notifications(filters=filters)
@@ -383,9 +394,8 @@ def test_approval_resolve_openwrt(
         {
             "hash": str(uuid.uuid4()),
             "status": "asked",
-            "time": datetime.now().isoformat(),
-            "install_list": [],
-            "remove_list": [],
+            "time": int(time.time()),
+            "plan": [],
             "reboot": False,
         },
         {"hash": str(uuid.uuid4()), "solution": "grant"},
@@ -395,9 +405,8 @@ def test_approval_resolve_openwrt(
         {
             "hash": str(uuid.uuid4()),
             "status": "asked",
-            "time": datetime.now().isoformat(),
-            "install_list": [],
-            "remove_list": [],
+            "time": int(time.time()),
+            "plan": [],
             "reboot": False,
         },
         {"hash": str(uuid.uuid4()), "solution": "deny"},
@@ -410,9 +419,8 @@ def test_approval_resolve_openwrt(
         {
             "hash": approval_id,
             "status": "granted",
-            "time": datetime.now().isoformat(),
-            "install_list": [],
-            "remove_list": [],
+            "time": int(time.time()),
+            "plan": [],
             "reboot": False,
         },
         {"hash": approval_id, "solution": "grant"},
@@ -422,9 +430,8 @@ def test_approval_resolve_openwrt(
         {
             "hash": approval_id,
             "status": "denied",
-            "time": datetime.now().isoformat(),
-            "install_list": [],
-            "remove_list": [],
+            "time": int(time.time()),
+            "plan": [],
             "reboot": False,
         },
         {"hash": approval_id, "solution": "deny"},
@@ -437,9 +444,8 @@ def test_approval_resolve_openwrt(
         {
             "hash": approval_id,
             "status": "asked",
-            "time": datetime.now().isoformat(),
-            "install_list": [],
-            "remove_list": [],
+            "time": int(time.time()),
+            "plan": [],
             "reboot": False,
         },
         {"hash": approval_id, "solution": "grant"},
@@ -449,9 +455,8 @@ def test_approval_resolve_openwrt(
         {
             "hash": approval_id,
             "status": "asked",
-            "time": datetime.now().isoformat(),
-            "install_list": [],
-            "remove_list": [],
+            "time": int(time.time()),
+            "plan": [],
             "reboot": False,
         },
         {"hash": approval_id, "solution": "deny"},

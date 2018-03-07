@@ -222,8 +222,12 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 "hash": str(uuid.uuid4()),
                 "status": random.choice(["asked", "granted", "denied"]),
                 "time": datetime.now().isoformat(),
-                "install_list": ["package1", "package2"],
-                "remove_list": ["package3", "package4"],
+                "plan": [
+                    {"name": "package1", "op": "install", "target_ver": "1.0"},
+                    {"name": "package2", "op": "remove", "cur_ver": "2.0"},
+                    {"name": "package3", "op": "update", "cur_ver": "1.0", "target_ver": "1.1"},
+                    {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "target_ver": "2.0"},
+                ],
                 "reboot": random.choice([True, False]),
             }
         ])

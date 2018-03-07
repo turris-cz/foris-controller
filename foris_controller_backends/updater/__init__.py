@@ -23,6 +23,8 @@ import updater.approvals
 import updater.l10n
 import updater.lists
 
+from datetime import datetime
+
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, store_bool
 )
@@ -130,6 +132,15 @@ class Updater(object):
         approval = updater.approvals.current()
         if approval:
             approval["present"] = True
+            approval["time"] = datetime.fromtimestamp(approval["time"]).isoformat()
+
+            # remove cur_ver: None and target_ver: None
+            for record in approval["plan"]:
+                if record["target_ver"] is None:
+                    del record["target_ver"]
+                if record["cur_ver"] is None:
+                    del record["cur_ver"]
+
             return approval
         else:
             return {"present": False}
