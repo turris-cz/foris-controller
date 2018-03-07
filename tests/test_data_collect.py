@@ -18,12 +18,13 @@
 #
 
 import pytest
+import updater.lists
 
 from .test_uci import get_uci_module
 from .test_updater import wait_for_updater_run_finished
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, init_script_result, lock_backend,
-    only_backends,
+    only_backends, updater_userlists
 )
 from foris_controller_testtools.utils import check_service_result
 
@@ -69,8 +70,7 @@ def test_get(uci_configs_init, infrastructure, ubusd_test):
     assert "agreed" in res["data"].keys()
 
 
-def test_set(infrastructure, ubusd_test):
-
+def test_set(updater_userlists, infrastructure, ubusd_test):
     def set_agreed(agreed):
         filters = [("data_collect", "set")]
         old_notifications = infrastructure.get_notifications(filters=filters)
@@ -118,7 +118,9 @@ def test_set(infrastructure, ubusd_test):
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_set_openwrt(uci_configs_init, init_script_result, infrastructure, ubusd_test):
+def test_set_openwrt(
+    updater_userlists, uci_configs_init, init_script_result, infrastructure, ubusd_test
+):
     filters = [("data_collect", "set"), ("updater", "run")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -135,6 +137,7 @@ def test_set_openwrt(uci_configs_init, init_script_result, infrastructure, ubusd
         u'kind': u'reply',
         u'module': u'data_collect'
     }
+    assert updater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is True
     check_service_result("ucollect", True, "restart")
     wait_for_updater_run_finished(notifications, infrastructure)
 
@@ -251,8 +254,9 @@ def test_set_honeypots_service_restart(
 
 @pytest.mark.only_backends(['openwrt'])
 def test_set_agreed_uci(
-        uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test):
-
+    updater_userlists, uci_configs_init, lock_backend, init_script_result, infrastructure,
+    ubusd_test
+):
     uci = get_uci_module(lock_backend)
 
     res = infrastructure.process_message({
@@ -273,8 +277,7 @@ def test_set_agreed_uci(
         data = backend.read()
 
     assert uci.parse_bool(uci.get_option_named(data, "foris", "eula", "agreed_collect", "0"))
-    user_lists = uci.get_option_named(data, "updater", "pkglists", "lists", [])
-    assert "i_agree_datacollect" in user_lists
+    assert updater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is True
 
     res = infrastructure.process_message({
         "module": "data_collect",
@@ -295,5 +298,4 @@ def test_set_agreed_uci(
         data = backend.read()
 
     assert not uci.parse_bool(uci.get_option_named(data, "foris", "eula", "agreed_collect", "0"))
-    user_lists = uci.get_option_named(data, "updater", "pkglists", "lists", [])
-    assert "i_agree_datacollect" not in user_lists
+    assert updater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is False
