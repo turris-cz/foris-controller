@@ -28,13 +28,15 @@ class UpdaterModule(BaseModule):
 
     def action_get_settings(self, data):
         """ Get current updater settings
-        :param data: supposed to be {}
+        :param data: supposed to be {'lang': }
         :type data: dict
         :returns: current updater settings
         :rtype: dict
         """
         res = self.handler.get_settings()
         res["approval"] = self.handler.get_approval()
+        res["user_lists"] = self.handler.get_user_lists(data["lang"])
+        res["languages"] = self.handler.get_languages()
         return res
 
     def action_update_settings(self, data):
@@ -47,7 +49,7 @@ class UpdaterModule(BaseModule):
         """
         return {
             "result": self.handler.update_settings(
-                data.get("user_lists", None), data.get("required_languages", None),
+                data.get("user_lists", None), data.get("languages", None),
                 data.get("approval_settings", None), data["enabled"], data.get("branch", None)
             )
         }
@@ -80,6 +82,8 @@ class UpdaterModule(BaseModule):
     'get_settings',
     'update_settings',
     'get_approval',
+    'get_user_lists',
+    'get_languages',
     'resolve_approval',
     'run',
 ])

@@ -42,13 +42,13 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         return OpenwrtUpdaterHandler.uci.get_settings()
 
     @logger_wrapper(logger)
-    def update_settings(self, user_lists, required_languages, approvals_settings, enabled, branch):
+    def update_settings(self, user_lists, languages, approvals_settings, enabled, branch):
         """ update updater settings
 
         :param user_lists: new user-list set
         :type user_lists: list
-        :param required_languages: languages which will be installed
-        :type required_languages: list
+        :param languages: languages which will be installed
+        :type languages: list
         :param approvals_settings: new approval settings
         :type approvals_settings: dict
         :param enable: is updater enabled indicator
@@ -61,7 +61,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         approvals_status = approvals_settings['status'] if approvals_settings else None
         approvals_delay = approvals_settings.get('delay', None) if approvals_settings else None
         return OpenwrtUpdaterHandler.uci.update_settings(
-            user_lists, required_languages, approvals_status, approvals_delay, enabled, branch
+            user_lists, languages, approvals_status, approvals_delay, enabled, branch
         )
 
     @logger_wrapper(logger)
@@ -73,17 +73,36 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         return self.updater.get_approval()
 
     @logger_wrapper(logger)
-    def resolve_approval(self, id, solution):
+    def resolve_approval(self, hash, solution):
         """ Resolv current approval
-        :param id: approval id
-        :type id: str
+        :param hash: approval hash
+        :type hash: str
         :param solution: what to do with the approval grant/deny
         :type solution: str
 
         :returns: True on success False otherwise
         :rtype: bool
         """
-        return self.updater.resolve_approval(id, solution)
+        return self.updater.resolve_approval(hash, solution)
+
+    @logger_wrapper(logger)
+    def get_user_lists(self, lang):
+        """ Returns user list and translated messages and titles
+
+        :param lang: language en/cs/de
+        :returns: [{"name": "..", "enabled": True, "title": "..", "msg": "..", "hidden": True}, ...]
+        :rtype: dict
+        """
+        return self.updater.get_user_lists(lang)
+
+    @logger_wrapper(logger)
+    def get_languages(self):
+        """ Returns language list and indicator whether the language is enabled
+
+        :returns: [{"code": "cs", "enabled": True}, {"code": "de", "enabled": True}, ...]
+        :rtype: dict
+        """
+        return self.updater.get_languages()
 
     @logger_wrapper(logger)
     def run(self, set_reboot_indicator):

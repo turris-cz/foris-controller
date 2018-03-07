@@ -19,6 +19,9 @@
 
 import logging
 import updater
+import updater.approvals
+import updater.l10n
+import updater.lists
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, store_bool
@@ -41,7 +44,7 @@ class UpdaterUci(object):
             ),
             "branch": get_option_named(updater_data, "updater", "override", "branch", ""),
             "user_lists": get_option_named(updater_data, "updater", "pkglists", "lists", []),
-            "required_languages": get_option_named(updater_data, "updater", "l10n", "langs", []),
+            "languages": get_option_named(updater_data, "updater", "l10n", "langs", []),
             "approval_settings": {
                 "status": "on" if parse_bool(
                     get_option_named(updater_data, "updater", "approvals", "need", "0"),
@@ -62,15 +65,9 @@ class UpdaterUci(object):
         return res
 
     def update_settings(
-        self, user_lists, required_languages, approvals_status, approvals_delay, enabled, branch
+        self, user_lists, languages, approvals_status, approvals_delay, enabled, branch
     ):
         with UciBackend() as backend:
-            if user_lists is not None:
-                backend.add_section("updater", "pkglists", "pkglists")
-                backend.replace_list("updater", "pkglists", "lists", user_lists)
-            if required_languages is not None:
-                backend.add_section("updater", "l10n", "l10n")
-                backend.replace_list("updater", "l10n", "langs", required_languages)
             if approvals_status is not None:
                 backend.add_section("updater", "approvals", "approvals")
                 if approvals_status == "off":
@@ -105,6 +102,12 @@ class UpdaterUci(object):
 
             backend.set_option("updater", "override", "disable", store_bool(not enabled))
 
+            if user_lists is not None:
+                updater.lists.update_userlists(user_lists)
+
+            if languages is not None:
+                updater.l10n.update_languages(languages)
+
         if enabled:
             updater.run(False)
 
@@ -117,25 +120,37 @@ class Updater(object):
         :returns: True if updater is running False otherwise
         :rtype: bool
         """
-        return updater.is_running()
+        return updater.opkg_lock()
 
     def get_approval(self):
         """ Returns current approval
         :returns: approval
         :rtype: dict
         """
-        approval = updater.get_approval()
+        approval = updater.approvals.current()
         if approval:
             approval["present"] = True
             return approval
         else:
             return {"present": False}
 
+    def get_user_lists(self, lang):
+        return [
+            {
+                "name": k, "enabled": v["enabled"], "hidden": v["hidden"],
+                "title": v["title"], "msg": v["message"],
+            }
+            for k, v in updater.lists.userlists(lang).items()
+        ]
+
+    def get_languages(self):
+        return [{"code": k, "enabled": v} for k, v in updater.l10n.languages().items()]
+
     def resolve_approval(self, approval_id, solution):
         """ Resolves approval
         """
-        res = updater.resolve_approval(
-            approval_id, True if solution == "grant" else False)
+        res = updater.approvals.approve(approval_id) if solution == "grant" \
+            else updater.approvals.deny(approval_id)
 
         # Run updater after approval was granted
         if res and solution == "grant":

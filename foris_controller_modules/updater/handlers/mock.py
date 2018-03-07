@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #
 # foris-controller
 # Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
@@ -33,8 +35,126 @@ logger = logging.getLogger(__name__)
 
 
 class MockUpdaterHandler(Handler, BaseMockHandler):
-    user_lists = []
-    required_languages = []
+    user_lists = [
+        {
+            "name": "api-token",
+            "msg": {
+                "en": u"A Foris plugin allowing to manage remote API access tokens"
+                " (for example for use in Spectator or Android application).",
+                "cs": "Správa tokenů pro vzdálený API přístup"
+                " (např. pro Spectator, nebo Android aplikaci) ve Forisu.",
+                "de": "Ein Plugin für Foris, welcher Management von Tokens für das"
+                " Fernzugriff-API (z. B. für Anwendung in Spectator oder Android"
+                " Applikationen) erlaubt.",
+            },
+            "title": {
+                "en": "Access tokens",
+                "cs": "Přístupové tokeny",
+                "de": "Zugangsverwaltung",
+            },
+            "enabled": False,
+            "hidden": False,
+        },
+        {
+            "name": "automation",
+            "msg": {
+                "cs": 'Software pro ovládání domácí automatizace, včetně Turris Gadgets.',
+                "de": 'Steuerungssoftware für die Hausautomation, einschließlich Turris '
+                'Gadgets.',
+                "en": 'Control software for home automation, including Turris Gadgets.',
+
+            },
+            "title": {
+                "cs": 'Domácí automatizace',
+                "de": 'Hausautomation',
+                "en": 'Home automation',
+            },
+            "enabled": False,
+            "hidden": False,
+        },
+        {
+            "name": "dev-detect",
+            "msg": {
+                'cs': 'Software pro detekci nově připojených zařízení na lokální síti'
+                ' (EXPERIMENTÁLNÍ).',
+                'de': 'Software für die Erkennung neuer Geräte im lokalen Netzwerk'
+                ' (EXPERIMENTELL).',
+                'en': 'Software for detecting new devices on local network (EXPERIMENTAL).',
+
+            },
+            "title": {
+                'cs': 'Detekce připojených zařízení',
+                'de': 'Geräterkennung',
+                'en': 'Device detection',
+
+            },
+            "enabled": False,
+            "hidden": False,
+        },
+        {
+            "name": "dvb",
+            "msg": {
+                'cs': 'Software na sdílení televizního vysílání přijímaného Turrisem.'
+                ' Neobsahuje ovladače pro zařízení.',
+                'de': 'Software für die Weiterleitung von Fernsehsignal, welcher mittels'
+                ' DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.',
+                'en': 'Software for sharing television received by a DVB tuner on Turris.' 
+                ' Does not include device drivers.'
+            },
+            "title": {
+                'cs': 'Televizní tuner',
+                'de': 'DVB-Tuner',
+                'en': 'DVB tuner',
+
+            },
+            "enabled": False,
+            "hidden": False,
+        },
+        {
+            "name": "i_agree_honeypot",
+            "msg": {
+                "cs": 'Past na roboty zkoušející hesla na SSH.',
+                "de": 'Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten'
+                ' versuchen.',
+                "en": 'Trap for password-guessing robots on SSH.',
+
+            },
+            "title": {
+                "cs": 'SSH Honeypot',
+                "de": 'SSH-Honigtopf',
+                "en": 'SSH Honeypot',
+            },
+            "enabled": False,
+            "hidden": False,
+        },
+        {
+            "name": "i_agree_datacollect",
+            "msg": {
+                "cs": '',
+                "de": '',
+                "en": '',
+            },
+            "title": {
+                "cs": '',
+                "de": '',
+                "en": '',
+            },
+            "enabled": False,
+            "hidden": True,
+        },
+    ]
+    languages = [
+        {"code": "cs", "enabled": True},
+        {"code": "de", "enabled": True},
+        {"code": "da", "enabled": False},
+        {"code": "fr", "enabled": False},
+        {"code": "lt", "enabled": False},
+        {"code": "pl", "enabled": False},
+        {"code": "ru", "enabled": False},
+        {"code": "sk", "enabled": False},
+        {"code": "hu", "enabled": False},
+        {"code": "it", "enabled": False},
+    ]
     branch = ""
     approvals_delay = None
     enabled = True
@@ -49,8 +169,6 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :rtype: dict
         """
         result = {
-            "user_lists": self.user_lists,
-            "required_languages": self.required_languages,
             "approval_settings": {"status": self.approvals_status},
             "enabled": self.enabled,
             "branch": self.branch,
@@ -60,13 +178,13 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         return result
 
     @logger_wrapper(logger)
-    def update_settings(self, user_lists, required_languages, approvals_settings, enabled, branch):
+    def update_settings(self, user_lists, languages, approvals_settings, enabled, branch):
         """ Mocks update updater settings
 
         :param user_lists: new user-list set
         :type user_lists: list
-        :param required_languages: languages which will be installed
-        :type required_languages: list
+        :param languages: languages which will be installed
+        :type languages: list
         :param approvals_settings: new approval settings
         :type approvals_settings: dict
         :param enable: is updater enabled indicator
@@ -77,9 +195,11 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :rtype: bool
         """
         if user_lists is not None:
-            MockUpdaterHandler.user_lists = user_lists
-        if required_languages is not None:
-            MockUpdaterHandler.required_languages = required_languages
+            for record in MockUpdaterHandler.user_lists:
+                record["enabled"] = record["name"] in user_lists
+        if languages is not None:
+            for record in MockUpdaterHandler.languages:
+                record["enabled"] = record["code"] in languages
         if approvals_settings is not None:
             MockUpdaterHandler.approvals_delay = approvals_settings.get("delay", None)
             MockUpdaterHandler.approvals_status = approvals_settings["status"]
@@ -99,7 +219,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             {"present": False},
             {
                 "present": True,
-                "id": str(uuid.uuid4()),
+                "hash": str(uuid.uuid4()),
                 "status": random.choice(["asked", "granted", "denied"]),
                 "time": datetime.now().isoformat(),
                 "install_list": ["package1", "package2"],
@@ -109,7 +229,34 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         ])
 
     @logger_wrapper(logger)
-    def resolve_approval(self, id, solution):
+    def get_user_lists(self, lang):
+        """ Mocks getting user lists
+        :param lang: language en/cs/de
+        :returns: [{"name": "..", "enabled": True, "title": "..", "msg": "..", "hidden": True}, ...]
+        :rtype: dict
+        """
+        exported = []
+        for record in MockUpdaterHandler.user_lists:
+            exported.append({
+                "name": record["name"],
+                "hidden": record["hidden"],
+                "enabled": record["enabled"],
+                "msg": record["msg"].get(lang, record["msg"]["en"]),
+                "title": record["title"].get(lang, record["title"]["en"]),
+            })
+        return exported
+
+    @logger_wrapper(logger)
+    def get_languages(self):
+        """ Mocks getting languages
+
+        :returns: [{"code": "cs", "enabled": True}, {"code": "de", "enabled": True}, ...]
+        :rtype: dict
+        """
+        return MockUpdaterHandler.languages
+
+    @logger_wrapper(logger)
+    def resolve_approval(self, hash, solution):
         """ Mocks resovling of the current approval
         """
         return random.choice([True, False])

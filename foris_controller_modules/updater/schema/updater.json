@@ -1,10 +1,38 @@
 {
-	"definitions": {
-		"updater_user_lists": {
-			"type": "array",
-			"items": {"type": "string", "minLength": 1}
-		},
-		"updater_languages": {
+    "definitions": {
+        "updater_user_list_name": {"type": "string", "minLength": 1},
+        "updater_user_lists_get": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"$ref": "#/definitions/updater_user_list_name"},
+                    "hidden": {"type": "boolean"},
+                    "enabled": {"type": "boolean"},
+                    "title": {"type": "string"},
+                    "msg": {"type": "string"}
+                },
+                "required": ["enabled", "name", "title", "msg", "hidden"],
+                "additionalProperties": false
+            }
+        },
+        "updater_user_lists_set": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/updater_user_list_name"}
+        },
+        "updater_languages_get": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "code": {"$ref": "#/definitions/iso2country"},
+                    "enabled": {"type": "boolean"}
+                },
+                "required": ["enabled", "code"],
+                "additionalProperties": false
+            }
+        },
+        "updater_languages_set": {
             "type": "array",
             "items": {"$ref": "#/definitions/iso2country"}
         },
@@ -38,14 +66,14 @@
                 }
             ]
         },
-        "updater_approval_id": {"type": "string"},
+        "updater_approval_hash": {"type": "string"},
         "updater_approval": {
             "type": "object",
             "oneOf": [
                 {
                     "properties": {
                         "present": {"enum": [true]},
-                        "id": {"$ref": "#/definitions/updater_approval_id"},
+                        "hash": {"$ref": "#/definitions/updater_approval_hash"},
                         "status": {"enum": ["asked", "granted", "denied"]},
                         "time": {"type": "string", "format": "date-time"},
                         "install_list": {"type": "array", "items": {"type": "string"}},
@@ -53,7 +81,7 @@
                         "reboot": {"type": "boolean", "description": "Flag whether the reboot will be required"}
                     },
                     "additionalProperties": false,
-                    "required": ["present", "id", "status", "time", "install_list", "remove_list", "reboot"]
+                    "required": ["present", "hash", "status", "time", "install_list", "remove_list", "reboot"]
                 },
                 {
                     "properties": {
@@ -71,9 +99,18 @@
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["request"]},
-                "action": {"enum": ["get_settings"]}
+                "action": {"enum": ["get_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "lang": {"$ref": "#/definitions/iso2country"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["lang"]
+                }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "reply to get updater settings and current approval",
@@ -84,8 +121,8 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "user_lists": {"$ref": "#/definitions/updater_user_lists"},
-                        "required_languages": {"$ref": "#/definitions/updater_languages"},
+                        "user_lists": {"$ref": "#/definitions/updater_user_lists_get"},
+                        "languages": {"$ref": "#/definitions/updater_languages_get"},
                         "approval_settings": {"$ref": "#/definitions/updater_approvals_settings_get"},
                         "enabled": {"type": "boolean"},
                         "branch": {"type": "string"},
@@ -93,7 +130,7 @@
                     },
                     "additionalProperties": false,
                     "required": [
-                        "user_lists", "required_languages", "approval_settings", "enabled", "branch",
+                        "user_lists", "languages", "approval_settings", "enabled", "branch",
                         "approval"
                     ]
                 }
@@ -112,15 +149,15 @@
                     "oneOf": [
                         {
                             "properties": {
-                                "user_lists": {"$ref": "#/definitions/updater_user_lists"},
-                                "required_languages": {"$ref": "#/definitions/updater_languages"},
+                                "user_lists": {"$ref": "#/definitions/updater_user_lists_set"},
+                                "languages": {"$ref": "#/definitions/updater_languages_set"},
                                 "approval_settings": {"$ref": "#/definitions/updater_approvals_settings_set"},
                                 "enabled": {"enum": [true]},
                                 "branch": {"type": "string"}
                             },
                             "additionalProperties": false,
                             "required": [
-                                "user_lists", "required_languages", "approval_settings", "enabled", "branch"
+                                "user_lists", "languages", "approval_settings", "enabled", "branch"
                             ]
                         },
                         {
@@ -163,11 +200,11 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "id": {"$ref": "#/definitions/updater_approval_id"},
+                        "hash": {"$ref": "#/definitions/updater_approval_hash"},
                         "solution": {"enum": ["grant", "deny"]}
                     },
                     "additionalProperties": false,
-                    "required": ["id", "solution"]
+                    "required": ["hash", "solution"]
                 }
             },
             "additionalProperties": false,
@@ -200,11 +237,11 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "id": {"$ref": "#/definitions/updater_approval_id"},
+                        "hash": {"$ref": "#/definitions/updater_approval_hash"},
                         "solution": {"enum": ["grant", "deny"]}
                     },
                     "additionalProperties": false,
-                    "required": ["id", "solution"]
+                    "required": ["hash", "solution"]
                 }
             },
             "additionalProperties": false,
