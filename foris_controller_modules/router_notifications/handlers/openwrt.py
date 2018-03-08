@@ -49,13 +49,13 @@ class OpenwrtRouterNotificationsHandler(Handler, BaseOpenwrtHandler):
                     int(notification['id'].split("-")[0])).isoformat()
             }
             msg = notification["messages"].get(lang, None)
-            if msg:
+            if msg is not None:
                 new["msg"] = msg
                 new["lang"] = lang
             else:
                 # english fallback
                 msg = notification["messages"].get("en", None)
-                if msg:
+                if msg is not None:
                     new["msg"] = msg
                     new["lang"] = "en"
                 else:

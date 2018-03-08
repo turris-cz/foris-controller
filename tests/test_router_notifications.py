@@ -100,6 +100,15 @@ STORED_NOTIFICATIONS = [
             "cs": "UPDATE2 CS",
             "en": "UPDATE2 EN"
         }
+    },
+    {
+        "displayed": False,
+        "id": "1518776436-2629",
+        "severity": "update",
+        "messages": {
+            "cs": "",
+            "en": ""
+        }
     }
 ]
 
