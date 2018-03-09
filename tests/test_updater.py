@@ -462,6 +462,17 @@ def test_approval_resolve_openwrt(
         {"hash": approval_id, "solution": "deny"},
         True
     )
+    resolve(
+        {
+            "hash": approval_id,
+            "status": "denied",
+            "time": int(time.time()),
+            "plan": [],
+            "reboot": False,
+        },
+        {"hash": approval_id, "solution": "grant"},
+        True
+    )
 
 
 def test_run(uci_configs_init, infrastructure, ubusd_test):
