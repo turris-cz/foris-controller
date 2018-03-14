@@ -162,8 +162,9 @@ class UciBackend(object):
         """
         fail_on_error = kwargs['fail_on_error'] if 'fail_on_error' in kwargs else True
         changes_path_option = "-p" if args[0] == "commit" else "-P"
-        cmdline_args = [
-            "uci", "-c", self.config_dir, changes_path_option, UciBackend.CHANGES_DIR
+        export_anonymous = ["-n"] if args[0] == "export" else []
+        cmdline_args = ["uci"] + export_anonymous + [
+            "-c", self.config_dir, changes_path_option, UciBackend.CHANGES_DIR
         ] + list(args)
         logger.debug("uci cmd '%s'" % str(args))
         retval, stdout, stderr = handle_command(*cmdline_args)
@@ -277,17 +278,12 @@ class UciBackend(object):
             while True:
                 if lines[0].startswith("config"):
                     line = lines.pop(0)
-                    section_name = None
-                    section_type = None
                     matched = re.match(r"^config ([^\s]+) '([^\s]+)'$", line)
-                    if matched:
-                        section_type, section_name = matched.group(1, 2)
-                    else:
-                        matched = re.match(r"^config ([^\s]+)$", line)
-                        section_type = matched.group(1)
+                    section_type, section_name = matched.group(1, 2)
                     section = {
                         "type": section_type, "name": section_name,
                         "data": self._parse_section(lines),
+                        "anonymous": True if re.search(r"^cfg[0-9a-f]{6}$", section_name) else False
                     }
                     result.append(section)
                 elif lines[0].startswith("package"):

@@ -314,7 +314,7 @@ def test_read(uci_configs_init, lock_backend):
     assert res1 == {"test1": []}
     assert res2 == {
         'test2': [
-            {'data': OrderedDict(), 'type': 'anonymous', 'name': None},
+            {'data': OrderedDict(), 'type': 'anonymous', 'name': 'cfg02e38e', "anonymous": True},
             {
                 'data': OrderedDict([
                     ('option1', 'aeb bb'),
@@ -323,9 +323,9 @@ def test_read(uci_configs_init, lock_backend):
                     ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
                     ('list3', ['itema', 'itemb']),
                 ]),
-                'type': 'anonymous', 'name': None
+                'type': 'anonymous', 'name': 'cfg04e38e', "anonymous": True
             },
-            {'data': OrderedDict(), 'type': 'named', 'name': 'named1'},
+            {'data': OrderedDict(), 'type': 'named', 'name': 'named1', "anonymous": False},
             {
                 'data': OrderedDict([
                     ('option1', 'aeb bb'),
@@ -334,14 +334,14 @@ def test_read(uci_configs_init, lock_backend):
                     ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
                     ('list3', ['itema', 'itemb']),
                 ]),
-                'type': 'named', 'name': 'named2'
+                'type': 'named', 'name': 'named2', "anonymous": False
             }
         ]
     }
     assert res3 == {
         'test1': [],
         'test2': [
-            {'data': OrderedDict(), 'type': 'anonymous', 'name': None},
+            {'data': OrderedDict(), 'type': 'anonymous', 'name': 'cfg02e38e', 'anonymous': True},
             {
                 'data': OrderedDict([
                     ('option1', 'aeb bb'),
@@ -350,9 +350,9 @@ def test_read(uci_configs_init, lock_backend):
                     ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
                     ('list3', ['itema', 'itemb']),
                 ]),
-                'type': 'anonymous', 'name': None
+                'type': 'anonymous', 'name': 'cfg04e38e', 'anonymous': True
             },
-            {'data': OrderedDict(), 'type': 'named', 'name': 'named1'},
+            {'data': OrderedDict(), 'type': 'named', 'name': 'named1', 'anonymous': False},
             {
                 'data': OrderedDict([
                     ('option1', 'aeb bb'),
@@ -361,7 +361,7 @@ def test_read(uci_configs_init, lock_backend):
                     ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
                     ('list3', ['itema', 'itemb']),
                 ]),
-                'type': 'named', 'name': 'named2'
+                'type': 'named', 'name': 'named2', 'anonymous': False
             }
         ]
     }
@@ -400,10 +400,11 @@ def test_parse_read_data(uci_configs_init, lock_backend):
         res2 = backend.read('test2')
 
     assert uci.get_config(res1, 'test1') == []
-    assert uci.get_section(res2, 'test2', 'named1') == {'data': OrderedDict(), 'type': 'named', 'name': 'named1'}
+    assert uci.get_section(res2, 'test2', 'named1') == \
+        {'data': OrderedDict(), 'type': 'named', 'name': 'named1', 'anonymous': False}
     assert uci.get_option_named(res2, 'test2', 'named2', 'option2') == 'xxx'
     assert uci.get_sections_by_type(res2, 'test2', 'anonymous') == [
-        {'data': OrderedDict(), 'type': 'anonymous', 'name': None},
+        {'data': OrderedDict(), 'type': 'anonymous', 'name': 'cfg02e38e', 'anonymous': True},
         {
             'data': OrderedDict([
                 ('option1', 'aeb bb'),
@@ -412,10 +413,11 @@ def test_parse_read_data(uci_configs_init, lock_backend):
                 ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
                 ('list3', ['itema', 'itemb']),
             ]),
-            'type': 'anonymous', 'name': None
+            'type': 'anonymous', 'name':  'cfg04e38e', 'anonymous': True
         },
     ]
-    assert uci.get_section_idx(res2, 'test2', 'anonymous', 0) == {'data': OrderedDict(), 'type': 'anonymous', 'name': None}
+    assert uci.get_section_idx(res2, 'test2', 'anonymous', 0) == \
+        {'data': OrderedDict(), 'type': 'anonymous', 'name': 'cfg02e38e', 'anonymous': True}
     assert uci.get_option_anonymous(res2, 'test2', 'anonymous', 1, 'option2') == 'xxx'
 
     with pytest.raises(UciRecordNotFound):
