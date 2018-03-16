@@ -102,7 +102,7 @@ class LanUci(object):
         }
 
     @staticmethod
-    def set_guest_network(backend, guest_network):
+    def set_guest_network(backend, guest_network, interfaces=None):
 
         def set_if_exists(backend, config, section, option, data, key):
             if key in data:
@@ -117,7 +117,7 @@ class LanUci(object):
         backend.set_option("network", "guest_turris", "type", "bridge")
         interfaces = [
             "guest_turris_%d" % i for i, _ in enumerate(WifiUci.get_wifi_devices(backend))
-        ]
+        ] if not interfaces else interfaces
         if interfaces:
             backend.replace_list("network", "guest_turris", "ifname", interfaces)
         backend.set_option("network", "guest_turris", "proto", "static")
@@ -177,7 +177,8 @@ class LanUci(object):
             pass  # section might not exist
 
         try:
-            if guest_network["enabled"] and guest_network["qos"]["enabled"]:
+            if guest_network["enabled"] and "qos" in guest_network and \
+                    guest_network["qos"]["enabled"]:
                 backend.add_section("sqm", "queue", "guest_limit_turris")
                 backend.set_option("sqm", "guest_limit_turris", "enabled", enabled)
                 backend.set_option("sqm", "guest_limit_turris", "interface", "br-guest_turris")

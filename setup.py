@@ -72,6 +72,8 @@ setup(
         'foris_controller_modules.wan.handlers',
         'foris_controller_modules.web',
         'foris_controller_modules.web.handlers',
+        'foris_controller_modules.wifi',
+        'foris_controller_modules.wifi.handlers',
     ],
     package_data={
         'foris_controller': [
@@ -88,6 +90,7 @@ setup(
         'foris_controller_modules.time': ['schema', 'schema/*.json'],
         'foris_controller_modules.updater': ['schema', 'schema/*.json'],
         'foris_controller_modules.web': ['schema', 'schema/*.json'],
+        'foris_controller_modules.wifi': ['schema', 'schema/*.json'],
     },
     scripts=['bin/foris-controller', "bin/foris-notify"],
     url='https://gitlab.labs.nic.cz/turris/foris-controller',
