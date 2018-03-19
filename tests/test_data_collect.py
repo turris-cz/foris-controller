@@ -18,7 +18,7 @@
 #
 
 import pytest
-import updater.lists
+import svupdater.lists
 
 from .test_uci import get_uci_module
 from .test_updater import wait_for_updater_run_finished
@@ -137,7 +137,7 @@ def test_set_openwrt(
         u'kind': u'reply',
         u'module': u'data_collect'
     }
-    assert updater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is True
+    assert svupdater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is True
     check_service_result("ucollect", True, "restart")
     wait_for_updater_run_finished(notifications, infrastructure)
 
@@ -277,7 +277,7 @@ def test_set_agreed_uci(
         data = backend.read()
 
     assert uci.parse_bool(uci.get_option_named(data, "foris", "eula", "agreed_collect", "0"))
-    assert updater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is True
+    assert svupdater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is True
 
     res = infrastructure.process_message({
         "module": "data_collect",
@@ -298,4 +298,4 @@ def test_set_agreed_uci(
         data = backend.read()
 
     assert not uci.parse_bool(uci.get_option_named(data, "foris", "eula", "agreed_collect", "0"))
-    assert updater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is False
+    assert svupdater.lists.userlists("en")["i_agree_datacollect"]["enabled"] is False

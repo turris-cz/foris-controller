@@ -18,8 +18,9 @@
 #
 
 import re
-import updater
-import updater.lists
+import svupdater
+import svupdater.lists
+import svupdater.exceptions
 
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.services import OpenwrtServices
@@ -96,8 +97,11 @@ class DataCollectUci(object):
             backend.add_section("foris", "config", "eula")
             backend.set_option("foris", "eula", "agreed_collect", store_bool(agreed))
 
-        updater.lists.set_userlist("i_agree_datacollect", agreed)
-        updater.run(False)
+        svupdater.lists.set_userlist("i_agree_datacollect", agreed)
+        try:
+            svupdater.run()
+        except svupdater.exceptions.ExceptionUpdaterDisabled:
+            pass  # settings were updater but updater failed to start
 
         with OpenwrtServices() as services:
             # fail_on_error=False - ucollect might not be installed yet

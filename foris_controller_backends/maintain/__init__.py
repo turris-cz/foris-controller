@@ -19,7 +19,9 @@
 
 import logging
 import os
-import updater
+import svupdater
+import svupdater.exceptions
+import svupdater.hook
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named
@@ -76,7 +78,12 @@ class MaintainCommands(BaseCmdLine):
             logger.error("Cmd to restore the backup '%s' failed." % str(cmd))
             return False
         # start updater and prepare for reboot
-        updater.run(True)
+        try:
+            svupdater.run()
+            svupdater.hook.register("/usr/bin/maintain-reboot-needed")
+        except svupdater.exceptions.ExceptionUpdaterDisabled:
+            pass  # failed to start updater, but configuration was restored
+
         return True
 
     def reboot_required(self):

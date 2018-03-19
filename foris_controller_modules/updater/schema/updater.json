@@ -66,7 +66,7 @@
                 }
             ]
         },
-        "updater_approval_plan_op": {"enum": ["install", "update", "downgrade", "remove"]},
+        "updater_approval_plan_op": {"enum": ["install", "upgrade", "downgrade", "remove"]},
         "updater_approval_plan": {
             "type": "array",
             "items": {
@@ -77,13 +77,13 @@
                             "name": {"type": "string", "minLength": 1},
                             "op": {
                                 "$ref": "#/definitions/updater_approval_plan_op",
-                                "enum": ["update", "downgrade"]
+                                "enum": ["upgrade", "downgrade"]
                             },
                             "cur_ver": {"type": "string", "minLength": 1},
-                            "target_ver": {"type": "string", "minLength": 1}
+                            "new_ver": {"type": "string", "minLength": 1}
                         },
                         "additionalProperties": false,
-                        "required": ["name", "op", "target_ver", "cur_ver"]
+                        "required": ["name", "op", "new_ver", "cur_ver"]
                     },
                     {
                         "properties": {
@@ -91,10 +91,10 @@
                             "op": {
                                 "$ref": "#/definitions/updater_approval_plan_op", "enum": ["install"]
                             },
-                            "target_ver": {"type": "string", "minLength": 1}
+                            "new_ver": {"type": "string", "minLength": 1}
                         },
                         "additionalProperties": false,
-                        "required": ["name", "op", "target_ver"]
+                        "required": ["name", "op", "new_ver"]
                     },
                     {
                         "properties": {

@@ -18,12 +18,16 @@
 #
 
 import logging
-import updater
-import updater.approvals
-import updater.l10n
-import updater.lists
+import svupdater
+import svupdater.approvals
+import svupdater.exceptions
+import svupdater.hook
+import svupdater.l10n
+import svupdater.lists
 
 from datetime import datetime
+
+from svupdater.exceptions import ExceptionUpdaterApproveInvalid
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, store_bool
@@ -105,13 +109,16 @@ class UpdaterUci(object):
             backend.set_option("updater", "override", "disable", store_bool(not enabled))
 
             if user_lists is not None:
-                updater.lists.update_userlists(user_lists)
+                svupdater.lists.update_userlists(user_lists)
 
             if languages is not None:
-                updater.l10n.update_languages(languages)
+                svupdater.l10n.update_languages(languages)
 
         if enabled:
-            updater.run(False)
+            try:
+                svupdater.run()
+            except svupdater.exceptions.ExceptionUpdaterDisabled:
+                pass  # failed to run updater, but settings were updated
 
         return True
 
@@ -122,22 +129,22 @@ class Updater(object):
         :returns: True if updater is running False otherwise
         :rtype: bool
         """
-        return updater.opkg_lock()
+        return svupdater.opkg_lock()
 
     def get_approval(self):
         """ Returns current approval
         :returns: approval
         :rtype: dict
         """
-        approval = updater.approvals.current()
+        approval = svupdater.approvals.current()
         if approval:
             approval["present"] = True
             approval["time"] = datetime.fromtimestamp(approval["time"]).isoformat()
 
-            # remove cur_ver: None and target_ver: None
+            # remove cur_ver: None and new_ver: None
             for record in approval["plan"]:
-                if record["target_ver"] is None:
-                    del record["target_ver"]
+                if record["new_ver"] is None:
+                    del record["new_ver"]
                 if record["cur_ver"] is None:
                     del record["cur_ver"]
 
@@ -151,25 +158,38 @@ class Updater(object):
                 "name": k, "enabled": v["enabled"], "hidden": v["hidden"],
                 "title": v["title"], "msg": v["message"],
             }
-            for k, v in updater.lists.userlists(lang).items()
+            for k, v in svupdater.lists.userlists(lang).items()
         ]
 
     def get_languages(self):
-        return [{"code": k, "enabled": v} for k, v in updater.l10n.languages().items()]
+        return [{"code": k, "enabled": v} for k, v in svupdater.l10n.languages().items()]
 
     def resolve_approval(self, approval_id, solution):
         """ Resolves approval
         """
-        res = updater.approvals.approve(approval_id) if solution == "grant" \
-            else updater.approvals.deny(approval_id)
+        try:
+            svupdater.approvals.approve(approval_id) if solution == "grant" \
+                else svupdater.approvals.deny(approval_id)
 
-        # Run updater after approval was granted
-        if res and solution == "grant":
-            updater.run(False)
+            # Run updater after approval was granted
+            if solution == "grant":
+                self.run(False)
 
-        return res
+        except ExceptionUpdaterApproveInvalid:
+
+            return False
+
+        return True
 
     def run(self, set_reboot_indicator):
         """ Starts updater run
         """
-        return updater.run(set_reboot_indicator)
+
+        try:
+            svupdater.run()
+            if set_reboot_indicator:
+                svupdater.hook.register("/usr/bin/maintain-reboot-needed")
+        except svupdater.exceptions.ExceptionUpdaterDisabled:
+            return False
+
+        return True

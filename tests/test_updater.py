@@ -288,8 +288,8 @@ def test_approval(
             data["present"] = True
             data["time"] = datetime.fromtimestamp(data["time"]).isoformat()
             for record in data["plan"]:
-                if record["target_ver"] is None:
-                    del record["target_ver"]
+                if record["new_ver"] is None:
+                    del record["new_ver"]
                 if record["cur_ver"] is None:
                     del record["cur_ver"]
             assert data == approval
@@ -309,8 +309,8 @@ def test_approval(
         "status": "granted",
         "time": int(time.time()),
         "plan": [
-            {"name": "package1", "op": "install", "cur_ver": None, "target_ver": "1.0"},
-            {"name": "package2", "op": "remove", "cur_ver": "2.0", "target_ver": None},
+            {"name": "package1", "op": "install", "cur_ver": None, "new_ver": "1.0"},
+            {"name": "package2", "op": "remove", "cur_ver": "2.0", "new_ver": None},
         ],
         "reboot": True,
     })
@@ -319,8 +319,8 @@ def test_approval(
         "status": "denied",
         "time": int(time.time()),
         "plan": [
-            {"name": "package3", "op": "update", "cur_ver": "1.0", "target_ver": "1.1"},
-            {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "target_ver": "2.0"},
+            {"name": "package3", "op": "upgrade", "cur_ver": "1.0", "new_ver": "1.1"},
+            {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "new_ver": "2.0"},
         ],
         "reboot": True,
     })

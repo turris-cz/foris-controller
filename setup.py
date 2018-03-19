@@ -101,7 +101,7 @@ setup(
         'foris_schema',
         'prctl',
         'pbkdf2',
-        'updater',
+        'svupdater',
     ],
     setup_requires=[
         'pytest-runner',
