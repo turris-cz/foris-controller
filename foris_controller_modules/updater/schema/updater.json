@@ -5,15 +5,30 @@
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {
-                    "name": {"$ref": "#/definitions/updater_user_list_name"},
-                    "hidden": {"type": "boolean"},
-                    "enabled": {"type": "boolean"},
-                    "title": {"type": "string"},
-                    "msg": {"type": "string"}
-                },
-                "required": ["enabled", "name", "title", "msg", "hidden"],
-                "additionalProperties": false
+                "oneOf": [
+                    {
+                        "properties": {
+                            "name": {"$ref": "#/definitions/updater_user_list_name"},
+                            "enabled": {"type": "boolean"},
+                            "hidden": {"enum": [false]},
+                            "title": {"type": "string"},
+                            "msg": {"type": "string"}
+                        },
+                        "required": ["enabled", "name", "title", "msg", "hidden"],
+                        "additionalProperties": false
+                    },
+                    {
+                        "properties": {
+                            "name": {"$ref": "#/definitions/updater_user_list_name"},
+                            "enabled": {"type": "boolean"},
+                            "hidden": {"enum": [true]},
+                            "title": {"type": "null"},
+                            "msg": {"type": "null"}
+                        },
+                        "required": ["enabled", "name", "title", "msg", "hidden"],
+                        "additionalProperties": false
+                    }
+                ]
             }
         },
         "updater_user_lists_set": {
