@@ -129,14 +129,19 @@ class Updater(object):
         :returns: True if updater is running False otherwise
         :rtype: bool
         """
-        return svupdater.opkg_lock()
+        logger.debug("Calling opkg_lock() check whether the updater is running")
+        res = svupdater.opkg_lock()
+        logger.debug("opkg_lock() -> %s", res)
+        return res
 
     def get_approval(self):
         """ Returns current approval
         :returns: approval
         :rtype: dict
         """
+        logger.debug("Try to get current approval.")
         approval = svupdater.approvals.current()
+        logger.debug("Approval obtained: %s", approval)
         if approval:
             approval["present"] = True
             approval["time"] = datetime.fromtimestamp(approval["time"]).isoformat()
@@ -153,29 +158,41 @@ class Updater(object):
             return {"present": False}
 
     def get_user_lists(self, lang):
+        logger.debug("Getting user lists for '%s'", lang)
+        user_lists = svupdater.lists.userlists(lang)
+        logger.debug("Userlists obtained: %s", user_lists)
         return [
             {
                 "name": k, "enabled": v["enabled"], "hidden": v["hidden"],
                 "title": v["title"], "msg": v["message"],
             }
-            for k, v in svupdater.lists.userlists(lang).items()
+            for k, v in user_lists.items()
         ]
 
     def get_languages(self):
-        return [{"code": k, "enabled": v} for k, v in svupdater.l10n.languages().items()]
+        logger.debug("Getting languages")
+        languages = svupdater.l10n.languages()
+        logger.debug("Languages obtained: %s", languages)
+        return [{"code": k, "enabled": v} for k, v in languages.items()]
 
     def resolve_approval(self, approval_id, solution):
         """ Resolves approval
         """
         try:
+            logger.debug("Resolving approval %s (->%s)", approval_id, solution)
             svupdater.approvals.approve(approval_id) if solution == "grant" \
                 else svupdater.approvals.deny(approval_id)
+            logger.debug("Approval resolved %s (->%s)", approval_id, solution)
 
             # Run updater after approval was granted
             if solution == "grant":
-                self.run(False)
+                try:
+                    self.run(False)
+                except svupdater.exceptions.ExceptionUpdaterDisabled:
+                    pass  # updater failed to run, but approval was resolved
 
         except ExceptionUpdaterApproveInvalid:
+            logger.warning("Failed to resolve approval %s (->%s)", approval_id, solution)
 
             return False
 
@@ -186,9 +203,13 @@ class Updater(object):
         """
 
         try:
+            logger.debug("Staring to trigger updater")
             svupdater.run()
+            logger.debug("Updater triggered")
             if set_reboot_indicator:
+                logger.debug("Adding updater hook")
                 svupdater.hook.register("/usr/bin/maintain-reboot-needed")
+                logger.debug("Updater hook added")
         except svupdater.exceptions.ExceptionUpdaterDisabled:
             return False
 
