@@ -321,6 +321,9 @@ def test_approval(
         "plan": [
             {"name": "package3", "op": "upgrade", "cur_ver": "1.0", "new_ver": "1.1"},
             {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "new_ver": "2.0"},
+            {"name": "package5", "op": "remove", "cur_ver": None, "new_ver": None},
+            {"name": "package6", "op": "upgrade", "cur_ver": None, "new_ver": "1.1"},
+            {"name": "package7", "op": "downgrade", "cur_ver": None, "new_ver": "2.0"},
         ],
         "reboot": True,
     })
