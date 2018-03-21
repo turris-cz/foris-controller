@@ -34,7 +34,7 @@ try:
     from foris_client import buses as client_buses
     client_modules_loaded = True
 except ImportError:
-    client_buses = False
+    client_modules_loaded = False
 
 
 logger = logging.getLogger("foris_controller")
