@@ -203,13 +203,11 @@ class Updater(object):
         """
 
         try:
-            logger.debug("Staring to trigger updater")
-            svupdater.run()
+            logger.debug(
+                "Staring to trigger updater (set_reboot_indicator=%s)", set_reboot_indicator)
+            hooks = ["/usr/bin/maintain-reboot-needed"] if set_reboot_indicator else []
+            svupdater.run(hooklist=hooks)
             logger.debug("Updater triggered")
-            if set_reboot_indicator:
-                logger.debug("Adding updater hook")
-                svupdater.hook.register("/usr/bin/maintain-reboot-needed")
-                logger.debug("Updater hook added")
         except svupdater.exceptions.ExceptionUpdaterDisabled:
             return False
 

@@ -79,8 +79,7 @@ class MaintainCommands(BaseCmdLine):
             return False
         # start updater and prepare for reboot
         try:
-            svupdater.run()
-            svupdater.hook.register("/usr/bin/maintain-reboot-needed")
+            svupdater.run(hooklist=["/usr/bin/maintain-reboot-needed"])
         except svupdater.exceptions.ExceptionUpdaterDisabled:
             pass  # failed to start updater, but configuration was restored
 
