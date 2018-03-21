@@ -24,7 +24,13 @@ test:
     - cd ..
 
     - pip install .
-    - rm -rf {foris-controller,foris-schema,foris-controller-testtools}
+
+    - git clone https://gitlab.labs.nic.cz/turris/foris-client.git
+    - cd foris-client
+    - pip install .
+    - cd ..
+
+    - rm -rf {foris-controller,foris-schema,foris-controller-testtools,foris-client}
     - export LD_LIBRARY_PATH=:/usr/local/lib
     - python setup.py test
     - python setup.py test --addopts="--backend openwrt"
