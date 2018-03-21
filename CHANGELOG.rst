@@ -1,3 +1,13 @@
+0.9 (2018-03-21)
+------------------
+
+* wifi module
+* uci api update (reading anonymous section)
+* foris-notify (some fixes)
+* updater module & updater integration into other modules (maintain, web, data_collect)
+* wan module - small fixes
+* client socket (see doc/client_socket)
+
 0.8.4 (2018-02-23)
 ------------------
 
