@@ -97,7 +97,6 @@ class DataCollectUci(object):
             backend.add_section("foris", "config", "eula")
             backend.set_option("foris", "eula", "agreed_collect", store_bool(agreed))
 
-        svupdater.lists.set_userlist("i_agree_datacollect", agreed)
         try:
             svupdater.run()
         except svupdater.exceptions.ExceptionUpdaterDisabled:
