@@ -68,14 +68,6 @@ if __name__ == "__main__":
     else:
         logging.basicConfig()
 
-    # setup syslog (best effort)
-    try:
-        handler = SysLogHandler("/dev/log")
-        handler.setFormatter(logging.Formatter('foris-notify: %(message)s'))
-        logging.getLogger().addHandler(handler)
-    except Exception:
-        logger.warning("Failed to initialize syslog handler.")
-
     if options.bus == "ubus":
         from foris_controller.buses.ubus import UbusNotificationSender
         logger.info("Using ubus to send notifications.")
