@@ -44,42 +44,52 @@ class MockWifiHandler(Handler, BaseMockHandler):
                 "SSID": "Turris-guest",
                 "password": ""
             },
-            "available_htmodes": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80"],
-            "available_hwmodes": ["11g", "11a"],
-            "available_channels": [
-                {"number": 1, 'frequency': 2412, 'radar': False},
-                {"number": 2, 'frequency': 2417, 'radar': False},
-                {"number": 3, 'frequency': 2422, 'radar': False},
-                {"number": 4, 'frequency': 2427, 'radar': False},
-                {"number": 5, 'frequency': 2432, 'radar': False},
-                {"number": 6, 'frequency': 2437, 'radar': False},
-                {"number": 7, 'frequency': 2442, 'radar': False},
-                {"number": 8, 'frequency': 2447, 'radar': False},
-                {"number": 9, 'frequency': 2452, 'radar': False},
-                {"number": 10, 'frequency': 2457, 'radar': False},
-                {"number": 11, 'frequency': 2462, 'radar': False},
-                {"number": 12, 'frequency': 2467, 'radar': False},
-                {"number": 13, 'frequency': 2472, 'radar': False},
-                {"number": 36, 'frequency': 5180, 'radar': False},
-                {"number": 40, 'frequency': 5200, 'radar': False},
-                {"number": 44, 'frequency': 5220, 'radar': False},
-                {"number": 48, 'frequency': 5240, 'radar': False},
-                {"number": 52, 'frequency': 5260, 'radar': True},
-                {"number": 56, 'frequency': 5280, 'radar': True},
-                {"number": 60, 'frequency': 5300, 'radar': True},
-                {"number": 64, 'frequency': 5320, 'radar': True},
-                {"number": 100, 'frequency': 5500, 'radar': True},
-                {"number": 104, 'frequency': 5520, 'radar': True},
-                {"number": 108, 'frequency': 5540, 'radar': True},
-                {"number": 112, 'frequency': 5560, 'radar': True},
-                {"number": 116, 'frequency': 5580, 'radar': True},
-                {"number": 120, 'frequency': 5600, 'radar': True},
-                {"number": 124, 'frequency': 5620, 'radar': True},
-                {"number": 128, 'frequency': 5640, 'radar': True},
-                {"number": 132, 'frequency': 5660, 'radar': True},
-                {"number": 136, 'frequency': 5680, 'radar': True},
-                {"number": 140, 'frequency': 5700, 'radar': True},
-            ],
+            "available_bands": [
+                {
+                    "hwmode": "11g",
+                    "available_htmodes": ["NOHT", "HT20", "HT40"],
+                    "available_channels": [
+                        {"number": 1, 'frequency': 2412, 'radar': False},
+                        {"number": 2, 'frequency': 2417, 'radar': False},
+                        {"number": 3, 'frequency': 2422, 'radar': False},
+                        {"number": 4, 'frequency': 2427, 'radar': False},
+                        {"number": 5, 'frequency': 2432, 'radar': False},
+                        {"number": 6, 'frequency': 2437, 'radar': False},
+                        {"number": 7, 'frequency': 2442, 'radar': False},
+                        {"number": 8, 'frequency': 2447, 'radar': False},
+                        {"number": 9, 'frequency': 2452, 'radar': False},
+                        {"number": 10, 'frequency': 2457, 'radar': False},
+                        {"number": 11, 'frequency': 2462, 'radar': False},
+                        {"number": 12, 'frequency': 2467, 'radar': False},
+                        {"number": 13, 'frequency': 2472, 'radar': False},
+                    ],
+                },
+                {
+                    "hwmode": "11a",
+                    "available_htmodes": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80"],
+                    "available_channels": [
+                        {"number": 36, 'frequency': 5180, 'radar': False},
+                        {"number": 40, 'frequency': 5200, 'radar': False},
+                        {"number": 44, 'frequency': 5220, 'radar': False},
+                        {"number": 48, 'frequency': 5240, 'radar': False},
+                        {"number": 52, 'frequency': 5260, 'radar': True},
+                        {"number": 56, 'frequency': 5280, 'radar': True},
+                        {"number": 60, 'frequency': 5300, 'radar': True},
+                        {"number": 64, 'frequency': 5320, 'radar': True},
+                        {"number": 100, 'frequency': 5500, 'radar': True},
+                        {"number": 104, 'frequency': 5520, 'radar': True},
+                        {"number": 108, 'frequency': 5540, 'radar': True},
+                        {"number": 112, 'frequency': 5560, 'radar': True},
+                        {"number": 116, 'frequency': 5580, 'radar': True},
+                        {"number": 120, 'frequency': 5600, 'radar': True},
+                        {"number": 124, 'frequency': 5620, 'radar': True},
+                        {"number": 128, 'frequency': 5640, 'radar': True},
+                        {"number": 132, 'frequency': 5660, 'radar': True},
+                        {"number": 136, 'frequency': 5680, 'radar': True},
+                        {"number": 140, 'frequency': 5700, 'radar': True},
+                    ],
+                }
+            ]
         },
         {
             "id": 1,
@@ -95,23 +105,27 @@ class MockWifiHandler(Handler, BaseMockHandler):
                 "SSID": "Turris-guest",
                 "password": ""
             },
-            "available_htmodes": ["NOHT", "HT20", "HT40"],
-            "available_hwmodes": ["11g"],
-            "available_channels": [
-                {"number": 1, 'frequency': 2412, 'radar': False},
-                {"number": 2, 'frequency': 2417, 'radar': False},
-                {"number": 3, 'frequency': 2422, 'radar': False},
-                {"number": 4, 'frequency': 2427, 'radar': False},
-                {"number": 5, 'frequency': 2432, 'radar': False},
-                {"number": 6, 'frequency': 2437, 'radar': False},
-                {"number": 7, 'frequency': 2442, 'radar': False},
-                {"number": 8, 'frequency': 2447, 'radar': False},
-                {"number": 9, 'frequency': 2452, 'radar': False},
-                {"number": 10, 'frequency': 2457, 'radar': False},
-                {"number": 11, 'frequency': 2462, 'radar': False},
-                {"number": 12, 'frequency': 2467, 'radar': False},
-                {"number": 13, 'frequency': 2472, 'radar': False},
-            ],
+            "available_bands": [
+                {
+                    "hwmode": "11g",
+                    "available_htmodes": ["NOHT", "HT20", "HT40"],
+                    "available_channels": [
+                        {"number": 1, 'frequency': 2412, 'radar': False},
+                        {"number": 2, 'frequency': 2417, 'radar': False},
+                        {"number": 3, 'frequency': 2422, 'radar': False},
+                        {"number": 4, 'frequency': 2427, 'radar': False},
+                        {"number": 5, 'frequency': 2432, 'radar': False},
+                        {"number": 6, 'frequency': 2437, 'radar': False},
+                        {"number": 7, 'frequency': 2442, 'radar': False},
+                        {"number": 8, 'frequency': 2447, 'radar': False},
+                        {"number": 9, 'frequency': 2452, 'radar': False},
+                        {"number": 10, 'frequency': 2457, 'radar': False},
+                        {"number": 11, 'frequency': 2462, 'radar': False},
+                        {"number": 12, 'frequency': 2467, 'radar': False},
+                        {"number": 13, 'frequency': 2472, 'radar': False},
+                    ],
+                }
+            ]
         },
     ]
 
@@ -144,10 +158,18 @@ class MockWifiHandler(Handler, BaseMockHandler):
             # don't need to check furhter input is only {"enabled": True, "id": X}
             return True
 
-        if htmode not in dev["available_htmodes"]:
+        # find corresponding band
+        corresponding_bands = [e for e in dev["available_bands"] if e["hwmode"] == hwmode]
+        if len(corresponding_bands) != 1:
+            return False
+        band = corresponding_bands[0]
+
+        # wrong channel
+        if channel not in [e["number"] for e in band["available_channels"]] and channel != 0:
             return False
 
-        if hwmode not in dev["available_hwmodes"]:
+        # from htmode
+        if htmode not in band["available_htmodes"]:
             return False
 
         dev["SSID"] = SSID

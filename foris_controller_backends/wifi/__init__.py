@@ -55,28 +55,19 @@ class WifiUci(object):
             backend.set_option("wireless", section_name, "disabled", store_bool(True))
 
     @staticmethod
-    def _get_device_capabilities(uci_device_path):
-        # read wifi device
-        path = inject_file_root(os.path.join("/", "sys", "devices", "platform", uci_device_path))
-        phy_path = glob.glob(os.path.join(path, "ieee80211", "*"))
-        if len(phy_path) != 1:
-            return None
-        phy_name = os.path.basename(phy_path[0])  # now we have phy device for iw command
-        retval, stdout, _ = BaseCmdLine._run_command("/usr/sbin/iw", "phy", phy_name, "info")
-        if retval != 0:
+    def _get_band(lines):
+        if not lines:
             return None
 
-        # read dat from iw command
-        available_htmodes = ["NOHT"]
-        available_channels = []
-        available_hwmodes = set()
-        for line in stdout.split("\n"):
-            if re.search(r"HT20", line) and "HT20" not in available_htmodes:
-                available_htmodes.append("HT20")
-            if re.search(r"HT40", line) and "HT40" not in available_htmodes:
-                available_htmodes.append("HT40")
+        htmodes = ["NOHT"]
+        channels = []
+        for line in lines:
+            if re.search(r"HT20", line) and "HT20" not in htmodes:
+                htmodes.append("HT20")
+            if re.search(r"HT40", line) and "HT40" not in htmodes:
+                htmodes.append("HT40")
             if re.search(r"VHT Capabilities", line):
-                available_htmodes.extend(["VHT20", "VHT40", "VHT80"])
+                htmodes.extend(["VHT20", "VHT40", "VHT80"])
             freq_match = re.match(r'^\s+\* (\d+) MHz \[(\d+)\] .*$', line)
             if freq_match:
                 if "disabled" in line:
@@ -84,16 +75,63 @@ class WifiUci(object):
                 freq, channel = freq_match.groups()
                 freq = int(freq)
                 channel = int(channel)
-                if 2400 < freq < 2500:
-                    available_hwmodes.add("11g")
-                elif 5000 < freq < 6000:
-                    available_hwmodes.add("11a")
-                available_channels.append({
+                channels.append({
                     "number": channel, "frequency": freq, "radar": "radar detection" in line,
                 })
-        available_hwmodes = list(available_hwmodes)
 
-        return available_hwmodes, available_htmodes, available_channels
+        # detect hwmode
+        if len(channels) == len([e for e in channels if 2400 < e["frequency"] < 2500]):
+            hwmode = "11g"
+        elif len(channels) == len([e for e in channels if 5000 < e["frequency"] < 6000]):
+            hwmode = "11a"
+        else:
+            return None
+
+        return {
+            "available_htmodes": htmodes,
+            "available_channels": channels,
+            "hwmode": hwmode,
+        }
+
+    @staticmethod
+    def _get_device_bands(uci_device_path):
+        # read wifi device
+        path = inject_file_root(os.path.join("/", "sys", "devices", "platform", uci_device_path))
+        phy_path = glob.glob(os.path.join(path, "ieee80211", "*"))
+        if len(phy_path) != 1:
+            return None
+
+        phy_name = os.path.basename(phy_path[0])  # now we have phy device for iw command
+        retval, stdout, _ = BaseCmdLine._run_command("/usr/sbin/iw", "phy", phy_name, "info")
+        if retval != 0:
+            return None
+
+        # read dat from iw command
+        bands = []
+        band_lines = []
+        reached = False
+        for line in stdout.split("\n"):
+
+            if reached:
+                band_lines.append(line)
+
+            # Handle stored band lines
+            if re.match(r'\s*Band \d+:$', line):
+                reached = True
+                band = WifiUci._get_band(band_lines)
+                if band:
+                    bands.append(band)
+                band_lines = []
+
+        if not reached:
+            # Band not present, something went wrong
+            return None
+        else:
+            band = WifiUci._get_band(band_lines)
+            if band:
+                bands.append(band)
+
+        return bands
 
     def _prepare_wifi_device(self, device, interface, guest_interface):
         # read data from uci
@@ -127,7 +165,10 @@ class WifiUci(object):
         if not path:
             return None
 
-        hwmodes, htmodes, channels = WifiUci._get_device_capabilities(path)
+        bands = WifiUci._get_device_bands(path)
+        if not bands:
+            # it doesn't make sense to display device without bands
+            return None
 
         return {
             "id": device_id,
@@ -143,9 +184,7 @@ class WifiUci(object):
                 "SSID": guest_ssid,
                 "password": guest_password,
             },
-            "available_htmodes": htmodes,
-            "available_hwmodes": hwmodes,
-            "available_channels": channels,
+            "available_bands": bands,
         }
 
     def _get_device_sections(self, data):
@@ -280,15 +319,22 @@ class WifiUci(object):
                     ][0]
 
                     if device["enabled"]:
-                        # test device capabilities
-                        hwmodes, htmodes, channels = WifiUci._get_device_capabilities(
-                            device_section["data"]["path"])
-                        # 0 means auto
-                        if device["channel"] not in [0] + [e["number"] for e in channels]:
+                        # test configuration
+
+                        # find corresponding band
+                        bands = [
+                            e for e in WifiUci._get_device_bands(device_section["data"]["path"])
+                            if e["hwmode"] == device["hwmode"]
+                        ]
+                        if len(bands) != 1:
                             raise ValueError()
-                        if device["htmode"] not in htmodes:
+                        band = bands[0]
+
+                        # test channels (0 means auto)
+                        if device["channel"] not in \
+                                [0] + [e["number"] for e in band["available_channels"]]:
                             raise ValueError()
-                        if device["hwmode"] not in hwmodes:
+                        if device["htmode"] not in band["available_htmodes"]:
                             raise ValueError()
 
                     interface, guest_interface = self._get_interface_sections_from_device_section(
