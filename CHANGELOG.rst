@@ -1,5 +1,12 @@
-0.9 (2018-03-21)
+0.9.1 (2018-03-23)
 ------------------
+
+* syslog support removed (should be handled elsewhere)
+* data_collect: remove i_agree_datacollect
+* wifi: api updates
+
+0.9 (2018-03-21)
+----------------
 
 * wifi module
 * uci api update (reading anonymous section)
