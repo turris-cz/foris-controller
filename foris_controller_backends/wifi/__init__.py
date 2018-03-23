@@ -153,11 +153,11 @@ class WifiUci(object):
 
         if guest_interface:
             guest_enabled = not parse_bool(guest_interface["data"].get("disabled", "0"))
-            guest_ssid = guest_interface["data"].get("ssid", "Turris-guest")
+            guest_ssid = guest_interface["data"].get("ssid", "%s-guest" % ssid)
             guest_password = guest_interface["data"].get("key", "")
         else:
             guest_enabled = False
-            guest_ssid = "Turris-guest"
+            guest_ssid = "%s-guest" % ssid
             guest_password = ""
 
         # first we obtain available features
