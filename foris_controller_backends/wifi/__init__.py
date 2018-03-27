@@ -96,8 +96,10 @@ class WifiUci(object):
     @staticmethod
     def _get_device_bands(uci_device_path):
         # read wifi device
-        path = inject_file_root(os.path.join("/", "sys", "devices", "platform", uci_device_path))
-        phy_path = glob.glob(os.path.join(path, "ieee80211", "*"))
+        path1 = inject_file_root(os.path.join("/", "sys", "devices", "platform", uci_device_path))
+        path2 = inject_file_root(os.path.join("/", "sys", "devices", uci_device_path))
+        phy_path = glob.glob(os.path.join(path1, "ieee80211", "*")) \
+            + glob.glob(os.path.join(path2, "ieee80211", "*"))
         if len(phy_path) != 1:
             return None
 
