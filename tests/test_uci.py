@@ -435,3 +435,28 @@ def test_parse_read_data(uci_configs_init, lock_backend):
         uci.get_option_anonymous(res2, 'test2', 'anonymous', 1, 'non_existing')
     assert "def2" == uci.get_option_anonymous(
         res2, 'test2', 'anonymous', 1, 'non_existing', default="def2")
+
+
+IMPORT_DATA = """
+config import 'import1'
+	option ipass '1'
+
+config import
+	option ipass '0'
+"""
+
+
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_import_data(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
+    uci = get_uci_module(lock_backend)
+    backend_class = get_uci_module(lock_backend).UciBackend
+
+    with backend_class(config_dir) as backend:
+        backend.import_data(IMPORT_DATA, "import_test")
+
+    with backend_class(config_dir) as backend:
+        data = backend.read("import_test")
+
+    assert uci.get_option_named(data, 'import_test', 'import1', 'ipass') == '1'
+    assert uci.get_option_anonymous(data, 'import_test', 'import', 1, 'ipass') == '0'

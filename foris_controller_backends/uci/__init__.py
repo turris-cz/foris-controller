@@ -167,7 +167,8 @@ class UciBackend(object):
             "-c", self.config_dir, changes_path_option, UciBackend.CHANGES_DIR
         ] + list(args)
         logger.debug("uci cmd '%s'" % str(args))
-        retval, stdout, stderr = handle_command(*cmdline_args)
+        retval, stdout, stderr = handle_command(
+            *cmdline_args, input_data=kwargs.pop("input_data", None))
         logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)
         logger.debug("stderr: %s" % stderr)
@@ -318,7 +319,22 @@ class UciBackend(object):
         return result
 
     def read(self, config=None):
-        output = self._run_uci_command("export", config) if config \
-            else self._run_uci_command("export")
+        output = self.export_data(config)
         lines = output.splitlines()
         return self._parse_packages(lines)
+
+    def export_data(self, config=None):
+        output = self._run_uci_command("export", config) if config \
+            else self._run_uci_command("export")
+        return output
+
+    def import_data(self, data, config):
+        """ Import data directly into uci
+        NOTE that import is not affected by commit and an entire config is replaced
+
+        :param data: data to be imorted
+        :type data: str
+        :param config: related uci config
+        :type config: string
+        """
+        self._run_uci_command("import", config, input_data=data)
