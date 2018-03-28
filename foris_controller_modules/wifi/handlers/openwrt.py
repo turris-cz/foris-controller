@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.wifi import WifiUci
+from foris_controller_backends.wifi import WifiUci, WifiCmds
 
 from .. import Handler
 
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtWifiHandler(Handler, BaseOpenwrtHandler):
     uci = WifiUci()
+    cmds = WifiCmds()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -51,3 +52,11 @@ class OpenwrtWifiHandler(Handler, BaseOpenwrtHandler):
         :rtype: boolean
         """
         return self.uci.update_settings(new_settings)
+
+    @logger_wrapper(logger)
+    def reset(self):
+        """ Resets wifi settings
+        :returns: True if reset passes False otherwise
+        :rtype: bool
+        """
+        return self.cmds.reset()

@@ -277,6 +277,42 @@
                 "action": {"enum": ["update_settings"]}
             },
             "additionalProperties": false
+        },
+        {
+            "description": "request to reset wifi settings",
+            "properties": {
+                "module": {"enum": ["wifi"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["reset"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to reset wifi settings",
+            "properties": {
+                "module": {"enum": ["wifi"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["reset"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that reset wifi settings was triggerd",
+            "properties": {
+                "module": {"enum": ["wifi"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["reset"]}
+            },
+            "additionalProperties": false
         }
     ]
 }

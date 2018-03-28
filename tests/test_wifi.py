@@ -31,6 +31,107 @@ from foris_controller_testtools.utils import match_subdict, check_service_result
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
 
 
+DEFAULT_CONFIG = [
+    {
+        u"id": 0,
+        u"enabled": False,
+        u"SSID": u"Turris",
+        u"hidden": False,
+        u"channel": 36,
+        u"htmode": u"VHT80",
+        u"hwmode": u"11a",
+        u"password": u"",
+        u"guest_wifi": {
+            u"enabled": False,
+            u"SSID": u"Turris-guest",
+            u"password": u""
+        },
+        u"available_bands": [
+            {
+                u"hwmode": "11g",
+                u"available_htmodes": [u"NOHT", u"HT20", u"HT40"],
+                u"available_channels": [
+                    {u"number": 1, u'frequency': 2412, u'radar': False},
+                    {u"number": 2, u'frequency': 2417, u'radar': False},
+                    {u"number": 3, u'frequency': 2422, u'radar': False},
+                    {u"number": 4, u'frequency': 2427, u'radar': False},
+                    {u"number": 5, u'frequency': 2432, u'radar': False},
+                    {u"number": 6, u'frequency': 2437, u'radar': False},
+                    {u"number": 7, u'frequency': 2442, u'radar': False},
+                    {u"number": 8, u'frequency': 2447, u'radar': False},
+                    {u"number": 9, u'frequency': 2452, u'radar': False},
+                    {u"number": 10, u'frequency': 2457, u'radar': False},
+                    {u"number": 11, u'frequency': 2462, u'radar': False},
+                    {u"number": 12, u'frequency': 2467, u'radar': False},
+                    {u"number": 13, u'frequency': 2472, u'radar': False},
+                ],
+            },
+            {
+                u"hwmode": "11a",
+                u"available_htmodes": [u"NOHT", u"HT20", u"HT40", u"VHT20", u"VHT40", u"VHT80"],
+                u"available_channels": [
+                    {u"number": 36, u'frequency': 5180, u'radar': False},
+                    {u"number": 40, u'frequency': 5200, u'radar': False},
+                    {u"number": 44, u'frequency': 5220, u'radar': False},
+                    {u"number": 48, u'frequency': 5240, u'radar': False},
+                    {u"number": 52, u'frequency': 5260, u'radar': True},
+                    {u"number": 56, u'frequency': 5280, u'radar': True},
+                    {u"number": 60, u'frequency': 5300, u'radar': True},
+                    {u"number": 64, u'frequency': 5320, u'radar': True},
+                    {u"number": 100, u'frequency': 5500, u'radar': True},
+                    {u"number": 104, u'frequency': 5520, u'radar': True},
+                    {u"number": 108, u'frequency': 5540, u'radar': True},
+                    {u"number": 112, u'frequency': 5560, u'radar': True},
+                    {u"number": 116, u'frequency': 5580, u'radar': True},
+                    {u"number": 120, u'frequency': 5600, u'radar': True},
+                    {u"number": 124, u'frequency': 5620, u'radar': True},
+                    {u"number": 128, u'frequency': 5640, u'radar': True},
+                    {u"number": 132, u'frequency': 5660, u'radar': True},
+                    {u"number": 136, u'frequency': 5680, u'radar': True},
+                    {u"number": 140, u'frequency': 5700, u'radar': True},
+                ],
+            }
+        ]
+    },
+    {
+        u"id": 1,
+        u"enabled": False,
+        u"SSID": u"Turris",
+        u"hidden": False,
+        u"channel": 11,
+        u"htmode": u"HT20",
+        u"hwmode": u"11g",
+        u"password": u"",
+        u"guest_wifi": {
+            u"enabled": False,
+            u"SSID": u"Turris-guest",
+            u"password": u""
+        },
+        u"available_bands": [
+            {
+                u"hwmode": "11g",
+                u"available_htmodes": [u"NOHT", u"HT20", u"HT40"],
+                u"available_channels": [
+                    {u"number": 1, u'frequency': 2412, u'radar': False},
+                    {u"number": 2, u'frequency': 2417, u'radar': False},
+                    {u"number": 3, u'frequency': 2422, u'radar': False},
+                    {u"number": 4, u'frequency': 2427, u'radar': False},
+                    {u"number": 5, u'frequency': 2432, u'radar': False},
+                    {u"number": 6, u'frequency': 2437, u'radar': False},
+                    {u"number": 7, u'frequency': 2442, u'radar': False},
+                    {u"number": 8, u'frequency': 2447, u'radar': False},
+                    {u"number": 9, u'frequency': 2452, u'radar': False},
+                    {u"number": 10, u'frequency': 2457, u'radar': False},
+                    {u"number": 11, u'frequency': 2462, u'radar': False},
+                    {u"number": 12, u'frequency': 2467, u'radar': False},
+                    {u"number": 13, u'frequency': 2472, u'radar': False},
+                ],
+            }
+        ]
+    },
+]
+
+
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_settings(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
@@ -41,105 +142,7 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure, ubusd_te
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
     # test initial situation (based on default omnia settings)
-    assert res["data"]["devices"] == [
-        {
-            u"id": 0,
-            u"enabled": False,
-            u"SSID": u"Turris",
-            u"hidden": False,
-            u"channel": 36,
-            u"htmode": u"VHT80",
-            u"hwmode": u"11a",
-            u"password": u"",
-            u"guest_wifi": {
-                u"enabled": False,
-                u"SSID": u"Turris-guest",
-                u"password": u""
-            },
-            u"available_bands": [
-                {
-                    u"hwmode": "11g",
-                    u"available_htmodes": [u"NOHT", u"HT20", u"HT40"],
-                    u"available_channels": [
-                        {u"number": 1, u'frequency': 2412, u'radar': False},
-                        {u"number": 2, u'frequency': 2417, u'radar': False},
-                        {u"number": 3, u'frequency': 2422, u'radar': False},
-                        {u"number": 4, u'frequency': 2427, u'radar': False},
-                        {u"number": 5, u'frequency': 2432, u'radar': False},
-                        {u"number": 6, u'frequency': 2437, u'radar': False},
-                        {u"number": 7, u'frequency': 2442, u'radar': False},
-                        {u"number": 8, u'frequency': 2447, u'radar': False},
-                        {u"number": 9, u'frequency': 2452, u'radar': False},
-                        {u"number": 10, u'frequency': 2457, u'radar': False},
-                        {u"number": 11, u'frequency': 2462, u'radar': False},
-                        {u"number": 12, u'frequency': 2467, u'radar': False},
-                        {u"number": 13, u'frequency': 2472, u'radar': False},
-                    ],
-                },
-                {
-                    u"hwmode": "11a",
-                    u"available_htmodes": [u"NOHT", u"HT20", u"HT40", u"VHT20", u"VHT40", u"VHT80"],
-                    u"available_channels": [
-                        {u"number": 36, u'frequency': 5180, u'radar': False},
-                        {u"number": 40, u'frequency': 5200, u'radar': False},
-                        {u"number": 44, u'frequency': 5220, u'radar': False},
-                        {u"number": 48, u'frequency': 5240, u'radar': False},
-                        {u"number": 52, u'frequency': 5260, u'radar': True},
-                        {u"number": 56, u'frequency': 5280, u'radar': True},
-                        {u"number": 60, u'frequency': 5300, u'radar': True},
-                        {u"number": 64, u'frequency': 5320, u'radar': True},
-                        {u"number": 100, u'frequency': 5500, u'radar': True},
-                        {u"number": 104, u'frequency': 5520, u'radar': True},
-                        {u"number": 108, u'frequency': 5540, u'radar': True},
-                        {u"number": 112, u'frequency': 5560, u'radar': True},
-                        {u"number": 116, u'frequency': 5580, u'radar': True},
-                        {u"number": 120, u'frequency': 5600, u'radar': True},
-                        {u"number": 124, u'frequency': 5620, u'radar': True},
-                        {u"number": 128, u'frequency': 5640, u'radar': True},
-                        {u"number": 132, u'frequency': 5660, u'radar': True},
-                        {u"number": 136, u'frequency': 5680, u'radar': True},
-                        {u"number": 140, u'frequency': 5700, u'radar': True},
-                    ],
-                }
-            ]
-        },
-        {
-            u"id": 1,
-            u"enabled": False,
-            u"SSID": u"Turris",
-            u"hidden": False,
-            u"channel": 11,
-            u"htmode": u"HT20",
-            u"hwmode": u"11g",
-            u"password": u"",
-            u"guest_wifi": {
-                u"enabled": False,
-                u"SSID": u"Turris-guest",
-                u"password": u""
-            },
-            u"available_bands": [
-                {
-                    u"hwmode": "11g",
-                    u"available_htmodes": [u"NOHT", u"HT20", u"HT40"],
-                    u"available_channels": [
-                        {u"number": 1, u'frequency': 2412, u'radar': False},
-                        {u"number": 2, u'frequency': 2417, u'radar': False},
-                        {u"number": 3, u'frequency': 2422, u'radar': False},
-                        {u"number": 4, u'frequency': 2427, u'radar': False},
-                        {u"number": 5, u'frequency': 2432, u'radar': False},
-                        {u"number": 6, u'frequency': 2437, u'radar': False},
-                        {u"number": 7, u'frequency': 2442, u'radar': False},
-                        {u"number": 8, u'frequency': 2447, u'radar': False},
-                        {u"number": 9, u'frequency': 2452, u'radar': False},
-                        {u"number": 10, u'frequency': 2457, u'radar': False},
-                        {u"number": 11, u'frequency': 2462, u'radar': False},
-                        {u"number": 12, u'frequency': 2467, u'radar': False},
-                        {u"number": 13, u'frequency': 2472, u'radar': False},
-                    ],
-                }
-            ]
-        },
-    ]
+    assert res["data"]["devices"] == DEFAULT_CONFIG
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -697,3 +700,81 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, ubusd_te
             "enabled": False,
         },
     }])
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_reset(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "devices": [
+                {
+                    "id": 0,
+                    "enabled": True,
+                    "SSID": "TurrisY",
+                    "hidden": True,
+                    "channel": 0,
+                    "htmode": "VHT20",
+                    "hwmode": "11a",
+                    "password": "passpass",
+                    "guest_wifi": {
+                        "enabled": False,
+                    },
+                },
+                {
+                    "id": 1,
+                    "enabled": True,
+                    "SSID": "TurrisX",
+                    "hidden": True,
+                    "channel": 0,
+                    "htmode": "NOHT",
+                    "hwmode": "11g",
+                    "password": "passpass",
+                    "guest_wifi": {
+                        "enabled": True,
+                        "SSID": "Turris-testik",
+                        "password": "ssapssap",
+                    },
+                }
+            ]
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'wifi'
+    }
+
+    filters = [("wifi", "reset")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "reset",
+        "kind": "request",
+    })
+    assert res == {
+        u'action': u'reset',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'wifi'
+    }
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        u"module": u"wifi",
+        u"action": u"reset",
+        u"kind": u"notification",
+    }
+
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "devices" in res["data"].keys()
+    # test initial situation (based on default omnia settings)
+
+    assert res["data"]["devices"] == DEFAULT_CONFIG

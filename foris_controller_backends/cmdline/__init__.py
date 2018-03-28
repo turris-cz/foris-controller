@@ -65,7 +65,7 @@ def handle_command(*args, **kwargs):
 
         popen_kwargs["stderr"] = stderr
         popen_kwargs["stdout"] = stdout
-        if input_data:
+        if input_data is not None:
             popen_kwargs["stdin"] = subprocess.PIPE
 
         process = subprocess.Popen(args, **popen_kwargs)

@@ -2,7 +2,7 @@
     "user": "stepan",
     "access": {
         "foris-controller-wifi": {
-            "methods": [ "get_settings", "update_settings"]
+            "methods": [ "get_settings", "update_settings", "reset"]
         }
     },
     "publish": [ "foris-controller-wifi" ],

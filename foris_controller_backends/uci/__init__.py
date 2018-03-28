@@ -337,4 +337,4 @@ class UciBackend(object):
         :param config: related uci config
         :type config: string
         """
-        self._run_uci_command("import", config, input_data=data)
+        self._run_uci_command("import", config, input_data=data if data else "")

@@ -47,10 +47,23 @@ class WifiModule(BaseModule):
             self.notify("update_settings")
         return {"result": res}
 
+    def action_reset(self, data):
+        """ Reset wifi cards
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: result of the reset {'result': True/False}
+        :rtype: dict
+        """
+        res = self.handler.reset()
+        if res:
+            self.notify("reset")
+        return {"result": res}
+
 
 @wrap_required_functions([
     'get_settings',
     'update_settings',
+    'reset',
 ])
 class Handler(object):
     pass

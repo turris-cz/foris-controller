@@ -370,3 +370,31 @@ class WifiUci(object):
             services.restart("network")
 
         return True
+
+
+class WifiCmds(BaseCmdLine):
+    def reset(self):
+        # export wireless config in case of any error
+        with UciBackend() as backend:
+            try:
+                backup = backend.export_data("wireless")
+            except UciException:
+                backup = ""  # in case the wireless config is missing
+
+        try:
+            # clear wireless config
+            with UciBackend() as backend:
+                # detection can be performed only when empty wireless is present
+                # import_data write to final conf immediatelly (not affected by commits)
+                backend.import_data("", "wireless")
+                new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "detect"], 0)
+                backend.import_data(new_data, "wireless")
+
+        except Exception as e:
+            logger.error("Exception occured during the reset '%s'" % str(e))
+            # try to restore the backup
+            with UciBackend() as backend:
+                backend.import_data(backup, "wireless")
+            return False
+
+        return True
