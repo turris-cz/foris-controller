@@ -46,8 +46,8 @@ class WanUci(object):
         wan_settings = {}
         wan_settings["wan_type"] = get_option_named(network_data, "network", "wan", "proto")
         if wan_settings["wan_type"] == "dhcp":
-            client_id = get_option_named(network_data, "network", "wan", "clientid", "")
-            wan_settings["wan_dhcp"] = {"client_id": client_id} if client_id else {}
+            hostname = get_option_named(network_data, "network", "wan", "hostname", "")
+            wan_settings["wan_dhcp"] = {"hostname": hostname} if hostname else {}
         elif wan_settings["wan_type"] == "static":
             wan_settings["wan_static"] = {
                 "ip": get_option_named(network_data, "network", "wan", "ipaddr"),
@@ -94,12 +94,12 @@ class WanUci(object):
             backend.add_section("network", "interface", "wan")
             backend.set_option("network", "wan", "proto", wan_type)
             if wan_type == "dhcp":
-                if "client_id" in wan_settings["wan_dhcp"]:
+                if "hostname" in wan_settings["wan_dhcp"]:
                     backend.set_option(
-                        "network", "wan", "clientid", wan_settings["wan_dhcp"]["client_id"])
+                        "network", "wan", "hostname", wan_settings["wan_dhcp"]["hostname"])
                 else:
                     try:
-                        backend.del_option("network", "wan", "clientid")
+                        backend.del_option("network", "wan", "hostname")
                     except UciException:
                         pass
 

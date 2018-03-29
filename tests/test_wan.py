@@ -105,12 +105,12 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     # WAN
     update(
         {
-            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {"client_id": "my-nice-turris"}},
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {"hostname": "my-nice-turris4"}},
             'wan6_settings': {'wan6_type': 'none'},
             'mac_settings': {'custom_mac_enabled': False},
         },
         {
-            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {"client_id": "my-nice-turris"}},
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {"hostname": "my-nice-turris4"}},
             'wan6_settings': {'wan6_type': 'none'},
             'mac_settings': {'custom_mac_enabled': False},
         },
@@ -343,7 +343,7 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     })
 
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
-    assert uci.get_option_named(data, "network", "wan", "clientid", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
@@ -352,13 +352,13 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
 
     data = update({
-        'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {"client_id": "my-nice-turris"}},
+        'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {"hostname": "my-nice-turris"}},
         'wan6_settings': {'wan6_type': 'none'},
         'mac_settings': {'custom_mac_enabled': False},
     })
 
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
-    assert uci.get_option_named(data, "network", "wan", "clientid", "") == "my-nice-turris"
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == "my-nice-turris"
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
@@ -444,7 +444,7 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     })
 
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
-    assert uci.get_option_named(data, "network", "wan", "clientid", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "dhcpv6"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
@@ -466,7 +466,7 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     })
 
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
-    assert uci.get_option_named(data, "network", "wan", "clientid", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "static"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr") == \
         "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
@@ -491,7 +491,7 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     })
 
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
-    assert uci.get_option_named(data, "network", "wan", "clientid", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "static"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr") == \
         "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
@@ -511,7 +511,7 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     })
 
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
-    assert uci.get_option_named(data, "network", "wan", "clientid", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""

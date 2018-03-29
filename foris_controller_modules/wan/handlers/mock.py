@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class MockWanHandler(Handler, BaseMockHandler):
     wan_type = "dhcp"
     wan_dhcp = {
-        "client_id": None,
+        "hostname": None,
     }
     wan_static = {
         "ip": None,
@@ -61,7 +61,7 @@ class MockWanHandler(Handler, BaseMockHandler):
     def _cleanup(self):
         self.wan_type = "dhcp"
         self.wan_dhcp = {
-            "client_id": None,
+            "hostname": None,
         }
         self.wan_static = {
             "ip": None,
@@ -98,8 +98,8 @@ class MockWanHandler(Handler, BaseMockHandler):
             "mac_settings": {"custom_mac_enabled": self.custom_mac_enabled},
         }
         if self.wan_type == "dhcp":
-            if self.wan_dhcp["client_id"]:
-                res["wan_settings"]["wan_dhcp"] = {"client_id": self.wan_dhcp["client_id"]}
+            if self.wan_dhcp["hostname"]:
+                res["wan_settings"]["wan_dhcp"] = {"hostname": self.wan_dhcp["hostname"]}
             else:
                 res["wan_settings"]["wan_dhcp"] = {}
         elif self.wan_type == "static":
@@ -143,8 +143,8 @@ class MockWanHandler(Handler, BaseMockHandler):
         self._cleanup()
         self.wan_type = new_settings["wan_settings"]["wan_type"]
         if self.wan_type == "dhcp":
-            self.wan_dhcp["client_id"] = new_settings["wan_settings"]["wan_dhcp"].get(
-                "client_id", None)
+            self.wan_dhcp["hostname"] = new_settings["wan_settings"]["wan_dhcp"].get(
+                "hostname", None)
         if self.wan_type == "static":
             self.wan_static["ip"] = new_settings["wan_settings"]["wan_static"]["ip"]
             self.wan_static["netmask"] = new_settings["wan_settings"]["wan_static"]["netmask"]

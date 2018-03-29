@@ -19,7 +19,7 @@
         "wan_dhcp": {
             "type": "object",
             "properties": {
-                "client_id": { "type": "string", "description": "DHCP client identifier (optional)" }
+                "hostname": { "type": "string", "description": "hostname provided to DHCP server (optional)" }
             },
             "additionalProperties": false
         },
