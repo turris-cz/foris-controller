@@ -90,4 +90,8 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
         :returns: {'up': True/False}
         :rtype: dict
         """
-        return {'up': self.status_cmds.get_status()["up"]}
+        status = self.status_cmds.get_status()
+        return {
+            'up': status["up"],
+            'last_seen_duid': status["duid"],
+        }

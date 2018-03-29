@@ -208,4 +208,7 @@ class MockWanHandler(Handler, BaseMockHandler):
         :returns: {'up': True/False}
         :rtype: dict
         """
-        return {'up': random.choice([True, False])}
+        return {
+            'up': random.choice([True, False]),
+            'last_seen_duid': random.choice(["", "00030001d858d7004555"])
+        }

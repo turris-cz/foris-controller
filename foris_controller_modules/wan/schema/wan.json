@@ -1,5 +1,6 @@
 {
     "definitions": {
+        "duid": {"type": "string", "pattern": "^([0-9a-fA-F][0-9a-fA-F]){4}([0-9a-fA-F][0-9a-fA-F])*$"},
         "connection_test_kind": {"enum": ["ipv4", "ipv6", "dns"]},
         "connection_test_id": {"type": "string"},
         "connection_test_data": {
@@ -350,10 +351,16 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "up": {"type": "boolean"}
+                        "up": {"type": "boolean"},
+                        "last_seen_duid": {
+                            "oneOf": [
+                                {"enum": [""]},
+                                {"$ref": "#/definitions/duid"}
+                            ]
+                        }
                     },
                     "additionalProperties": false,
-                    "required": ["up"]
+                    "required": ["up", "last_seen_duid"]
                 }
             },
             "additionalProperties": false,

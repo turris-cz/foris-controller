@@ -19,6 +19,7 @@
 
 import logging
 import json
+import os
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, store_bool
@@ -28,6 +29,7 @@ from foris_controller.exceptions import (
 )
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
 from foris_controller_backends.services import OpenwrtServices
+from foris_controller_backends.files import BaseFile
 
 
 logger = logging.getLogger(__name__)
@@ -260,7 +262,8 @@ class WanTestCommands(AsyncCommand):
         return process_id
 
 
-class WanStatusCommands(BaseCmdLine):
+class WanStatusCommands(BaseCmdLine, BaseFile):
+    DUID_STATUS_FILE = '/var/run/odhcp6c-duid'
 
     def get_status(self):
         args = ("/bin/ubus", "-S", "call", "network.interface.wan", "status")
@@ -273,4 +276,15 @@ class WanStatusCommands(BaseCmdLine):
             parsed = json.loads(stdout.strip())
         except ValueError:
             raise FailedToParseCommandOutput(args, stdout)
+
+        # try to figure out duid (best effort)
+        device = parsed.get("device", None)
+        parsed["duid"] = ""
+        if device:
+            duid_path = "%s.%s" % (WanStatusCommands.DUID_STATUS_FILE, device)
+            try:
+                parsed["duid"] = self._file_content(duid_path).strip()
+            except (OSError, IOError):
+                pass
+
         return parsed

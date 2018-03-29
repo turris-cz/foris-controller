@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
@@ -24,6 +25,8 @@ from foris_controller_testtools.fixtures import (
 )
 from .test_uci import get_uci_module
 from foris_controller_testtools.utils import sh_was_called
+
+FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -38,6 +41,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "mac_settings" in res["data"].keys()
 
 
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_wan_status(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "wan",
@@ -46,6 +50,7 @@ def test_get_wan_status(uci_configs_init, infrastructure, ubusd_test):
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "up" in res["data"].keys()
+    assert "last_seen_duid" in res["data"].keys()
 
 
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
