@@ -22,6 +22,8 @@ import svupdater
 import svupdater.lists
 import svupdater.exceptions
 
+from foris_controller.exceptions import BackendCommandFailed
+
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.uci import (
@@ -31,17 +33,7 @@ from foris_controller_backends.uci import (
 
 class RegisteredCmds(BaseCmdLine):
 
-    def get_registered(self, email, language):
-        """ Returns registration status
-        :param email: email which will be used in the server query
-        :type email: str
-        :param language: language which will be used in the server query (en/cs)
-        :type language: str
-
-        :returns: registration status and sometimes registration url
-        :rtype: dict
-        """
-
+    def _query_registered(self, email, language):
         # get registration code
         from foris_controller_backends.about import ServerUplinkFiles
         registration_code = ServerUplinkFiles().get_registration_number()
@@ -77,6 +69,29 @@ class RegisteredCmds(BaseCmdLine):
             }
 
         return {"status": "unknown"}
+
+    def get_registered(self, email, language):
+        """ Returns registration status
+        :param email: email which will be used in the server query
+        :type email: str
+        :param language: language which will be used in the server query (en/cs)
+        :type language: str
+
+        :returns: registration status and sometimes registration url
+        :rtype: dict
+        """
+        res = self._query_registered(email, language)
+
+        if res["status"] == "not_found":
+            # Try to update registration code first
+            try:
+                self._run_command_and_check_retval(
+                    ["/usr/share/server-uplink/registration_code.sh"], 0)
+            except BackendCommandFailed:
+                return {"status": "not_found"}
+            res = self._query_registered(email, language)
+
+        return res
 
 
 class DataCollectUci(object):
