@@ -19,7 +19,6 @@
 
 import logging
 import json
-import os
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, store_bool
@@ -75,6 +74,10 @@ class WanUci(object):
             dns = get_option_named(network_data, "network", "wan6", "dns", [])
             dns = reversed(dns)  # dns with higher priority should be last
             wan6_settings["wan6_static"].update(zip(("dns1", "dns2"), dns))
+        elif wan6_settings["wan6_type"] == "dhcpv6":
+            wan6_settings["wan6_dhcpv6"] = {
+                "duid": get_option_named(network_data, "network", "wan6", "clientid", ""),
+            }
 
         # MAC
         custom_mac = get_option_named(network_data, "network", "wan", "macaddr", "")
@@ -135,6 +138,15 @@ class WanUci(object):
                     if name in wan6_settings["wan6_static"]
                 ]  # dns with higher priority should be added last
                 backend.replace_list("network", "wan6", "dns", dns)
+            elif wan6_type == "dhcpv6":
+                new_duid = wan6_settings["wan6_dhcpv6"]["duid"]
+                if new_duid:
+                    backend.set_option("network", "wan6", "clientid", new_duid)
+                else:
+                    try:
+                        backend.del_option("network", "wan6", "clientid")
+                    except UciException:
+                        pass
             else:
                 # remove extra fields (otherwise it will mess with other settings)
                 for field in ["ip6prefix", "ip6addr", "ip6gw"]:

@@ -213,12 +213,31 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     update(
         {
             'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
-            'wan6_settings': {'wan6_type': 'dhcpv6'},
+            'wan6_settings': {'wan6_type': 'dhcpv6', 'wan6_dhcpv6': {"duid": ""}},
             'mac_settings': {'custom_mac_enabled': False},
         },
         {
             'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
-            'wan6_settings': {'wan6_type': 'dhcpv6'},
+            'wan6_settings': {'wan6_type': 'dhcpv6', 'wan6_dhcpv6': {"duid": ""}},
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+        {
+            'wan_type': 'dhcp',
+            'wan6_type': 'dhcpv6',
+            'custom_mac_enabled': False,
+        },
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': 'dhcpv6', 'wan6_dhcpv6': {"duid": "00030001d858d7004555"}},
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': 'dhcpv6', 'wan6_dhcpv6': {"duid": "00030001d858d7004555"}},
             'mac_settings': {'custom_mac_enabled': False},
         },
         {
@@ -439,13 +458,14 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     # WAN6
     data = update({
         'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
-        'wan6_settings': {'wan6_type': 'dhcpv6'},
+        'wan6_settings': {'wan6_type': 'dhcpv6', 'wan6_dhcpv6': {"duid": "00030001d858d7004566"}},
         'mac_settings': {'custom_mac_enabled': False},
     })
 
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "dhcpv6"
+    assert uci.get_option_named(data, "network", "wan6", "clientid") == "00030001d858d7004566"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""

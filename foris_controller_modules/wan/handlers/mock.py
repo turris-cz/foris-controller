@@ -82,6 +82,9 @@ class MockWanHandler(Handler, BaseMockHandler):
             "dns1": None,
             "dns2": None,
         }
+        self.wan6_dhcpv6 = {
+            "duid": "",
+        }
         self.custom_mac_enabled = False
         self.custom_mac = None
 
@@ -128,6 +131,10 @@ class MockWanHandler(Handler, BaseMockHandler):
                 res["wan6_settings"]["wan6_static"]["dns1"] = self.wan6_static["dns1"]
             if self.wan6_static["dns2"] is not None:
                 res["wan6_settings"]["wan6_static"]["dns2"] = self.wan6_static["dns2"]
+        elif self.wan6_type == "dhcpv6":
+            res["wan6_settings"]["wan6_dhcpv6"] = {
+                "duid": self.wan6_dhcpv6["duid"]
+            }
 
         if self.custom_mac_enabled:
             res["mac_settings"]["custom_mac"] = self.custom_mac
@@ -164,6 +171,8 @@ class MockWanHandler(Handler, BaseMockHandler):
                 "dns1", None)
             self.wan6_static["dns2"] = new_settings["wan6_settings"]["wan6_static"].get(
                 "dns2", None)
+        elif self.wan6_type == "dhcpv6":
+            self.wan6_dhcpv6["duid"] = new_settings["wan6_settings"]["wan6_dhcpv6"]["duid"]
 
         self.custom_mac_enabled = new_settings["mac_settings"]["custom_mac_enabled"]
         self.custom_mac = new_settings["mac_settings"].get("custom_mac", None)
