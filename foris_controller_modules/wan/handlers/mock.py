@@ -219,5 +219,6 @@ class MockWanHandler(Handler, BaseMockHandler):
         """
         return {
             'up': random.choice([True, False]),
-            'last_seen_duid': random.choice(["", "00030001d858d7004555"])
+            'last_seen_duid': random.choice(["", "00030001d858d7004555"]),
+            'proto': random.choice(["pppoe", "dhcp", "static", "none"]),
         }

@@ -51,6 +51,7 @@ def test_get_wan_status(uci_configs_init, infrastructure, ubusd_test):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "up" in res["data"].keys()
     assert "last_seen_duid" in res["data"].keys()
+    assert "proto" in res["data"].keys()
 
 
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test):

@@ -394,10 +394,11 @@
                                 {"enum": [""]},
                                 {"$ref": "#/definitions/duid"}
                             ]
-                        }
+                        },
+                        "proto": {"type": "string"}
                     },
                     "additionalProperties": false,
-                    "required": ["up", "last_seen_duid"]
+                    "required": ["up", "last_seen_duid", "proto"]
                 }
             },
             "additionalProperties": false,

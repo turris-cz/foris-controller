@@ -94,4 +94,5 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
         return {
             'up': status["up"],
             'last_seen_duid': status["duid"],
+            'proto': status["proto"],
         }
