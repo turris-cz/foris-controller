@@ -15,6 +15,7 @@ fi
 
 root_path=$1
 target_name=$2
+year=$(date +%Y)
 
 if ! echo "$target_name" | grep '^[a-z][a-z_0-9]*$' > /dev/null ; then
 	echo "TARGET_NAME not in a valid format [a-z][a-z_0-9]*"
@@ -729,7 +730,7 @@ __LICENSE_TEXT
 	cat > /tmp/short_license.txt <<-__SHORT_LICENSE_TEXT
 #
 # foris-controller-${target_name}-module
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) ${year} CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
