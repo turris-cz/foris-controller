@@ -532,3 +532,47 @@ def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
     })
     assert res["data"]["result"]
     wait_for_updater_run_finished(notifications, infrastructure)
+
+
+def test_get_enabled(
+    updater_languages, updater_userlists,
+    uci_configs_init, infrastructure, ubusd_test
+):
+
+    res = infrastructure.process_message({
+        "module": "updater",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "enabled": True,
+            "branch": "",
+            "approval_settings": {"status": "off"},
+            "user_lists": [],
+            "languages": [],
+        },
+    })
+    assert res["data"]["result"]
+
+    res = infrastructure.process_message({
+        "module": "updater",
+        "action": "get_enabled",
+        "kind": "request",
+    })
+    assert res["data"]["enabled"] is True
+
+    res = infrastructure.process_message({
+        "module": "updater",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "enabled": False,
+        },
+    })
+    assert res["data"]["result"]
+
+    res = infrastructure.process_message({
+        "module": "updater",
+        "action": "get_enabled",
+        "kind": "request",
+    })
+    assert res["data"]["enabled"] is False

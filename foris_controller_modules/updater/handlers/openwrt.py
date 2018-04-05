@@ -113,3 +113,9 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :rtype: bool
         """
         return self.updater.run(set_reboot_indicator)
+
+    @logger_wrapper(logger)
+    def get_enabled(self):
+        """ Get info whether updater is enabled
+        """
+        return self.uci.get_enabled()

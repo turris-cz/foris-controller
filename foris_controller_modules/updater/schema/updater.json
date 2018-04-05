@@ -217,6 +217,33 @@
             "required": ["data"]
         },
         {
+            "description": "request to obrain information whether updater is enabled",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_enabled"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to obrain information whether updater is enabled",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_enabled"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["enabled"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
             "description": "request to update updater settings",
             "properties": {
                 "module": {"enum": ["updater"]},
@@ -252,7 +279,7 @@
             "required": ["data"]
         },
         {
-            "description": "request to get updater settings",
+            "description": "reply to update updater settings",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["reply"]},
@@ -362,7 +389,7 @@
             "required": ["data"]
         },
         {
-            "description": "reply to start updater",
+            "description": "notifications from running updater instance",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["notification"]},

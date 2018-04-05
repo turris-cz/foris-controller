@@ -77,6 +77,15 @@ class UpdaterModule(BaseModule):
         """
         return {"result": self.handler.run(**data)}
 
+    def action_get_enabled(self, data):
+        """ Get information whether updater is enabled
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: {"enabled": True/False}
+        :rtype: dict
+        """
+        return {"enabled": self.handler.get_enabled()}
+
 
 @wrap_required_functions([
     'get_settings',
@@ -86,6 +95,7 @@ class UpdaterModule(BaseModule):
     'get_languages',
     'resolve_approval',
     'run',
+    'get_enabled',
 ])
 class Handler(object):
     pass

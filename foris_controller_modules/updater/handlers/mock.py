@@ -272,3 +272,9 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :type set_reboot_indicator: bool
         """
         return True
+
+    @logger_wrapper(logger)
+    def get_enabled(self):
+        """ Mocks get info whether updater is enabled
+        """
+        return self.enabled

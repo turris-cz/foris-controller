@@ -2,7 +2,7 @@
     "user": "stepan",
     "access": {
         "foris-controller-updater": {
-            "methods": [ "get_settings", "update_settings", "resolve_approval", "run" ]
+            "methods": [ "get_settings", "update_settings", "resolve_approval", "run", "get_enabled" ]
         }
     },
     "publish": [ "foris-controller-updater" ],

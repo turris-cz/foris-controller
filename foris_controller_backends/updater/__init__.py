@@ -70,6 +70,13 @@ class UpdaterUci(object):
 
         return res
 
+    def get_enabled(self):
+        with UciBackend() as backend:
+            updater_data = backend.read("updater")
+        return not parse_bool(
+            get_option_named(updater_data, "updater", "override", "disable", "0")
+        )
+
     def update_settings(
         self, user_lists, languages, approvals_status, approvals_delay, enabled, branch
     ):
