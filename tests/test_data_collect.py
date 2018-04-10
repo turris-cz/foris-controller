@@ -19,13 +19,12 @@
 
 import pytest
 
-from .test_uci import get_uci_module
 from .test_updater import wait_for_updater_run_finished
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, init_script_result, lock_backend,
     only_backends, updater_userlists
 )
-from foris_controller_testtools.utils import check_service_result
+from foris_controller_testtools.utils import check_service_result, get_uci_module
 
 
 def test_get_registered(uci_configs_init, infrastructure, ubusd_test):

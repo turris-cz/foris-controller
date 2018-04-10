@@ -24,8 +24,7 @@ from foris_controller.exceptions import UciRecordNotFound
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
 )
-from .test_uci import get_uci_module
-from foris_controller_testtools.utils import match_subdict, sh_was_called
+from foris_controller_testtools.utils import match_subdict, sh_was_called, get_uci_module
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):

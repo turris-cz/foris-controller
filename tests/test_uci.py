@@ -27,21 +27,13 @@ from collections import OrderedDict
 from foris_controller.exceptions import UciException, UciTypeException, UciRecordNotFound
 
 from foris_controller_testtools.fixtures import lock_backend, uci_configs_init
+from foris_controller_testtools.utils import get_uci_module
 
 CONFIG_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "uci_configs", "uci_tests"
 )
 
 
-@pytest.mark.uci_config_path(CONFIG_PATH)
-def get_uci_module(lock_backend):
-    from foris_controller.app import app_info
-    app_info["lock_backend"] = lock_backend
-    from foris_controller_backends import uci
-    return uci
-
-
-@pytest.mark.uci_config_path(CONFIG_PATH)
 def show(config_dir):
     process = subprocess.Popen(["uci", "-c", config_dir, "show"], stdout=subprocess.PIPE)
     stdout, _ = process.communicate()

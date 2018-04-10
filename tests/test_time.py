@@ -25,9 +25,7 @@ from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, only_backends, lock_backend,
     init_script_result
 )
-from foris_controller_testtools.utils import check_service_result
-
-from .test_uci import get_uci_module
+from foris_controller_testtools.utils import check_service_result, get_uci_module
 
 NTPDATE_INDICATOR_PATH = "/tmp/foris-controller-ntp-fail"
 

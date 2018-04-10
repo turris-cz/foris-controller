@@ -23,8 +23,7 @@ import pytest
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
 )
-from .test_uci import get_uci_module
-from foris_controller_testtools.utils import sh_was_called
+from foris_controller_testtools.utils import sh_was_called, get_uci_module
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
 

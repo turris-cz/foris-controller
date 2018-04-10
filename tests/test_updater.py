@@ -30,9 +30,7 @@ from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
     clean_reboot_indicator, updater_languages, updater_userlists
 )
-from foris_controller_testtools.utils import set_approval
-
-from .test_uci import get_uci_module
+from foris_controller_testtools.utils import set_approval, get_uci_module
 
 
 def wait_for_updater_run_finished(notifications, infrastructure):
