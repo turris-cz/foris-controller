@@ -22,6 +22,9 @@ import importlib
 import inspect
 import os
 import pkgutil
+import socket
+import struct
+import re
 
 from functools import wraps
 
@@ -238,3 +241,63 @@ def get_validator_dirs(filter_modules, module_paths=[]):
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     return schema_dirs, definition_dirs
+
+
+class IPv4(object):
+    @staticmethod
+    def str_to_num(ip_str):
+        """ Converts IPv4 to number
+        :param ip_str: str
+        :return: int
+        """
+        try:
+            _, _, _, _ = ip_str.split(".")
+            res = struct.unpack("!I", socket.inet_aton(ip_str))[0]
+        except Exception:
+            raise ValueError("Incorrect IPv4 format %s" % repr(ip_str))
+        return res
+
+    @staticmethod
+    def num_to_str(ip_number):
+        """ Converts number to IPv4
+        :param ip_number: int
+        :return: str
+        """
+        try:
+            res = socket.inet_ntoa(struct.pack("!I", ip_number))
+        except Exception:
+            raise ValueError("%s can't be converted to IPv4 address" % repr(ip_number))
+
+        return res
+
+    @staticmethod
+    def normalize_subnet(ip_address, mask):
+        """ 1.2.3.4 255.255.0.0 -> 1.2.0.0
+        :param ip_address: str
+        :param mask: str
+        :return ip address: str
+        """
+        return IPv4.num_to_str(IPv4.str_to_num(ip_address) & IPv4.str_to_num(mask))
+
+    @staticmethod
+    def mask_to_prefix(mask):
+        """ 255.255.255.0 -> 24
+        :param mask: str
+        :return prefix: int
+        """
+        binary = "{0:b}".format(IPv4.str_to_num(mask))
+
+        if not re.match(r"^1*0*$", binary):
+            raise ValueError("%s is not a valid netmask")
+
+        return "{0:b}".format(IPv4.str_to_num(mask)).count("1")
+
+    @staticmethod
+    def prefix_to_mask(subnet):
+        """ 255.255.255.0 -> 24
+        :param prefix: int
+        :return mask: str
+        """
+        if not(0 <= subnet <= 32):
+            raise ValueError("Incorrect subnet %s" % subnet)
+        return IPv4.num_to_str(int('1' * subnet + '0' * (32 - subnet), 2))
