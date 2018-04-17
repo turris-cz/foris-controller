@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockWanHandler(Handler, BaseMockHandler):
-    wan_type = "dhcp"
+    wan_type = "none"
     wan_dhcp = {
         "hostname": None,
     }
