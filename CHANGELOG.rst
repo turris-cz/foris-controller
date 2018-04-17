@@ -1,3 +1,12 @@
+0.9.2 (2018-04-17)
+------------------
+
+* updater module: new call get_enabled
+* data_collect module: redownload registration code when router is not found
+* wan module: new configuration options (duid, dhcp hostname) + some fixes
+* wifi module: reset action added
+* uci backend: import command added
+
 0.9.1 (2018-03-23)
 ------------------
 
