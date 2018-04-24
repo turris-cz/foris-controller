@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockTimeHandler(Handler, BaseMockHandler):
+    guide_set = BaseMockHandler._manager.Value(bool, False)
     region = "Europe"
     city = "Prague"
     timezone = "UTC"
@@ -78,6 +79,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
         self.how_to_set_time = how_to_set_time
         if time is not None:
             self.time = time
+        MockTimeHandler.guide_set.set(True)
         return True
 
     @logger_wrapper(logger)

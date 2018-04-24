@@ -38,6 +38,7 @@ class WebModule(BaseModule):
             'reboot_required': self.handler.reboot_required(),
             'updater_running': self.handler.updater_running(),
             'notification_count': self.handler.get_notification_count(),
+            'guide': self.handler.get_guide(),
         }
 
     def action_set_language(self, data):
@@ -61,6 +62,15 @@ class WebModule(BaseModule):
         """
         return {'languages': self.handler.list_languages()}
 
+    def action_update_guide(self, data):
+        """ Update current guide settings
+        :param data: supposed to be {"enabled": True/False, "workflow": "standard"}
+        :type data: dict
+        :returns: {'result': true}
+        :rtype: dict
+        """
+        return {"result": self.handler.update_guide(**data)}
+
 
 @wrap_required_functions([
     'get_language',
@@ -69,6 +79,8 @@ class WebModule(BaseModule):
     'reboot_required',
     'updater_running',
     'get_notification_count',
+    'update_guide',
+    'get_guide',
 ])
 class Handler(object):
     pass

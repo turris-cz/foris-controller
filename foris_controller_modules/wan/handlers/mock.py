@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockWanHandler(Handler, BaseMockHandler):
+    guide_set = BaseMockHandler._manager.Value(bool, False)
     wan_type = "none"
     wan_dhcp = {
         "hostname": None,
@@ -209,6 +210,7 @@ class MockWanHandler(Handler, BaseMockHandler):
 
         self.custom_mac_enabled = new_settings["mac_settings"]["custom_mac_enabled"]
         self.custom_mac = new_settings["mac_settings"].get("custom_mac", None)
+        MockWanHandler.guide_set.set(True)
 
         return True
 

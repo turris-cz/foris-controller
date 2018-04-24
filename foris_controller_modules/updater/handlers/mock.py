@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockUpdaterHandler(Handler, BaseMockHandler):
+    guide_set = BaseMockHandler._manager.Value(bool, False)
     user_lists = [
         {
             "name": "api-token",
@@ -206,6 +207,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         MockUpdaterHandler.enabled = enabled
         if branch is not None:
             MockUpdaterHandler.branch = branch
+        MockUpdaterHandler.guide_set.set(True)
 
         return True
 

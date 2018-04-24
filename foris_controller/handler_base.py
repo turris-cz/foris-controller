@@ -18,6 +18,7 @@
 #
 
 import inspect
+from utils import make_multiprocessing_manager
 
 
 class HandlerFunctionNotImplemented(BaseException):
@@ -55,4 +56,4 @@ class BaseOpenwrtHandler(object):
 
 
 class BaseMockHandler(object):
-    pass
+    _manager = make_multiprocessing_manager()

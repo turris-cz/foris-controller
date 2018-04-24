@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockPasswordHandler(Handler, BaseMockHandler):
+    guide_set = BaseMockHandler._manager.Value(bool, False)
     system_password = None
     foris_password = None
 
@@ -40,7 +41,7 @@ class MockPasswordHandler(Handler, BaseMockHandler):
         :returns: "good" / "bad" / "unset"
         :rtype: str
         """
-        if self.foris_password is None:
+        if MockPasswordHandler.foris_password is None:
             return "unset"
         return "good" if self.foris_password == password else "bad"
 
@@ -53,7 +54,8 @@ class MockPasswordHandler(Handler, BaseMockHandler):
         :returns: True on success False otherwise
         :rtype: bool
         """
-        self.foris_password = password
+        MockPasswordHandler.foris_password = password
+        MockPasswordHandler.guide_set.set(True)
         return True
 
     @logger_wrapper(logger)
@@ -65,5 +67,5 @@ class MockPasswordHandler(Handler, BaseMockHandler):
         :returns: True on success False otherwise
         :rtype: bool
         """
-        self.system_password = password
+        MockPasswordHandler.system_password = password
         return True

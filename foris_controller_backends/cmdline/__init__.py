@@ -30,11 +30,10 @@ import threading
 
 from tempfile import TemporaryFile
 from collections import OrderedDict
-from multiprocessing.managers import SyncManager
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import BackendCommandFailed, FailedToParseCommandOutput
-from foris_controller.utils import RWLock
+from foris_controller.utils import RWLock, make_multiprocessing_manager
 
 
 logger = logging.getLogger(__name__)
@@ -231,16 +230,10 @@ class AsyncProcessData(object):
         return self._exitted.get()
 
 
-def _make_manager():
-    manager = SyncManager()
-    manager.start(initializer=lambda: prctl.set_pdeathsig(signal.SIGKILL))
-    return manager
-
-
 class AsyncCommand(object):
     PROCESS_BUFFER = 20
 
-    manager = _make_manager()
+    manager = make_multiprocessing_manager()
 
     def __init__(self):
         self.lock = RWLock(app_info["lock_backend"])

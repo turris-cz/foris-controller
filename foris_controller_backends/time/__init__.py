@@ -26,6 +26,7 @@ from foris_controller_backends.uci import (
 from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand
 from foris_controller.utils import writelock, RWLock
+from foris_controller.exceptions import UciException
 
 
 logger = logging.getLogger(__name__)
@@ -85,6 +86,14 @@ class TimeUciCommands(object):
             backend.set_option("system", "@system[0]", "timezone", timezone)
             backend.set_option("system", "@system[0]", "zonename", "%s/%s" % (region, city))
             backend.set_option("system", "ntp", "enabled", store_bool(how_to_set_time == "ntp"))
+
+        # update wizard passed in foris web (best effort)
+        try:
+            with UciBackend() as backend:
+                backend.add_section("foris", "config", "wizard")
+                backend.add_to_list("foris", "wizard", "passed", ["time"])
+        except UciException:
+            pass
 
         with OpenwrtServices() as services:
             if how_to_set_time == "ntp":

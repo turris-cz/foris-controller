@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockDnsHandler(Handler, BaseMockHandler):
+    guide_set = BaseMockHandler._manager.Value(bool, False)
     forwarding_enabled = True
     dnssec_enabled = True
     dns_from_dhcp_enabled = False
@@ -71,4 +72,5 @@ class MockDnsHandler(Handler, BaseMockHandler):
         MockDnsHandler.dns_from_dhcp_enabled = dns_from_dhcp_enabled
         if dns_from_dhcp_domain is not None:
             MockDnsHandler.dns_from_dhcp_domain = dns_from_dhcp_domain
+        MockDnsHandler.guide_set.set(True)
         return True

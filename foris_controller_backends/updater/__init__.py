@@ -103,8 +103,9 @@ class UpdaterUci(object):
                     backend.set_option("updater", "approvals", "need", store_bool(True))
                 else:
                     raise NotImplementedError()
+
+            backend.add_section("updater", "override", "override")
             if branch is not None:
-                backend.add_section("updater", "override", "override")
                 if branch:
                     backend.set_option("updater", "override", "branch", branch)
                 else:
@@ -115,11 +116,19 @@ class UpdaterUci(object):
 
             backend.set_option("updater", "override", "disable", store_bool(not enabled))
 
-            if user_lists is not None:
-                svupdater.lists.update_userlists(user_lists)
+        if user_lists is not None:
+            svupdater.lists.update_userlists(user_lists)
 
-            if languages is not None:
-                svupdater.l10n.update_languages(languages)
+        if languages is not None:
+            svupdater.l10n.update_languages(languages)
+
+        # update wizard passed in foris web (best effort)
+        try:
+            with UciBackend() as backend:
+                backend.add_section("foris", "config", "wizard")
+                backend.add_to_list("foris", "wizard", "passed", ["updater"])
+        except UciException:
+            pass
 
         if enabled:
             try:

@@ -23,7 +23,7 @@ from foris_controller_backends.uci import (
     UciBackend, get_option_anonymous, get_option_named, parse_bool, store_bool
 )
 from foris_controller_backends.services import OpenwrtServices
-from foris_controller.exceptions import UciRecordNotFound
+from foris_controller.exceptions import UciRecordNotFound, UciException
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +68,14 @@ class DnsUciCommands(object):
             if dns_from_dhcp_domain:
                 backend.set_option(
                     "dhcp", "@dnsmasq[0]", "local", "/%s/" % dns_from_dhcp_domain.strip("/"))
+
+        # update wizard passed in foris web (best effort)
+        try:
+            with UciBackend() as backend:
+                backend.add_section("foris", "config", "wizard")
+                backend.add_to_list("foris", "wizard", "passed", ["dns"])
+        except UciException:
+            pass
 
         with OpenwrtServices() as services:
             services.restart("resolver")

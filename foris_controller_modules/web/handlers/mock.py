@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 class MockWebHandler(Handler, BaseMockHandler):
+    guide_workflow = "standard"
+    guide_enabled = True
     language_list = ['en', 'de', 'cs']
     current_language = 'en'
 
@@ -75,3 +77,46 @@ class MockWebHandler(Handler, BaseMockHandler):
         from foris_controller_modules.router_notifications.handlers.mock import \
                 MockRouterNotificationsHandler
         return len([e for e in MockRouterNotificationsHandler.notifications if not e["displayed"]])
+
+    @logger_wrapper(logger)
+    def update_guide(self, enabled, workflow):
+        MockWebHandler.guide_enabled = enabled
+        MockWebHandler.guide_workflow = workflow
+        if not enabled:
+            from foris_controller_modules.password.handlers import MockPasswordHandler
+            from foris_controller_modules.wan.handlers import MockWanHandler
+            from foris_controller_modules.time.handlers import MockTimeHandler
+            from foris_controller_modules.dns.handlers import MockDnsHandler
+            from foris_controller_modules.updater.handlers import MockUpdaterHandler
+            # Clean passed in mock backend
+            for e in [
+                MockPasswordHandler,
+                MockWanHandler,
+                MockTimeHandler,
+                MockDnsHandler,
+                MockUpdaterHandler,
+            ]:
+                e.guide_set.set(False)
+        return True
+
+    @logger_wrapper(logger)
+    def get_guide(self):
+        from foris_controller_modules.password.handlers import MockPasswordHandler
+        from foris_controller_modules.wan.handlers import MockWanHandler
+        from foris_controller_modules.time.handlers import MockTimeHandler
+        from foris_controller_modules.dns.handlers import MockDnsHandler
+        from foris_controller_modules.updater.handlers import MockUpdaterHandler
+        passed = [
+            e[0] for e in [
+                ("password", MockPasswordHandler),
+                ("wan", MockWanHandler),
+                ("time", MockTimeHandler),
+                ("dns", MockDnsHandler),
+                ("updater", MockUpdaterHandler),
+            ] if e[1].guide_set.get()
+        ]
+        return {
+            "enabled": MockWebHandler.guide_enabled,
+            "workflow": MockWebHandler.guide_workflow,
+            "passed": passed,
+        }

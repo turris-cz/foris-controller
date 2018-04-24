@@ -90,3 +90,23 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         :rtype: bool
         """
         return self.updater.updater_running()
+
+    @logger_wrapper(logger)
+    def update_guide(self, enabled, workflow):
+        """ Updates guide settings
+        :param enabled: is guide mode enabled
+        :type enabled: bool
+        :param workflow: which guide workflow is used
+        :type workflow: str
+        :returns: True on success, False otherwise
+        :rtype: bool
+        """
+        return self.web_uci_cmds.update_guide(enabled, workflow)
+
+    @logger_wrapper(logger)
+    def get_guide(self):
+        """ Get guide configuration and state
+        :returns: {"enabled": 0, "workflow": "standard", "passed": ["password", ...]}
+        :rtype: dict
+        """
+        return self.web_uci_cmds.get_guide()

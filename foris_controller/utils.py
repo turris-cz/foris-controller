@@ -22,11 +22,14 @@ import importlib
 import inspect
 import os
 import pkgutil
+import prctl
+import signal
 import socket
 import struct
 import re
 
 from functools import wraps
+from multiprocessing.managers import SyncManager
 
 from .module_base import BaseModule
 
@@ -301,3 +304,15 @@ class IPv4(object):
         if not(0 <= subnet <= 32):
             raise ValueError("Incorrect subnet %s" % subnet)
         return IPv4.num_to_str(int('1' * subnet + '0' * (32 - subnet), 2))
+
+
+def make_multiprocessing_manager():
+    """ Prepares multiprocessing manager which can serve to exchange data between
+    different processes (see pythons multiprocessing doc)
+
+    :returns: newly create instance of multiprocessing manager
+    :rtype: multiprocessing.managers.SyncManager
+    """
+    manager = SyncManager()
+    manager.start(initializer=lambda: prctl.set_pdeathsig(signal.SIGKILL))
+    return manager

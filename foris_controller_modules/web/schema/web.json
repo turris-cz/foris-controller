@@ -1,4 +1,27 @@
 {
+    "definitions": {
+        "guide_workflows": {"enum": ["standard"]},
+        "guide_standard_steps": {"enum": ["password", "wan", "time", "dns", "updater"]},
+        "guide": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"type": "boolean"},
+                        "workflow": {
+                            "allOf": [{"enum": ["standard"]}, {"$ref": "#/definitions/guide_workflows"}]
+                        },
+                        "passed": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/guide_standard_steps" }
+                        }
+                    },
+                    "required": ["enabled"],
+                    "additionalProperties": false
+                }
+            ]
+        }
+    },
     "oneOf": [
         {
             "description": "Request to get data which are necessary for the web gui",
@@ -21,10 +44,14 @@
                         "language": { "$ref": "#/definitions/iso2country" },
                         "reboot_required": {"type": "boolean"},
                         "updater_running": {"type": "boolean"},
-                        "notification_count": {"type": "integer", "minimum": 0}
+                        "notification_count": {"type": "integer", "minimum": 0},
+                        "guide": { "$ref": "#/definitions/guide" }
                     },
                     "additionalProperties": false,
-                    "required": ["language", "reboot_required", "notification_count", "updater_running"]
+                    "required": [
+                       "language", "reboot_required", "notification_count", "updater_running",
+                       "guide"
+                    ]
                 }
             },
             "additionalProperties": false,
@@ -110,6 +137,43 @@
                     },
                     "additionalProperties": false,
                     "required": ["language"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to update guide attributes",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_guide"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"type": "boolean"},
+                        "workflow": {"$ref": "#/definitions/guide_workflows"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["enabled", "workflow"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to update guide attributes",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_guide"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
                 }
             },
             "additionalProperties": false,

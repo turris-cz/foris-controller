@@ -18,11 +18,11 @@
 #
 
 import logging
-import glob
 import os
 
 from foris_controller_backends.files import BaseMatch
-from foris_controller_backends.uci import UciBackend, get_option_named
+from foris_controller_backends.password import ForisPasswordUci
+from foris_controller_backends.uci import UciBackend, get_option_named, store_bool, parse_bool
 from foris_controller.exceptions import UciException, UciRecordNotFound
 
 logger = logging.getLogger(__name__)
@@ -55,6 +55,32 @@ class WebUciCommands(object):
                 backend.set_option("luci", "main", "lang", language)
             except UciException:
                 pass
+
+        return True
+
+    def get_guide(self):
+        with UciBackend() as backend:
+            foris_data = backend.read("foris")
+
+        finished = parse_bool(get_option_named(foris_data, "foris", "wizard", "finished", '0'))
+        # remedy for migration from older wizard
+        step = int(get_option_named(foris_data, "foris", "wizard", "allowed_step_max", '0'))
+        enabled = not finished and step < 7
+        workflow = get_option_named(foris_data, "foris", "wizard", "workflow", 'standard')
+        passed = get_option_named(foris_data, "foris", "wizard", "passed", [])
+
+        return {
+            "enabled": enabled,
+            "workflow": workflow,
+            "passed": passed,
+        }
+
+    def update_guide(self, enabled, workflow):
+
+        with UciBackend() as backend:
+            backend.add_section("foris", "config", "wizard")
+            backend.set_option("foris", "wizard", "finished", store_bool(not enabled))
+            backend.set_option("foris", "wizard", "workflow", workflow)
 
         return True
 

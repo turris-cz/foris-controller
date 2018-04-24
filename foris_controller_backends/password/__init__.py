@@ -23,7 +23,7 @@ import pbkdf2
 logger = logging.getLogger(__name__)
 
 from foris_controller_backends.cmdline import BaseCmdLine
-from foris_controller_backends.uci import UciBackend, get_option_named
+from foris_controller_backends.uci import UciBackend, get_option_named, UciException
 
 
 class ForisPasswordUci(object):
@@ -33,6 +33,14 @@ class ForisPasswordUci(object):
         with UciBackend() as backend:
             backend.add_section("foris", "config", "auth")
             backend.set_option("foris", "auth", "password", new_password_hash)
+
+        # update wizard passed in foris web (best effort)
+        try:
+            with UciBackend() as backend:
+                backend.add_section("foris", "config", "wizard")
+                backend.add_to_list("foris", "wizard", "passed", ["password"])
+        except UciException:
+            pass
 
         return True
 
