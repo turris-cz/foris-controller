@@ -55,11 +55,10 @@ class ForisPasswordUci(object):
 
         return password_hash == pbkdf2.crypt(password, salt=password_hash)
 
-    def is_password_set(self):
-        with UciBackend() as backend:
-            data = backend.read("foris")
+    @staticmethod
+    def is_password_set(foris_data):
         try:
-            get_option_named(data, "foris", "auth", "password")
+            get_option_named(foris_data, "foris", "auth", "password")
             return True
         except (UciRecordNotFound, UciException):
             return False

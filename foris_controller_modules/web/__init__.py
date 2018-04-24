@@ -33,14 +33,7 @@ class WebModule(BaseModule):
         :returns: current data {'language': '..'}
         :rtype: dict
         """
-        return {
-            'language': self.handler.get_language(),
-            'reboot_required': self.handler.reboot_required(),
-            'updater_running': self.handler.updater_running(),
-            'notification_count': self.handler.get_notification_count(),
-            'guide': self.handler.get_guide(),
-            'password_ready': self.handler.is_password_set(),
-        }
+        return self.handler.get_data()
 
     def action_set_language(self, data):
         """ Sets language of the web gui
@@ -74,15 +67,10 @@ class WebModule(BaseModule):
 
 
 @wrap_required_functions([
-    'get_language',
     'set_language',
     'list_languages',
-    'reboot_required',
-    'updater_running',
-    'get_notification_count',
     'update_guide',
-    'get_guide',
-    'is_password_set',
+    'get_data',
 ])
 class Handler(object):
     pass

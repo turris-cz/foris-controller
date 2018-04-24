@@ -32,13 +32,10 @@ DEFAULT_LANGUAGE = "en"
 
 class WebUciCommands(object):
 
-    def get_language(self):
-
-        with UciBackend() as backend:
-            data = backend.read("foris")
-
+    @staticmethod
+    def get_language(foris_data):
         try:
-            return get_option_named(data, "foris", "settings", "lang")
+            return get_option_named(foris_data, "foris", "settings", "lang")
         except UciRecordNotFound:
             return DEFAULT_LANGUAGE
 
@@ -58,9 +55,8 @@ class WebUciCommands(object):
 
         return True
 
-    def get_guide(self):
-        with UciBackend() as backend:
-            foris_data = backend.read("foris")
+    @staticmethod
+    def get_guide(foris_data):
 
         finished = parse_bool(get_option_named(foris_data, "foris", "wizard", "finished", '0'))
         # remedy for migration from older wizard
@@ -83,6 +79,16 @@ class WebUciCommands(object):
             backend.set_option("foris", "wizard", "workflow", workflow)
 
         return True
+
+    def get_data(self):
+        with UciBackend() as backend:
+            data = backend.read("foris")
+
+        return {
+            "password_ready": ForisPasswordUci.is_password_set(data),
+            "language": WebUciCommands.get_language(data),
+            "guide": WebUciCommands.get_guide(data),
+        }
 
 
 class Languages(object):

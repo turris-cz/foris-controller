@@ -42,15 +42,6 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
     updater = Updater()
 
     @logger_wrapper(logger)
-    def get_language(self):
-        """ Mocks get language
-
-        :returns: current language
-        :rtype: str
-        """
-        return self.web_uci_cmds.get_language()
-
-    @logger_wrapper(logger)
     def set_language(self, language):
         """ Sets language
 
@@ -68,32 +59,6 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         """
         return self.langs.list_languages()
 
-    @logger_wrapper(logger)
-    def reboot_required(self):
-        """ Is reboot required indicator
-        :returns: True if reboot is required False otherwise
-        :rtype: bool
-        """
-        return self.maintain_cmds.reboot_required()
-
-    @logger_wrapper(logger)
-    def get_notification_count(self):
-        """ Get notifications count
-
-        :returns: current notifcations count
-        :rtype: int
-         """
-        return self.notifications_cmds.active_count()
-
-    @logger_wrapper(logger)
-    def updater_running(self):
-        """ Returns indicator whether the updater is running
-        :returns: True if updater is running False otherwise
-        :rtype: bool
-        """
-        return self.updater.updater_running()
-
-    @logger_wrapper(logger)
     def update_guide(self, enabled, workflow):
         """ Updates guide settings
         :param enabled: is guide mode enabled
@@ -106,17 +71,10 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         return self.web_uci_cmds.update_guide(enabled, workflow)
 
     @logger_wrapper(logger)
-    def get_guide(self):
-        """ Get guide configuration and state
-        :returns: {"enabled": 0, "workflow": "standard", "passed": ["password", ...]}
-        :rtype: dict
-        """
-        return self.web_uci_cmds.get_guide()
+    def get_data(self):
+        data = self.web_uci_cmds.get_data()
+        data["updater_running"] = self.updater.updater_running()
+        data["notification_count"] = self.notifications_cmds.active_count()
+        data["reboot_required"] = self.maintain_cmds.reboot_required()
 
-    @logger_wrapper(logger)
-    def is_password_set(self):
-        """ Determine whether a password is set
-        :returns: True if it is set False otherwise
-        :rtype: bool
-        """
-        return self.password_uci.is_password_set()
+        return data

@@ -33,7 +33,6 @@ class MockWebHandler(Handler, BaseMockHandler):
     language_list = ['en', 'de', 'cs']
     current_language = 'en'
 
-    @logger_wrapper(logger)
     def get_language(self):
         """ Mocks get language
 
@@ -63,22 +62,18 @@ class MockWebHandler(Handler, BaseMockHandler):
         """
         return MockWebHandler.language_list[:]
 
-    @logger_wrapper(logger)
     def reboot_required(self):
         return False
 
-    @logger_wrapper(logger)
     def updater_running(self):
         from foris_controller_modules.updater.handlers.mock import MockUpdaterHandler
         return MockUpdaterHandler.updater_running
 
-    @logger_wrapper(logger)
     def get_notification_count(self):
         from foris_controller_modules.router_notifications.handlers.mock import \
                 MockRouterNotificationsHandler
         return len([e for e in MockRouterNotificationsHandler.notifications if not e["displayed"]])
 
-    @logger_wrapper(logger)
     def update_guide(self, enabled, workflow):
         MockWebHandler.guide_enabled = enabled
         MockWebHandler.guide_workflow = workflow
@@ -99,7 +94,6 @@ class MockWebHandler(Handler, BaseMockHandler):
                 e.guide_set.set(False)
         return True
 
-    @logger_wrapper(logger)
     def get_guide(self):
         from foris_controller_modules.password.handlers import MockPasswordHandler
         from foris_controller_modules.wan.handlers import MockWanHandler
@@ -121,7 +115,17 @@ class MockWebHandler(Handler, BaseMockHandler):
             "passed": passed,
         }
 
-    @logger_wrapper(logger)
     def is_password_set(self):
         from foris_controller_modules.password.handlers import MockPasswordHandler
         return MockPasswordHandler.guide_set.get()
+
+    @logger_wrapper(logger)
+    def get_data(self):
+        return {
+            'language': self.get_language(),
+            'reboot_required': self.reboot_required(),
+            'updater_running': self.updater_running(),
+            'notification_count': self.get_notification_count(),
+            'guide': self.get_guide(),
+            'password_ready': self.is_password_set(),
+        }
