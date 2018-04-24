@@ -120,3 +120,8 @@ class MockWebHandler(Handler, BaseMockHandler):
             "workflow": MockWebHandler.guide_workflow,
             "passed": passed,
         }
+
+    @logger_wrapper(logger)
+    def is_password_set(self):
+        from foris_controller_modules.password.handlers import MockPasswordHandler
+        return MockPasswordHandler.guide_set.get()

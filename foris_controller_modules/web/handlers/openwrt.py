@@ -26,6 +26,7 @@ from foris_controller_backends.updater import Updater
 from foris_controller_backends.web import WebUciCommands, Languages
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.router_notifications import RouterNotificationsCmds
+from foris_controller_backends.password import ForisPasswordUci
 
 from .. import Handler
 
@@ -34,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
     web_uci_cmds = WebUciCommands()
+    password_uci = ForisPasswordUci()
     langs = Languages()
     maintain_cmds = MaintainCommands()
     notifications_cmds = RouterNotificationsCmds()
@@ -110,3 +112,11 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         :rtype: dict
         """
         return self.web_uci_cmds.get_guide()
+
+    @logger_wrapper(logger)
+    def is_password_set(self):
+        """ Determine whether a password is set
+        :returns: True if it is set False otherwise
+        :rtype: bool
+        """
+        return self.password_uci.is_password_set()

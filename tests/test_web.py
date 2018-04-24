@@ -37,7 +37,7 @@ def test_get(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
         u"language", u"reboot_required", u"notification_count", u"updater_running",
-        u"guide",
+        u"guide", u"password_ready",
     }
     assert len(res["data"]["language"]) == 2
     assert res["data"]["notification_count"] >= 0

@@ -41,11 +41,12 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": { "$ref": "#/definitions/iso2country" },
+                        "language": {"$ref": "#/definitions/iso2country"},
                         "reboot_required": {"type": "boolean"},
                         "updater_running": {"type": "boolean"},
                         "notification_count": {"type": "integer", "minimum": 0},
-                        "guide": { "$ref": "#/definitions/guide" }
+                        "guide": {"$ref": "#/definitions/guide"},
+                        "password_ready": {"type": "boolean"}
                     },
                     "additionalProperties": false,
                     "required": [

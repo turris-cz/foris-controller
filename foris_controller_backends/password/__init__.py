@@ -23,7 +23,9 @@ import pbkdf2
 logger = logging.getLogger(__name__)
 
 from foris_controller_backends.cmdline import BaseCmdLine
-from foris_controller_backends.uci import UciBackend, get_option_named, UciException
+from foris_controller_backends.uci import (
+    UciBackend, get_option_named, UciException, UciRecordNotFound
+)
 
 
 class ForisPasswordUci(object):
@@ -52,6 +54,15 @@ class ForisPasswordUci(object):
         password_hash = get_option_named(foris_data, "foris", "auth", "password")
 
         return password_hash == pbkdf2.crypt(password, salt=password_hash)
+
+    def is_password_set(self):
+        with UciBackend() as backend:
+            data = backend.read("foris")
+        try:
+            get_option_named(data, "foris", "auth", "password")
+            return True
+        except (UciRecordNotFound, UciException):
+            return False
 
 
 class SystemPasswordCmd(BaseCmdLine):

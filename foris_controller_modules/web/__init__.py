@@ -39,6 +39,7 @@ class WebModule(BaseModule):
             'updater_running': self.handler.updater_running(),
             'notification_count': self.handler.get_notification_count(),
             'guide': self.handler.get_guide(),
+            'password_ready': self.handler.is_password_set(),
         }
 
     def action_set_language(self, data):
@@ -81,6 +82,7 @@ class WebModule(BaseModule):
     'get_notification_count',
     'update_guide',
     'get_guide',
+    'is_password_set',
 ])
 class Handler(object):
     pass
