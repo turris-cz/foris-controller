@@ -13,7 +13,8 @@
                         },
                         "passed": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/guide_standard_steps" }
+                            "items": { "$ref": "#/definitions/guide_standard_steps" },
+                            "uniqueItems": true
                         }
                     },
                     "required": ["enabled"],

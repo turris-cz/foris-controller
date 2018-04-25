@@ -124,9 +124,8 @@ class UpdaterUci(object):
 
         # update wizard passed in foris web (best effort)
         try:
-            with UciBackend() as backend:
-                backend.add_section("foris", "config", "wizard")
-                backend.add_to_list("foris", "wizard", "passed", ["updater"])
+            from foris_controller_backends.web import WebUciCommands
+            WebUciCommands.update_passed("updater")
         except UciException:
             pass
 

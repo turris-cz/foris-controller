@@ -21,7 +21,8 @@ import pytest
 import base64
 
 from foris_controller_testtools.fixtures import (
-    uci_configs_init, infrastructure, ubusd_test, file_root_init
+    uci_configs_init, infrastructure, ubusd_test, file_root_init,
+    init_script_result
 )
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_web_files")
@@ -106,7 +107,7 @@ def test_missing_data(file_root_init, uci_configs_init, infrastructure, ubusd_te
     assert "errors" in res["data"]
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_update_guide(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_update_guide(file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "update_guide",
@@ -142,18 +143,26 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, ubusd_te
         assert res["data"]["guide"]["passed"] == passed
     get_passed([])
 
+    def pass_step(msg, result):
+        res = infrastructure.process_message(msg)
+        assert res["data"]["result"] is True
+        get_passed(result)
+        # repeat it twice to be sure that it doesn't return duplicates
+        res = infrastructure.process_message(msg)
+        assert res["data"]["result"] is True
+        get_passed(result)
+
     # Update password
-    res = infrastructure.process_message({
+    msg = {
         "module": "password",
         "action": "set",
         "kind": "request",
         "data": {"password": base64.b64encode("heslo"), "type": "foris"},
-    })
-    assert res["data"]["result"] is True
-    get_passed(["password"])
+    }
+    pass_step(msg, ["password"])
 
     # Update wan
-    res = infrastructure.process_message({
+    msg = {
         "module": "wan",
         "action": "update_settings",
         "kind": "request",
@@ -162,12 +171,11 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, ubusd_te
             'wan6_settings': {'wan6_type': 'none'},
             'mac_settings': {'custom_mac_enabled': False},
         }
-    })
-    assert res["data"]["result"] is True
-    get_passed(["password", "wan"])
+    }
+    pass_step(msg, ["password", "wan"])
 
     # Update timezone
-    res = infrastructure.process_message({
+    msg = {
         "module": "time",
         "action": "update_settings",
         "kind": "request",
@@ -180,12 +188,11 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, ubusd_te
                 u"time": u"2018-01-30T15:51:30.482515",
             }
         }
-    })
-    assert res["data"]["result"] is True
-    get_passed(["password", "wan", "time"])
+    }
+    pass_step(msg, ["password", "wan", "time"])
 
     # Update dns
-    res = infrastructure.process_message({
+    msg = {
         "module": "dns",
         "action": "update_settings",
         "kind": "request",
@@ -194,17 +201,15 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, ubusd_te
             "dnssec_enabled": False,
             "dns_from_dhcp_enabled": False,
         }
-    })
-    assert res["data"]["result"] is True
-    get_passed(["password", "wan", "time", "dns"])
+    }
+    pass_step(msg, ["password", "wan", "time", "dns"])
 
-    res = infrastructure.process_message({
+    msg = {
         "module": "updater",
         "action": "update_settings",
         "kind": "request",
         "data": {
             "enabled": False,
         },
-    })
-    assert res["data"]["result"] is True
-    get_passed(["password", "wan", "time", "dns", "updater"])
+    }
+    pass_step(msg, ["password", "wan", "time", "dns", "updater"])

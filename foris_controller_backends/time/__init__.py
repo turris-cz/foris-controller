@@ -89,9 +89,8 @@ class TimeUciCommands(object):
 
         # update wizard passed in foris web (best effort)
         try:
-            with UciBackend() as backend:
-                backend.add_section("foris", "config", "wizard")
-                backend.add_to_list("foris", "wizard", "passed", ["time"])
+            from foris_controller_backends.web import WebUciCommands
+            WebUciCommands.update_passed("time")
         except UciException:
             pass
 

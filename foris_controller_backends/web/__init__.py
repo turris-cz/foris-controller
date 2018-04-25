@@ -90,6 +90,15 @@ class WebUciCommands(object):
             "guide": WebUciCommands.get_guide(data),
         }
 
+    @staticmethod
+    def update_passed(step):
+        with UciBackend() as backend:
+            data = backend.read("foris")
+            passed = get_option_named(data, "foris", "wizard", "passed", [])
+            if step not in passed:
+                backend.add_section("foris", "config", "wizard")
+                backend.add_to_list("foris", "wizard", "passed", [step])
+
 
 class Languages(object):
     INSTALLED_LANG_MATCH = "/usr/lib/python2.7/site-packages/foris/langs/??.py"
