@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #
 # foris-controller
 # Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
@@ -452,3 +454,33 @@ def test_import_data(uci_configs_init, lock_backend):
 
     assert uci.get_option_named(data, 'import_test', 'import1', 'ipass') == '1'
     assert uci.get_option_anonymous(data, 'import_test', 'import', 1, 'ipass') == '0'
+
+@pytest.mark.uci_config_path(CONFIG_PATH)
+def test_strange_chars_in_value(uci_configs_init, lock_backend):
+    config_dir, _ = uci_configs_init
+    uci = get_uci_module(lock_backend)
+
+    SPECIAL_VALUES = [
+        u"Příliš žluťoučký kůň úpěl ďábelské ódy",
+        u"Mike's place",
+        u"Nick’s place",
+        u"Kick''is ''' pl ' howgh",
+        u"Dick\\''",
+        u"Rick\\'\\'",
+        u"'Mi\\'d'dle'",
+    ]
+    backend_class = get_uci_module(lock_backend).UciBackend
+    with backend_class(config_dir) as backend:
+        backend.add_section("test1", "special_values", "special_values")
+        for idx, value in enumerate(SPECIAL_VALUES):
+            backend.set_option("test1", "special_values", "val_%d" % idx, value)
+            backend.replace_list("test1", "special_values", "my_list", SPECIAL_VALUES)
+
+    with backend_class(config_dir) as backend:
+        data = backend.read('test1')
+
+    for idx, value in enumerate(SPECIAL_VALUES):
+        assert uci.get_option_named(data, 'test1', 'special_values', "val_%d" % idx) \
+            == value.encode("utf8")
+    assert [e.encode("utf8") for e in SPECIAL_VALUES] == \
+        uci.get_option_named(data, "test1", "special_values", "my_list")

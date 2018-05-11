@@ -250,6 +250,16 @@ class UciBackend(object):
             self._run_uci_command("revert", config)
         logger.debug("Uci configs updates were commited.")
 
+    def _convert_value(self, value):
+        """ Converts value to originall value which is was put to uci
+            "'Tom'\''sNet'" -> "Tom'sNet"
+        """
+        return "".join([
+            "'" if e == "\\'" else e.strip("'")
+            for e in re.split(r"('[^']*'|\\')", value)
+            if e
+        ])
+
     def _parse_section(self, lines):
         result = collections.OrderedDict()
         try:
@@ -257,15 +267,15 @@ class UciBackend(object):
                 if lines[0].startswith("package") or lines[0].startswith("config"):
                     break
 
-                match = re.match(r"^\s*option ([^\s]+) '([^']+)'$", lines[0])
+                match = re.match(r"^\s*option ([^\s]+) ('.+')$", lines[0])
                 if match:
-                    result[match.group(1)] = match.group(2)
+                    result[match.group(1)] = self._convert_value(match.group(2))
                 else:
-                    match = re.match(r"^\s*list ([^\s]+) '([^']+)'$", lines[0])
+                    match = re.match(r"^\s*list ([^\s]+) ('.+')$", lines[0])
                     if match:
                         list_name, value = match.group(1, 2)
                         result[list_name] = result.get(list_name, [])
-                        result[list_name].append(value)
+                        result[list_name].append(self._convert_value(value))
                 lines.pop(0)
 
         except IndexError:
