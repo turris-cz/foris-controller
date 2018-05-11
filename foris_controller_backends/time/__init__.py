@@ -54,7 +54,6 @@ class SetTimeCommand(BaseCmdLine):
         self._set_hwclock()
 
 
-
 class TimeUciCommands(object):
 
     def get_settings(self):
@@ -68,7 +67,7 @@ class TimeUciCommands(object):
             region, city = zonename.split("/")
         except ValueError:
             region, city = "", ""
-        ntp = parse_bool(get_option_named(system_data, "system", "ntp", "enabled"))
+        ntp = parse_bool(get_option_named(system_data, "system", "ntp", "enabled", "1"))
 
         return {
             "region": region,
