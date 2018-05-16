@@ -79,6 +79,10 @@ class WanUci(object):
             wan6_settings["wan6_dhcpv6"] = {
                 "duid": get_option_named(network_data, "network", "wan6", "clientid", ""),
             }
+        elif wan6_settings["wan6_type"] == "6to4":
+            wan6_settings["wan6_6to4"] = {
+                "ipv4_address": get_option_named(network_data, "network", "wan6", "ipaddr", ""),
+            }
 
         # MAC
         custom_mac = get_option_named(network_data, "network", "wan", "macaddr", "")
@@ -148,6 +152,15 @@ class WanUci(object):
                 else:
                     try:
                         backend.del_option("network", "wan6", "clientid")
+                    except UciException:
+                        pass
+            elif wan6_type == "6to4":
+                mapped_ipv4 = wan6_settings["wan6_6to4"]["ipv4_address"]
+                if mapped_ipv4:
+                    backend.set_option("network", "wan6", "ipaddr", mapped_ipv4)
+                else:
+                    try:
+                        backend.del_option("network", "wan6", "ipaddr")
                     except UciException:
                         pass
             else:

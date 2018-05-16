@@ -315,6 +315,40 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     update(
         {
             'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': ""}},
+            'mac_settings': {'custom_mac_enabled': True, "custom_mac": "11:22:33:44:55:66"},
+        },
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': ""}},
+            'mac_settings': {'custom_mac_enabled': True, "custom_mac": "11:22:33:44:55:66"},
+        },
+        {
+            'wan_type': 'dhcp',
+            'wan6_type': '6to4',
+            'custom_mac_enabled': True,
+        },
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': "1.2.3.4"}},
+            'mac_settings': {'custom_mac_enabled': True, "custom_mac": "11:22:33:44:55:66"},
+        },
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': "1.2.3.4"}},
+            'mac_settings': {'custom_mac_enabled': True, "custom_mac": "11:22:33:44:55:66"},
+        },
+        {
+            'wan_type': 'dhcp',
+            'wan6_type': '6to4',
+            'custom_mac_enabled': True,
+        },
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
             'wan6_settings': {'wan6_type': 'none'},
             'mac_settings': {'custom_mac_enabled': True, "custom_mac": "11:22:33:44:55:66"},
         },
@@ -538,6 +572,40 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == "11:22:33:44:55:66"
 
+    # WAN
+    data = update({
+        'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+        'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': ""}},
+        'mac_settings': {'custom_mac_enabled': False},
+    })
+
+    assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "proto") == "6to4"
+    assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ipaddr", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
+    assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+
+    # WAN
+    data = update({
+        'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+        'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': "1.5.7.9"}},
+        'mac_settings': {'custom_mac_enabled': False},
+    })
+
+    assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "proto") == "6to4"
+    assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ipaddr", "") == "1.5.7.9"
+    assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
+    assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+
 
 def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
 
@@ -641,6 +709,18 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
                     "gateway": "2001:1488:fffe:6::1",
                     "dns1": None,
                     "dns2": "2001:4860:4860::8888",
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        }
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6to4',
+                'wan6_6to4': {
+                    "ipv4_address": "256.0.0.0",
                 },
             },
             'mac_settings': {'custom_mac_enabled': False},

@@ -83,7 +83,7 @@
                 }
             ]
         },
-        "wan6_type": {"enum": ["none", "static", "dhcpv6"]},
+        "wan6_type": {"enum": ["none", "static", "dhcpv6", "6to4"]},
         "wan6_static": {
             "type": "object",
             "properties": {
@@ -107,6 +107,19 @@
                 }
             },
             "required": ["duid"],
+            "additionalProperties": false
+        },
+        "wan6_6to4": {
+            "type": "object",
+            "properties": {
+                "ipv4_address": {
+                    "oneOf": [
+                        {"enum": [""]},
+                        {"format": "ipv4", "type": "string"}
+                    ]
+                }
+            },
+            "required": ["ipv4_address"],
             "additionalProperties": false
         },
         "wan6_settings": {
@@ -151,6 +164,20 @@
                     },
                     "additionalProperties": false,
                     "required": ["wan6_type", "wan6_static"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "wan6_type": {
+                            "allOf": [
+                                {"$ref": "#/definitions/wan6_type"},
+                                {"enum": ["6to4"]}
+                            ]
+                        },
+                        "wan6_6to4": {"$ref": "#/definitions/wan6_6to4"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["wan6_type", "wan6_6to4"]
                 }
             ]
         },
