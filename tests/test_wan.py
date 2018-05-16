@@ -681,3 +681,45 @@ def test_connection_test(uci_configs_init, infrastructure, ubusd_test):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert res['data']['status'] in ["running", "finished"]
     assert "data" in res['data']
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_missing_wan6_openwrt(uci_configs_init, lock_backend, infrastructure, ubusd_test):
+    uci = get_uci_module(lock_backend)
+    with uci.UciBackend() as backend:
+        backend.del_section("network", "wan6")
+
+    res = infrastructure.process_message({
+        "module": "wan",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert "wan6_settings" in res["data"].keys()
+    assert res["data"]["wan6_settings"]["wan6_type"] == "none"
+
+    res = infrastructure.process_message({
+        "module": "wan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {'wan6_type': 'dhcpv6', 'wan6_dhcpv6': {"duid": ""}},
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+    })
+    assert "result" in res["data"]
+    assert res["data"]["result"]
+
+    res = infrastructure.process_message({
+        "module": "wan",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert "wan6_settings" in res["data"].keys()
+    assert res["data"]["wan6_settings"]["wan6_type"] == "dhcpv6"
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    assert uci.get_option_named(data, "network", "wan6", "proto") == "dhcpv6"
+    assert uci.get_option_named(data, "network", "wan6", "ifname") == "@wan"

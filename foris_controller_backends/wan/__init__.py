@@ -64,7 +64,8 @@ class WanUci(object):
 
         # WAN6
         wan6_settings = {}
-        wan6_settings["wan6_type"] = get_option_named(network_data, "network", "wan6", "proto")
+        wan6_settings["wan6_type"] = get_option_named(
+            network_data, "network", "wan6", "proto", "none")
         if wan6_settings["wan6_type"] == "static":
             wan6_settings["wan6_static"] = {
                 "ip": get_option_named(network_data, "network", "wan6", "ip6addr"),
@@ -126,6 +127,8 @@ class WanUci(object):
 
             # WAN6
             wan6_type = wan6_settings["wan6_type"]
+            backend.add_section("network", "interface", "wan6")
+            backend.set_option("network", "wan6", "ifname", "@wan")
             backend.set_option("network", "wan6", "proto", wan6_type)
             if wan6_type == "static":
                 backend.set_option("network", "wan6", "ip6addr", wan6_settings["wan6_static"]["ip"])
