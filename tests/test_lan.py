@@ -22,9 +22,11 @@ import pytest
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
+    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result
 )
-from foris_controller_testtools.utils import match_subdict, sh_was_called, get_uci_module
+from foris_controller_testtools.utils import (
+    match_subdict, sh_was_called, get_uci_module, check_service_result
+)
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -136,7 +138,9 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_guest_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubusd_test):
+def test_guest_openwrt_backend(
+    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test
+):
 
     uci = get_uci_module(lock_backend)
 
@@ -154,6 +158,11 @@ def test_guest_openwrt_backend(uci_configs_init, lock_backend, infrastructure, u
             u'module': u'lan'
         }
         assert sh_was_called("/etc/init.d/network", ["restart"])
+        if data["guest_network"]["enabled"]:
+            if data["guest_network"]["qos"]["enabled"]:
+                check_service_result("sqm", True, "enable")
+            else:
+                check_service_result("sqm", True, "disable")
 
     # test guest network
     update({

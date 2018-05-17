@@ -103,6 +103,10 @@ class LanUci(object):
 
     @staticmethod
     def set_guest_network(backend, guest_network, interfaces=None):
+        """
+        :returns: None or "enable" or "disable" to set sqm service
+        :rtype: NoneType or str
+        """
 
         def set_if_exists(backend, config, section, option, data, key):
             if key in data:
@@ -198,6 +202,9 @@ class LanUci(object):
                     backend, "sqm", "guest_limit_turris", "download", guest_network["qos"],
                     "upload"
                 )
+                return "enable"
+            else:
+                return "disable"
         except UciException:
             pass  # sqm might not be installed -> set at least the rest and don't fail
 
@@ -237,7 +244,14 @@ class LanUci(object):
                 WifiUci.set_guest_wifi_disabled(backend)
 
             # set guest network part
-            self.set_guest_network(backend, guest_network)
+            sqm_cmd = self.set_guest_network(backend, guest_network)
 
         with OpenwrtServices() as services:
+            # try to restart sqm (best effort) in might not be installed yet
+            # note that sqm will be restarted when the network is restarted
+            if sqm_cmd == "enable":
+                services.enable("sqm", fail_on_error=False)
+            elif sqm_cmd == "disable":
+                services.disable("sqm", fail_on_error=False)
+
             services.restart("network", delay=2)
