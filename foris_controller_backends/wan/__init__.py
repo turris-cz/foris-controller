@@ -156,6 +156,7 @@ class WanUci(object):
                         pass
             elif wan6_type == "6to4":
                 mapped_ipv4 = wan6_settings["wan6_6to4"]["ipv4_address"]
+                backend.set_option("network", "lan", "ip6assign", "60")
                 if mapped_ipv4:
                     backend.set_option("network", "wan6", "ipaddr", mapped_ipv4)
                 else:

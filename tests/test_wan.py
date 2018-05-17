@@ -572,7 +572,8 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == "11:22:33:44:55:66"
 
-    # WAN
+    with uci.UciBackend() as backend:
+        backend.del_option("network", "lan", "ip6assign")
     data = update({
         'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
         'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': ""}},
@@ -587,9 +588,11 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ipaddr", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
+    assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
 
-    # WAN
+    with uci.UciBackend() as backend:
+        backend.del_option("network", "lan", "ip6assign")
     data = update({
         'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
         'wan6_settings': {'wan6_type': '6to4', 'wan6_6to4': {'ipv4_address': "1.5.7.9"}},
@@ -604,6 +607,7 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ipaddr", "") == "1.5.7.9"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
+    assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
 
 
