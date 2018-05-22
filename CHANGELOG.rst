@@ -1,3 +1,13 @@
+0.9.4 (2018-05-22)
+------------------
+
+* lan: guest network and sqm service fix
+* wan: 6in4 support
+* wan: 6to4 support
+* wan: handle missing wan6 section
+* uci: character `'` in values
+* time: default value for ntp.enabled
+
 0.9.3 (2018-04-26)
 ------------------
 
