@@ -349,6 +349,86 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     update(
         {
             'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1480,
+                    "server_ipv4": "111.22.33.44",
+                    "ipv6_prefix": "2001:470:6e:39::/64",
+                    "dynamic_ipv4": {
+                        "enabled": False,
+                    }
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1480,
+                    "server_ipv4": "111.22.33.44",
+                    "ipv6_prefix": "2001:470:6e:39::/64",
+                    "dynamic_ipv4": {
+                        "enabled": False,
+                    }
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+        {
+            'wan_type': 'dhcp',
+            'wan6_type': '6in4',
+            'custom_mac_enabled': False,
+        },
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1280,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "2001:470:6f:39::/64",
+                    "dynamic_ipv4": {
+                        "enabled": True,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1"
+                    }
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1280,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "2001:470:6f:39::/64",
+                    "dynamic_ipv4": {
+                        "enabled": True,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1"
+                    }
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+        {
+            'wan_type': 'dhcp',
+            'wan6_type': '6in4',
+            'custom_mac_enabled': False,
+        },
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
             'wan6_settings': {'wan6_type': 'none'},
             'mac_settings': {'custom_mac_enabled': True, "custom_mac": "11:22:33:44:55:66"},
         },
@@ -610,6 +690,104 @@ def test_wan_openwrt_backend(uci_configs_init, lock_backend, infrastructure, ubu
     assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
 
+    data = update({
+        'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+        'wan6_settings': {
+            'wan6_type': '6in4',
+            'wan6_6in4': {
+                "mtu": 1470,
+                "server_ipv4": "1.22.33.44",
+                "ipv6_prefix": "2001:470:6a:39::/64",
+                "dynamic_ipv4": {
+                    "enabled": False,
+                }
+            },
+        },
+        'mac_settings': {'custom_mac_enabled': False},
+    })
+    assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "proto") == "6in4"
+    assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == "2001:470:6a:39::/64"
+    assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == "1.22.33.44"
+    assert uci.get_option_named(data, "network", "wan6", "mtu", "") == "1470"
+    assert uci.get_option_named(data, "network", "wan6", "tunnelid", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "username", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "password", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
+    assert uci.parse_bool(uci.get_option_named(
+        data, "firewall", "turris_wan_6in4_rule", "enabled", "0")) is True
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "family", "") == "ipv4"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src", "") == "wan"
+    assert uci.get_option_named(
+        data, "firewall", "turris_wan_6in4_rule", "src_ip", "") == "1.22.33.44"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "proto", "") == "41"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "target", "") == "ACCEPT"
+    assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+
+    data = update({
+        'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+        'wan6_settings': {
+            'wan6_type': '6in4',
+            'wan6_6in4': {
+                "mtu": 1290,
+                "server_ipv4": "1.222.33.44",
+                "ipv6_prefix": "2001:470:6c:39::/64",
+                "dynamic_ipv4": {
+                    "enabled": True,
+                    "tunnel_id": "123456",
+                    "username": "user11",
+                    "password_or_key": "passphrase11"
+                }
+            },
+        },
+        'mac_settings': {'custom_mac_enabled': False},
+    })
+    assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "proto") == "6in4"
+    assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == "2001:470:6c:39::/64"
+    assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == "1.222.33.44"
+    assert uci.get_option_named(data, "network", "wan6", "mtu", "") == "1290"
+    assert uci.get_option_named(data, "network", "wan6", "tunnelid", "") == "123456"
+    assert uci.get_option_named(data, "network", "wan6", "username", "") == "user11"
+    assert uci.get_option_named(data, "network", "wan6", "password", "") == "passphrase11"
+    assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
+    assert uci.parse_bool(uci.get_option_named(
+        data, "firewall", "turris_wan_6in4_rule", "enabled", "")) is True
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "family", "") == "ipv4"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src", "") == "wan"
+    assert uci.get_option_named(
+        data, "firewall", "turris_wan_6in4_rule", "src_ip", "") == "1.222.33.44"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "proto", "") == "41"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "target", "") == "ACCEPT"
+    assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+
+    data = update({
+        'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+        'wan6_settings': {'wan6_type': 'none'},
+        'mac_settings': {'custom_mac_enabled': False},
+    })
+    assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
+    assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "mtu", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "tunnelid", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "username", "") == ""
+    assert uci.get_option_named(data, "network", "wan6", "password", "") == ""
+    assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
+    assert uci.parse_bool(uci.get_option_named(
+        data, "firewall", "turris_wan_6in4_rule", "enabled", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
+
 
 def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
 
@@ -725,6 +903,86 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
                 'wan6_type': '6to4',
                 'wan6_6to4': {
                     "ipv4_address": "256.0.0.0",
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        }
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1480,
+                    "server_ipv4": "11.22.333.44",
+                    "ipv6_prefix": "2001:470:6f:39::/64",
+                    "dynamic_ipv4": {
+                        "enabled": True,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1"
+                    }
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        }
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1480,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "2001:470::6f:39::/64",
+                    "dynamic_ipv4": {
+                        "enabled": True,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1"
+                    }
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        }
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1480,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "2001:470:6f:39::/129",
+                    "dynamic_ipv4": {
+                        "enabled": True,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1"
+                    }
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        }
+    )
+    update(
+        {
+            'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
+            'wan6_settings': {
+                'wan6_type': '6in4',
+                'wan6_6in4': {
+                    "mtu": 1480,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "2001:470:6f:39::/64",
+                    "dynamic_ipv4": {
+                        "enabled": False,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1"
+                    }
                 },
             },
             'mac_settings': {'custom_mac_enabled': False},

@@ -83,7 +83,7 @@
                 }
             ]
         },
-        "wan6_type": {"enum": ["none", "static", "dhcpv6", "6to4"]},
+        "wan6_type": {"enum": ["none", "static", "dhcpv6", "6to4", "6in4"]},
         "wan6_static": {
             "type": "object",
             "properties": {
@@ -120,6 +120,39 @@
                 }
             },
             "required": ["ipv4_address"],
+            "additionalProperties": false
+        },
+        "wan6_6in4": {
+            "type": "object",
+            "properties": {
+                "mtu": {"$ref": "#/definitions/mtu"},
+                "server_ipv4": {"format": "ipv4", "type": "string"},
+                "ipv6_prefix": {"format": "ipv6prefix", "type": "string"},
+                "dynamic_ipv4": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {"enum": [false]}
+                            },
+                            "required": ["enabled"],
+                            "additionalProperties": false
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {"enum": [true]},
+                                "tunnel_id": {"type": "string", "minLength": 1},
+                                "username": {"type": "string", "minLength": 1},
+                                "password_or_key": {"type": "string", "minLength": 1}
+                            },
+                            "required": ["enabled", "tunnel_id", "username", "password_or_key"],
+                            "additionalProperties": false
+                        }
+                    ]
+                }
+            },
+            "required": ["mtu", "server_ipv4", "ipv6_prefix", "dynamic_ipv4"],
             "additionalProperties": false
         },
         "wan6_settings": {
@@ -178,6 +211,20 @@
                     },
                     "additionalProperties": false,
                     "required": ["wan6_type", "wan6_6to4"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "wan6_type": {
+                            "allOf": [
+                                {"$ref": "#/definitions/wan6_type"},
+                                {"enum": ["6in4"]}
+                            ]
+                        },
+                        "wan6_6in4": {"$ref": "#/definitions/wan6_6in4"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["wan6_type", "wan6_6in4"]
                 }
             ]
         },

@@ -57,6 +57,14 @@ class MockWanHandler(Handler, BaseMockHandler):
     wan6_6to4 = {
         "ipv4_address": "",
     }
+    wan6_6in4 = {
+        "mtu": 1480,
+        "server_ipv4": "",
+        "ipv6_prefix": "",
+        "dynamic_ipv4": {
+            "enabled": False
+        }
+    }
     custom_mac_enabled = False
     custom_mac = None
     test_id_set = set()
@@ -90,6 +98,14 @@ class MockWanHandler(Handler, BaseMockHandler):
         }
         self.wan6_6to4 = {
             "ipv4_address": "",
+        }
+        self.wan6_6in4 = {
+            "mtu": 1480,
+            "server_ipv4": "",
+            "ipv6_prefix": "",
+            "dynamic_ipv4": {
+                "enabled": False
+            }
         }
         self.custom_mac_enabled = False
         self.custom_mac = None
@@ -145,6 +161,8 @@ class MockWanHandler(Handler, BaseMockHandler):
             res["wan6_settings"]["wan6_6to4"] = {
                 "ipv4_address": self.wan6_6to4["ipv4_address"]
             }
+        elif self.wan6_type == "6in4":
+            res["wan6_settings"]["wan6_6in4"] = copy.deepcopy(self.wan6_6in4)
 
         if self.custom_mac_enabled:
             res["mac_settings"]["custom_mac"] = self.custom_mac
@@ -186,6 +204,8 @@ class MockWanHandler(Handler, BaseMockHandler):
         elif self.wan6_type == "6to4":
             self.wan6_6to4["ipv4_address"] = \
                 new_settings["wan6_settings"]["wan6_6to4"]["ipv4_address"]
+        elif self.wan6_type == "6in4":
+            self.wan6_6in4 = copy.deepcopy(new_settings["wan6_settings"]["wan6_6in4"])
 
         self.custom_mac_enabled = new_settings["mac_settings"]["custom_mac_enabled"]
         self.custom_mac = new_settings["mac_settings"].get("custom_mac", None)
