@@ -19,6 +19,8 @@
 
 import logging
 
+from functools import reduce
+
 from foris_controller.app import app_info
 from foris_controller_backends.uci import (
     UciBackend, get_option_anonymous, get_option_named, parse_bool, store_bool
@@ -115,11 +117,11 @@ class TimeUciCommands(object):
 
 class TimeAsyncCmds(AsyncCommand):
 
-    def ntpdate_trigger(self, exit_notify_function, reset_notify_function):
-        """ Executes ntpdate in async modude
+    def ntpd_trigger(self, exit_notify_function, reset_notify_function):
+        """ Executes ntpd in async modude
 
         This means that we don't wait for result, but a async_id will be returned immediatelly.
-        Then we cat watch ntpdate notifications with the same async_id
+        Then we cat watch ntpd notifications with the same async_id
 
         :param exit_notify_function: function which is used to send notifications back to client
                                      when cmd exits
@@ -129,7 +131,7 @@ class TimeAsyncCmds(AsyncCommand):
         :returns: async id
         :rtype: str
         """
-        logger.debug("Starting ntpdate.")
+        logger.debug("Starting ntpd.")
 
         # handler which will be called when the program
         def handler_exit(process_data):
@@ -141,7 +143,7 @@ class TimeAsyncCmds(AsyncCommand):
                 SetTimeCommand().set_hwclock()
 
             exit_notify_function({"id": process_data.id, "result": result})
-            logger.debug("ntpdate finished: (retval=%d)" % process_data.get_retval())
+            logger.debug("ntpd finished: (retval=%d)" % process_data.get_retval())
 
         # get all ntpserver
         with UciBackend() as backend:
@@ -150,11 +152,11 @@ class TimeAsyncCmds(AsyncCommand):
         servers = get_option_named(system_data, "system", "ntp", "server", [])
 
         async_id = self.start_process(
-            ["/usr/sbin/ntpdate"] + servers,
+            ["/usr/sbin/ntpd", "-q", "-n"] + reduce(lambda x, y: x + ["-p"] + [y], servers, []),
             [],
             handler_exit,
             reset_notify_function,
         )
-        logger.debug("ntpdate started in async mode '%s'." % async_id)
+        logger.debug("ntpd started in async mode '%s'." % async_id)
 
         return async_id

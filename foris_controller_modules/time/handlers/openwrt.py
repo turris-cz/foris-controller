@@ -71,4 +71,4 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         :returns: generated_ntpdate_id
         :rtype: str
         """
-        return self.async.ntpdate_trigger(exit_notify_function, reset_notify_function)
+        return self.async.ntpd_trigger(exit_notify_function, reset_notify_function)
