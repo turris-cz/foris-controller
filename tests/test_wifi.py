@@ -700,6 +700,36 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, ubusd_te
         },
     }])
 
+    # too long SSID
+    update([{
+        "id": 0,
+        "enabled": False,
+        "SSID": "This SSID has more than 32 charac",
+        "hidden": False,
+        "channel": 10,
+        "htmode": "HT20",
+        "hwmode": "11g",
+        "password": "passpass",
+        "guest_wifi": {
+            "enabled": False,
+        },
+    }])
+    update([{
+        "id": 0,
+        "enabled": False,
+        "SSID": "Turris",
+        "hidden": False,
+        "channel": 40,
+        "htmode": "HT20",
+        "hwmode": "11g",
+        "password": "passpass",
+        "guest_wifi": {
+            "enabled": True,
+            "SSID": "This SSID has more than 32 charac",
+            "password": "passpass"
+        },
+    }])
+
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_reset(file_root_init, uci_configs_init, infrastructure, ubusd_test):
@@ -777,3 +807,40 @@ def test_reset(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     # test initial situation (based on default omnia settings)
 
     assert res["data"]["devices"] == DEFAULT_CONFIG
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(['openwrt'])
+def test_too_long_generated_guest_ssid(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "devices": [{
+                "id": 0,
+                "enabled": True,
+                "SSID": "This SSID has less than 32 chars",
+                "hidden": False,
+                "channel": 10,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": False,
+                },
+            }]
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'wifi'
+    }
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert res["data"]["devices"][0]["guest_wifi"]["SSID"] == "Turris-guest"

@@ -154,8 +154,9 @@ class WifiUci(object):
         current_channel = 0 if current_channel == "auto" else int(current_channel)
 
         if guest_interface:
+            derived_guest = "%s-guest" % ssid if len("%s-guest" % ssid) <= 32 else "Turris-guest"
             guest_enabled = not parse_bool(guest_interface["data"].get("disabled", "0"))
-            guest_ssid = guest_interface["data"].get("ssid", "%s-guest" % ssid)
+            guest_ssid = guest_interface["data"].get("ssid", derived_guest)
             guest_password = guest_interface["data"].get("key", "")
         else:
             guest_enabled = False
