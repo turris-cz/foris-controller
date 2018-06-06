@@ -844,3 +844,84 @@ def test_too_long_generated_guest_ssid(file_root_init, uci_configs_init, infrast
         "kind": "request",
     })
     assert res["data"]["devices"][0]["guest_wifi"]["SSID"] == "Turris-guest"
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(['openwrt'])
+def test_modify_encryption_only_if_none(
+    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, ubusd_test
+):
+    uci = get_uci_module(lock_backend)
+
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "devices": [{
+                "id": 0,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 10,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "SSID": "Turris-guest",
+                    "enabled": True,
+                    "password": "passpass",
+                },
+            }]
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'wifi'
+    }
+    with uci.UciBackend() as backend:
+        data = backend.read()
+    assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "psk2+ccmp"
+
+    with uci.UciBackend() as backend:
+        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "psk2+tkip+ccmp")
+        backend.set_option("wireless", "guest_iface_0", "encryption", "psk2+tkip+ccmp")
+
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "devices": [{
+                "id": 0,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 10,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "SSID": "Turris-guest",
+                    "enabled": True,
+                    "password": "passpass",
+                },
+            }]
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'wifi'
+    }
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+    assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") \
+        == "psk2+tkip+ccmp"
+    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") \
+        == "psk2+tkip+ccmp"

@@ -270,7 +270,8 @@ class WifiUci(object):
         backend.set_option("wireless", interface_section["name"], "mode", "ap")
         backend.set_option(
             "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"]))
-        backend.set_option("wireless", interface_section["name"], "encryption", "psk2+ccmp")
+        if interface_section["data"].get("encryption", "none") == "none":
+            backend.set_option("wireless", interface_section["name"], "encryption", "psk2+ccmp")
         backend.set_option("wireless", interface_section["name"], "wpa_group_rekey", "86400")
         backend.set_option("wireless", interface_section["name"], "key", settings["password"])
 
@@ -293,7 +294,9 @@ class WifiUci(object):
         backend.set_option("wireless", guest_name, "mode", "ap")
         backend.set_option("wireless", guest_name, "ssid", settings["guest_wifi"]["SSID"])
         backend.set_option("wireless", guest_name, "network", "guest_turris")
-        backend.set_option("wireless", guest_name, "encryption", "psk2+ccmp")
+        if not guest_interface_section or \
+                guest_interface_section["data"].get("encryption", "none") == "none":
+            backend.set_option("wireless", guest_name, "encryption", "psk2+ccmp")
         backend.set_option("wireless", guest_name, "wpa_group_rekey", "86400")
         backend.set_option("wireless", guest_name, "key", settings["guest_wifi"]["password"])
         guest_ifname = "guest_turris_%d" % settings["id"]
@@ -343,7 +346,8 @@ class WifiUci(object):
                     interface, guest_interface = self._get_interface_sections_from_device_section(
                         data, device_section)
                     ifname = self._update_wifi(
-                        backend, device, device_section, interface, guest_interface)
+                        backend, device, device_section, interface, guest_interface
+                    )
                     if ifname:
                         guest_ifnames.append(ifname)
 
