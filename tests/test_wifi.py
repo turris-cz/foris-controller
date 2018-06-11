@@ -142,6 +142,7 @@ def wifi_opt(request):
 
     os.unlink(WIFI_OPT_PATH)
 
+
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_settings(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
@@ -936,3 +937,40 @@ def test_modify_encryption_only_if_none(
         == "psk2+tkip+ccmp"
     assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") \
         == "psk2+tkip+ccmp"
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_get_settings_and_reset(
+    wifi_opt, file_root_init, uci_configs_init, infrastructure, ubusd_test
+):
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "devices" in res["data"].keys()
+    # test initial situation (based on default omnia settings)
+    assert res["data"]["devices"] == DEFAULT_CONFIG
+
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "reset",
+        "kind": "request",
+    })
+    assert res == {
+        u'action': u'reset',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'wifi'
+    }
+
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "devices" in res["data"].keys()
+    # test initial situation (based on default omnia settings)
+    assert res["data"]["devices"] == DEFAULT_CONFIG

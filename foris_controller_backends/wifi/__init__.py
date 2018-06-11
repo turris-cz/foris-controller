@@ -94,16 +94,34 @@ class WifiUci(object):
         }
 
     @staticmethod
-    def _get_device_bands(uci_device_path):
+    def _get_device_bands(uci_device_path=None, uci_macaddr=None):
         # read wifi device
-        path1 = inject_file_root(os.path.join("/", "sys", "devices", "platform", uci_device_path))
-        path2 = inject_file_root(os.path.join("/", "sys", "devices", uci_device_path))
-        phy_path = glob.glob(os.path.join(path1, "ieee80211", "*")) \
-            + glob.glob(os.path.join(path2, "ieee80211", "*"))
-        if len(phy_path) != 1:
+        phy_name = None
+        if uci_device_path:
+            # try to get wifi device from path
+            path1 = inject_file_root(
+                os.path.join("/", "sys", "devices", "platform", uci_device_path))
+            path2 = inject_file_root(os.path.join("/", "sys", "devices", uci_device_path))
+            phy_path = glob.glob(os.path.join(path1, "ieee80211", "*")) \
+                + glob.glob(os.path.join(path2, "ieee80211", "*"))
+            if len(phy_path) == 1:
+                # now we have phy device for iw command
+                phy_name = os.path.basename(phy_path[0])
+
+        if not phy_name and uci_macaddr:
+            main_path = inject_file_root("/sys/class/ieee80211/*/macaddress")
+            # try to get wifi device from mac address
+            for macaddr_path in glob.glob(main_path):
+                with open(macaddr_path) as f:
+                    content = f.read()
+                if content.lower().strip() == uci_macaddr.lower():
+                    phy_name = os.path.basename(os.path.dirname(macaddr_path))
+                    break
+
+        if not phy_name:
+            # failed to get device name
             return None
 
-        phy_name = os.path.basename(phy_path[0])  # now we have phy device for iw command
         retval, stdout, _ = BaseCmdLine._run_command("/usr/sbin/iw", "phy", phy_name, "info")
         if retval != 0:
             return None
@@ -163,14 +181,13 @@ class WifiUci(object):
             guest_ssid = "%s-guest" % ssid
             guest_password = ""
 
-        # first we obtain available features
-        path = device["data"].get("path", None)
-        if not path:
-            return None
-
-        bands = WifiUci._get_device_bands(path)
+        # first we obtain the devices (e.g. phy1, phy2, ...)
+        bands = WifiUci._get_device_bands(
+            device["data"].get("path", None),
+            device["data"].get("macaddr", None),
+        )
         if not bands:
-            # it doesn't make sense to display device without bands
+            # unable to determine wifi device name
             return None
 
         return {
@@ -329,7 +346,10 @@ class WifiUci(object):
 
                         # find corresponding band
                         bands = [
-                            e for e in WifiUci._get_device_bands(device_section["data"]["path"])
+                            e for e in WifiUci._get_device_bands(
+                                device_section["data"].get("path", None),
+                                device_section["data"].get("macaddr", None),
+                            )
                             if e["hwmode"] == device["hwmode"]
                         ]
                         if len(bands) != 1:
