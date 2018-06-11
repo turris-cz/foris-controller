@@ -22,7 +22,7 @@ import logging
 import os
 import re
 
-from foris_controller.exceptions import UciException, UciRecordNotFound
+from foris_controller.exceptions import UciException, UciRecordNotFound, BackendCommandFailed
 from foris_controller_backends.uci import (
     UciBackend, get_sections_by_type, store_bool, parse_bool, get_option_named
 )
@@ -394,7 +394,12 @@ class WifiCmds(BaseCmdLine):
                 # detection can be performed only when empty wireless is present
                 # import_data write to final conf immediatelly (not affected by commits)
                 backend.import_data("", "wireless")
-                new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "detect"], 0)
+                try:
+                    # TODO detect should deprecated in TurrisOS >= 4.0
+                    # so this error handling can be removed later
+                    new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "detect"], 0)
+                except BackendCommandFailed:
+                    new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "config"], 0)
                 backend.import_data(new_data, "wireless")
 
         except Exception as e:

@@ -131,6 +131,17 @@ DEFAULT_CONFIG = [
 ]
 
 
+@pytest.fixture(scope="function", params=["detect", "config"])
+def wifi_opt(request):
+    WIFI_OPT_PATH = "/tmp/foris-controller-tests-wifi-detect-opt"
+    with open(WIFI_OPT_PATH, "w") as f:
+        f.write(request.param)
+        f.flush()
+
+    yield request.param
+
+    os.unlink(WIFI_OPT_PATH)
+
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_settings(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
@@ -732,7 +743,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, ubusd_te
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_reset(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "wifi",
         "action": "update_settings",
