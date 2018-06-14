@@ -106,15 +106,15 @@ def _register_object(module_name, module):
 
             # handle multipart message
             if data["multipart"]:
-                RequestStorage.append(data["request_id"], data["multipart_data"])
+                RequestStorage.append(data["request_id"], data["payload"]["multipart_data"])
                 logger.debug("Multipart stored for '%s'" % data["request_id"])
                 if data["final"]:
                     logger.debug("Parsing multipart data.")
                     try:
                         multi_data = RequestStorage.pickup(data["request_id"])
                         data["data"] = json.loads(multi_data)
-                        logger.debug("Failed to parse multipart message.")
                     except ValueError:
+                        logger.debug("Failed to parse multipart message.")
                         res = {
                             "errors": [{
                                 "description": "failed to parse multipart", "stacktrace": ""
@@ -124,14 +124,14 @@ def _register_object(module_name, module):
                         return
                 else:
                     return  # return no response
+            elif "data" in data["payload"]:
+                data["data"] = data["payload"]["data"]
 
             del data["multipart"]
-            del data["multipart_data"]
             del data["final"]
             del data["request_id"]
+            del data["payload"]
 
-            if not data["data"]:
-                del data["data"]
             response = router.process_message(data)
             logger.debug("Sending response %s" % str(response)[:LOGGER_MAX_LEN])
             dumped_data = json.dumps(response["data"])
@@ -146,11 +146,10 @@ def _register_object(module_name, module):
         object_name,
         {
             method_name: {"method": handler_gen(module_name, method_name), "signature": {
-                "data": ubus.BLOBMSG_TYPE_TABLE,
                 "request_id": ubus.BLOBMSG_TYPE_STRING,  # unique request id
                 "final": ubus.BLOBMSG_TYPE_BOOL,  # final part?
                 "multipart": ubus.BLOBMSG_TYPE_BOOL,  # more parts present
-                "multipart_data": ubus.BLOBMSG_TYPE_STRING,  # more parts present
+                "payload": ubus.BLOBMSG_TYPE_TABLE,
             }} for method_name in methods
         }
     )
