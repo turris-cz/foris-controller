@@ -35,9 +35,11 @@ def display_spend_time(message_in, message_out):
         @wraps(function)
         def wrapper(*args, **kwargs):
             start = time.time()
-            logger.debug(message_in)
+            if message_in:
+                logger.debug(message_in)
             res = function(*args, **kwargs)
-            logger.debug(message_out, time.time() - start)
+            if message_out:
+                logger.debug(message_out, time.time() - start)
             return res
         return wrapper
     return real_decorator
@@ -61,6 +63,7 @@ class Router(object):
             "data": {"errors": errors},
         }
 
+    @display_spend_time(None, "validation took %f.")
     def validate(self, message):
         """ validates whether the message fits current schema and tries to obtain
             more verbose info if it does not
