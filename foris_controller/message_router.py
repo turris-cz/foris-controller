@@ -18,14 +18,29 @@
 #
 
 import logging
+import time
 
 from traceback import format_exc
 
 from jsonschema import ValidationError
+from functools import wraps
 
 from foris_controller.app import app_info
 
 logger = logging.getLogger(__name__)
+
+
+def display_spend_time(message_in, message_out):
+    def real_decorator(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            logger.debug(message_in)
+            res = function(*args, **kwargs)
+            logger.debug(message_out, time.time() - start)
+            return res
+        return wrapper
+    return real_decorator
 
 
 class Router(object):
@@ -59,6 +74,7 @@ class Router(object):
         except ValidationError:
             app_info["validator"].validate_verbose(message)
 
+    @display_spend_time("Starting to process message", "Message processing took %f.")
     def process_message(self, message):
         """ handles the incomming message, makes sure that msg content is validated,
             routes message to corresponding module, validates output and returns reply
