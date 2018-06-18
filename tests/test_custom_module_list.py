@@ -40,11 +40,11 @@ def test_call_existing_and_non_existing(uci_configs_init, infrastructure):
         "action": "get_settings",
         "kind": "request",
     })
-    assert "errors" not in res["data"]
+    assert "errors" not in res
 
     res = infrastructure.process_message({
         "module": "web",
         "action": "get_data",
         "kind": "request",
     })
-    assert "errors" in res["data"]
+    assert "errors" in res

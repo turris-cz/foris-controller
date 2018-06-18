@@ -27,11 +27,7 @@ class BaseNotificationSender(object):
 
     def _validate(self, msg, validator):
         logger.debug("Starting to validate notification.")
-        from jsonschema import ValidationError
-        try:
-            validator.validate(msg)
-        except ValidationError:
-            validator.validate_verbose(msg)
+        validator.validate(msg)
         logger.debug("Notification validation passed.")
 
     def _prepare_msg(self, module, action, data=None):

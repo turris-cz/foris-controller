@@ -34,8 +34,8 @@ def test_get_registered(uci_configs_init, infrastructure, ubusd_test):
         "kind": "request"
     })
 
-    assert "errors" in res["data"].keys()
-    assert "Incorrect input." in res["data"]["errors"][0]["description"]
+    assert "errors" in res
+    assert "Incorrect input." in res["errors"][0]["description"]
 
     res = infrastructure.process_message({
         "module": "data_collect",
@@ -44,8 +44,8 @@ def test_get_registered(uci_configs_init, infrastructure, ubusd_test):
         "data": {
         }
     })
-    assert "errors" in res["data"].keys()
-    assert "Incorrect input." in res["data"]["errors"][0]["description"]
+    assert "errors" in res
+    assert "Incorrect input." in res["errors"][0]["description"]
 
     res = infrastructure.process_message({
         "module": "data_collect",

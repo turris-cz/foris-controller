@@ -133,8 +133,13 @@ def _register_object(module_name, module):
             del data["payload"]
 
             response = router.process_message(data)
-            logger.debug("Sending response %s" % str(response)[:LOGGER_MAX_LEN])
-            dumped_data = json.dumps(response["data"])
+            if "errors" in response:
+                dumped_data = {"errors": response["errors"]}
+            else:
+                dumped_data = {"data": response["data"]}
+            dumped_data = json.dumps(dumped_data)
+
+            logger.debug("Sending response %s" % str(dumped_data)[:LOGGER_MAX_LEN])
             for i in range(0, len(dumped_data), 512 * 1024):
                 handler.reply({"data": dumped_data[i: i + 512 * 1024]})
                 logger.debug("Part %d was sent." % (i / (512 * 1024) + 1))

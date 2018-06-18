@@ -609,7 +609,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, ubusd_te
             "kind": "request",
             "data": {"devices": devices},
         })
-        assert "errors" in res["data"]
+        assert "errors" in res
 
     # enabled false
     update([{

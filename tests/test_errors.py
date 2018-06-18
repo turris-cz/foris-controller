@@ -32,8 +32,8 @@ def test_wrong_input_data(infrastructure, ubusd_test):
     assert res["action"] == u"get"
     assert res["kind"] == u"reply"
     assert res["module"] == u"about"
-    assert "errors" in res["data"]
-    assert "Incorrect input." in res["data"]["errors"][0]["description"]
+    assert "errors" in res
+    assert "Incorrect input." in res["errors"][0]["description"]
 
 
 @pytest.mark.only_message_buses(['unix-socket'])
@@ -55,11 +55,9 @@ def test_wrong_input_kind(infrastructure, ubusd_test):
     })
     assert res == {
             u'action': u'get',
-            u'data': {
-                u'errors': [{
-                    u'description': u'Wrong message kind (only request are allowed).'
-                }]
-            },
+            u'errors': [{
+                u'description': u'Wrong message kind (only request are allowed).'
+            }],
             u'kind': u'reply',
             u'module': u'about'
     }
@@ -74,8 +72,8 @@ def test_wrong_input_action(infrastructure, ubusd_test):
     assert res["action"] == u"non-exiting"
     assert res["kind"] == u"reply"
     assert res["module"] == u"about"
-    assert "errors" in res["data"]
-    assert "Incorrect input." in res["data"]["errors"][0]["description"]
+    assert "errors" in res
+    assert "Incorrect input." in res["errors"][0]["description"]
 
 
 @pytest.mark.only_message_buses(['unix-socket'])
@@ -88,5 +86,5 @@ def test_wrong_input_module(infrastructure, ubusd_test):
     assert res["action"] == u"get"
     assert res["kind"] == u"reply"
     assert res["module"] == u"non-exiting"
-    assert "errors" in res["data"]
-    assert "Incorrect input." in res["data"]["errors"][0]["description"]
+    assert "errors" in res
+    assert "Incorrect input." in res["errors"][0]["description"]

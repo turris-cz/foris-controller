@@ -301,7 +301,7 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
             "kind": "request",
             "data": data
         })
-        assert "errors" in res["data"]
+        assert "errors" in res
 
     update({
         u"ip": u"10.1.0.3",

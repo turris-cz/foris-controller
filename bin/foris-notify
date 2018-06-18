@@ -23,7 +23,6 @@ import argparse
 import logging
 import json
 
-from logging.handlers import SysLogHandler
 from foris_controller.utils import get_validator_dirs
 
 logger = logging.getLogger("foris_notify")

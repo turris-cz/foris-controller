@@ -37,6 +37,7 @@ def extra_module_paths():
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
     ]
 
+
 def notify_cmd(infras, module, action, data, validate=True):
     args = [
         "bin/foris-notify", "-m", module, "-a", action,

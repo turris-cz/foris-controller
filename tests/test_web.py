@@ -104,7 +104,7 @@ def test_missing_data(file_root_init, uci_configs_init, infrastructure, ubusd_te
         "action": "set_language",
         "kind": "request",
     })
-    assert "errors" in res["data"]
+    assert "errors" in res
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_update_guide(file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test):

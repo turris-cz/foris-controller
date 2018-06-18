@@ -77,16 +77,12 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
     """
     app_info["modules"] = {}
 
-    # use root schema dir
-    schema_dirs = [
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas"),
-    ]
-
     # and global definitions
     definition_dirs = [
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions"),
     ]
 
+    schema_dirs = []
     for module_name, module in get_modules(app_info["filter_modules"], extra_modules_paths):
         logger.debug("Trying to load module '%s'." % module_name)
         handler = get_handler(module, base_handler_class)

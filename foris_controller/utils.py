@@ -229,16 +229,12 @@ def get_validator_dirs(filter_modules, module_paths=[]):
     :param module_paths: extra paths to dir containing modules
     """
 
-    # use root schema dir
-    schema_dirs = [
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas"),
-    ]
-
     # and global definitions
     definition_dirs = [
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions"),
     ]
 
+    schema_dirs = []
     # load modules dirs
     for module_name, module in get_modules(filter_modules, module_paths):
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))

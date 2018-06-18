@@ -60,22 +60,18 @@ class Router(object):
             "module": orig_msg.get("module", "?"),
             "kind": "reply",
             "action": orig_msg.get("action", "?"),
-            "data": {"errors": errors},
+            "errors": errors,
         }
 
     @display_spend_time(None, "validation took %f.")
     def validate(self, message):
-        """ validates whether the message fits current schema and tries to obtain
-            more verbose info if it does not
+        """ validates whether the message fits current schema
 
         :param message: message to be validated
         :type message: dict
         """
 
-        try:
-            app_info["validator"].validate(message)
-        except ValidationError:
-            app_info["validator"].validate_verbose(message)
+        app_info["validator"].validate(message)
 
     @display_spend_time("Starting to process message", "Message processing took %f.")
     def process_message(self, message):
