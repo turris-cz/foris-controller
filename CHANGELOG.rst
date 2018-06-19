@@ -1,3 +1,15 @@
+0.10.1 (2018-06-19)
+------------------
+
+* reflect foris-schema api update (it should boost the performace significantly)
+* log how long some operations took
+* ubus: message format changed
+* wifi: when option path is missing try to detect the device based on mac address
+* wifi: make reset to be compatible with newer version of openwrt
+* wifi: set encryption only when it is unset or none
+* wifi: too long SSID and guest wifi fix
+* time: use ntpd instead of ntpdate to trigger time update
+
 0.10.0 (2018-05-22)
 ------------------
 
