@@ -22,9 +22,8 @@ import os
 import json
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend
+    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, notify_cmd
 )
-from .test_notifications import notify_cmd
 
 from foris_controller_testtools.utils import match_subdict
 
@@ -187,14 +186,14 @@ def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructur
         assert notification["displayed"] == (notification["id"] in ids)
 
 
-def test_mark_as_displayed_notification(uci_configs_init, infrastructure, ubusd_test):
+def test_mark_as_displayed_notification(notify_cmd, uci_configs_init, infrastructure, ubusd_test):
     # these notifications are meant to be send by external program
     # to imitate such behavior just call cmd foris-notify
     filters = [("router_notifications", "mark_as_displayed")]
     def mark_as_displayed_notification(data):
         notifications = infrastructure.get_notifications(filters=filters)
         retval, _, _ = notify_cmd(
-            infrastructure, "router_notifications", "mark_as_displayed",
+            "router_notifications", "mark_as_displayed",
             data
         )
         assert retval == 0
@@ -207,7 +206,7 @@ def test_mark_as_displayed_notification(uci_configs_init, infrastructure, ubusd_
     def mark_as_displayed_notification_failed(data):
         new_notifications = infrastructure.get_notifications(filters=filters)
         retval, _, _ = notify_cmd(
-            infrastructure, "router_notifications", "mark_as_displayed",
+            "router_notifications", "mark_as_displayed",
             data
         )
         assert not retval == 0
@@ -394,14 +393,14 @@ def test_create(stored_notifications, uci_configs_init, infrastructure, ubusd_te
     create("msg4", "error", False)
 
 
-def test_create_notification(uci_configs_init, infrastructure, ubusd_test):
+def test_create_notification(notify_cmd, uci_configs_init, infrastructure, ubusd_test):
     # these notifications are meant to be send by external program
     # to imitate such behavior just call cmd foris-notify
     filters = [("router_notifications", "create")]
 
     def create_notification(data):
         notifications = infrastructure.get_notifications(filters=filters)
-        retval, _, _ = notify_cmd(infrastructure, "router_notifications", "create", data)
+        retval, _, _ = notify_cmd("router_notifications", "create", data)
         assert retval == 0
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
