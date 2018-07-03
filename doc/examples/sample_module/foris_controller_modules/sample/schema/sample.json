@@ -1,45 +1,133 @@
 {
+    "definitions": {
+        "slices_type": {"type": "integer", "minimum": 2, "maximum": 15},
+        "list_data_type": {
+            "type": "array",
+            "items": {"type": "array", "minItems": 2, "maxItems": 2},
+            "minItems": 2,
+            "maxItems": 15
+        }
+    },
     "oneOf": [
         {
-            "description": "Get information from the sample module",
+            "description": "Get number of slices from the sample module",
             "properties": {
                 "module": {"enum": ["sample"]},
                 "kind": {"enum": ["request"]},
-                "action": {"enum": ["get"]}
+                "action": {"enum": ["get_slices"]}
             },
             "additionalProperties": false
         },
         {
-            "description": "Reply to call get action in sample module",
+            "description": "Get number of slices from the sample module",
             "properties": {
                 "module": {"enum": ["sample"]},
                 "kind": {"enum": ["reply"]},
-                "action": {"enum": ["get"]},
+                "action": {"enum": ["get_slices"]},
                 "data": {
                     "type": "object",
                     "properties": {
-                        "data": {"type": "object"}
+                        "slices": {"$ref": "#/definitions/slices_type"}
                     },
                     "additionalProperties": false,
-                    "required": ["data"]
+                    "required": ["slices"]
                 }
             },
             "additionalProperties": false,
             "required": ["data"]
         },
         {
-            "description": "Notification in get action in sample module",
+            "description": "Set the number of slices of the sample module",
             "properties": {
                 "module": {"enum": ["sample"]},
-                "kind": {"enum": ["notification"]},
-                "action": {"enum": ["get"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["set_slices"]},
                 "data": {
                     "type": "object",
                     "properties": {
-                        "msg": {"type": "string"}
+                        "slices": {"$ref": "#/definitions/slices_type"}
                     },
                     "additionalProperties": false,
-                    "required": ["msg"]
+                    "required": ["slices"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that slices were set in sample module",
+            "properties": {
+                "module": {"enum": ["sample"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["set_slices"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "slices": {"$ref": "#/definitions/slices_type"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["slices"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to set the number of slices of the sample module",
+            "properties": {
+                "module": {"enum": ["sample"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["set_slices"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "List current data",
+            "properties": {
+                "module": {"enum": ["sample"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["list"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to list current data",
+            "properties": {
+                "module": {"enum": ["sample"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["list"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "records": {"$ref": "#/definitions/list_data_type"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["records"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification to reload chart sample module",
+            "properties": {
+                "module": {"enum": ["sample"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["reload_chart"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                    },
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false,

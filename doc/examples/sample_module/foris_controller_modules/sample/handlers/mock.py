@@ -9,12 +9,18 @@ logger = logging.getLogger(__name__)
 
 
 class MockSampleHandler(Handler, BaseMockHandler):
+    slices = 10
+    data = [list(e) for e in enumerate(range(10))]
 
     @logger_wrapper(logger)
-    def get_sample(self):
-        return {
-            "data": {
-                "sample": "some/path",
-                "atsha": "0011002233",
-            }
-        }
+    def get_slices(self):
+        return MockSampleHandler.slices
+
+    @logger_wrapper(logger)
+    def set_slices(self, value):
+        MockSampleHandler.slices = value
+        return True
+
+    @logger_wrapper(logger)
+    def list(self):
+        return MockSampleHandler.data[:MockSampleHandler.slices]
