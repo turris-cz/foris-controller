@@ -23,6 +23,7 @@ import argparse
 import logging
 import json
 
+from foris_controller import __version__
 from foris_controller.utils import get_validator_dirs
 
 logger = logging.getLogger("foris_notify")
@@ -32,6 +33,7 @@ if __name__ == "__main__":
 
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-notify")
+    parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument(
         "-m", "--module", dest="module", help="module which will be used",
         required=True, type=str,

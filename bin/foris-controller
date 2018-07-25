@@ -25,6 +25,7 @@ import multiprocessing
 
 from logging.handlers import SysLogHandler
 
+from foris_controller import __version__
 from foris_controller.app import (
     app_info, set_app_info, prepare_app_modules, prepare_notification_sender
 )
@@ -44,6 +45,7 @@ if __name__ == "__main__":
 
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-controller")
+    parser.add_argument('--version', action='version', version=__version__)
     subparsers = parser.add_subparsers(help="buses", dest="bus")
     ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
     ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
