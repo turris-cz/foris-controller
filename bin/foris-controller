@@ -101,6 +101,7 @@ if __name__ == "__main__":
             logging.Formatter("[%(created)f:%(process)d]" + logging.BASIC_FORMAT))
         logging.getLogger().addHandler(file_handler)
 
+    logger.debug("Version %s" % __version__)
     logger.info("Foris controller is starting.")
     if options.bus == "ubus":
         from foris_controller.buses.ubus import UbusListener, UbusNotificationSender
