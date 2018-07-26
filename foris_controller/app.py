@@ -19,8 +19,10 @@
 
 import os
 import logging
+import importlib
 
 
+from foris_controller import __version__
 from foris_controller.utils import get_modules, get_handler, get_module_class, get_validator_dirs
 
 
@@ -84,7 +86,14 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
 
     schema_dirs = []
     for module_name, module in get_modules(app_info["filter_modules"], extra_modules_paths):
-        logger.debug("Trying to load module '%s'." % module_name)
+        # try to obtain version
+        try:
+            version = importlib.import_module(
+                "foris_controller_%s_module" % module_name).__version__
+        except (ImportError, AttributeError):
+            version = __version__
+
+        logger.debug("Trying to load module '%s (%s)'." % (module_name, version))
         handler = get_handler(module, base_handler_class)
         if not handler:
             logger.error(
