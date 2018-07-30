@@ -155,6 +155,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         {"code": "sk", "enabled": False},
         {"code": "hu", "enabled": False},
         {"code": "it", "enabled": False},
+        {"code": "nb_NO", "enabled": True},
     ]
     branch = ""
     approvals_delay = None

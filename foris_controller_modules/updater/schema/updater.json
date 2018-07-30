@@ -40,7 +40,7 @@
             "items": {
                 "type": "object",
                 "properties": {
-                    "code": {"$ref": "#/definitions/iso2country"},
+                    "code": {"$ref": "#/definitions/locale_name"},
                     "enabled": {"type": "boolean"}
                 },
                 "required": ["enabled", "code"],
@@ -49,7 +49,7 @@
         },
         "updater_languages_set": {
             "type": "array",
-            "items": {"$ref": "#/definitions/iso2country"}
+            "items": {"$ref": "#/definitions/locale_name"}
         },
         "updater_approvals_status": {"enum": ["off", "delayed", "on"]},
         "updater_approvals_settings_get": {
@@ -181,7 +181,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "lang": {"$ref": "#/definitions/iso2country"}
+                        "lang": {"$ref": "#/definitions/locale_name"}
                     },
                     "additionalProperties": false,
                     "required": ["lang"]

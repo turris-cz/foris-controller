@@ -40,21 +40,22 @@ def test_get(file_root_init, uci_configs_init, infrastructure, ubusd_test):
         u"language", u"reboot_required", u"notification_count", u"updater_running",
         u"guide", u"password_ready",
     }
-    assert len(res["data"]["language"]) == 2
+    assert len(res["data"]["language"]) in [2, 5]  # en, en_US
     assert res["data"]["notification_count"] >= 0
     assert "enabled" in res["data"]["guide"]
     assert "passed" in res["data"]["guide"]
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_set(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+@pytest.mark.parametrize("code", ["cs", "nb_NO"])
+def test_set(code, file_root_init, uci_configs_init, infrastructure, ubusd_test):
     filters = [("web", "set_language")]
     old_notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "web",
         "action": "set_language",
         "kind": "request",
-        "data": {"language": "cs"},
+        "data": {"language": code},
     })
     assert res == {
         u'action': u'set_language',
@@ -67,10 +68,13 @@ def test_set(file_root_init, uci_configs_init, infrastructure, ubusd_test):
         u"action": u"set_language",
         u"kind": u"notification",
         u"data": {
-            u"language": u"cs",
+            u"language": code,
         }
     }
 
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_set_missing(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "set_language",
@@ -94,7 +98,7 @@ def test_list_languages(file_root_init, uci_configs_init, infrastructure, ubusd_
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert u"languages" in res["data"].keys()
-    assert set(res["data"]["languages"]) == {'en', 'cs', 'de'}
+    assert set(res["data"]["languages"]) == {'en', 'cs', 'de', 'nb_NO'}
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)

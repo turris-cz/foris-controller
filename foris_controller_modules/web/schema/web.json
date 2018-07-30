@@ -42,7 +42,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": {"$ref": "#/definitions/iso2country"},
+                        "language": {"$ref": "#/definitions/locale_name"},
                         "reboot_required": {"type": "boolean"},
                         "updater_running": {"type": "boolean"},
                         "notification_count": {"type": "integer", "minimum": 0},
@@ -68,7 +68,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": { "$ref": "#/definitions/iso2country" }
+                        "language": {"$ref": "#/definitions/locale_name"}
                     },
                     "additionalProperties": false,
                     "required": ["language"]
@@ -115,7 +115,7 @@
                     "properties": {
                         "languages": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/iso2country" },
+                            "items": {"$ref": "#/definitions/locale_name"},
                             "minItems": 1
                         }
                     },
@@ -135,7 +135,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "language": { "$ref": "#/definitions/iso2country" }
+                        "language": {"$ref": "#/definitions/locale_name"}
                     },
                     "additionalProperties": false,
                     "required": ["language"]

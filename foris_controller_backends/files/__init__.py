@@ -88,13 +88,16 @@ class BaseFile(object):
 
 class BaseMatch(object):
     @staticmethod
-    def list_files(file_match):
+    def list_files(file_matches):
         """ Reads all files in which matches the requst (glob will be used for matching)
-        :param file match: files to match
+        :param file_matches: list of expressions to match
 
         :returns: list of files that matches
         :rtype: list
         """
-        match = inject_file_root(file_match)
-        logger.debug("Listing '%s'" % match)
-        return glob.glob(match)
+        res = []
+        for file_match in file_matches:
+            match = inject_file_root(file_match)
+            logger.debug("Listing '%s'" % match)
+            res.extend(glob.glob(match))
+        return res

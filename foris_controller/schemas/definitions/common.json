@@ -1,7 +1,8 @@
 {
     "definitions": {
-        "iso2country": {
-            "type": "string", "minlength": 2, "maxlength": 2
+        "locale_name": {
+            "description": "Shorter locale format: language[_territory]",
+            "type": "string", "pattern": "^[a-z][a-z](_[A-Z][A-Z]){0,1}$"
         },
         "mtu": {
             "type": "integer", "minimum": 1280, "maximum": 1500

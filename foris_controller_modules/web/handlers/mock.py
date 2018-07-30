@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class MockWebHandler(Handler, BaseMockHandler):
     guide_workflow = "standard"
     guide_enabled = True
-    language_list = ['en', 'de', 'cs']
+    language_list = ['en', 'de', 'cs', 'nb_NO']
     current_language = 'en'
 
     def get_language(self):

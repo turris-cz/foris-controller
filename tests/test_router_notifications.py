@@ -34,7 +34,8 @@ STORED_NOTIFICATIONS = [
         "severity": "restart",
         "messages": {
             "cs": "REBOOT1 CS",
-            "en": "REBOOT1 EN"
+            "en": "REBOOT1 EN",
+            "nb_NO": "REBOOT1 nb_NO",
         }
     },
     {
@@ -43,7 +44,8 @@ STORED_NOTIFICATIONS = [
         "severity": "restart",
         "messages": {
             "cs": "REBOOT2 CS",
-            "en": "REBOOT2 EN"
+            "en": "REBOOT2 EN",
+            "nb_NO": "REBOOT2 nb_NO",
         }
     },
     {
@@ -52,7 +54,8 @@ STORED_NOTIFICATIONS = [
         "severity": "news",
         "messages": {
             "cs": "NEWS1 CS",
-            "en": "NEWS1 EN"
+            "en": "NEWS1 EN",
+            "nb_NO": "NEWS1 nb_NO",
         }
     },
     {
@@ -61,7 +64,8 @@ STORED_NOTIFICATIONS = [
         "severity": "news",
         "messages": {
             "cs": "NEWS2 CS",
-            "en": "NEWS2 EN"
+            "en": "NEWS2 EN",
+            "nb_NO": "NEWS2 nb_NO",
         }
     },
     {
@@ -70,7 +74,8 @@ STORED_NOTIFICATIONS = [
         "severity": "error",
         "messages": {
             "cs": "ERROR1 CS",
-            "en": "ERROR1 EN"
+            "en": "ERROR1 EN",
+            "nb_NO": "ERROR1 nb_NO",
         }
     },
     {
@@ -79,7 +84,8 @@ STORED_NOTIFICATIONS = [
         "severity": "error",
         "messages": {
             "cs": "ERROR2 CS",
-            "en": "ERROR2 EN"
+            "en": "ERROR2 EN",
+            "nb_NO": "ERROR2 nb_NO",
         }
     },
     {
@@ -88,7 +94,8 @@ STORED_NOTIFICATIONS = [
         "severity": "update",
         "messages": {
             "cs": "UPDATE1 CS",
-            "en": "UPDATE1 EN"
+            "en": "UPDATE1 EN",
+            "nb_NO": "UPDATE1 nb_NO",
         }
     },
     {
@@ -97,7 +104,8 @@ STORED_NOTIFICATIONS = [
         "severity": "update",
         "messages": {
             "cs": "UPDATE2 CS",
-            "en": "UPDATE2 EN"
+            "en": "UPDATE2 EN",
+            "nb_NO": "UPDATE2 nb_NO",
         }
     },
     {
@@ -106,7 +114,8 @@ STORED_NOTIFICATIONS = [
         "severity": "update",
         "messages": {
             "cs": "",
-            "en": ""
+            "en": "",
+            "nb_NO": "",
         }
     }
 ]
@@ -132,30 +141,13 @@ def stored_notifications():
         pass
 
 
-def test_list(stored_notifications, uci_configs_init, infrastructure, ubusd_test):
+@pytest.mark.parametrize("language", ["en", "cs", "nb_NO"])
+def test_list(language, stored_notifications, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "router_notifications",
         "action": "list",
         "kind": "request",
-        "data": {"lang": "en"}
-    })
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "notifications" in res["data"].keys()
-
-    res = infrastructure.process_message({
-        "module": "router_notifications",
-        "action": "list",
-        "kind": "request",
-        "data": {"lang": "cs"}
-    })
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "notifications" in res["data"].keys()
-
-    res = infrastructure.process_message({
-        "module": "router_notifications",
-        "action": "list",
-        "kind": "request",
-        "data": {"lang": "pl"}
+        "data": {"lang": language}
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "notifications" in res["data"].keys()

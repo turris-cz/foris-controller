@@ -101,7 +101,10 @@ class WebUciCommands(object):
 
 
 class Languages(object):
-    INSTALLED_LANG_MATCH = "/usr/lib/python2.7/site-packages/foris/langs/??.py"
+    INSTALLED_LANG_MATCHES = [
+        "/usr/lib/python2.7/site-packages/foris/langs/??.py",
+        "/usr/lib/python2.7/site-packages/foris/langs/??_??.py",
+    ]
 
     @staticmethod
     def list_languages():
@@ -111,6 +114,6 @@ class Languages(object):
         """
 
         return [DEFAULT_LANGUAGE] + [
-            os.path.basename(e)[:2]
-            for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCH)
+            os.path.basename(e)[:-3]
+            for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCHES)
         ]

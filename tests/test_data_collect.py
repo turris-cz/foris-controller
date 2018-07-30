@@ -27,7 +27,21 @@ from foris_controller_testtools.fixtures import (
 from foris_controller_testtools.utils import check_service_result, get_uci_module
 
 
-def test_get_registered(uci_configs_init, infrastructure, ubusd_test):
+@pytest.mark.parametrize("code", ["cs", "nb_NO"])
+def test_get_registered(code, uci_configs_init, infrastructure, ubusd_test):
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "get_registered",
+        "kind": "request",
+        "data": {
+            "email": "test@test.test",
+            "language": code,
+        }
+    })
+    assert "status" in res["data"].keys()
+
+
+def test_get_registered_errors(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "data_collect",
         "action": "get_registered",
@@ -46,17 +60,6 @@ def test_get_registered(uci_configs_init, infrastructure, ubusd_test):
     })
     assert "errors" in res
     assert "Incorrect input." in res["errors"][0]["description"]
-
-    res = infrastructure.process_message({
-        "module": "data_collect",
-        "action": "get_registered",
-        "kind": "request",
-        "data": {
-            "email": "test@test.test",
-            "language": "en"
-        }
-    })
-    assert "status" in res["data"].keys()
 
 
 def test_get(uci_configs_init, infrastructure, ubusd_test):

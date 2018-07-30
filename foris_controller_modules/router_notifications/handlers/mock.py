@@ -40,7 +40,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "restart",
             "messages": {
                 "cs": "REBOOT1 CS",
-                "en": "REBOOT1 EN"
+                "en": "REBOOT1 EN",
+                "nb_NO": "REBOOT1 nb_NO",
             }
         },
         {
@@ -49,7 +50,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "restart",
             "messages": {
                 "cs": "REBOOT2 CS",
-                "en": "REBOOT2 EN"
+                "en": "REBOOT2 EN",
+                "nb_NO": "REBOOT2 nb_NO",
             }
         },
         {
@@ -58,7 +60,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "news",
             "messages": {
                 "cs": "NEWS1 CS",
-                "en": "NEWS1 EN"
+                "en": "NEWS1 EN",
+                "nb_NO": "NEWS1 nb_NO",
             }
         },
         {
@@ -67,7 +70,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "news",
             "messages": {
                 "cs": "NEWS2 CS",
-                "en": "NEWS2 EN"
+                "en": "NEWS2 EN",
+                "nb_NO": "NEWS2 nb_NO",
             }
         },
         {
@@ -76,7 +80,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "error",
             "messages": {
                 "cs": "ERROR1 CS",
-                "en": "ERROR1 EN"
+                "en": "ERROR1 EN",
+                "nb_NO": "ERROR1 nb_NO",
             }
         },
         {
@@ -85,7 +90,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "error",
             "messages": {
                 "cs": "ERROR2 CS",
-                "en": "ERROR2 EN"
+                "en": "ERROR2 EN",
+                "nb_NO": "ERROR2 nb_NO",
             }
         },
         {
@@ -94,7 +100,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "update",
             "messages": {
                 "cs": "UPDATE1 CS",
-                "en": "UPDATE1 EN"
+                "en": "UPDATE1 EN",
+                "nb_NO": "UPDATE1 nb_NO",
             }
         },
         {
@@ -103,7 +110,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "severity": "update",
             "messages": {
                 "cs": "UPDATE2 CS",
-                "en": "UPDATE2 EN"
+                "en": "UPDATE2 EN",
+                "nb_NO": "UPDATE2 nb_NO",
             }
         }
     ]

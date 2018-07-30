@@ -83,6 +83,7 @@ def test_get_settings(
     get("en")
     get("cs")
     get("de")
+    get("nb_NO")
     get("xx")
 
 
@@ -138,7 +139,7 @@ def test_update_settings(
         "branch": "",
         "approval_settings": {"status": "delayed", "delay": 24},
         "user_lists": ['dvb'],
-        "languages": ['cs', 'de'],
+        "languages": ['cs', 'de', "nb_NO"],
     })
 
     update_settings({
@@ -234,7 +235,7 @@ def test_uci(
         "branch": "",
         "approval_settings": {"status": "delayed", "delay": 24},
         "user_lists": ['list2'],
-        "languages": ['cs', 'de'],
+        "languages": ['cs', 'de', "nb_NO"],
     })
     with uci.UciBackend() as backend:
         data = backend.read("updater")
@@ -270,8 +271,9 @@ def test_uci(
 
 
 @pytest.mark.only_backends(['openwrt'])
+@pytest.mark.parametrize("language", ["cs", "nb_NO"])
 def test_approval(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
+    language, updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
 ):
     def approval(data):
         set_approval(data)
@@ -279,7 +281,7 @@ def test_approval(
             "module": "updater",
             "action": "get_settings",
             "kind": "request",
-            "data": {"lang": "en"},
+            "data": {"lang": language},
         })
         approval = res["data"]["approval"]
         if data:

@@ -6,7 +6,7 @@
         "router_notification": {
             "type": "object",
             "properties": {
-                "lang": {"$ref": "#/definitions/iso2country"},
+                "lang": {"$ref": "#/definitions/locale_name"},
                 "msg": {"type": "string"},
                 "id": {"$ref": "#/definitions/router_notification_id"},
                 "created_at": {"type": "string", "format": "date-time"},
@@ -131,7 +131,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "lang": {"$ref": "#/definitions/iso2country"}
+                        "lang": {"$ref": "#/definitions/locale_name"}
                     },
                     "additionalProperties": false,
                     "required": ["lang"]
