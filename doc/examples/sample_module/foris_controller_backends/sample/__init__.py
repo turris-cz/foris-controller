@@ -1,4 +1,5 @@
 import logging
+import random
 #import json
 
 from foris_controller_backends.cmdline import BaseCmdLine
@@ -31,14 +32,12 @@ class SampleUci():
 
 class SampleCmds(BaseCmdLine):
     ###
-    import random
     data = [list(e) for e in enumerate([random.randrange(100) for _ in range(SampleUci.slices)])]
     ###
 
     def list(self):
         #return json.loads(self._run_command("<command_to_obtain_data>")[1])
         ###
-        import random
         del SampleCmds.data[0]
         while len(SampleCmds.data) < SampleUci.slices:
             SampleCmds.data.append([SampleCmds.data[-1][0] + 1, random.randrange(100)])
