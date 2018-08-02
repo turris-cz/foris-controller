@@ -39,7 +39,7 @@ CONFIG_PATH = os.path.join(
 def show(config_dir):
     process = subprocess.Popen(["uci", "-c", config_dir, "show"], stdout=subprocess.PIPE)
     stdout, _ = process.communicate()
-    return stdout
+    return stdout.decode("utf-8")
 
 
 @pytest.mark.uci_config_path(CONFIG_PATH)
@@ -481,6 +481,6 @@ def test_strange_chars_in_value(uci_configs_init, lock_backend):
 
     for idx, value in enumerate(SPECIAL_VALUES):
         assert uci.get_option_named(data, 'test1', 'special_values', "val_%d" % idx) \
-            == value.encode("utf8")
-    assert [e.encode("utf8") for e in SPECIAL_VALUES] == \
+            == value
+    assert [e for e in SPECIAL_VALUES] == \
         uci.get_option_named(data, "test1", "special_values", "my_list")

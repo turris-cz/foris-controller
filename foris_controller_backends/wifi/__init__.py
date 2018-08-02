@@ -123,6 +123,7 @@ class WifiUci(object):
             return None
 
         retval, stdout, _ = BaseCmdLine._run_command("/usr/sbin/iw", "phy", phy_name, "info")
+        stdout = stdout.decode("utf-8")
         if retval != 0:
             return None
 
@@ -420,7 +421,7 @@ class WifiCmds(BaseCmdLine):
                     new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "detect"], 0)
                 except BackendCommandFailed:
                     new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "config"], 0)
-                backend.import_data(new_data, "wireless")
+                backend.import_data(new_data.decode("utf-8"), "wireless")
 
         except Exception as e:
             logger.error("Exception occured during the reset '%s'" % str(e))

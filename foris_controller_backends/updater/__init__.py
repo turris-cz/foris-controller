@@ -61,7 +61,7 @@ class UpdaterUci(object):
         try:
             delay_seconds = int(get_option_named(
                 updater_data, "updater", "approvals", "auto_grant_seconds"))
-            delay_hours = delay_seconds / (60 * 60)
+            delay_hours = delay_seconds // (60 * 60)
             res["approval_settings"]["delay"] = delay_hours
             if res["approval_settings"]["status"] == "on":
                 res["approval_settings"]["status"] = "delayed"

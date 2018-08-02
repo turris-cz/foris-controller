@@ -53,7 +53,7 @@ def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd
         "module": "password",
         "action": "set",
         "kind": "request",
-        "data": {"password": base64.b64encode(new_pass), "type": "system"},
+        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8"), "type": "system"},
     })
     assert res == {
         u'action': u'set',
@@ -73,7 +73,7 @@ def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd
         "module": "password",
         "action": "check",
         "kind": "request",
-        "data": {"password": base64.b64encode(new_pass)},
+        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8")},
     })
     assert res["data"]["status"] != u"good"
 
@@ -86,7 +86,7 @@ def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_
         "module": "password",
         "action": "set",
         "kind": "request",
-        "data": {"password": base64.b64encode(new_pass), "type": "foris"},
+        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8"), "type": "foris"},
     })
     assert res == {
         u'action': u'set',
@@ -106,7 +106,7 @@ def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_
         "module": "password",
         "action": "check",
         "kind": "request",
-        "data": {"password": base64.b64encode(new_pass)},
+        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8")},
     })
     assert res == {
         u'action': u'check',
@@ -124,7 +124,7 @@ def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, ubusd_tes
         "module": "password",
         "action": "set",
         "kind": "request",
-        "data": {"password": base64.b64encode(new_pass), "type": "system"},
+        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8"), "type": "system"},
     })
     assert res == {
         u'action': u'set',

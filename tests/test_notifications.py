@@ -51,7 +51,7 @@ def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, ubusd_test):
     retval, stdout, stderr = notify_cmd(
         "web", "set_language", {"language": "en", "invalid": True}, True)
     assert retval == 1
-    assert u"ValidationError" in stderr
+    assert b"ValidationError" in stderr
     assert notifications == infrastructure.get_notifications(filters=filters)
 
     retval, stdout, stderr = notify_cmd(

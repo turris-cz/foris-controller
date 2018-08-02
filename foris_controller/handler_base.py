@@ -18,7 +18,7 @@
 #
 
 import inspect
-from utils import make_multiprocessing_manager
+from foris_controller.utils import make_multiprocessing_manager
 
 
 class HandlerFunctionNotImplemented(BaseException):

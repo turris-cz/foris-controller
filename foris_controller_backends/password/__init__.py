@@ -68,7 +68,7 @@ class SystemPasswordCmd(BaseCmdLine):
     def set_password(self, password):
         busybox_passwd = "/bin/passwd"
         logger.debug("Setting system password.")
-        passwords = "%(password)s\n%(password)s\n" % dict(password=password)
+        passwords = password + b"\n" + password + b"\n"
         retval, _, _ = self._run_command(busybox_passwd, input_data=passwords)
         if retval != 0:
             logger.error("Failed to set system password.")

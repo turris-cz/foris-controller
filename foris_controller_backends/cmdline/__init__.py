@@ -121,10 +121,10 @@ class BaseCmdLine(object):
         except (OSError, IOError) as e:
             raise BackendCommandFailed(e.errno, args, e.strerror)
 
-        logger.debug("Command '%s' finished." % str(args))
-        logger.debug("retcode: %d" % retval)
-        logger.debug("stdout: %s" % stdout)
-        logger.debug("stderr: %s" % stderr)
+        logger.debug("Command '%s' finished.", str(args))
+        logger.debug("retcode: %d", retval)
+        logger.debug("stdout: %s", stdout)
+        logger.debug("stderr: %s", stderr)
         return retval, stdout, stderr
 
     @staticmethod
@@ -162,7 +162,7 @@ class BaseCmdLine(object):
         :rtype: tuple
         """
         stdout, _ = BaseCmdLine._run_command_and_check_retval(args, 0)
-        match = re.search(regex, stdout, re.MULTILINE)
+        match = re.search(regex, stdout.decode("utf-8"), re.MULTILINE)
         if not match:
             logger.error("Failed to parse output of %s." % str(args))
             raise FailedToParseCommandOutput(args, stdout)

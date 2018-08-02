@@ -44,7 +44,7 @@ class MockMaintainHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def generate_backup(self):
-        return base64.b64encode("This is backup!!!")
+        return base64.b64encode(b"This is backup!!!").decode("utf-8")
 
     @logger_wrapper(logger)
     def restore_backup(self, backup):

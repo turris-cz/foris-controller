@@ -161,7 +161,7 @@ def test_update_guide(file_root_init, init_script_result, uci_configs_init, infr
         "module": "password",
         "action": "set",
         "kind": "request",
-        "data": {"password": base64.b64encode("heslo"), "type": "foris"},
+        "data": {"password": base64.b64encode(b"heslo").decode("utf-8"), "type": "foris"},
     }
     pass_step(msg, ["password"])
 

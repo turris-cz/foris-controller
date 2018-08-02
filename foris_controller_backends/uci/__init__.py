@@ -174,7 +174,7 @@ class UciBackend(object):
         logger.debug("stderr: %s" % stderr)
         if fail_on_error and retval:
             raise UciException(cmdline_args, stderr)
-        return stdout
+        return stdout.decode("utf-8")
 
     def add_section(self, config, section_type, section_name=None):
         """
@@ -347,4 +347,5 @@ class UciBackend(object):
         :param config: related uci config
         :type config: string
         """
-        self._run_uci_command("import", config, input_data=data if data else "")
+        data = data if data else ""
+        self._run_uci_command("import", config, input_data=data.encode())
