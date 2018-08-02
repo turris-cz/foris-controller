@@ -1,11 +1,7 @@
-image: registry.labs.nic.cz/turris/foris-ci
-
 stages:
   - test
 
-test:
-  stage: test
-
+.run_script: &run_script
   script:
 
     - git clone https://gitlab.labs.nic.cz/turris/foris-schema.git
@@ -30,7 +26,6 @@ test:
     - pip install .
     - cd ..
 
-    - export LD_LIBRARY_PATH=:/usr/local/lib
     - python setup.py test
     - python setup.py test --addopts="--backend openwrt"
 
@@ -38,3 +33,13 @@ test:
     - pip install .
     - python setup.py test
     - python setup.py test --addopts="--backend openwrt"
+
+test_python2:
+  image: registry.labs.nic.cz/turris/foris-ci/python2
+  stage: test
+  <<: *run_script
+
+test_python3:
+  image: registry.labs.nic.cz/turris/foris-ci/python3
+  stage: test
+  <<: *run_script
