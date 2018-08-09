@@ -31,6 +31,8 @@ setup(
     author_email='stepan.henek@nic.cz',
     packages=[
         'foris_controller',
+        'foris_controller.controller',
+        'foris_controller.notify',
         'foris_controller.buses',
         'foris_controller_backends',
         'foris_controller_backends.about',
@@ -92,7 +94,6 @@ setup(
         'foris_controller_modules.web': ['schema', 'schema/*.json'],
         'foris_controller_modules.wifi': ['schema', 'schema/*.json'],
     },
-    scripts=['bin/foris-controller', "bin/foris-notify"],
     url='https://gitlab.labs.nic.cz/turris/foris-controller',
     license='COPYING',
     description=DESCRIPTION,
@@ -112,6 +113,12 @@ setup(
     ],
     extras_require={
         'client-socket': ["foris-client"],
+    },
+    entry_points={
+        "console_scripts": [
+            "foris-controller = foris_controller.controller.__main__:main",
+            "foris-notify = foris_controller.notify.__main__:main",
+        ]
     },
     include_package_data=True,
     zip_safe=False,

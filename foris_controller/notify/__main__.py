@@ -29,8 +29,7 @@ from foris_controller.utils import get_validator_dirs
 logger = logging.getLogger("foris_notify")
 
 
-if __name__ == "__main__":
-
+def main():
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-notify")
     parser.add_argument('--version', action='version', version=__version__)
@@ -95,3 +94,7 @@ if __name__ == "__main__":
         sender.notify(
             options.module, options.action, notification if notification else None, validator
         )
+
+
+if __name__ == "__main__":
+    main()

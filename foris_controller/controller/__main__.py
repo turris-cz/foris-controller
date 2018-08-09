@@ -41,8 +41,7 @@ except ImportError:
 logger = logging.getLogger("foris_controller")
 
 
-if __name__ == "__main__":
-
+def main():
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-controller")
     parser.add_argument('--version', action='version', version=__version__)
@@ -160,3 +159,7 @@ if __name__ == "__main__":
 
     logger.debug("Entering main loop.")
     server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
