@@ -1,3 +1,14 @@
+0.10.2 (2018-08-10)
+-------------------
+
+* test updates
+* sample plugin updates
+* display version + --version option
+* support for locales with territory code (e.g. nb_NO)
+* python3 compatibility
+* CI with python3 integration
+* create entrypoints for scripts
+
 0.10.1 (2018-06-19)
 ------------------
 
