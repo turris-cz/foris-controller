@@ -18,13 +18,55 @@
 #
 
 import pytest
+import textwrap
 
 from .test_updater import wait_for_updater_run_finished
+from .conftest import cmdline_script_root
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, init_script_result, lock_backend,
-    only_backends, updater_userlists
+    only_backends, updater_userlists, FILE_ROOT_PATH
 )
-from foris_controller_testtools.utils import check_service_result, get_uci_module
+from foris_controller_testtools.utils import check_service_result, get_uci_module, FileFaker
+
+
+@pytest.fixture(
+    params=[(200, "free"), (200, "foreign"), (0, "unknown"), (404, "not_found"), (200, "owned")],
+    ids=["free", "foreign", "unknown", "not_found", "owned"],
+    scope="function"
+)
+def register_cmd(request):
+    status_code, status = request.param
+
+    if not status_code:
+        content = """\
+            #!/bin/sh
+            exit 1
+        """
+    else:
+        content = """\
+            #!/bin/sh
+            cat <<-EOF
+            status: %(status)s
+            url: "https://some.page/${2:-en}/data?email=${1}&registration_code=XXXXXXX"
+            code: %(code)d
+            EOF
+        """ % dict(code=status_code, status=status)
+
+    with FileFaker(
+        cmdline_script_root(), "/usr/share/server-uplink/registered.sh",
+        True, textwrap.dedent(content)
+    ) as f:
+        yield f, status
+
+
+@pytest.fixture(scope="function")
+def registration_code(request):
+    content = "0000000B00009CD6"
+    with FileFaker(
+        FILE_ROOT_PATH, "/usr/share/server-uplink/registration_code",
+        False, textwrap.dedent(content)
+    ) as f:
+        yield f, content
 
 
 @pytest.mark.parametrize("code", ["cs", "nb_NO"])
@@ -40,6 +82,26 @@ def test_get_registered(code, uci_configs_init, infrastructure, ubusd_test):
     })
     assert "status" in res["data"].keys()
 
+
+@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.parametrize("code", ["cs", "nb_NO"])
+def test_get_registered_openwrt(
+    cmdline_script_root, code, uci_configs_init, infrastructure, ubusd_test, register_cmd,
+    registration_code
+):
+    res = infrastructure.process_message({
+        "module": "data_collect",
+        "action": "get_registered",
+        "kind": "request",
+        "data": {
+            "email": "test@test.test",
+            "language": code,
+        }
+    })
+    _, status = register_cmd
+    assert "status" in res["data"].keys()
+    assert res["data"]["status"] == status
+    assert status not in ["free", "foreign"] or "url" in res["data"]
 
 def test_get_registered_errors(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({

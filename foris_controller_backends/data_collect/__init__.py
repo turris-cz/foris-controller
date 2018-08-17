@@ -44,6 +44,7 @@ class RegisteredCmds(BaseCmdLine):
             "/usr/share/server-uplink/registered.sh",
             email, language
         )
+        stdout = stdout.decode()
         if not retcode == 0:
             # cmd failed (e.g. connection failed)
             return {"status": "unknown"}
