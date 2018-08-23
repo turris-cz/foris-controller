@@ -19,6 +19,7 @@
 
 import logging
 import os
+import sys
 
 from foris_controller_backends.files import BaseMatch
 from foris_controller_backends.password import ForisPasswordUci
@@ -101,9 +102,11 @@ class WebUciCommands(object):
 
 
 class Languages(object):
+    LANG_DIR = "/usr/lib/python%s.%s/site-packages/foris/langs/" % (
+        sys.version_info.major, sys.version_info.minor)
     INSTALLED_LANG_MATCHES = [
-        "/usr/lib/python2.7/site-packages/foris/langs/??.py",
-        "/usr/lib/python2.7/site-packages/foris/langs/??_??.py",
+        os.path.join(LANG_DIR, "??.py"),
+        os.path.join(LANG_DIR, "??_??.py"),
     ]
 
     @staticmethod

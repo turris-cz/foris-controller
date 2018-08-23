@@ -19,16 +19,27 @@
 import os
 import pytest
 import base64
+import sys
 
 from foris_controller_testtools.fixtures import (
     uci_configs_init, infrastructure, ubusd_test, file_root_init,
-    init_script_result
+    init_script_result, FILE_ROOT_PATH
 )
+from foris_controller_testtools.utils import FileFaker
 
-FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_web_files")
+
+@pytest.fixture(scope="function")
+def installed_languages(request):
+    trans_dir = "/usr/lib/python%s.%s/site-packages/foris/langs/" % (
+        sys.version_info.major, sys.version_info.minor
+    )
+    with \
+            FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "cs.py"), False, "") as f1, \
+            FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "de.py"), False, "") as f2, \
+            FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "nb_NO.py"), False, "") as f3:
+        yield f1, f2, f3
 
 
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
@@ -46,9 +57,8 @@ def test_get(file_root_init, uci_configs_init, infrastructure, ubusd_test):
     assert "passed" in res["data"]["guide"]
 
 
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.parametrize("code", ["cs", "nb_NO"])
-def test_set(code, file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_set(installed_languages, code, file_root_init, uci_configs_init, infrastructure, ubusd_test):
     filters = [("web", "set_language")]
     old_notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -73,8 +83,7 @@ def test_set(code, file_root_init, uci_configs_init, infrastructure, ubusd_test)
     }
 
 
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_set_missing(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_set_missing(installed_languages, file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "set_language",
@@ -89,8 +98,7 @@ def test_set_missing(file_root_init, uci_configs_init, infrastructure, ubusd_tes
     }
 
 
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_list_languages(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_list_languages(installed_languages, file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "list_languages",
@@ -101,8 +109,7 @@ def test_list_languages(file_root_init, uci_configs_init, infrastructure, ubusd_
     assert set(res["data"]["languages"]) == {'en', 'cs', 'de', 'nb_NO'}
 
 
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_missing_data(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_missing_data(installed_languages, file_root_init, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
         "action": "set_language",
@@ -110,7 +117,6 @@ def test_missing_data(file_root_init, uci_configs_init, infrastructure, ubusd_te
     })
     assert "errors" in res
 
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_update_guide(file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
         "module": "web",
