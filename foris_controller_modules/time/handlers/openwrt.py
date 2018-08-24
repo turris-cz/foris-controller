@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
     uci = TimeUciCommands()
-    async = TimeAsyncCmds()
+    async_cmd = TimeAsyncCmds()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -71,4 +71,4 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         :returns: generated_ntpdate_id
         :rtype: str
         """
-        return self.async.ntpd_trigger(exit_notify_function, reset_notify_function)
+        return self.async_cmd.ntpd_trigger(exit_notify_function, reset_notify_function)
