@@ -65,7 +65,7 @@ class TimeUciCommands(object):
             system_data = backend.read("system")
 
         timezone = get_option_anonymous(system_data, "system", "system", 0, "timezone")
-        zonename = get_option_anonymous(system_data, "system", "system", 0, "zonename")
+        zonename = get_option_anonymous(system_data, "system", "system", 0, "zonename", "UTC")
         try:
             region, city = zonename.split("/")
         except ValueError:
