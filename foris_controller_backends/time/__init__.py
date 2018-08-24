@@ -26,7 +26,8 @@ from foris_controller_backends.uci import (
     UciBackend, get_option_anonymous, get_option_named, parse_bool, store_bool
 )
 from foris_controller_backends.services import OpenwrtServices
-from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand
+from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand, inject_cmdline_root
+from foris_controller_backends.files import path_exists
 from foris_controller.utils import writelock, RWLock
 from foris_controller.exceptions import UciException
 
@@ -133,6 +134,10 @@ class TimeAsyncCmds(AsyncCommand):
         """
         logger.debug("Starting ntpd.")
 
+        # binary placement might differ on turrisOS >= 4.0
+        binary_path = "/sbin/ntpd"
+        binary_path = binary_path if path_exists(binary_path) else "/usr/sbin/ntpd"
+
         # handler which will be called when the program
         def handler_exit(process_data):
             result = process_data.get_retval() == 0
@@ -152,7 +157,7 @@ class TimeAsyncCmds(AsyncCommand):
         servers = get_option_named(system_data, "system", "ntp", "server", [])
 
         async_id = self.start_process(
-            ["/usr/sbin/ntpd", "-q", "-n"] + reduce(lambda x, y: x + ["-p"] + [y], servers, []),
+            [binary_path, "-q", "-n"] + reduce(lambda x, y: x + ["-p"] + [y], servers, []),
             [],
             handler_exit,
             reset_notify_function,

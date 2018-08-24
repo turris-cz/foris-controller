@@ -47,6 +47,15 @@ def inject_file_root(path):
     return path
 
 
+def path_exists(path):
+    """ Checks whether a path exists
+
+    :param path: path
+    :type path: str
+    """
+    return os.path.exists(inject_file_root(path))
+
+
 class BaseFile(object):
     def _file_content(self, path):
         """ Returns a content of a file
