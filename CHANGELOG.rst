@@ -1,3 +1,10 @@
+0.10.4 (2018-08-29)
+-------------------
+
+* time module fixes
+* python 3.7 compatilility fix
+* web module language detect update
+
 0.10.3 (2018-08-17)
 -------------------
 
