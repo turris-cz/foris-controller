@@ -215,10 +215,11 @@ class WifiUci(object):
         ]
 
     def _get_interface_sections_from_device_section(self, data, device_section):
-        # first anonymous section is interface
+        # first section is interface
         interface = [
             e for e in get_sections_by_type(data, "wireless", "wifi-iface")
-            if e["data"].get("device") == device_section["name"] and e["anonymous"]
+            if e["data"].get("device") == device_section["name"] and
+            (e["anonymous"] or not e["name"].startswith("guest_iface_"))
         ][0]
         # first non-anonymous section starting with 'guest_iface_' is guest wifi
         guest_interfaces = [

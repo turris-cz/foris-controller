@@ -390,11 +390,13 @@ def test_update_settings_uci(init_script_result, file_root_init, uci_configs_ini
         # get sections where device is radioX
         real_section = [
             e for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
-            if e["data"].get("device") == radio_name and e["anonymous"]
+            if e["data"].get("device") == radio_name
+            and not e.get("name", "").startswith("guest_iface_")
         ][0]["name"]
         guest_section = [
             e for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
-            if e["data"].get("device") == radio_name and not e["anonymous"]
+            if e["data"].get("device") == radio_name
+            and e.get("name", "").startswith("guest_iface_")
         ][0]["name"]
         return real_section, guest_section
 

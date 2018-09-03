@@ -15,19 +15,16 @@ config wifi-iface
         option ssid     Turris
         option encryption none
 
-config wifi-device  radio1
-        option type     mac80211
-        option channel  11
-        option country  'CZ'
-        option hwmode   11g
-        option macaddr  '00:11:22:33:44:55'
-        option htmode   HT20
-        # REMOVE THIS LINE TO ENABLE WIFI:
-        option disabled 1
+config wifi-device 'radio1'
+        option type 'mac80211'
+        option channel '11'
+        option hwmode '11g'
+        option macaddr '00:11:22:33:44:55'
+        option htmode 'HT20'
+        option disabled '1'
 
-config wifi-iface
-        option device   radio1
-        option network  lan
-        option mode     ap
-        option ssid     Turris
-        option encryption none
+config wifi-iface 'default_radio1'
+        option device 'radio1'
+        option network 'lan'
+        option mode 'ap'
+        option ssid 'Turris'
