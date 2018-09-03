@@ -1,0 +1,176 @@
+{
+    "definitions": {
+        "interface_id": {"type": "string", "minLength": 1, "pattern": "^[0-9a-z_-]*"},
+        "interface_record": {
+            "type": "object",
+            "properties": {
+                "id": {"$ref": "#/definitions/interface_id"},
+                "kind": {"enum": ["eth", "usb", "3g", "4g"]},
+                "module_index": {"type": "integer", "minimum": 0},
+                "index": {"type": "integer", "minimum": 0}
+            },
+            "required": ["id", "kind", "module_index", "index"],
+            "additionalProperties": false
+        }
+    },
+    "oneOf": [
+        {
+            "description": "request to get ports settings",
+            "properties": {
+                "module": {"enum": ["networks"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_settings"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to get ports settings",
+            "properties": {
+                "module": {"enum": ["networks"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "device": {
+                            "type": "object",
+                            "properties": {
+                                "type": {"enum": ["omnia", "turris", "mox"]},
+                                "version": {"type": "string"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["type", "version"]
+                        },
+                        "networks": {
+                            "type": "object",
+                            "properties": {
+                                "wan": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_record"},
+                                    "maxItems": 1
+                                },
+                                "lan": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_record"}
+                                },
+                                "guest": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_record"}
+                                },
+                                "none": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_record"}
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["wan", "lan", "guest", "none"]
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["device", "networks"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to update ports settings",
+            "properties": {
+                "module": {"enum": ["networks"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "networks": {
+                            "type": "object",
+                            "properties": {
+                                "wan": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"},
+                                    "maxItems": 1
+                                },
+                                "lan": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"}
+                                },
+                                "guest": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"}
+                                },
+                                "none": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"}
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["wan", "lan", "guest", "none"]
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["networks"]
+                }
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to update ports settings",
+            "properties": {
+                "module": {"enum": ["networks"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that ports settings were updated",
+            "properties": {
+                "module": {"enum": ["networks"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "networks": {
+                            "type": "object",
+                            "properties": {
+                                "wan": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"},
+                                    "maxItems": 1
+                                },
+                                "lan": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"}
+                                },
+                                "guest": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"}
+                                },
+                                "none": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/interface_id"}
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["wan", "lan", "guest", "none"]
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["networks"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}
