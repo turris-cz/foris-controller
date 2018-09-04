@@ -24,10 +24,11 @@ import re
 
 from foris_controller.exceptions import UciException, UciRecordNotFound, BackendCommandFailed
 from foris_controller_backends.uci import (
-    UciBackend, get_sections_by_type, store_bool, parse_bool, get_option_named
+    UciBackend, get_sections_by_type, store_bool, parse_bool
 )
 
 from foris_controller_backends.files import inject_file_root
+from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.services import OpenwrtServices
 
@@ -306,7 +307,7 @@ class WifiUci(object):
             # just add disabled and possibly update device if wifi-interface is newly created
             backend.set_option("wireless", guest_name, "disabled", store_bool(True))
             backend.set_option("wireless", guest_name, "device", device_section["name"])
-            return None
+            return False
 
         backend.set_option("wireless", guest_name, "disabled", store_bool(False))
         backend.set_option("wireless", guest_name, "device", device_section["name"])
@@ -322,7 +323,7 @@ class WifiUci(object):
         backend.set_option("wireless", guest_name, "ifname", guest_ifname)
         backend.set_option("wireless", guest_name, "isolate", store_bool(True))
 
-        return guest_ifname
+        return True
 
     def update_settings(self, new_settings):
         """ Updates current wifi settings
@@ -336,7 +337,7 @@ class WifiUci(object):
                 data = backend.read("wireless")  # data were read to find corresponding sections
                 device_sections = self._get_device_sections(data)
 
-                guest_ifnames = []
+                enable_guest_network = False
 
                 for device in new_settings["devices"]:
                     device_section = [
@@ -367,30 +368,14 @@ class WifiUci(object):
 
                     interface, guest_interface = self._get_interface_sections_from_device_section(
                         data, device_section)
-                    ifname = self._update_wifi(
+
+                    if self._update_wifi(
                         backend, device, device_section, interface, guest_interface
-                    )
-                    if ifname:
-                        guest_ifnames.append(ifname)
+                    ):
+                        enable_guest_network = True
 
-                if guest_ifnames:
-                    from foris_controller_backends.lan import LanUci
-                    data = backend.read("network")
-
-                    try:
-                        get_option_named(data, "network", "guest_turris", 'proto', None)
-                        # guest network present
-                        LanUci.set_guest_network(backend, {"enabled": True}, guest_ifnames)
-                    except (UciException, UciRecordNotFound):
-                        # guest network missing - try to create initial configuration
-                        LanUci.set_guest_network(
-                            backend,
-                            {
-                                "enabled": True, "ip": LanUci.DEFAULT_GUEST_ADDRESS,
-                                "netmask": LanUci.DEFAULT_GUEST_NETMASK,
-                            },
-                            guest_ifnames
-                        )
+                if enable_guest_network:
+                    GuestUci.enable_guest_network(backend)
 
         except (IndexError, ValueError):
             return False  # device not found changes were not commited - no partial changes passed

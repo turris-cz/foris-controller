@@ -22,15 +22,15 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
+from foris_controller_backends.networks import NetworksUci
+
 from .. import Handler
 
 logger = logging.getLogger(__name__)
 
 
 class OpenwrtNetworksHandler(Handler, BaseOpenwrtHandler):
-    # uci = WanUci()
-    # test_cmds = WanTestCommands()
-    # status_cmds = WanStatusCommands()
+    uci = NetworksUci()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -39,7 +39,6 @@ class OpenwrtNetworksHandler(Handler, BaseOpenwrtHandler):
         :returns: current networks settings
         :rtype: dict
         """
-        raise NotImplementedError()
         return self.uci.get_settings()
 
     @logger_wrapper(logger)
@@ -52,6 +51,4 @@ class OpenwrtNetworksHandler(Handler, BaseOpenwrtHandler):
         :return: True if update passes
         :rtype: boolean
         """
-        raise NotImplementedError()
-        self.uci.update_settings(**new_settings)
-        return True
+        return self.uci.update_settings(**new_settings)

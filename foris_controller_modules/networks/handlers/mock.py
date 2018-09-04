@@ -31,26 +31,26 @@ logger = logging.getLogger(__name__)
 class MockNetworksHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
     device = {
-        "type": "omnia",
+        "model": "omnia",
         "version": "2G no GPIO",
     }
     DEFAULT_NETWORKS = {
         "wan": [
-            {"id": "eth2", "kind": "eth", "module_index": 0, "index": 0},
+            {"id": "eth2", "kind": "eth", "module_index": 0, "index": 0, "title": "WAN"},
         ],
         "lan": [
-            {"id": "eth0", "kind": "eth", "module_index": 0, "index": 1},
-            {"id": "lan0", "kind": "eth", "module_index": 0, "index": 1},
-            {"id": "lan1", "kind": "eth", "module_index": 0, "index": 2},
-            {"id": "lan2", "kind": "eth", "module_index": 0, "index": 3},
-            {"id": "lan3", "kind": "eth", "module_index": 0, "index": 4},
+            {"id": "lan0", "kind": "eth", "module_index": 0, "index": 1, "title": "LAN0"},
+            {"id": "lan1", "kind": "eth", "module_index": 0, "index": 2, "title": "LAN1"},
+            {"id": "lan2", "kind": "eth", "module_index": 0, "index": 3, "title": "LAN2"},
+            {"id": "lan3", "kind": "eth", "module_index": 0, "index": 4, "title": "LAN3"},
+            {"id": "lan4", "kind": "eth", "module_index": 0, "index": 5, "title": "LAN4"},
         ],
         "guest": [
-            {"id": "eth3", "kind": "usb", "module_index": 0, "index": 5},
+            {"id": "eth3", "kind": "usb", "module_index": 0, "index": 5, "title": "USB-0"},
         ],
         "none": [
-            {"id": "wwan0", "kind": "4g", "module_index": 0, "index": 0},
-            {"id": "wwan1", "kind": "3g", "module_index": 0, "index": 1},
+            {"id": "wwan0", "kind": "4g", "module_index": 0, "index": 0, "title": "MPCI1"},
+            {"id": "wwan1", "kind": "3g", "module_index": 0, "index": 1, "title": "MPCI1"},
         ],
     }
     networks = copy.deepcopy(DEFAULT_NETWORKS)

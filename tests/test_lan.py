@@ -184,9 +184,6 @@ def test_guest_openwrt_backend(
     assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled"))
     assert uci.get_option_named(data, "network", "guest_turris", "type") == "bridge"
     # this depends on default uci wireless config if it changes this line needs to be updated
-    required_set = {"guest_turris_0", "guest_turris_1"}
-    assert set(uci.get_option_named(data, "network", "guest_turris", "ifname")) == \
-        required_set
     assert uci.get_option_named(data, "network", "guest_turris", "proto") == "static"
     assert uci.get_option_named(data, "network", "guest_turris", "ipaddr") == "192.168.8.1"
     assert uci.get_option_named(data, "network", "guest_turris", "netmask") == "255.255.255.0"

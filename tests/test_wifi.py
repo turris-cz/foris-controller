@@ -533,8 +533,6 @@ def test_update_settings_uci(init_script_result, file_root_init, uci_configs_ini
 
     assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0")) \
         is True
-    assert set(uci.get_option_named(data, "network", "guest_turris", "ifname", "0")) \
-        == {"guest_turris_1"}
 
     data = update(
         {
@@ -572,8 +570,6 @@ def test_update_settings_uci(init_script_result, file_root_init, uci_configs_ini
 
     assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0")) \
         is True
-    assert set(uci.get_option_named(data, "network", "guest_turris", "ifname", "0")) \
-        == {"guest_turris_0"}
 
     data = update(
         {
