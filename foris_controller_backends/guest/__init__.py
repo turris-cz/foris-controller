@@ -20,9 +20,12 @@
 import logging
 
 from foris_controller_backends.uci import (
-    parse_bool, get_option_named, store_bool
+    parse_bool, get_option_named, store_bool, UciBackend
 )
 from foris_controller.exceptions import UciRecordNotFound, UciException
+
+from foris_controller_backends.lan import LanUci
+from foris_controller_backends.services import OpenwrtServices
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +45,6 @@ class GuestUci(object):
 
         return \
             test(network_data, "network", "guest_turris", "enabled") \
-            and not test(dhcp_data, "dhcp", "guest_turris", "ignore", True) \
             and test(firewall_data, "firewall", "guest_turris", "enabled") \
             and test(firewall_data, "firewall", "guest_turris_forward_wan", "enabled") \
             and test(firewall_data, "firewall", "guest_turris_dhcp_rule", "enabled") \
@@ -67,6 +69,14 @@ class GuestUci(object):
         guest["qos"]["download"] = int(get_option_named(
             sqm_data, "sqm", "guest_limit_turris", "upload", 1024))
 
+        guest["dhcp"] = {}
+        guest["dhcp"]["enabled"] = not parse_bool(
+            get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0"))
+        guest["dhcp"]["start"] = int(
+            get_option_named(dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START))
+        guest["dhcp"]["limit"] = int(
+            get_option_named(dhcp_data, "dhcp", "guest_turris", "limit", LanUci.DEFAULT_DHCP_LIMIT))
+
         return guest
 
     @staticmethod
@@ -76,20 +86,16 @@ class GuestUci(object):
         :rtype: NoneType or str
         """
 
-        def set_if_exists(backend, config, section, option, data, key):
-            if key in data:
-                backend.set_option(config, section, option, data[key])
-
         enabled = store_bool(guest_network["enabled"])
-        ignored = store_bool(not guest_network["enabled"])
 
         # update network interface list
         backend.add_section("network", "interface", "guest_turris")
         backend.set_option("network", "guest_turris", "enabled", enabled)
         backend.set_option("network", "guest_turris", "type", "bridge")
         backend.set_option("network", "guest_turris", "proto", "static")
-        set_if_exists(backend, "network", "guest_turris", "ipaddr", guest_network, "ip")
-        set_if_exists(backend, "network", "guest_turris", "netmask", guest_network, "netmask")
+        if guest_network["enabled"]:
+            backend.set_option("network", "guest_turris", "ipaddr", guest_network["ip"])
+            backend.set_option("network", "guest_turris", "netmask", guest_network["netmask"])
         backend.set_option("network", "guest_turris", "bridge_empty", store_bool(True))
 
         # update firewall config
@@ -126,15 +132,18 @@ class GuestUci(object):
 
         # update dhcp config
         backend.add_section("dhcp", "dhcp", "guest_turris")
-        backend.set_option("dhcp", "guest_turris", "ignore", ignored)
         backend.set_option("dhcp", "guest_turris", "interface", "guest_turris")
-        # use fixed values for guest dhcp
-        backend.set_option("dhcp", "guest_turris", "start", "200")
-        backend.set_option("dhcp", "guest_turris", "limit", "50")
         backend.set_option("dhcp", "guest_turris", "leasetime", "1h")
-        if guest_network.get("ip", False):
-            backend.replace_list(
-                "dhcp", "guest_turris", "dhcp_option", ["6,%s" % guest_network["ip"]])
+        if guest_network["enabled"]:
+            dhcp_ignored = store_bool(not guest_network["dhcp"]["enabled"])
+            backend.set_option("dhcp", "guest_turris", "ignore", dhcp_ignored)
+            if guest_network["dhcp"]["enabled"]:
+                # use fixed values for guest dhcp
+                backend.set_option("dhcp", "guest_turris", "start", guest_network["dhcp"]["start"])
+                backend.set_option("dhcp", "guest_turris", "limit", guest_network["dhcp"]["limit"])
+            if guest_network.get("ip", False):
+                backend.replace_list(
+                    "dhcp", "guest_turris", "dhcp_option", ["6,%s" % guest_network["ip"]])
 
         # qos part (replaces whole sqm section)
         try:
@@ -142,6 +151,10 @@ class GuestUci(object):
             backend.del_section("sqm", "guest_limit_turris")
         except UciException:
             pass  # section might not exist
+
+        def set_if_exists(backend, config, section, option, data, key):
+            if key in data:
+                backend.set_option(config, section, option, data[key])
 
         try:
             if guest_network["enabled"] and "qos" in guest_network and \
@@ -176,17 +189,61 @@ class GuestUci(object):
         """ Enables guest network. If guest network is not preset it is created
         """
 
-        data = backend.read("network")
+        network_data = backend.read("network")
+        dhcp_data = backend.read("dhcp")
         try:
-            get_option_named(data, "network", "guest_turris", 'proto', None)
+            dhcp_enabled = not parse_bool(
+                get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0"))
+            dhcp_start = int(get_option_named(
+                dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START))
+            dhcp_limit = int(get_option_named(
+                dhcp_data, "dhcp", "guest_turris", "limit", LanUci.DEFAULT_DHCP_LIMIT))
+            router_ip = get_option_named(
+                network_data, "network", "guest_turris", "ipaddr", GuestUci.DEFAULT_GUEST_ADDRESS)
+            netmask = get_option_named(
+                network_data, "network", "guest_turris", "netmask", GuestUci.DEFAULT_GUEST_NETMASK)
+
+            get_option_named(network_data, "network", "guest_turris", 'proto', None)
             # guest network present
-            GuestUci.set_guest_network(backend, {"enabled": True})
+            GuestUci.set_guest_network(
+                backend, {
+                    "enabled": True, "ip": router_ip, "netmask": netmask,
+                    "dhcp": {"enabled": dhcp_enabled, "start": dhcp_start, "limit": dhcp_limit}
+                }
+            )
         except (UciException, UciRecordNotFound):
             # guest network missing - try to create initial configuration
             GuestUci.set_guest_network(
                 backend,
                 {
-                    "enabled": True, "ip": GuestUci.DEFAULT_GUEST_ADDRESS,
-                    "netmask": GuestUci.DEFAULT_GUEST_NETMASK,
+                    "enabled": True, "ip": router_ip, "netmask": netmask,
+                    "dhcp": {"enabled": dhcp_enabled, "start": dhcp_start, "limit": dhcp_limit}
                 },
             )
+
+    def get_settings(self):
+
+        with UciBackend() as backend:
+            firewall = backend.read("firewall")
+            network = backend.read("network")
+            sqm = backend.read("sqm")
+            dhcp = backend.read("dhcp")
+        return GuestUci.get_guest_network_settings(network, firewall, dhcp, sqm)
+
+    def update_settings(self, **new_settings):
+        with UciBackend() as backend:
+            from foris_controller_backends.wifi import WifiUci
+            # disable guest wifi when guest network is not enabled
+            if not new_settings["enabled"]:
+                WifiUci.set_guest_wifi_disabled(backend)
+            sqm_cmd = GuestUci.set_guest_network(backend, new_settings)
+
+        with OpenwrtServices() as services:
+            # try to restart sqm (best effort) in might not be installed yet
+            # note that sqm will be restarted when the network is restarted
+            if sqm_cmd == "enable":
+                services.enable("sqm", fail_on_error=False)
+            elif sqm_cmd == "disable":
+                services.disable("sqm", fail_on_error=False)
+
+            services.restart("network", delay=2)

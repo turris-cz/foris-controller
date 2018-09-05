@@ -27,7 +27,8 @@ from .. import Handler
 logger = logging.getLogger(__name__)
 
 
-class MockLanHandler(Handler, BaseMockHandler):
+class MockGuestHandler(Handler, BaseMockHandler):
+    enabled = False
     router_ip = "192.168.1.1"
     netmask = "255.255.255.0"
     dhcp = {
@@ -35,30 +36,46 @@ class MockLanHandler(Handler, BaseMockHandler):
         "start": 100,
         "limit": 150,
     }
+    qos = {
+        "enabled": False,
+        "download": 1200,
+        "upload": 1200,
+    }
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get lan settings
+        """ Mocks get guest settings
 
-        :returns: current lan settiongs
+        :returns: current guest settiongs
         :rtype: str
         """
         result = {
-            "ip": self.router_ip,
-            "netmask": self.netmask,
-            "dhcp": self.dhcp,
+            "enabled": MockGuestHandler.enabled,
+            "ip": MockGuestHandler.router_ip,
+            "netmask": MockGuestHandler.netmask,
+            "dhcp": MockGuestHandler.dhcp,
+            "qos": MockGuestHandler.qos,
         }
         return result
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ Mocks updates current lan settings
+        """ Mocks updates current guest settings
         :returns: True if update passes
         :rtype: bool
         """
-        self.router_ip = new_settings["ip"]
-        self.netmask = new_settings["netmask"]
-        self.dhcp["enabled"] = new_settings["dhcp"]["enabled"]
-        self.dhcp["start"] = new_settings["dhcp"].get("start", self.dhcp["start"])
-        self.dhcp["limit"] = new_settings["dhcp"].get("limit", self.dhcp["limit"])
+        MockGuestHandler.enabled = new_settings["enabled"]
+        if MockGuestHandler.enabled:
+            MockGuestHandler.router_ip = new_settings["ip"]
+            MockGuestHandler.netmask = new_settings["netmask"]
+            MockGuestHandler.dhcp["enabled"] = new_settings["dhcp"]["enabled"]
+            MockGuestHandler.dhcp["start"] = new_settings["dhcp"].get(
+                "start", MockGuestHandler.dhcp["start"])
+            MockGuestHandler.dhcp["limit"] = new_settings["dhcp"].get(
+                "limit", MockGuestHandler.dhcp["limit"])
+            MockGuestHandler.qos["enabled"] = new_settings["qos"]["enabled"]
+            if MockGuestHandler.qos["enabled"]:
+                MockGuestHandler.qos["download"] = new_settings["qos"]["download"]
+                MockGuestHandler.qos["upload"] = new_settings["qos"]["upload"]
+
         return True

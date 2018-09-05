@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,46 +19,36 @@
 
 import logging
 
-from foris_controller.handler_base import BaseMockHandler
+from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
+from foris_controller_backends.guest import GuestUci
 
 from .. import Handler
 
 logger = logging.getLogger(__name__)
 
 
-class MockLanHandler(Handler, BaseMockHandler):
-    router_ip = "192.168.1.1"
-    netmask = "255.255.255.0"
-    dhcp = {
-        "enabled": False,
-        "start": 100,
-        "limit": 150,
-    }
+class OpenwrtGuestHandler(Handler, BaseOpenwrtHandler):
+    uci = GuestUci()
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get lan settings
+        """ get guest settings
 
-        :returns: current lan settiongs
-        :rtype: str
+        :returns: current guest settings
+        :rtype: dict
         """
-        result = {
-            "ip": self.router_ip,
-            "netmask": self.netmask,
-            "dhcp": self.dhcp,
-        }
-        return result
+        return self.uci.get_settings()
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ Mocks updates current lan settings
-        :returns: True if update passes
-        :rtype: bool
+        """ updates current guest settings
+
+        :param new_settings: new settings dictionary
+        :type new_settings: dict
+
+        :return: True if update passes
+        :rtype: boolean
         """
-        self.router_ip = new_settings["ip"]
-        self.netmask = new_settings["netmask"]
-        self.dhcp["enabled"] = new_settings["dhcp"]["enabled"]
-        self.dhcp["start"] = new_settings["dhcp"].get("start", self.dhcp["start"])
-        self.dhcp["limit"] = new_settings["dhcp"].get("limit", self.dhcp["limit"])
+        self.uci.update_settings(**new_settings)
         return True

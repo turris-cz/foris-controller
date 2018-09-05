@@ -1,87 +1,5 @@
 {
     "definitions": {
-        "qos_get": {
-            "type": "object",
-            "properties": {
-                "enabled": {"type": "boolean"},
-                "download": {
-                    "type": "integer",
-                    "description": "download limit in kb/s",
-                    "minimum": 1
-                },
-                "upload": {
-                    "type": "integer",
-                    "description": "upload limit in kb/s",
-                    "minimum": 1
-                }
-            },
-            "required": ["enabled", "upload", "download"],
-            "additionalProperties": false
-        },
-        "qos_set": {
-            "oneOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "enabled": {"enum": [true]},
-                        "download": {
-                            "type": "integer",
-                            "description": "download limit in kb/s",
-                            "minimum": 1
-                        },
-                        "upload": {
-                            "type": "integer",
-                            "description": "upload limit in kb/s",
-                            "minimum": 1
-                        }
-                    },
-                    "required": ["enabled", "upload", "download"],
-                    "additionalProperties": false
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "enabled": {"enum": [false]}
-                    },
-                    "required": ["enabled"],
-                    "additionalProperties": false
-                }
-            ]
-        },
-        "guest_network_get": {
-            "type": "object",
-            "properties": {
-                "enabled": {"type": "boolean"},
-                "ip": { "format": "ipv4", "description": "router IP in guest network"},
-                "netmask": { "format": "ipv4" },
-                "qos": {"$ref": "#/definitions/qos_get"}
-            },
-            "required": ["enabled", "ip", "netmask"],
-            "additionalProperties": false
-        },
-        "guest_network_set": {
-            "oneOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "enabled": {"enum": [true]},
-                        "ip": { "format": "ipv4", "description": "router IP in guest network"},
-                        "netmask": { "format": "ipv4" },
-                        "qos": {"$ref": "#/definitions/qos_set"}
-                    },
-                    "required": ["enabled", "ip", "netmask", "qos"],
-                    "additionalProperties": false
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "enabled": {"enum": [false]}
-                    },
-                    "required": ["enabled"],
-                    "additionalProperties": false
-                }
-            ]
-        },
         "dhcp_settings_get": {
             "type": "object",
             "properties": {
@@ -135,12 +53,11 @@
                     "type": "object",
                     "properties": {
                         "ip": { "format": "ipv4", "description": "router IP in lan network"},
-                        "netmask": { "format": "ipv4" },
-                        "dhcp": {"$ref": "#/definitions/dhcp_settings_get"},
-                        "guest_network": {"$ref": "#/definitions/guest_network_get"}
+                        "netmask": { "format": "ipv4netmask", "type": "string" },
+                        "dhcp": {"$ref": "#/definitions/dhcp_settings_get"}
                     },
                     "additionalProperties": false,
-                    "required": ["ip", "netmask", "dhcp", "guest_network"]
+                    "required": ["ip", "netmask", "dhcp"]
                 }
             },
             "additionalProperties": false,
@@ -156,12 +73,11 @@
                     "type": "object",
                     "properties": {
                         "ip": { "format": "ipv4", "description": "router IP in lan network"},
-                        "netmask": { "format": "ipv4" },
-                        "dhcp": {"$ref": "#/definitions/dhcp_settings_set"},
-                        "guest_network": {"$ref": "#/definitions/guest_network_set"}
+                        "netmask": { "format": "ipv4netmask", "type": "string" },
+                        "dhcp": {"$ref": "#/definitions/dhcp_settings_set"}
                     },
                     "additionalProperties": false,
-                    "required": ["ip", "netmask", "dhcp", "guest_network"]
+                    "required": ["ip", "netmask", "dhcp"]
                 }
             },
             "additionalProperties": false
@@ -194,12 +110,11 @@
                     "type": "object",
                     "properties": {
                         "ip": { "format": "ipv4", "description": "router IP in lan network"},
-                        "netmask": { "format": "ipv4" },
-                        "dhcp": {"$ref": "#/definitions/dhcp_settings_set"},
-                        "guest_network": {"$ref": "#/definitions/guest_network_set"}
+                        "netmask": { "format": "ipv4netmask", "type": "string" },
+                        "dhcp": {"$ref": "#/definitions/dhcp_settings_set"}
                     },
                     "additionalProperties": false,
-                    "required": ["ip", "netmask", "dhcp", "guest_network"]
+                    "required": ["ip", "netmask", "dhcp"]
                 }
             },
             "additionalProperties": false

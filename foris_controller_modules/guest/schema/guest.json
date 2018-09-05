@@ -1,0 +1,181 @@
+{
+    "definitions": {
+        "qos_get": {
+            "type": "object",
+            "properties": {
+                "enabled": {"type": "boolean"},
+                "download": {
+                    "type": "integer",
+                    "description": "download limit in kb/s",
+                    "minimum": 1
+                },
+                "upload": {
+                    "type": "integer",
+                    "description": "upload limit in kb/s",
+                    "minimum": 1
+                }
+            },
+            "required": ["enabled", "upload", "download"],
+            "additionalProperties": false
+        },
+        "qos_set": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [true]},
+                        "download": {
+                            "type": "integer",
+                            "description": "download limit in kb/s",
+                            "minimum": 1
+                        },
+                        "upload": {
+                            "type": "integer",
+                            "description": "upload limit in kb/s",
+                            "minimum": 1
+                        }
+                    },
+                    "required": ["enabled", "upload", "download"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [false]}
+                    },
+                    "required": ["enabled"],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "guest_network_get": {
+            "type": "object",
+            "properties": {
+                "enabled": {"type": "boolean"},
+                "ip": { "format": "ipv4", "description": "router IP in guest network"},
+                "netmask": { "format": "ipv4netmask", "type": "string" },
+                "dhcp": {"$ref": "#/definitions/dhcp_settings_get"},
+                "qos": {"$ref": "#/definitions/qos_get"}
+            },
+            "required": ["enabled", "ip", "netmask", "dhcp"],
+            "additionalProperties": false
+        },
+        "guest_network_set": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [true]},
+                        "ip": { "format": "ipv4", "description": "router IP in guest network"},
+                        "netmask": { "format": "ipv4netmask", "type": "string" },
+                        "dhcp": {"$ref": "#/definitions/dhcp_settings_set"},
+                        "qos": {"$ref": "#/definitions/qos_set"}
+                    },
+                    "required": ["enabled", "ip", "netmask", "qos", "dhcp"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [false]}
+                    },
+                    "required": ["enabled"],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "dhcp_settings_get": {
+            "type": "object",
+            "properties": {
+                "enabled": {"type": "boolean"},
+                "start": {"type": "integer", "minimum": 1},
+                "limit": {"type": "integer", "minimum": 1}
+            },
+            "required": ["enabled", "start", "limit"],
+            "additionalProperties": false
+        },
+        "dhcp_settings_set": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [true]},
+                        "start": {"type": "integer", "minimum": 1},
+                        "limit": {"type": "integer", "minimum": 1}
+                    },
+                    "required": ["enabled", "start", "limit"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [false]}
+                    },
+                    "required": ["enabled"],
+                    "additionalProperties": false
+                }
+            ]
+        }
+    },
+    "oneOf": [
+        {
+            "description": "request to get guest settings",
+            "properties": {
+                "module": {"enum": ["guest"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_settings"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "request to get guest settings",
+            "properties": {
+                "module": {"enum": ["guest"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_settings"]},
+                "data": {"$ref": "#/definitions/guest_network_get"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to update guest settings",
+            "properties": {
+                "module": {"enum": ["guest"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {"$ref": "#/definitions/guest_network_set"}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to update guest settings",
+            "properties": {
+                "module": {"enum": ["guest"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that guest settings were updated",
+            "properties": {
+                "module": {"enum": ["guest"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {"$ref": "#/definitions/guest_network_set"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}
