@@ -27,7 +27,7 @@ from foris_controller.exceptions import (
     UciException, BackendCommandFailed, FailedToParseCommandOutput
 )
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
-from foris_controller_backends.services import OpenwrtServices
+from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.files import BaseFile
 
 
@@ -258,8 +258,7 @@ class WanUci(object):
         except UciException:
             pass
 
-        with OpenwrtServices() as services:
-            services.restart("network", delay=2)
+        MaintainCommands().restart_network()
 
         return True
 

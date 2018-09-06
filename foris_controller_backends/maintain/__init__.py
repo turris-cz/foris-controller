@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import json
 import logging
 import os
 import svupdater
@@ -35,17 +36,26 @@ logger = logging.getLogger(__name__)
 
 class MaintainUci(object):
 
-    def get_lan_ips(self):
+    def possible_router_ips(self):
 
         res = []
         with UciBackend() as backend:
             network_data = backend.read("network")
 
         for option in ("ipaddr", "ip6addr"):
-            try:
-                res.append(get_option_named(network_data, "network", "lan", option))
-            except UciRecordNotFound:
-                pass
+            for network in ("wan", "lan"):
+                try:
+                    res.append(get_option_named(network_data, "network", network, option))
+                except UciRecordNotFound:
+                    pass
+
+        for network in ("wan", "lan"):
+            retval, out, _ = BaseCmdLine._run_command("/sbin/ifstatus", network)
+            if retval != 0:
+                continue
+            parsed = json.loads(out)
+            res += [e["address"] for e in parsed["ipv4-address"]]
+            res += [e["address"] for e in parsed["ipv6-address"]]
 
         return res
 
@@ -54,12 +64,10 @@ class MaintainCommands(BaseCmdLine):
     REBOOT_INDICATOR_PATH = '/tmp/device-reboot-required'
 
     def reboot(self):
-        args = ("/bin/sh", "-c", "reboot -d 5 &")  # 5 seconds before reboot
-        self._run_command_in_background(*args)
-        retval, _, _ = self._run_command(*args)
-        if not retval == 0:
-            logger.error("Reboot cmd failed.")
-            raise BackendCommandFailed(retval, args)
+        self._run_command_in_background("/usr/bin/maintain-reboot")
+
+    def restart_network(self):
+        self._run_command_in_background("/usr/bin/maintain-network-restart")
 
     def generate_backup(self):
         logger.debug("Starting to prepare the backup.")

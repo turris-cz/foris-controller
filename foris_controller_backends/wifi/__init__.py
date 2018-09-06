@@ -27,10 +27,10 @@ from foris_controller_backends.uci import (
     UciBackend, get_sections_by_type, store_bool, parse_bool
 )
 
+from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.files import inject_file_root
 from foris_controller_backends.guest import GuestUci
-from foris_controller_backends.cmdline import BaseCmdLine
-from foris_controller_backends.services import OpenwrtServices
+from foris_controller_backends.maintain import MaintainCommands
 
 logger = logging.getLogger(__name__)
 
@@ -380,8 +380,7 @@ class WifiUci(object):
         except (IndexError, ValueError):
             return False  # device not found changes were not commited - no partial changes passed
 
-        with OpenwrtServices() as services:
-            services.restart("network")
+        MaintainCommands().restart_network()
 
         return True
 

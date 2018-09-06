@@ -22,10 +22,11 @@ import pytest
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result
+    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
+    network_restart_command
 )
 from foris_controller_testtools.utils import (
-    match_subdict, sh_was_called, get_uci_module, check_service_result
+    match_subdict, network_restart_was_called, get_uci_module, check_service_result
 )
 
 
@@ -49,7 +50,9 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "download" in res["data"]["qos"].keys()
 
 
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_update_settings(
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command
+):
     filters = [("guest", "update_settings")]
 
     def update(data):
@@ -124,13 +127,15 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_guest_openwrt_backend(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test
+def test_update_settings_openwrt(
+    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test,
+    network_restart_command,
 ):
-
+    filters = [("guest", "update_settings")]
     uci = get_uci_module(lock_backend)
 
     def update(data):
+        notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message({
             "module": "guest",
             "action": "update_settings",
@@ -143,7 +148,8 @@ def test_guest_openwrt_backend(
             u'kind': u'reply',
             u'module': u'guest'
         }
-        assert sh_was_called("/etc/init.d/network", ["restart"])
+        infrastructure.get_notifications(notifications, filters=filters)  # needed just for waiting
+        assert network_restart_was_called([])
         if data["enabled"] and data["qos"]["enabled"]:
             check_service_result("sqm", True, "enable")
         else:
@@ -274,7 +280,7 @@ def test_guest_openwrt_backend(
         assert uci.get_option_named(data, "sqm", "guest_limit_turris", "enabled")
 
 
-def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
+def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_restart_command):
 
     def update(data):
         res = infrastructure.process_message({

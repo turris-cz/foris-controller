@@ -25,6 +25,7 @@ from foris_controller_backends.uci import (
 from foris_controller.exceptions import UciRecordNotFound, UciException
 
 from foris_controller_backends.lan import LanUci
+from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.services import OpenwrtServices
 
 
@@ -246,4 +247,4 @@ class GuestUci(object):
             elif sqm_cmd == "disable":
                 services.disable("sqm", fail_on_error=False)
 
-            services.restart("network", delay=2)
+        MaintainCommands().restart_network()

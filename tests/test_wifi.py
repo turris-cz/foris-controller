@@ -22,9 +22,11 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
-    file_root_init, init_script_result
+    file_root_init, init_script_result, network_restart_command
 )
-from foris_controller_testtools.utils import match_subdict, check_service_result, get_uci_module
+from foris_controller_testtools.utils import (
+    match_subdict, check_service_result, get_uci_module, network_restart_was_called
+)
 
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
@@ -157,7 +159,10 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure, ubusd_te
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_update_settings(init_script_result, file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_update_settings(
+    init_script_result, file_root_init, uci_configs_init, infrastructure, ubusd_test,
+    network_restart_command
+):
     filters = [("wifi", "update_settings")]
 
     def update(result, *devices):
@@ -364,7 +369,10 @@ def test_update_settings(init_script_result, file_root_init, uci_configs_init, i
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(['openwrt'])
-def test_update_settings_uci(init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, ubusd_test):
+def test_update_settings_uci(
+    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, ubusd_test,
+    network_restart_command
+):
 
     uci = get_uci_module(lock_backend)
 
@@ -381,7 +389,7 @@ def test_update_settings_uci(init_script_result, file_root_init, uci_configs_ini
             u'kind': u'reply',
             u'module': u'wifi'
         }
-        check_service_result("network", True, "restart")
+        network_restart_was_called([])
         with uci.UciBackend() as backend:
             data = backend.read()
         return data
@@ -742,7 +750,9 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, ubusd_te
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_reset(
+    wifi_opt, file_root_init, uci_configs_init, infrastructure, ubusd_test, network_restart_command
+):
     res = infrastructure.process_message({
         "module": "wifi",
         "action": "update_settings",
@@ -821,7 +831,9 @@ def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, ubusd
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(['openwrt'])
-def test_too_long_generated_guest_ssid(file_root_init, uci_configs_init, infrastructure, ubusd_test):
+def test_too_long_generated_guest_ssid(
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, network_restart_command
+):
     res = infrastructure.process_message({
         "module": "wifi",
         "action": "update_settings",
@@ -859,7 +871,8 @@ def test_too_long_generated_guest_ssid(file_root_init, uci_configs_init, infrast
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(['openwrt'])
 def test_modify_encryption_only_if_none(
-    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, ubusd_test
+    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, ubusd_test,
+    network_restart_command
 ):
     uci = get_uci_module(lock_backend)
 

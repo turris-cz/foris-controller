@@ -20,10 +20,11 @@
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result
+    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
+    network_restart_command
 )
 from foris_controller_testtools.utils import (
-    match_subdict, sh_was_called, get_uci_module, check_service_result
+    match_subdict, get_uci_module, check_service_result
 )
 
 
@@ -43,7 +44,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert set(res["data"].keys()) == {"ip", "netmask", "dhcp"}
 
 
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_update_settings(uci_configs_init, infrastructure, ubusd_test, network_restart_command):
     filters = [("lan", "update_settings")]
 
     def update(data):
@@ -102,7 +103,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     })
 
 
-def test_wrong_update(uci_configs_init, infrastructure, ubusd_test):
+def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_restart_command):
 
     def update(data):
         res = infrastructure.process_message({

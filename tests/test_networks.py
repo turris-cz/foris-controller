@@ -21,10 +21,12 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, FILE_ROOT_PATH,
-    init_script_result
+    init_script_result, network_restart_command,
 )
 
-from foris_controller_testtools.utils import sh_was_called, get_uci_module, FileFaker
+from foris_controller_testtools.utils import (
+    sh_was_called, get_uci_module, FileFaker, network_restart_was_called
+)
 
 
 @pytest.fixture(
@@ -64,7 +66,9 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omni
     assert "networks" in res["data"].keys()
 
 
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omnia):
+def test_update_settings(
+    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, network_restart_command
+):
     filters = [("networks", "update_settings")]
     res = infrastructure.process_message({
         "module": "networks",
@@ -127,7 +131,9 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_o
     assert [e["id"] for e in res["data"]["networks"]["none"]] == none_ports
 
 
-def test_update_settings_empty_wan(uci_configs_init, infrastructure, ubusd_test, mox_and_omnia):
+def test_update_settings_empty_wan(
+    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, network_restart_command
+):
     filters = [("networks", "update_settings")]
     res = infrastructure.process_message({
         "module": "networks",
@@ -190,7 +196,9 @@ def test_update_settings_empty_wan(uci_configs_init, infrastructure, ubusd_test,
 
 
 
-def test_update_settings_more_wans(uci_configs_init, infrastructure, ubusd_test, only_omnia):
+def test_update_settings_more_wans(
+    uci_configs_init, infrastructure, ubusd_test, only_omnia, network_restart_command
+):
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -243,7 +251,9 @@ def test_update_settings_more_wans(uci_configs_init, infrastructure, ubusd_test,
     assert res["data"]["networks"]["none"] == orig_none
 
 
-def test_update_settings_missing_assign(uci_configs_init, infrastructure, ubusd_test, only_omnia):
+def test_update_settings_missing_assign(
+    uci_configs_init, infrastructure, ubusd_test, only_omnia, network_restart_command
+):
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -297,7 +307,9 @@ def test_update_settings_missing_assign(uci_configs_init, infrastructure, ubusd_
     assert res["data"]["networks"]["none"] == orig_none
 
 
-def test_update_settings_unknown_assign(uci_configs_init, infrastructure, ubusd_test, mox_and_omnia):
+def test_update_settings_unknown_assign(
+    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, network_restart_command
+):
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -354,7 +366,8 @@ def test_update_settings_unknown_assign(uci_configs_init, infrastructure, ubusd_
 
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test, mox_and_omnia
+    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test, mox_and_omnia,
+    network_restart_command
 ):
     uci = get_uci_module(lock_backend)
 
@@ -393,7 +406,7 @@ def test_update_settings_openwrt(
     })
     assert res["data"] == {"result": True}
 
-    assert sh_was_called("/etc/init.d/network", ["restart"])
+    assert network_restart_was_called([])
 
     with uci.UciBackend() as backend:
         data = backend.read()

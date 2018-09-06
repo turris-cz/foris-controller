@@ -40,7 +40,7 @@ class OpenwrtMaintainHandler(Handler, BaseOpenwrtHandler):
         :returns: probable new ips of the router
         :rtype: dict
         """
-        ips = self.uci_cmds.get_lan_ips()
+        ips = self.uci_cmds.possible_router_ips()
 
         self.cmds.reboot()
 

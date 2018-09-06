@@ -20,7 +20,7 @@
 import os
 import pytest
 
-from foris_controller_testtools.fixtures import lock_backend, init_script_result
+from foris_controller_testtools.fixtures import lock_backend, init_script_result, sh_command
 from foris_controller_testtools.utils import check_service_result, sh_was_called
 
 from foris_controller.exceptions import ServiceCmdFailed
@@ -58,8 +58,8 @@ def test_service(action, custom_cmdline_root, init_script_result, service_class)
 
 
 @pytest.mark.parametrize("action", ["start", "stop", "restart", "reload", "enable", "disable"])
-def test_service_delayed(action, custom_cmdline_root, init_script_result, service_class):
+def test_service_delayed(action, custom_cmdline_root, init_script_result, service_class, sh_command):
     # can't check the result for delayed services thus fail_on_error doesn't make sense neither
     with service_class() as services:
         getattr(services, action)("pass", delay=2)
-        assert sh_was_called("/etc/init.d/pass", [action])
+        assert sh_was_called(["/etc/init.d/pass", action])

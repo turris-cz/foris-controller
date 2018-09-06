@@ -23,7 +23,7 @@ import sys
 
 from foris_controller_testtools.fixtures import (
     uci_configs_init, infrastructure, ubusd_test, file_root_init,
-    init_script_result, FILE_ROOT_PATH
+    init_script_result, FILE_ROOT_PATH, network_restart_command
 )
 from foris_controller_testtools.utils import FileFaker
 
@@ -117,7 +117,11 @@ def test_missing_data(installed_languages, file_root_init, uci_configs_init, inf
     })
     assert "errors" in res
 
-def test_update_guide(file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test):
+
+def test_update_guide(
+    file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test,
+    network_restart_command
+):
     res = infrastructure.process_message({
         "module": "web",
         "action": "update_guide",

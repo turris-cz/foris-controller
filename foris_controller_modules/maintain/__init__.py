@@ -34,7 +34,7 @@ class MaintainModule(BaseModule):
         :returns: list of probable router's IPs of the router after reboot
         :rtype: dict
         """
-        msg = {"new_ips": self.handler.reboot()}
+        msg = {"ips": self.handler.reboot()}
         self.notify("reboot", msg)
         return msg
 

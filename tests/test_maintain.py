@@ -23,15 +23,17 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, file_root_init,
-    only_backends
+    only_backends, reboot_command
 )
+
+from foris_controller_testtools.utils import reboot_was_called
 
 from .test_updater import wait_for_updater_run_finished
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_maintain_files")
 
 
-def test_reboot(uci_configs_init, infrastructure, ubusd_test):
+def test_reboot(uci_configs_init, infrastructure, ubusd_test, reboot_command):
     filters = [("maintain", "reboot")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -39,9 +41,23 @@ def test_reboot(uci_configs_init, infrastructure, ubusd_test):
         "action": "reboot",
         "kind": "request",
     })
-    assert "new_ips" in res["data"].keys()
+    assert "ips" in res["data"].keys()
     notifications = infrastructure.get_notifications(notifications, filters=filters)
-    assert "new_ips" in notifications[-1]["data"].keys()
+    assert "ips" in notifications[-1]["data"].keys()
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_reboot_opewrt(uci_configs_init, infrastructure, ubusd_test, reboot_command):
+    filters = [("maintain", "reboot")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    infrastructure.process_message({
+        "module": "maintain",
+        "action": "reboot",
+        "kind": "request",
+    })
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert reboot_was_called([])
+
 
 
 def test_generate_backup(uci_configs_init, infrastructure, ubusd_test):

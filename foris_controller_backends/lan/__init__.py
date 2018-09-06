@@ -23,7 +23,7 @@ from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, store_bool
 )
 
-from foris_controller_backends.services import OpenwrtServices
+from foris_controller_backends.maintain import MaintainCommands
 
 logger = logging.getLogger(__name__)
 
@@ -83,5 +83,4 @@ class LanUci(object):
                 # TODO we might want to preserve some options
                 backend.replace_list("dhcp", "lan", "dhcp_option", ["6,%s" % ip])
 
-        with OpenwrtServices() as services:
-            services.restart("network", delay=2)
+        MaintainCommands().restart_network()

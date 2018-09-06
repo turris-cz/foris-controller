@@ -27,13 +27,13 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "new_ips": {
+                        "ips": {
                             "type": "array",
                             "items": {"$ref": "#/definitions/router_address"}
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["new_ips"]
+                    "required": ["ips"]
                 }
             },
             "additionalProperties": false,
@@ -48,13 +48,46 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "new_ips": {
+                        "ips": {
+                            "description": "Router IP address to reach configuration interface",
                             "type": "array",
                             "items": {"$ref": "#/definitions/router_address"}
+                        },
+                        "remains": {
+                            "description": "remaining time in micro seconds",
+                            "type": "integer",
+                            "minimum": 0
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["new_ips"]
+                    "required": ["ips"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that network restart was triggered",
+            "properties": {
+                "module": {"enum": ["maintain"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["network_restart"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "ips": {
+                            "description": "Router IP address to reach configuration interface",
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/router_address"}
+                        },
+                        "remains": {
+                            "description": "remaining time in micro seconds",
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["new"]
                 }
             },
             "additionalProperties": false,
