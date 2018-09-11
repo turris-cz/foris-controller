@@ -34,6 +34,11 @@ class MockNetworksHandler(Handler, BaseMockHandler):
         "model": "omnia",
         "version": "2G no GPIO",
     }
+    firewall = {
+        "ssh_on_wan": False,
+        "http_on_wan": False,
+        "https_on_wan": False,
+    }
     DEFAULT_NETWORKS = {
         "wan": [
             {"id": "eth2", "kind": "eth", "module_index": 0, "index": 0, "title": "WAN"},
@@ -67,6 +72,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
         """
         res = {
             "device": MockNetworksHandler.device,
+            "firewall": MockNetworksHandler.firewall,
             "networks": MockNetworksHandler.networks,
         }
         return copy.deepcopy(res)
@@ -96,5 +102,6 @@ class MockNetworksHandler(Handler, BaseMockHandler):
             return False
 
         MockNetworksHandler.networks = new_nets
+        MockNetworksHandler.firewall = new_settings["firewall"]
 
         return True

@@ -12,6 +12,16 @@
             },
             "required": ["id", "kind", "module_index", "index"],
             "additionalProperties": false
+        },
+        "firewall_settings": {
+            "type": "object",
+            "properties": {
+                "ssh_on_wan": {"type": "boolean"},
+                "http_on_wan": {"type": "boolean"},
+                "https_on_wan": {"type": "boolean"}
+            },
+            "additionalProperties": false,
+            "required": ["ssh_on_wan", "http_on_wan", "https_on_wan"]
         }
     },
     "oneOf": [
@@ -42,6 +52,7 @@
                             "additionalProperties": false,
                             "required": ["model", "version"]
                         },
+                        "firewall": {"$ref": "#/definitions/firewall_settings"},
                         "networks": {
                             "type": "object",
                             "properties": {
@@ -68,7 +79,7 @@
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["device", "networks"]
+                    "required": ["device", "networks", "firewall"]
                 }
             },
             "additionalProperties": false,
@@ -83,6 +94,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
+                        "firewall": {"$ref": "#/definitions/firewall_settings"},
                         "networks": {
                             "type": "object",
                             "properties": {
@@ -109,7 +121,7 @@
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["networks"]
+                    "required": ["networks", "firewall"]
                 }
             },
             "additionalProperties": false
@@ -141,6 +153,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
+                        "firewall": {"$ref": "#/definitions/firewall_settings"},
                         "networks": {
                             "type": "object",
                             "properties": {
@@ -167,7 +180,7 @@
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["networks"]
+                    "required": ["networks", "firewall"]
                 }
             },
             "additionalProperties": false,

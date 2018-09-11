@@ -22,7 +22,7 @@ import logging
 from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
-from foris_controller_backends.uci import UciBackend, get_option_named, store_bool
+from foris_controller_backends.uci import UciBackend, get_option_named, store_bool, parse_bool
 
 logger = logging.getLogger(__name__)
 
@@ -79,17 +79,30 @@ class NetworksUci(object):
         ports_map = {e["id"]: e for e in ports}
 
         with UciBackend() as backend:
-            data = backend.read("network")
+            network_data = backend.read("network")
+            firewall_data = backend.read("firewall")
 
-        wan_network = self._prepare_network(data, "wan", ports_map)
-        lan_network = self._prepare_network(data, "lan", ports_map)
-        guest_network = self._prepare_network(data, "guest_turris", ports_map)
+        wan_network = self._prepare_network(network_data, "wan", ports_map)
+        lan_network = self._prepare_network(network_data, "lan", ports_map)
+        guest_network = self._prepare_network(network_data, "guest_turris", ports_map)
         none_network = [e for e in ports_map.values()]  # reduced in _prepare_network using pop()
+        # parse firewall options
+        ssh_on_wan = parse_bool(
+            get_option_named(firewall_data, "firewall", "wan_ssh_turris_rule", "enabled", "0"))
+        http_on_wan = parse_bool(
+            get_option_named(firewall_data, "firewall", "wan_http_turris_rule", "enabled", "0"))
+        https_on_wan = parse_bool(
+            get_option_named(firewall_data, "firewall", "wan_https_turris_rule", "enabled", "0"))
 
         return {
             "device": {
                 "model": model,
                 "version": "??"
+            },
+            "firewall": {
+                "ssh_on_wan": ssh_on_wan,
+                "http_on_wan": http_on_wan,
+                "https_on_wan": https_on_wan,
             },
             "networks": {
                 "wan": wan_network,
@@ -99,7 +112,7 @@ class NetworksUci(object):
             }
         }
 
-    def update_settings(self, networks):
+    def update_settings(self, firewall, networks):
         # check valid ports
         if self._get_model() == "turris":
             return False  # Networks module can't be used for old turris
@@ -118,8 +131,21 @@ class NetworksUci(object):
             backend.set_option("network", "lan", "bridge_empty", store_bool(True))
             backend.set_option("network", "lan", "type", "bridge")
             backend.replace_list("network", "lan", "ifname", lan_ifs)
-
             backend.replace_list("network", "guest_turris", "ifname", guest_ifs)
+
+            def set_firewall_rule(name, enabled, port):
+                # update firewall rules
+                backend.add_section("firewall", "rule", name)
+                backend.set_option("firewall", name, "name", name)
+                backend.set_option("firewall", name, "enabled", store_bool(enabled))
+                backend.set_option("firewall", name, "target", "ACCEPT")
+                backend.set_option("firewall", name, "dest_port", port)
+                backend.set_option("firewall", name, "proto", "tcp")
+                backend.set_option("firewall", name, "src", "wan")
+
+            set_firewall_rule("wan_ssh_turris_rule", firewall["ssh_on_wan"], 22)
+            set_firewall_rule("wan_http_turris_rule", firewall["http_on_wan"], 80)
+            set_firewall_rule("wan_https_turris_rule", firewall["https_on_wan"], 443)
 
         MaintainCommands().restart_network()
 

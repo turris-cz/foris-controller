@@ -64,6 +64,8 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omni
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "device" in res["data"].keys()
     assert "networks" in res["data"].keys()
+    assert "firewall" in res["data"].keys()
+    assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
 
 
 def test_update_settings(
@@ -96,6 +98,11 @@ def test_update_settings(
         "action": "update_settings",
         "kind": "request",
         "data": {
+            "firewall": {
+                "ssh_on_wan": True,
+                "http_on_wan": False,
+                "https_on_wan": True,
+            },
             "networks": {
                 "wan": [wan_port],
                 "lan": lan_ports,
@@ -111,6 +118,11 @@ def test_update_settings(
         "action": "update_settings",
         "kind": "notification",
         "data": {
+            "firewall": {
+                "ssh_on_wan": True,
+                "http_on_wan": False,
+                "https_on_wan": True,
+            },
             "networks": {
                 "wan": [wan_port],
                 "lan": lan_ports,
@@ -129,6 +141,9 @@ def test_update_settings(
     assert [e["id"] for e in res["data"]["networks"]["lan"]] == lan_ports
     assert [e["id"] for e in res["data"]["networks"]["guest"]] == guest_ports
     assert [e["id"] for e in res["data"]["networks"]["none"]] == none_ports
+    assert res["data"]["firewall"] == {
+        "ssh_on_wan": True, "http_on_wan": False, "https_on_wan": True
+    }
 
 
 def test_update_settings_empty_wan(
@@ -160,6 +175,11 @@ def test_update_settings_empty_wan(
         "action": "update_settings",
         "kind": "request",
         "data": {
+            "firewall": {
+                "ssh_on_wan": False,
+                "http_on_wan": True,
+                "https_on_wan": False,
+            },
             "networks": {
                 "wan": [],
                 "lan": lan_ports,
@@ -175,6 +195,11 @@ def test_update_settings_empty_wan(
         "action": "update_settings",
         "kind": "notification",
         "data": {
+            "firewall": {
+                "ssh_on_wan": False,
+                "http_on_wan": True,
+                "https_on_wan": False,
+            },
             "networks": {
                 "wan": [],
                 "lan": lan_ports,
@@ -193,7 +218,11 @@ def test_update_settings_empty_wan(
     assert {e["id"] for e in res["data"]["networks"]["lan"]} == set(lan_ports)
     assert {e["id"] for e in res["data"]["networks"]["guest"]} == set(guest_ports)
     assert {e["id"] for e in res["data"]["networks"]["none"]} == set(none_ports)
-
+    assert res["data"]["firewall"] == {
+        "ssh_on_wan": False,
+        "http_on_wan": True,
+        "https_on_wan": False,
+    }
 
 
 def test_update_settings_more_wans(
@@ -208,6 +237,7 @@ def test_update_settings_more_wans(
     orig_lan = res["data"]["networks"]["lan"]
     orig_guest = res["data"]["networks"]["guest"]
     orig_none = res["data"]["networks"]["none"]
+    orig_firewall = res["data"]["firewall"]
     # get ports
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
@@ -230,6 +260,7 @@ def test_update_settings_more_wans(
         "action": "update_settings",
         "kind": "request",
         "data": {
+            "firewall": orig_firewall,
             "networks": {
                 "wan": wan_ports,
                 "lan": lan_ports,
@@ -249,6 +280,7 @@ def test_update_settings_more_wans(
     assert res["data"]["networks"]["lan"] == orig_lan
     assert res["data"]["networks"]["guest"] == orig_guest
     assert res["data"]["networks"]["none"] == orig_none
+    assert res["data"]["firewall"] == orig_firewall
 
 
 def test_update_settings_missing_assign(
@@ -263,6 +295,7 @@ def test_update_settings_missing_assign(
     orig_lan = res["data"]["networks"]["lan"]
     orig_guest = res["data"]["networks"]["guest"]
     orig_none = res["data"]["networks"]["none"]
+    orig_firewall = res["data"]["firewall"]
     # get ports
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
@@ -286,6 +319,7 @@ def test_update_settings_missing_assign(
         "action": "update_settings",
         "kind": "request",
         "data": {
+            "firewall": orig_firewall,
             "networks": {
                 "wan": wan_ports,
                 "lan": lan_ports,
@@ -305,6 +339,7 @@ def test_update_settings_missing_assign(
     assert res["data"]["networks"]["lan"] == orig_lan
     assert res["data"]["networks"]["guest"] == orig_guest
     assert res["data"]["networks"]["none"] == orig_none
+    assert res["data"]["firewall"] == orig_firewall
 
 
 def test_update_settings_unknown_assign(
@@ -319,6 +354,7 @@ def test_update_settings_unknown_assign(
     orig_lan = res["data"]["networks"]["lan"]
     orig_guest = res["data"]["networks"]["guest"]
     orig_none = res["data"]["networks"]["none"]
+    orig_firewall = res["data"]["firewall"]
     # get ports
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
@@ -343,6 +379,7 @@ def test_update_settings_unknown_assign(
         "action": "update_settings",
         "kind": "request",
         "data": {
+            "firewall": orig_firewall,
             "networks": {
                 "wan": wan_ports,
                 "lan": lan_ports,
@@ -362,6 +399,7 @@ def test_update_settings_unknown_assign(
     assert res["data"]["networks"]["lan"] == orig_lan
     assert res["data"]["networks"]["guest"] == orig_guest
     assert res["data"]["networks"]["none"] == orig_none
+    assert res["data"]["firewall"] == orig_firewall
 
 
 @pytest.mark.only_backends(['openwrt'])
@@ -396,6 +434,11 @@ def test_update_settings_openwrt(
         "action": "update_settings",
         "kind": "request",
         "data": {
+            "firewall": {
+                "ssh_on_wan": True,
+                "http_on_wan": True,
+                "https_on_wan": False,
+            },
             "networks": {
                 "wan": [wan_port],
                 "lan": lan_ports,
@@ -420,6 +463,34 @@ def test_update_settings_openwrt(
     assert "bridge" == uci.get_option_named(data, "network", "guest_turris", "type")
     assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "bridge_empty"))
     assert guest_ports == uci.get_option_named(data, "network", "guest_turris", "ifname", [])
+
+    # test firewall rules
+    assert uci.parse_bool(
+        uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "enabled")) is True
+    assert uci.get_option_named(
+        data, "firewall", "wan_ssh_turris_rule", "name") == "wan_ssh_turris_rule"
+    assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "target") == "ACCEPT"
+    assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "proto") == "tcp"
+    assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "src") == "wan"
+    assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "dest_port") == "22"
+
+    assert uci.parse_bool(
+        uci.get_option_named(data, "firewall", "wan_http_turris_rule", "enabled")) is True
+    assert uci.get_option_named(
+        data, "firewall", "wan_http_turris_rule", "name") == "wan_http_turris_rule"
+    assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "target") == "ACCEPT"
+    assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "proto") == "tcp"
+    assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "src") == "wan"
+    assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "dest_port") == "80"
+
+    assert uci.parse_bool(
+        uci.get_option_named(data, "firewall", "wan_https_turris_rule", "enabled")) is False
+    assert uci.get_option_named(
+        data, "firewall", "wan_https_turris_rule", "name") == "wan_https_turris_rule"
+    assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "target") == "ACCEPT"
+    assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "proto") == "tcp"
+    assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "src") == "wan"
+    assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "dest_port") == "443"
 
 
 @pytest.mark.only_backends(['openwrt'])
@@ -446,6 +517,11 @@ def test_update_settings_openwrt_turris(
         "action": "update_settings",
         "kind": "request",
         "data": {
+            "firewall": {
+                "ssh_on_wan": False,
+                "http_on_wan": True,
+                "https_on_wan": True,
+            },
             "networks": {
                 "wan": [],
                 "lan": [],
