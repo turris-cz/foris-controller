@@ -100,9 +100,11 @@ class MockWebHandler(Handler, BaseMockHandler):
         from foris_controller_modules.time.handlers import MockTimeHandler
         from foris_controller_modules.dns.handlers import MockDnsHandler
         from foris_controller_modules.updater.handlers import MockUpdaterHandler
+        from foris_controller_modules.networks.handlers import MockNetworksHandler
         passed = [
             e[0] for e in [
                 ("password", MockPasswordHandler),
+                ("networks", MockNetworksHandler),
                 ("wan", MockWanHandler),
                 ("time", MockTimeHandler),
                 ("dns", MockDnsHandler),

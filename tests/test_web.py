@@ -28,6 +28,20 @@ from foris_controller_testtools.fixtures import (
 from foris_controller_testtools.utils import FileFaker
 
 
+@pytest.fixture(
+    params=[
+        ("mox", "CZ.NIC Turris Mox Board"),
+        ("omnia", "Turris Omnia"),
+    ],
+    ids=["mox", "omnia"],
+    scope="function"
+)
+def mox_and_omnia(request):
+    device, device_str = request.param
+    with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, device_str + "\n"):
+        yield device
+
+
 @pytest.fixture(scope="function")
 def installed_languages(request):
     trans_dir = "/usr/lib/python%s.%s/site-packages/foris/langs/" % (
@@ -120,7 +134,7 @@ def test_missing_data(installed_languages, file_root_init, uci_configs_init, inf
 
 def test_update_guide(
     file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test,
-    network_restart_command
+    network_restart_command, mox_and_omnia
 ):
     res = infrastructure.process_message({
         "module": "web",
@@ -175,6 +189,44 @@ def test_update_guide(
     }
     pass_step(msg, ["password"])
 
+    # Update networks
+    res = infrastructure.process_message({
+        "module": "networks",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
+        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    wan_port = ports.pop()["id"]
+    lan_ports, guest_ports, none_ports = [], [], []
+    for i, port in enumerate(ports):
+        if i % 3 == 0:
+            lan_ports.append(port["id"])
+        elif i % 3 == 1:
+            guest_ports.append(port["id"])
+        elif i % 3 == 2:
+            none_ports.append(port["id"])
+
+    msg = {
+        "module": "networks",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "firewall": {
+                "ssh_on_wan": True,
+                "http_on_wan": False,
+                "https_on_wan": True,
+            },
+            "networks": {
+                "wan": [wan_port],
+                "lan": lan_ports,
+                "guest": guest_ports,
+                "none": none_ports,
+            }
+        }
+    }
+    pass_step(msg, ["password", "networks"])
+
     # Update wan
     msg = {
         "module": "wan",
@@ -186,7 +238,7 @@ def test_update_guide(
             'mac_settings': {'custom_mac_enabled': False},
         }
     }
-    pass_step(msg, ["password", "wan"])
+    pass_step(msg, ["password", "networks", "wan"])
 
     # Update timezone
     msg = {
@@ -203,7 +255,7 @@ def test_update_guide(
             }
         }
     }
-    pass_step(msg, ["password", "wan", "time"])
+    pass_step(msg, ["password", "networks", "wan", "time"])
 
     # Update dns
     msg = {
@@ -216,7 +268,7 @@ def test_update_guide(
             "dns_from_dhcp_enabled": False,
         }
     }
-    pass_step(msg, ["password", "wan", "time", "dns"])
+    pass_step(msg, ["password", "networks", "wan", "time", "dns"])
 
     msg = {
         "module": "updater",
@@ -226,4 +278,4 @@ def test_update_guide(
             "enabled": False,
         },
     }
-    pass_step(msg, ["password", "wan", "time", "dns", "updater"])
+    pass_step(msg, ["password", "networks", "wan", "time", "dns", "updater"])

@@ -1,16 +1,14 @@
 {
     "definitions": {
         "guide_workflows": {"enum": ["standard"]},
-        "guide_standard_steps": {"enum": ["password", "wan", "time", "dns", "updater"]},
+        "guide_standard_steps": {"enum": ["password", "networks", "wan", "time", "dns", "updater"]},
         "guide": {
             "oneOf": [
                 {
                     "type": "object",
                     "properties": {
                         "enabled": {"type": "boolean"},
-                        "workflow": {
-                            "allOf": [{"enum": ["standard"]}, {"$ref": "#/definitions/guide_workflows"}]
-                        },
+                        "workflow": {"$ref": "#/definitions/guide_workflows"},
                         "passed": {
                             "type": "array",
                             "items": { "$ref": "#/definitions/guide_standard_steps" },

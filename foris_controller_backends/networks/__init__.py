@@ -24,6 +24,8 @@ from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.uci import UciBackend, get_option_named, store_bool, parse_bool
 
+from foris_controller.exceptions import UciException
+
 logger = logging.getLogger(__name__)
 
 
@@ -146,6 +148,13 @@ class NetworksUci(object):
             set_firewall_rule("wan_ssh_turris_rule", firewall["ssh_on_wan"], 22)
             set_firewall_rule("wan_http_turris_rule", firewall["http_on_wan"], 80)
             set_firewall_rule("wan_https_turris_rule", firewall["https_on_wan"], 443)
+
+        # update wizard passed in foris web (best effort)
+        try:
+            from foris_controller_backends.web import WebUciCommands
+            WebUciCommands.update_passed("networks")
+        except UciException:
+            pass
 
         MaintainCommands().restart_network()
 
