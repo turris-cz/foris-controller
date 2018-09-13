@@ -138,13 +138,23 @@ class SystemInfoFiles(BaseFile):
             SystemInfoFiles.OS_RELEASE_PATH, r'^([0-9]+(\.[0-9]+)*)$', (1, ))
 
     @readlock(file_lock, logger)
-    def get_model(self):
+    def get_model_name(self):
         """ Returns model of the device
 
         :returns: model
         :rtype: str
         """
         return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r'^(\w+.*)$', (1, ))
+
+    def get_model(self):
+        """ display standartized model name (omnia/mox/turris)
+        """
+        repr_model = self.get_model_name()
+        if "Omnia" in repr_model:
+            return "omnia"
+        elif "Mox" in repr_model:
+            return "mox"
+        return "turris"
 
     @readlock(file_lock, logger)
     def get_board_name(self):

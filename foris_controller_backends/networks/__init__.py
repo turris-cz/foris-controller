@@ -40,19 +40,9 @@ class NetworksUci(object):
                 res.append(ports_map.pop(interface))
         return res
 
-    def _get_model(self):
-        model_name = SystemInfoFiles().get_model()
-        if "Omnia" in model_name:
-            model = "omnia"
-        elif "Mox" in model_name:
-            model = "mox"
-        else:
-            model = "turris"
-        return model
-
     def _fake_hwdetect(self):
         # TODO this should be done using hwdetect
-        model = self._get_model()
+        model = SystemInfoFiles().get_model()
         if model == "omnia":
             ports = [
                 {"id": "eth2", "kind": "eth", "module_index": 0, "index": 0, "title": "WAN"},
@@ -75,7 +65,6 @@ class NetworksUci(object):
         :returns: {"device": {}, "networks": [{...},]}
         "rtype: dict
         """
-        model = self._get_model()
 
         ports = self._fake_hwdetect()
         ports_map = {e["id"]: e for e in ports}
@@ -98,7 +87,7 @@ class NetworksUci(object):
 
         return {
             "device": {
-                "model": model,
+                "model": SystemInfoFiles().get_model(),
                 "version": "??"
             },
             "firewall": {
@@ -116,7 +105,7 @@ class NetworksUci(object):
 
     def update_settings(self, firewall, networks):
         # check valid ports
-        if self._get_model() == "turris":
+        if SystemInfoFiles().get_model() == "turris":
             return False  # Networks module can't be used for old turris
         wan_ifs = networks["wan"]
         lan_ifs = networks["lan"]
