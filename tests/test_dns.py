@@ -25,6 +25,8 @@ from foris_controller_testtools.fixtures import (
 )
 from foris_controller_testtools.utils import check_service_result
 
+from .test_web import mox, newer
+
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     res = infrastructure.process_message({
@@ -38,7 +40,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "dns_from_dhcp_enabled" in res["data"].keys()
 
 
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_update_settings(uci_configs_init, infrastructure, ubusd_test, mox, newer):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -99,7 +101,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test):
     }
 
 
-def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test, mox, newer):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -179,7 +181,8 @@ def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_service_restart(
-        uci_configs_init, init_script_result, infrastructure, ubusd_test):
+    uci_configs_init, init_script_result, infrastructure, ubusd_test, mox, newer
+):
 
     res = infrastructure.process_message({
         "module": "dns",

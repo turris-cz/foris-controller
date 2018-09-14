@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 #
 
 import logging
+
+from foris_controller import profiles
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
@@ -45,7 +47,7 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
     def set_language(self, language):
         """ Sets language
 
-        :returns: True
+         :returns: True
         :rtype: bool
         """
         return self.web_uci_cmds.set_language(language)
@@ -76,5 +78,14 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         data["updater_running"] = self.updater.updater_running()
         data["notification_count"] = self.notifications_cmds.active_count()
         data["reboot_required"] = self.maintain_cmds.reboot_required()
+        data["guide"]["workflow_steps"] = profiles.WORKFLOWS[data["guide"]["workflow"]]
 
         return data
+
+    @logger_wrapper(logger)
+    def get_guide(self):
+        return self.web_uci_cmds.get_guide()
+
+    @logger_wrapper(logger)
+    def reset_guide(self, new_workflow=None):
+        return self.web_uci_cmds.reset_guide(new_workflow)

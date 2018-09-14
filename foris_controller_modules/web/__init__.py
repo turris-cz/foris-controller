@@ -65,12 +65,31 @@ class WebModule(BaseModule):
         """
         return {"result": self.handler.update_guide(**data)}
 
+    def action_get_guide(self, data):
+        """ Get current guide settings (workflow, ...)
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: current data
+        :rtype: dict
+        """
+        return self.handler.get_guide()
+
+    def action_reset_guide(self, data):
+        """ Reset guide resets guide
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: {"result": True/False}
+        :rtype: dict
+        """
+        return {"result": self.handler.reset_guide(**data)}
 
 @wrap_required_functions([
     'set_language',
     'list_languages',
     'update_guide',
     'get_data',
+    'get_guide',
+    'reset_guide',
 ])
 class Handler(object):
     pass

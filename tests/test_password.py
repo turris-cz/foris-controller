@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@ from foris_controller_testtools.fixtures import (
     uci_configs_init, infrastructure, ubusd_test, only_backends
 )
 
+from .test_web import mox, newer
+
 PASS_PATH = "/tmp/passwd_input"
 
 @pytest.fixture
@@ -45,7 +47,7 @@ def pass_file():
         pass
 
 
-def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd_test):
+def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd_test, newer, mox):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)
@@ -78,7 +80,7 @@ def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd
     assert res["data"]["status"] != u"good"
 
 
-def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_test):
+def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_test, mox, newer):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)

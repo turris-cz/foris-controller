@@ -1,24 +1,26 @@
 {
     "definitions": {
-        "guide_workflows": {"enum": ["standard"]},
-        "guide_standard_steps": {"enum": ["password", "networks", "wan", "time", "dns", "updater"]},
+        "guide_workflows": {"enum": ["min", "old", "router"]},
+        "guide_steps": {"enum": ["password", "profile", "networks", "wan", "time", "dns", "updater"]},
         "guide": {
-            "oneOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "enabled": {"type": "boolean"},
-                        "workflow": {"$ref": "#/definitions/guide_workflows"},
-                        "passed": {
-                            "type": "array",
-                            "items": { "$ref": "#/definitions/guide_standard_steps" },
-                            "uniqueItems": true
-                        }
-                    },
-                    "required": ["enabled"],
-                    "additionalProperties": false
-                }
-            ]
+			"type": "object",
+			"properties": {
+				"enabled": {"type": "boolean"},
+				"workflow": {"$ref": "#/definitions/guide_workflows"},
+				"workflow_steps": {
+					"type": "array",
+					"items": {"$ref": "#/definitions/guide_steps"},
+					"uniqueItems" : true
+
+				},
+				"passed": {
+					"type": "array",
+					"items": { "$ref": "#/definitions/guide_steps" },
+					"uniqueItems": true
+				}
+			},
+			"required": ["enabled", "workflow", "workflow_steps", "passed"],
+			"additionalProperties": false
         }
     },
     "oneOf": [
@@ -143,6 +145,40 @@
             "required": ["data"]
         },
         {
+            "description": "Request to get guide",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_guide"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to get guide",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_guide"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "current_workflow": {"$ref": "#/definitions/guide_workflows"},
+                        "recommended_workflow": {"$ref": "#/definitions/guide_workflows"},
+                        "available_workflows": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/guide_workflows"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                       "current_workflow", "recommended_workflow", "available_workflows"
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
             "description": "Request to update guide attributes",
             "properties": {
                 "module": {"enum": ["web"]},
@@ -167,6 +203,40 @@
                 "module": {"enum": ["web"]},
                 "kind": {"enum": ["reply"]},
                 "action": {"enum": ["update_guide"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to reset guide",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["reset_guide"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "new_workflow": {"enum": ["min", "old", "router"]}
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to reset guide",
+            "properties": {
+                "module": {"enum": ["web"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["reset_guide"]},
                 "data": {
                     "type": "object",
                     "properties": {

@@ -32,6 +32,7 @@ from foris_controller_testtools.fixtures import (
 )
 from foris_controller_testtools.utils import set_approval, get_uci_module
 
+from .test_web import mox, newer
 
 def wait_for_updater_run_finished(notifications, infrastructure):
     filters = [("updater", "run")]
@@ -89,7 +90,8 @@ def test_get_settings(
 
 def test_update_settings(
     updater_languages, updater_userlists,
-    uci_configs_init, infrastructure, ubusd_test
+    uci_configs_init, infrastructure, ubusd_test,
+    newer, mox,
 ):
 
     def update_settings(new_settings, expected=None):
@@ -163,7 +165,8 @@ def test_update_settings(
 
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
+    updater_languages, updater_userlists, uci_configs_init, infrastructure,
+    ubusd_test, newer, mox
 ):
     filters = [("updater", "run")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -185,7 +188,8 @@ def test_update_settings_openwrt(
 
 @pytest.mark.only_backends(['openwrt'])
 def test_uci(
-    updater_languages, updater_userlists, uci_configs_init, lock_backend, infrastructure, ubusd_test
+    updater_languages, updater_userlists, uci_configs_init, lock_backend, infrastructure,
+    ubusd_test, newer, mox
 ):
 
     uci = get_uci_module(lock_backend)
@@ -536,7 +540,8 @@ def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
 
 def test_get_enabled(
     updater_languages, updater_userlists,
-    uci_configs_init, infrastructure, ubusd_test
+    uci_configs_init, infrastructure, ubusd_test,
+    newer, mox
 ):
 
     res = infrastructure.process_message({

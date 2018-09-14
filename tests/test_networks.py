@@ -28,6 +28,8 @@ from foris_controller_testtools.utils import (
     sh_was_called, get_uci_module, FileFaker, network_restart_was_called
 )
 
+from .test_web import newer
+
 
 @pytest.fixture(
     params=[
@@ -55,7 +57,7 @@ def only_turris(request):
         yield "turris"
 
 
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omnia):
+def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer):
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -69,7 +71,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omni
 
 
 def test_update_settings(
-    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer, network_restart_command
 ):
     filters = [("networks", "update_settings")]
     res = infrastructure.process_message({
@@ -147,7 +149,7 @@ def test_update_settings(
 
 
 def test_update_settings_empty_wan(
-    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer, network_restart_command
 ):
     filters = [("networks", "update_settings")]
     res = infrastructure.process_message({
@@ -343,7 +345,7 @@ def test_update_settings_missing_assign(
 
 
 def test_update_settings_unknown_assign(
-    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer, network_restart_command
 ):
     res = infrastructure.process_message({
         "module": "networks",
@@ -404,7 +406,7 @@ def test_update_settings_unknown_assign(
 
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test, mox_and_omnia,
+    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test, mox_and_omnia, newer,
     network_restart_command
 ):
     uci = get_uci_module(lock_backend)

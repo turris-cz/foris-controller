@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
+from foris_controller import profiles
 
 from .. import Handler
 
@@ -28,7 +29,9 @@ logger = logging.getLogger(__name__)
 
 
 class MockWebHandler(Handler, BaseMockHandler):
-    guide_workflow = "standard"
+    guide_set = BaseMockHandler._manager.Value(bool, False)
+    guide_workflow = profiles.WORKFLOW_MIN
+    recommended_workflow = profiles.WORKFLOW_ROUTER
     guide_enabled = True
     language_list = ['en', 'de', 'cs', 'nb_NO']
     current_language = 'en'
@@ -75,6 +78,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         return len([e for e in MockRouterNotificationsHandler.notifications if not e["displayed"]])
 
     def update_guide(self, enabled, workflow):
+        MockWebHandler.guide_set.set(True)
         MockWebHandler.guide_enabled = enabled
         MockWebHandler.guide_workflow = workflow
         if not enabled:
@@ -94,7 +98,7 @@ class MockWebHandler(Handler, BaseMockHandler):
                 e.guide_set.set(False)
         return True
 
-    def get_guide(self):
+    def get_guide_data(self):
         from foris_controller_modules.password.handlers import MockPasswordHandler
         from foris_controller_modules.wan.handlers import MockWanHandler
         from foris_controller_modules.time.handlers import MockTimeHandler
@@ -104,6 +108,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         passed = [
             e[0] for e in [
                 ("password", MockPasswordHandler),
+                ("profile", MockWebHandler),
                 ("networks", MockNetworksHandler),
                 ("wan", MockWanHandler),
                 ("time", MockTimeHandler),
@@ -114,6 +119,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         return {
             "enabled": MockWebHandler.guide_enabled,
             "workflow": MockWebHandler.guide_workflow,
+            "workflow_steps": profiles.WORKFLOWS[MockWebHandler.guide_workflow],
             "passed": passed,
         }
 
@@ -123,11 +129,41 @@ class MockWebHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_data(self):
+        guide = self.get_guide_data()
+        if set(guide["workflow_steps"]) == set(guide["passed"]):
+            MockWebHandler.guide_enabled = False
         return {
             'language': self.get_language(),
             'reboot_required': self.reboot_required(),
             'updater_running': self.updater_running(),
             'notification_count': self.get_notification_count(),
-            'guide': self.get_guide(),
+            'guide': self.get_guide_data(),
             'password_ready': self.is_password_set(),
         }
+
+    @logger_wrapper(logger)
+    def get_guide(self):
+        return {
+            'available_workflows': [e for e in profiles.WORKFLOWS],
+            'current_workflow': MockWebHandler.guide_workflow,
+            'recommended_workflow': MockWebHandler.recommended_workflow,
+        }
+
+    @logger_wrapper(logger)
+    def reset_guide(self, new_workflow=profiles.WORKFLOW_MIN):
+        from foris_controller_modules.password.handlers import MockPasswordHandler
+        from foris_controller_modules.wan.handlers import MockWanHandler
+        from foris_controller_modules.time.handlers import MockTimeHandler
+        from foris_controller_modules.dns.handlers import MockDnsHandler
+        from foris_controller_modules.updater.handlers import MockUpdaterHandler
+        from foris_controller_modules.networks.handlers import MockNetworksHandler
+        MockPasswordHandler.guide_set.set(False)
+        MockWebHandler.guide_set.set(False)
+        MockNetworksHandler.guide_set.set(False)
+        MockWanHandler.guide_set.set(False)
+        MockTimeHandler.guide_set.set(False)
+        MockDnsHandler.guide_set.set(False)
+        MockUpdaterHandler.guide_set.set(False)
+        MockWebHandler.guide_workflow = new_workflow
+        MockWebHandler.guide_enabled = True
+        return True

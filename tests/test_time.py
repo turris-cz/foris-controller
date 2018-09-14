@@ -27,6 +27,8 @@ from foris_controller_testtools.fixtures import (
 )
 from foris_controller_testtools.utils import check_service_result, get_uci_module
 
+from .test_web import mox, newer
+
 NTPDATE_INDICATOR_PATH = "/tmp/foris-controller-ntp-fail"
 
 
@@ -106,7 +108,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "time" in res["data"]["time_settings"].keys()
 
 
-def test_update_settings(uci_configs_init, init_script_result, infrastructure, ubusd_test):
+def test_update_settings(uci_configs_init, init_script_result, infrastructure, ubusd_test, mox, newer):
     filters = [("time", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -205,7 +207,8 @@ def test_get_router_time(uci_configs_init, infrastructure, ubusd_test):
 @pytest.mark.only_backends(['openwrt'])
 def test_openwrt_complex(
     uci_configs_init, init_script_result, date_mock, hwclock_mock,
-    cmdline_script_root, infrastructure, ubusd_test, lock_backend
+    cmdline_script_root, infrastructure, ubusd_test, lock_backend,
+    mox, newer,
 ):
     res = infrastructure.process_message({
         "module": "time",
