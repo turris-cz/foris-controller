@@ -34,7 +34,7 @@ from foris_controller_testtools.utils import check_service_result, get_uci_modul
     ids=["free", "foreign", "unknown", "not_found", "owned"],
     scope="function"
 )
-def register_cmd(request):
+def register_cmd(request, cmdline_script_root):
     status_code, status = request.param
 
     if not status_code:
@@ -53,7 +53,7 @@ def register_cmd(request):
         """ % dict(code=status_code, status=status)
 
     with FileFaker(
-        cmdline_script_root(), "/usr/share/server-uplink/registered.sh",
+        cmdline_script_root, "/usr/share/server-uplink/registered.sh",
         True, textwrap.dedent(content)
     ) as f:
         yield f, status
