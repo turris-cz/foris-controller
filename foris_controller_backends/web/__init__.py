@@ -104,11 +104,15 @@ class WebUciCommands(object):
         )
         passed = get_option_named(foris_data, "foris", "wizard", "passed", [])
 
-        return {
+        res = {
             "enabled": enabled,
             "workflow": workflow,
             "passed": passed,
         }
+        next_step = profiles.next_step(passed, workflow)
+        if enabled and next_step:
+            res["next_step"] = next_step
+        return res
 
     def update_guide(self, enabled, workflow):
         if workflow not in WebUciCommands._detect_available_workflows():

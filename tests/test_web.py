@@ -432,6 +432,11 @@ def test_walk_through_guide(
         assert res["data"]["guide"]["enabled"] is enabled
         assert res["data"]["guide"]["workflow"] == workflow
         assert res["data"]["guide"]["passed"] == passed
+        assert res["data"]["guide"]["workflow_steps"] == [e for e in profiles.WORKFLOWS[workflow]]
+        if enabled:
+            assert res["data"]["guide"]["next_step"] == profiles.next_step(passed, workflow)
+        else:
+            assert "next_step" not in res["data"]["guide"]
 
     def pass_step(msg, passed, target_workflow, enabled):
         res = infrastructure.process_message(msg)

@@ -116,12 +116,16 @@ class MockWebHandler(Handler, BaseMockHandler):
                 ("updater", MockUpdaterHandler),
             ] if e[1].guide_set.get()
         ]
-        return {
+        res = {
             "enabled": MockWebHandler.guide_enabled,
             "workflow": MockWebHandler.guide_workflow,
             "workflow_steps": profiles.WORKFLOWS[MockWebHandler.guide_workflow],
             "passed": passed,
         }
+        next_step = profiles.next_step(passed, MockWebHandler.guide_workflow)
+        if next_step and MockWebHandler.guide_enabled:
+            res["next_step"] = next_step
+        return res
 
     def is_password_set(self):
         from foris_controller_modules.password.handlers import MockPasswordHandler

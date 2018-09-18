@@ -3,24 +3,47 @@
         "guide_workflows": {"enum": ["min", "old", "router"]},
         "guide_steps": {"enum": ["password", "profile", "networks", "wan", "time", "dns", "updater"]},
         "guide": {
-			"type": "object",
-			"properties": {
-				"enabled": {"type": "boolean"},
-				"workflow": {"$ref": "#/definitions/guide_workflows"},
-				"workflow_steps": {
-					"type": "array",
-					"items": {"$ref": "#/definitions/guide_steps"},
-					"uniqueItems" : true
-
-				},
-				"passed": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/guide_steps" },
-					"uniqueItems": true
-				}
-			},
-			"required": ["enabled", "workflow", "workflow_steps", "passed"],
-			"additionalProperties": false
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [true]},
+                        "workflow": {"$ref": "#/definitions/guide_workflows"},
+                        "workflow_steps": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/guide_steps"},
+                            "uniqueItems" : true
+                        },
+                        "passed": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/guide_steps" },
+                            "uniqueItems": true
+                        },
+                        "next_step": { "$ref": "#/definitions/guide_steps" }
+                    },
+                    "required": ["enabled", "workflow", "workflow_steps", "passed", "next_step"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [false]},
+                        "workflow": {"$ref": "#/definitions/guide_workflows"},
+                        "workflow_steps": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/guide_steps"},
+                            "uniqueItems" : true
+                        },
+                        "passed": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/guide_steps" },
+                            "uniqueItems": true
+                        }
+                    },
+                    "required": ["enabled", "workflow", "workflow_steps", "passed"],
+                    "additionalProperties": false
+                }
+            ]
         }
     },
     "oneOf": [
