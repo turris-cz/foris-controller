@@ -20,14 +20,14 @@ import os
 import pytest
 import base64
 import sys
-import itertools
 
 from foris_controller_testtools.fixtures import (
     uci_configs_init, infrastructure, ubusd_test, file_root_init, only_backends,
-    init_script_result, FILE_ROOT_PATH, network_restart_command
+    init_script_result, FILE_ROOT_PATH, network_restart_command, lock_backend,
 )
-from foris_controller_testtools.utils import FileFaker
+from foris_controller_testtools.utils import FileFaker, get_uci_module
 from foris_controller import profiles
+from foris_controller.exceptions import UciRecordNotFound
 
 
 NEW_WORKFLOWS = [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
@@ -231,8 +231,18 @@ def test_update_guide(
 @pytest.mark.parametrize("workflow", list(profiles.WORKFLOWS))
 def test_update_guide_openwrt(
     file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test,
-    network_restart_command, workflow, device_version_matrix,
+    network_restart_command, workflow, device_version_matrix, lock_backend
 ):
+    uci = get_uci_module(lock_backend)
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    try:
+        orig = uci.get_option_named(data, "foris", "wizard", "workflow")
+    except UciRecordNotFound:
+        orig = None
+
     res = infrastructure.process_message({
         "module": "web",
         "action": "update_guide",
@@ -240,6 +250,22 @@ def test_update_guide_openwrt(
         "data": {"enabled": True, "workflow": workflow},
     })
     assert res["data"]["result"] is (workflow in device_version_matrix)
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    if res["data"]["result"]:
+        assert uci.get_option_named(data, "foris", "wizard", "workflow") == workflow
+        passed = uci.get_option_named(data, "foris", "wizard", "passed")
+        assert "profile" in passed
+        if set(profiles.WORKFLOWS[workflow]).issubset(set(passed)):
+            assert uci.parse_bool(uci.get_option_named(data, "foris", "wizard", "finished"))
+    else:
+        try:
+            new = uci.get_option_named(data, "foris", "wizard", "workflow", None)
+        except UciRecordNotFound:
+            new = None
+        assert orig == new
 
 
 def test_reset_guide(file_root_init, uci_configs_init, infrastructure, ubusd_test, newer, mox):
@@ -295,13 +321,26 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, ubusd_tes
 @pytest.mark.only_backends(['openwrt'])
 def test_reset_guide_openwrt(
     file_root_init, uci_configs_init, infrastructure, ubusd_test, device_version_matrix,
+    lock_backend,
 ):
+    uci = get_uci_module(lock_backend)
+
     res = infrastructure.process_message({
         "module": "web",
         "action": "reset_guide",
         "kind": "request",
     })
     assert res["data"] == {"result": True}
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    assert uci.get_option_named(data, "foris", "wizard", "workflow") in [
+        profiles.WORKFLOW_MIN, profiles.WORKFLOW_OLD
+    ]
+    assert not uci.parse_bool(
+        uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False)))
+
     res = infrastructure.process_message({
         "module": "web",
         "action": "get_data",
@@ -339,6 +378,15 @@ def test_reset_guide_openwrt(
         "kind": "request",
     })
     assert res["data"] == {"result": True}
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    assert uci.get_option_named(data, "foris", "wizard", "workflow") in [
+        profiles.WORKFLOW_MIN, profiles.WORKFLOW_OLD
+    ]
+    assert not uci.parse_bool(
+        uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False)))
 
     res = infrastructure.process_message({
         "module": "web",
