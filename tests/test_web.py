@@ -60,8 +60,8 @@ def device_version_matrix(request):
     device, version, workflow = request.param
 
     with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, DEVICE_REPR_MAP[device] + "\n"), \
-           FileFaker(FILE_ROOT_PATH, "/etc/turris-version", False, version + "\n"):
-        yield workflow
+            FileFaker(FILE_ROOT_PATH, "/etc/turris-version", False, version + "\n"):
+        yield request.param
 
 @pytest.fixture(scope="function")
 def mox():
@@ -102,7 +102,7 @@ def test_get_data(file_root_init, uci_configs_init, infrastructure, ubusd_test, 
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
         u"language", u"reboot_required", u"notification_count", u"updater_running",
-        u"guide", u"password_ready",
+        u"guide", u"password_ready", u"turris_os_version", u"device"
     }
     assert len(res["data"]["language"]) in [2, 5]  # en, en_US
     assert res["data"]["notification_count"] >= 0
@@ -204,7 +204,7 @@ def test_get_guide_openwrt_available(
         "action": "get_guide",
         "kind": "request",
     })
-    assert set(res["data"]["available_workflows"]) == set(device_version_matrix)
+    assert set(res["data"]["available_workflows"]) == set(device_version_matrix[2])
 
 
 @pytest.mark.skip(reason="waiting for hw detect to be finished")
@@ -249,7 +249,7 @@ def test_update_guide_openwrt(
         "kind": "request",
         "data": {"enabled": True, "workflow": workflow},
     })
-    assert res["data"]["result"] is (workflow in device_version_matrix)
+    assert res["data"]["result"] is (workflow in device_version_matrix[2])
 
     with uci.UciBackend() as backend:
         data = backend.read()
@@ -347,7 +347,7 @@ def test_reset_guide_openwrt(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is True
-    assert (res["data"]["guide"]["workflow"] in device_version_matrix) or not device_version_matrix
+    assert (res["data"]["guide"]["workflow"] in device_version_matrix[2]) or not device_version_matrix[2]
     assert res["data"]["guide"]["passed"] == []
 
     res = infrastructure.process_message({
@@ -356,21 +356,24 @@ def test_reset_guide_openwrt(
         "kind": "request",
         "data": {
             "enabled": False,
-            "workflow": device_version_matrix[0]
-                if device_version_matrix else profiles.WORKFLOW_OLD
+            "workflow": device_version_matrix[2][0]
+                if device_version_matrix[2] else profiles.WORKFLOW_OLD
         },
     })
-    assert res["data"]["result"] is bool(device_version_matrix)
+    assert res["data"]["result"] is bool(device_version_matrix[2])
 
-    if device_version_matrix:
+    if device_version_matrix[2]:
+        device, version, _ = device_version_matrix
         res = infrastructure.process_message({
             "module": "web",
             "action": "get_data",
             "kind": "request",
         })
         assert res["data"]["guide"]["enabled"] is False
-        assert (res["data"]["guide"]["workflow"] in device_version_matrix) or not device_version_matrix
+        assert (res["data"]["guide"]["workflow"] in device_version_matrix[2]) or not device_version_matrix[2]
         assert res["data"]["guide"]["passed"] == ['profile']
+        assert res["data"]["device"] == device
+        assert res["data"]["turris_os_version"] == version
 
     res = infrastructure.process_message({
         "module": "web",
@@ -394,7 +397,7 @@ def test_reset_guide_openwrt(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is True
-    assert (res["data"]["guide"]["workflow"] in device_version_matrix) or not device_version_matrix
+    assert (res["data"]["guide"]["workflow"] in device_version_matrix[2]) or not device_version_matrix[2]
     assert res["data"]["guide"]["passed"] == []
 
 

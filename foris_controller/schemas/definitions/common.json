@@ -6,6 +6,10 @@
         },
         "mtu": {
             "type": "integer", "minimum": 1280, "maximum": 1500
-        }
+        },
+        "turris_os_version": {
+            "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)*$"
+        },
+        "turris_device": {"enum": ["omnia", "mox", "turris"]}
     }
 }

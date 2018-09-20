@@ -24,6 +24,7 @@ from foris_controller import profiles
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
+from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.updater import Updater
 from foris_controller_backends.web import WebUciCommands, Languages
 from foris_controller_backends.maintain import MaintainCommands
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
+    sys_info_files = SystemInfoFiles()
     web_uci_cmds = WebUciCommands()
     password_uci = ForisPasswordUci()
     langs = Languages()
@@ -79,6 +81,8 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         data["notification_count"] = self.notifications_cmds.active_count()
         data["reboot_required"] = self.maintain_cmds.reboot_required()
         data["guide"]["workflow_steps"] = profiles.WORKFLOWS[data["guide"]["workflow"]]
+        data["device"] = self.sys_info_files.get_model()
+        data["turris_os_version"] = self.sys_info_files.get_os_version()
 
         return data
 

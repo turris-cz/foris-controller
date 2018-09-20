@@ -70,7 +70,9 @@
                         "updater_running": {"type": "boolean"},
                         "notification_count": {"type": "integer", "minimum": 0},
                         "guide": {"$ref": "#/definitions/guide"},
-                        "password_ready": {"type": "boolean"}
+                        "password_ready": {"type": "boolean"},
+                        "turris_os_version": {"$ref": "#/definitions/turris_os_version"},
+                        "device": {"$ref": "#/definitions/turris_device"}
                     },
                     "additionalProperties": false,
                     "required": [

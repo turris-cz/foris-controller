@@ -35,6 +35,8 @@ class MockWebHandler(Handler, BaseMockHandler):
     guide_enabled = True
     language_list = ['en', 'de', 'cs', 'nb_NO']
     current_language = 'en'
+    turris_os_version = "4.0"
+    device = "mox"
 
     def get_language(self):
         """ Mocks get language
@@ -143,6 +145,8 @@ class MockWebHandler(Handler, BaseMockHandler):
             'notification_count': self.get_notification_count(),
             'guide': self.get_guide_data(),
             'password_ready': self.is_password_set(),
+            'turris_os_version': self.turris_os_version,
+            'device': self.device,
         }
 
     @logger_wrapper(logger)
