@@ -1,3 +1,13 @@
+0.10.5 (2018-09-20)
+-------------------
+
+* pytest: deprecation warnings removed
+* web: various guide updates regarding workflows
+* maintain: reboot and restart network are done using external script
+* lan: module splitted to lan and guest
+* networks: module added
+* wifi: making it compatible with newer version of openwrt
+
 0.10.4 (2018-08-29)
 -------------------
 
