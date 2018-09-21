@@ -10,6 +10,46 @@
         "turris_os_version": {
             "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)*$"
         },
-        "turris_device": {"enum": ["omnia", "mox", "turris"]}
+        "turris_device": {"enum": ["omnia", "mox", "turris"]},
+        "dhcp_lease_time": {
+            "oneOf": [
+                {"enum": [0]},
+                {"type": "integer", "minimum": 120}
+            ]
+        },
+        "dhcp_settings_get": {
+            "type": "object",
+            "properties": {
+                "enabled": {"type": "boolean"},
+                "start": {"type": "integer", "minimum": 1},
+                "limit": {"type": "integer", "minimum": 1},
+                "lease_time": {"$ref": "#/definitions/dhcp_lease_time"}
+            },
+            "required": ["enabled", "start", "limit", "lease_time"],
+            "additionalProperties": false
+        },
+        "dhcp_settings_set": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [true]},
+                        "start": {"type": "integer", "minimum": 1},
+                        "limit": {"type": "integer", "minimum": 1},
+                        "lease_time": {"$ref": "#/definitions/dhcp_lease_time"}
+                    },
+                    "required": ["enabled", "start", "limit", "lease_time"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [false]}
+                    },
+                    "required": ["enabled"],
+                    "additionalProperties": false
+                }
+            ]
+        }
     }
 }

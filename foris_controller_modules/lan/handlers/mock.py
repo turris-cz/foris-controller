@@ -34,6 +34,7 @@ class MockLanHandler(Handler, BaseMockHandler):
         "enabled": False,
         "start": 100,
         "limit": 150,
+        "lease_time": 120,
     }
 
     @logger_wrapper(logger)
@@ -61,4 +62,5 @@ class MockLanHandler(Handler, BaseMockHandler):
         self.dhcp["enabled"] = new_settings["dhcp"]["enabled"]
         self.dhcp["start"] = new_settings["dhcp"].get("start", self.dhcp["start"])
         self.dhcp["limit"] = new_settings["dhcp"].get("limit", self.dhcp["limit"])
+        self.dhcp["lease_time"] = new_settings["dhcp"].get("lease_time", self.dhcp["lease_time"])
         return True

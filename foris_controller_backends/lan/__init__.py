@@ -31,6 +31,19 @@ logger = logging.getLogger(__name__)
 class LanUci(object):
     DEFAULT_DHCP_START = 100
     DEFAULT_DHCP_LIMIT = 150
+    DEFAULT_LEASE_TIME = 12 * 60 * 60
+
+    @staticmethod
+    def _normalize_lease(value):
+        leasetime = str(value)
+        if leasetime == "infinite":
+            return 0
+        elif leasetime.endswith("m"):
+            return int(leasetime[:-1]) * 60
+        elif leasetime.endswith("h"):
+            return int(leasetime[:-1]) * 60 * 60
+        else:
+            return int(leasetime)
 
     def get_settings(self):
 
@@ -47,6 +60,9 @@ class LanUci(object):
             dhcp_data, "dhcp", "lan", "start", self.DEFAULT_DHCP_START))
         dhcp["limit"] = int(get_option_named(
             dhcp_data, "dhcp", "lan", "limit", self.DEFAULT_DHCP_LIMIT))
+        dhcp["lease_time"] = LanUci._normalize_lease(
+            get_option_named(dhcp_data, "dhcp", "lan", "leasetime", self.DEFAULT_LEASE_TIME)
+        )
 
         return {
             "ip": router_ip,
@@ -75,9 +91,13 @@ class LanUci(object):
             # set dhcp part
             if dhcp["enabled"]:
                 backend.set_option(
-                    "dhcp", "lan", "start", dhcp.get("start", self.DEFAULT_DHCP_START))
+                    "dhcp", "lan", "start", dhcp["start"])
                 backend.set_option(
-                    "dhcp", "lan", "limit", dhcp.get("limit", self.DEFAULT_DHCP_LIMIT))
+                    "dhcp", "lan", "limit", dhcp["limit"])
+                backend.set_option(
+                    "dhcp", "lan", "leasetime",
+                    "infinite" if dhcp["lease_time"] == 0 else dhcp["lease_time"]
+                )
 
                 # this will override all user dhcp options
                 # TODO we might want to preserve some options

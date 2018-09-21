@@ -17,6 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import pytest
+
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
@@ -41,6 +43,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "enabled" in res["data"]["dhcp"].keys()
     assert "start" in res["data"]["dhcp"].keys()
     assert "limit" in res["data"]["dhcp"].keys()
+    assert "lease_time" in res["data"]["dhcp"].keys()
     assert set(res["data"].keys()) == {"ip", "netmask", "dhcp"}
 
 
@@ -94,6 +97,7 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test, network_r
             u"enabled": True,
             u"start": 10,
             u"limit": 50,
+            u"lease_time":  24 * 60 * 60 + 1,
         },
     })
     update({
@@ -121,6 +125,7 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
             u"enabled": False,
             u"start": 10,
             u"limit": 50,
+            u"lease_time":  24 * 60 * 60 + 2,
         },
     })
     update({
@@ -130,6 +135,7 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
             u"enabled": True,
             u"start": 10,
             u"limit": 50,
+            u"lease_time":  24 * 60 * 60 + 3,
         },
     })
     update({
@@ -139,5 +145,66 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
             u"enabled": True,
             u"start": 10,
             u"limit": 50,
+            u"lease_time":  24 * 60 * 60 + 4,
         },
     })
+    update({
+        u"ip": u"10.1.0.1",
+        u"netmask": u"255.255.0.0",
+        u"dhcp": {
+            u"enabled": True,
+            u"start": 10,
+            u"limit": 50,
+            u"lease_time": 119,  # too small
+        },
+    })
+
+
+@pytest.mark.parametrize(
+    "orig_backend_val,api_val,new_backend_val", [
+        ["", 12 * 60 * 60, "43200"],
+        ["infinite", 0, "infinite"],
+        ["120", 120, "120"],
+        ["3m", 180, "180"],
+        ["1h", 3600, "3600"],
+    ],
+    ids=["none", "infinite", "120", "3m", "1h"],
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_dhcp_lease(
+    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    orig_backend_val, api_val, new_backend_val,
+):
+    uci = get_uci_module(lock_backend)
+
+    with uci.UciBackend() as backend:
+        backend.set_option("dhcp", "lan", "leasetime", orig_backend_val)
+
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert res["data"]["dhcp"]["lease_time"] == api_val
+
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "ip": "10.1.0.3",
+            "netmask": "255.252.0.0",
+            "dhcp": {
+                "enabled": True,
+                "start": 10,
+                "limit": 50,
+                "lease_time": api_val,
+            },
+        }
+    })
+    assert res["data"]["result"]
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    assert uci.get_option_named(data, "dhcp", "lan", "leasetime") == new_backend_val

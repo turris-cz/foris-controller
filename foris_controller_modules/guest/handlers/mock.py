@@ -35,6 +35,7 @@ class MockGuestHandler(Handler, BaseMockHandler):
         "enabled": False,
         "start": 100,
         "limit": 150,
+        "lease_time": 12 * 60 * 60,
     }
     qos = {
         "enabled": False,
@@ -73,6 +74,8 @@ class MockGuestHandler(Handler, BaseMockHandler):
                 "start", MockGuestHandler.dhcp["start"])
             MockGuestHandler.dhcp["limit"] = new_settings["dhcp"].get(
                 "limit", MockGuestHandler.dhcp["limit"])
+            MockGuestHandler.dhcp["lease_time"] = new_settings["dhcp"].get(
+                "lease_time", MockGuestHandler.dhcp["lease_time"])
             MockGuestHandler.qos["enabled"] = new_settings["qos"]["enabled"]
             if MockGuestHandler.qos["enabled"]:
                 MockGuestHandler.qos["download"] = new_settings["qos"]["download"]

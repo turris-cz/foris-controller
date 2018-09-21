@@ -110,6 +110,7 @@ def test_update_settings(
             u"enabled": True,
             u"start": 10,
             u"limit": 50,
+            u"lease_time": 24 * 60 * 60 + 1,
         },
         u"qos": {u"enabled": False},
     })
@@ -176,7 +177,6 @@ def test_update_settings_openwrt(
 
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "guest_turris", "ignore"))
     assert uci.get_option_named(data, "dhcp", "guest_turris", "interface") == "guest_turris"
-    assert uci.get_option_named(data, "dhcp", "guest_turris", "leasetime") == "1h"
     assert uci.get_option_named(data, "dhcp", "guest_turris", "dhcp_option") == ["6,192.168.8.1"]
 
     assert uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris", "enabled"))
@@ -246,7 +246,7 @@ def test_update_settings_openwrt(
         u"enabled": True,
         u"ip": u"192.168.11.1",
         u"netmask": u"255.255.255.0",
-        u"dhcp": {u"enabled": True, "start": 25, "limit": 100},
+        u"dhcp": {u"enabled": True, "start": 25, "limit": 100, "lease_time": 201},
         u"qos": {u"enabled": False},
     })
     with uci.UciBackend() as backend:
@@ -256,7 +256,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "dhcp", "guest_turris", "interface") == "guest_turris"
     assert uci.get_option_named(data, "dhcp", "guest_turris", "start") == "25"
     assert uci.get_option_named(data, "dhcp", "guest_turris", "limit") == "100"
-    assert uci.get_option_named(data, "dhcp", "guest_turris", "leasetime") == "1h"
+    assert uci.get_option_named(data, "dhcp", "guest_turris", "leasetime") == "201"
     assert uci.get_option_named(data, "dhcp", "guest_turris", "dhcp_option") == ["6,192.168.11.1"]
 
     # test guest disabled
@@ -311,6 +311,17 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
         u"enabled": True,
         u"ip": u"10.1.0.3",
         u"netmask": u"255.255.0.0",
+        u"dhcp": {
+            u"enabled": True,
+            u"start": 10,
+            u"limit": 50,
+            u"lease_time": 119,
+        },
+    })
+    update({
+        u"enabled": True,
+        u"ip": u"10.1.0.3",
+        u"netmask": u"255.255.0.0",
         u"dhcp": {u"enabled": False},
         u"qos": {
             u"enabled": False,
@@ -332,3 +343,56 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
         u"dhcp": {u"enabled": False},
         u"qos": {u"enabled": False},
     })
+
+
+@pytest.mark.parametrize(
+    "orig_backend_val,api_val,new_backend_val", [
+        ["", 60 * 60, "3600"],
+        ["infinite", 0, "infinite"],
+        ["120", 120, "120"],
+        ["3m", 180, "180"],
+        ["1h", 3600, "3600"],
+    ],
+    ids=["none", "infinite", "120", "3m", "1h"],
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_dhcp_lease(
+    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    orig_backend_val, api_val, new_backend_val,
+):
+    uci = get_uci_module(lock_backend)
+
+    with uci.UciBackend() as backend:
+        backend.add_section("dhcp", "dhcp", "guest_turris")
+        backend.set_option("dhcp", "guest_turris", "leasetime", orig_backend_val)
+
+    res = infrastructure.process_message({
+        "module": "guest",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert res["data"]["dhcp"]["lease_time"] == api_val
+
+    res = infrastructure.process_message({
+        "module": "guest",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "enabled": True,
+            "ip": "10.1.0.3",
+            "netmask": "255.252.0.0",
+            "dhcp": {
+                "enabled": True,
+                "start": 10,
+                "limit": 50,
+                "lease_time": api_val,
+            },
+            "qos": {"enabled": False},
+        }
+    })
+    assert res["data"]["result"]
+
+    with uci.UciBackend() as backend:
+        data = backend.read()
+
+    assert uci.get_option_named(data, "dhcp", "guest_turris", "leasetime") == new_backend_val

@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 class GuestUci(object):
     DEFAULT_GUEST_ADDRESS = "10.111.222.1"
     DEFAULT_GUEST_NETMASK = "255.255.255.0"
+    DEFAULT_GUEST_DHCP_LEASE_TIME = 60 * 60
 
     @staticmethod
     def get_guest_enabled(network_data, firewall_data, dhcp_data):
@@ -77,6 +78,12 @@ class GuestUci(object):
             get_option_named(dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START))
         guest["dhcp"]["limit"] = int(
             get_option_named(dhcp_data, "dhcp", "guest_turris", "limit", LanUci.DEFAULT_DHCP_LIMIT))
+        guest["dhcp"]["lease_time"] = LanUci._normalize_lease(
+            get_option_named(
+                dhcp_data, "dhcp", "guest_turris", "leasetime",
+                GuestUci.DEFAULT_GUEST_DHCP_LEASE_TIME
+            )
+        )
 
         return guest
 
@@ -134,14 +141,17 @@ class GuestUci(object):
         # update dhcp config
         backend.add_section("dhcp", "dhcp", "guest_turris")
         backend.set_option("dhcp", "guest_turris", "interface", "guest_turris")
-        backend.set_option("dhcp", "guest_turris", "leasetime", "1h")
         if guest_network["enabled"]:
             dhcp_ignored = store_bool(not guest_network["dhcp"]["enabled"])
             backend.set_option("dhcp", "guest_turris", "ignore", dhcp_ignored)
             if guest_network["dhcp"]["enabled"]:
-                # use fixed values for guest dhcp
                 backend.set_option("dhcp", "guest_turris", "start", guest_network["dhcp"]["start"])
                 backend.set_option("dhcp", "guest_turris", "limit", guest_network["dhcp"]["limit"])
+                backend.set_option(
+                    "dhcp", "guest_turris", "leasetime",
+                    "infinite" if guest_network["dhcp"]["lease_time"] == 0
+                    else guest_network["dhcp"]["lease_time"]
+                )
             if guest_network.get("ip", False):
                 backend.replace_list(
                     "dhcp", "guest_turris", "dhcp_option", ["6,%s" % guest_network["ip"]])
@@ -192,24 +202,34 @@ class GuestUci(object):
 
         network_data = backend.read("network")
         dhcp_data = backend.read("dhcp")
-        try:
-            dhcp_enabled = not parse_bool(
-                get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0"))
-            dhcp_start = int(get_option_named(
-                dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START))
-            dhcp_limit = int(get_option_named(
-                dhcp_data, "dhcp", "guest_turris", "limit", LanUci.DEFAULT_DHCP_LIMIT))
-            router_ip = get_option_named(
-                network_data, "network", "guest_turris", "ipaddr", GuestUci.DEFAULT_GUEST_ADDRESS)
-            netmask = get_option_named(
-                network_data, "network", "guest_turris", "netmask", GuestUci.DEFAULT_GUEST_NETMASK)
 
+        dhcp_enabled = not parse_bool(
+            get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0"))
+        dhcp_start = int(get_option_named(
+            dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START))
+        dhcp_limit = int(get_option_named(
+            dhcp_data, "dhcp", "guest_turris", "limit", LanUci.DEFAULT_DHCP_LIMIT))
+        router_ip = get_option_named(
+            network_data, "network", "guest_turris", "ipaddr", GuestUci.DEFAULT_GUEST_ADDRESS)
+        netmask = get_option_named(
+            network_data, "network", "guest_turris", "netmask", GuestUci.DEFAULT_GUEST_NETMASK)
+        dhcp_lease_time = LanUci._normalize_lease(
+            get_option_named(
+                dhcp_data, "dhcp", "guest_turris", "leasetime",
+                GuestUci.DEFAULT_GUEST_DHCP_LEASE_TIME
+            )
+        )
+
+        try:
             get_option_named(network_data, "network", "guest_turris", 'proto', None)
             # guest network present
             GuestUci.set_guest_network(
                 backend, {
                     "enabled": True, "ip": router_ip, "netmask": netmask,
-                    "dhcp": {"enabled": dhcp_enabled, "start": dhcp_start, "limit": dhcp_limit}
+                    "dhcp": {
+                        "enabled": dhcp_enabled, "start": dhcp_start, "limit": dhcp_limit,
+                        "lease_time": dhcp_lease_time,
+                    }
                 }
             )
         except (UciException, UciRecordNotFound):
@@ -218,7 +238,10 @@ class GuestUci(object):
                 backend,
                 {
                     "enabled": True, "ip": router_ip, "netmask": netmask,
-                    "dhcp": {"enabled": dhcp_enabled, "start": dhcp_start, "limit": dhcp_limit}
+                    "dhcp": {
+                        "enabled": dhcp_enabled, "start": dhcp_start, "limit": dhcp_limit,
+                        "lease_time": dhcp_lease_time,
+                    }
                 },
             )
 
