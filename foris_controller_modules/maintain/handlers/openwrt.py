@@ -22,7 +22,7 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
-from foris_controller_backends.maintain import MaintainUci, MaintainCommands
+from foris_controller_backends.maintain import MaintainCommands
 
 from .. import Handler
 
@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 
 class OpenwrtMaintainHandler(Handler, BaseOpenwrtHandler):
-    uci_cmds = MaintainUci()
     cmds = MaintainCommands()
 
     @logger_wrapper(logger)
@@ -40,11 +39,8 @@ class OpenwrtMaintainHandler(Handler, BaseOpenwrtHandler):
         :returns: probable new ips of the router
         :rtype: dict
         """
-        ips = self.uci_cmds.possible_router_ips()
-
         self.cmds.reboot()
-
-        return ips
+        return True
 
     @logger_wrapper(logger)
     def generate_backup(self):

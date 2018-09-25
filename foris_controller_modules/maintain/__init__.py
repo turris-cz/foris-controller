@@ -34,9 +34,7 @@ class MaintainModule(BaseModule):
         :returns: list of probable router's IPs of the router after reboot
         :rtype: dict
         """
-        msg = {"ips": self.handler.reboot()}
-        self.notify("reboot", msg)
-        return msg
+        return {"result": self.handler.reboot()}
 
     def action_generate_backup(self, data):
         """ Which calls a command which returns a backup of curret system

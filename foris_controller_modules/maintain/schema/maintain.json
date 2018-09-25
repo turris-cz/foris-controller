@@ -27,13 +27,10 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "ips": {
-                            "type": "array",
-                            "items": {"$ref": "#/definitions/router_address"}
-                        }
+                        "result": {"type": "boolean"}
                     },
                     "additionalProperties": false,
-                    "required": ["ips"]
+                    "required": ["result"]
                 }
             },
             "additionalProperties": false,

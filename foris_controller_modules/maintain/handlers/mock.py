@@ -34,13 +34,10 @@ class MockMaintainHandler(Handler, BaseMockHandler):
     def reboot(self):
         """ Mocks rebooting the device
 
-        :returns: mocked ips
+        :returns: {"result": True}
         :rtype: dict
         """
-        return [
-            "192.168.1.1",
-            "2001:1488:fffe:6:2a92:4aff:fecc:a3e",
-        ]
+        return True
 
     @logger_wrapper(logger)
     def generate_backup(self):

@@ -34,30 +34,22 @@ FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test
 
 
 def test_reboot(uci_configs_init, infrastructure, ubusd_test, reboot_command):
-    filters = [("maintain", "reboot")]
-    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "maintain",
         "action": "reboot",
         "kind": "request",
     })
-    assert "ips" in res["data"].keys()
-    notifications = infrastructure.get_notifications(notifications, filters=filters)
-    assert "ips" in notifications[-1]["data"].keys()
+    assert res["data"]["result"]
 
 
 @pytest.mark.only_backends(['openwrt'])
 def test_reboot_opewrt(uci_configs_init, infrastructure, ubusd_test, reboot_command):
-    filters = [("maintain", "reboot")]
-    notifications = infrastructure.get_notifications(filters=filters)
     infrastructure.process_message({
         "module": "maintain",
         "action": "reboot",
         "kind": "request",
     })
-    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert reboot_was_called([])
-
 
 
 def test_generate_backup(uci_configs_init, infrastructure, ubusd_test):
