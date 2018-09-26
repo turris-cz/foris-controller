@@ -1,3 +1,9 @@
+0.10.7 (2018-09-26)
+-------------------
+
+* maintain: move some logic to /usr/bin/maintain-reboot script
+* setup.py: packages fix
+
 0.10.6 (2018-09-21)
 -------------------
 
