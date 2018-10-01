@@ -404,9 +404,10 @@ class WifiCmds(BaseCmdLine):
                     # TODO detect should deprecated in TurrisOS >= 4.0
                     # so this error handling can be removed later
                     new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "detect"], 0)
+                    backend.import_data(new_data.decode("utf-8"), "wireless")
                 except BackendCommandFailed:
-                    new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "config"], 0)
-                backend.import_data(new_data.decode("utf-8"), "wireless")
+                    # wifi config creates /etc/config/wireless and does not print output to stdout
+                    self._run_command_and_check_retval(["/sbin/wifi", "config"], 0)
 
         except Exception as e:
             logger.error("Exception occured during the reset '%s'" % str(e))

@@ -6,7 +6,10 @@ if [ "$required_opt" != "$1" ] ; then
 	exit 1
 fi
 
-cat << EOF
+
+cat > /tmp/uci_import <<EOF
+package 'wireless'
+
 config wifi-device  radio0
         option type     mac80211
         option channel  36
@@ -42,3 +45,12 @@ config wifi-iface
         option encryption none
 
 EOF
+
+if [ "$1" = "config" ] ; then
+	cat /tmp/uci_import | uci -c "$DEFAULT_UCI_CONFIG_DIR" import
+	exit 0
+else
+	cat /tmp/uci_import | tail -n +1
+fi
+
+#rm /tmp/uci_import
