@@ -41,21 +41,21 @@ class MockNetworksHandler(Handler, BaseMockHandler):
     }
     DEFAULT_NETWORKS = {
         "wan": [
-            {"id": "eth2", "kind": "eth", "module_index": 0, "index": 0, "title": "WAN"},
+            {"id": "eth2", "kind": "eth", "description": "WAN", "state": "up", "link_speed": 1000},
         ],
         "lan": [
-            {"id": "lan0", "kind": "eth", "module_index": 0, "index": 1, "title": "LAN0"},
-            {"id": "lan1", "kind": "eth", "module_index": 0, "index": 2, "title": "LAN1"},
-            {"id": "lan2", "kind": "eth", "module_index": 0, "index": 3, "title": "LAN2"},
-            {"id": "lan3", "kind": "eth", "module_index": 0, "index": 4, "title": "LAN3"},
-            {"id": "lan4", "kind": "eth", "module_index": 0, "index": 5, "title": "LAN4"},
+            {"id": "lan0", "kind": "eth", "description": "LAN0", "state": "down", "link_speed": 0},
+            {"id": "lan1", "kind": "eth", "description": "LAN1", "state": "down", "link_speed": 0},
+            {"id": "lan2", "kind": "eth", "description": "LAN2", "state": "up", "link_speed": 100},
+            {"id": "lan3", "kind": "eth", "description": "LAN3", "state": "down", "link_speed": 0},
+            {"id": "lan4", "kind": "eth", "description": "LAN4", "state": "down", "link_speed": 0},
         ],
         "guest": [
-            {"id": "eth3", "kind": "usb", "module_index": 0, "index": 5, "title": "USB-0"},
+            {"id": "eth3", "kind": "usb", "description": "USB-0", "state": "down", "link_speed": 0},
         ],
         "none": [
-            {"id": "wwan0", "kind": "4g", "module_index": 0, "index": 0, "title": "MPCI1"},
-            {"id": "wwan1", "kind": "3g", "module_index": 0, "index": 1, "title": "MPCI1"},
+            {"id": "wwan0", "kind": "4g", "description": "MPCI1", "state": "down", "link_speed": 0},
+            {"id": "wwan1", "kind": "3g", "description": "MPCI1", "state": "down", "link_speed": 0},
         ],
     }
     networks = copy.deepcopy(DEFAULT_NETWORKS)

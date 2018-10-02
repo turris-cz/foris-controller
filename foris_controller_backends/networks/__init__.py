@@ -19,6 +19,8 @@
 
 import logging
 
+import turrishw
+
 from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
@@ -40,25 +42,16 @@ class NetworksUci(object):
                 res.append(ports_map.pop(interface))
         return res
 
-    def _fake_hwdetect(self):
-        # TODO this should be done using hwdetect
-        model = SystemInfoFiles().get_model()
-        if model == "omnia":
-            ports = [
-                {"id": "eth2", "kind": "eth", "module_index": 0, "index": 0, "title": "WAN"},
-                {"id": "lan0", "kind": "eth", "module_index": 0, "index": 1, "title": "LAN0"},
-                {"id": "lan1", "kind": "eth", "module_index": 0, "index": 2, "title": "LAN1"},
-                {"id": "lan2", "kind": "eth", "module_index": 0, "index": 3, "title": "LAN2"},
-                {"id": "lan3", "kind": "eth", "module_index": 0, "index": 4, "title": "LAN3"},
-                {"id": "lan4", "kind": "eth", "module_index": 0, "index": 5, "title": "LAN4"},
-            ]
-        elif model == "mox":
-            ports = [
-                {"id": "eth0", "kind": "eth", "module_index": 0, "index": 0, "title": "WAN"},
-            ]
-        else:
-            ports = []
-        return ports
+    def _detect_ports(self):
+        res = []
+        try:
+            for k, v in turrishw.get_ifaces().items():
+                v["id"] = k
+                v["kind"] = "eth"  # TODO hw detect should return which bus is used
+                res.append(v)
+        except Exception:
+            res = []  # when turrishw get fail -> return empty dict
+        return sorted(res, key=lambda x: x["id"])
 
     def get_settings(self):
         """ Get current wifi settings
@@ -66,7 +59,7 @@ class NetworksUci(object):
         "rtype: dict
         """
 
-        ports = self._fake_hwdetect()
+        ports = self._detect_ports()
         ports_map = {e["id"]: e for e in ports}
 
         with UciBackend() as backend:
@@ -88,7 +81,7 @@ class NetworksUci(object):
         return {
             "device": {
                 "model": SystemInfoFiles().get_model(),
-                "version": "??"
+                "version": SystemInfoFiles().get_os_version(),
             },
             "firewall": {
                 "ssh_on_wan": ssh_on_wan,
@@ -104,14 +97,21 @@ class NetworksUci(object):
         }
 
     def update_settings(self, firewall, networks):
-        # check valid ports
-        if SystemInfoFiles().get_model() == "turris":
-            return False  # Networks module can't be used for old turris
+        system_files = SystemInfoFiles()
+
+        if system_files.get_model() == "turris":
+            return False  # Networks module can't be set for old turris
+
+        if int(system_files.get_os_version().split(".", 1)[0]) < 4:
+            return False  # Networks module can't be set for older versions
+
         wan_ifs = networks["wan"]
         lan_ifs = networks["lan"]
         guest_ifs = networks["guest"]
         none_ifs = networks["none"]
-        ports = self._fake_hwdetect()
+        ports = self._detect_ports()
+
+        # check valid ports
         if {e["id"] for e in ports} != {e for e in wan_ifs + lan_ifs + guest_ifs + none_ifs}:
             # current ports doesn't match the one that are being set
             return False

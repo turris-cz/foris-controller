@@ -111,6 +111,7 @@ setup(
         'prctl',
         'pbkdf2',
         'svupdater',
+        'turrishw',
     ],
     setup_requires=[
         'pytest-runner',

@@ -24,61 +24,32 @@ import sys
 from foris_controller_testtools.fixtures import (
     uci_configs_init, infrastructure, ubusd_test, file_root_init, only_backends,
     init_script_result, FILE_ROOT_PATH, network_restart_command, lock_backend,
+    device, turris_os_version,
 )
-from foris_controller_testtools.utils import FileFaker, get_uci_module
+from foris_controller_testtools.utils import FileFaker, get_uci_module, prepare_turrishw_root
 from foris_controller import profiles
 from foris_controller.exceptions import UciRecordNotFound
 
 
 NEW_WORKFLOWS = [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
 
-DEVICE_REPR_MAP = {
-    "mox": "CZ.NIC Turris Mox Board",
-    "omnia": "Turris Omnia",
-    "turris": "other text",
+EXPECTED_WORKFLOWS = {
+    ("mox", "4.0"): NEW_WORKFLOWS,
+    ("mox", "3.10.7"): [],
+    ("omnia", "4.0"): [profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER],
+    ("omnia", "3.10.7"): [profiles.WORKFLOW_OLD],
+    ("turris", "4.0"): [profiles.WORKFLOW_OLD],
+    ("turris", "3.10.7"): [profiles.WORKFLOW_OLD],
 }
 
-@pytest.fixture(
-    params=[
-        ("mox", "4.0", NEW_WORKFLOWS),
-        ("mox", "3.10", []),
-        ("omnia", "4.0", [profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER]),
-        ("omnia", "3.10", [profiles.WORKFLOW_OLD]),
-        ("turris", "4.0", [profiles.WORKFLOW_OLD]),
-        ("turris", "3.10", [profiles.WORKFLOW_OLD]),
-    ],
-    ids=[
-        "mox-4.0",
-        "mox-3.10",
-        "omnia-4.0",
-        "omnia-3.10",
-        "turris-4.0",
-        "turris-3.10",
-    ]
-)
-def device_version_matrix(request):
-    device, version, workflow = request.param
-
-    with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, DEVICE_REPR_MAP[device] + "\n"), \
-            FileFaker(FILE_ROOT_PATH, "/etc/turris-version", False, version + "\n"):
-        yield request.param
-
-@pytest.fixture(scope="function")
-def mox():
-    with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, "CZ.NIC Turris Mox Board\n"):
-        yield "mox"  # mox should have all possible workflows
-
-
-@pytest.fixture(scope="function")
-def newer():
-    with FileFaker(FILE_ROOT_PATH, "/etc/turris-version", False, "4.0\n"):
-        yield "4.0"
-
-
-@pytest.fixture(scope="function")
-def older():
-    with FileFaker(FILE_ROOT_PATH, "/etc/turris-version", False, "3.10\n"):
-        yield "3.10.0"
+RECOMMENDED_WORKFLOWS = {
+    ("mox", "4.0"): profiles.WORKFLOW_ROUTER,
+    ("mox", "3.10.7"): profiles.WORKFLOW_OLD,
+    ("omnia", "4.0"): profiles.WORKFLOW_ROUTER,
+    ("omnia", "3.10.7"): profiles.WORKFLOW_OLD,
+    ("turris", "4.0"): profiles.WORKFLOW_OLD,
+    ("turris", "3.10.7"): profiles.WORKFLOW_OLD,
+}
 
 
 @pytest.fixture(scope="function")
@@ -93,7 +64,21 @@ def installed_languages(request):
         yield f1, f2, f3
 
 
-def test_get_data(file_root_init, uci_configs_init, infrastructure, ubusd_test, device_version_matrix):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+        ("mox", "3.10.7"),
+        ("omnia", "4.0"),
+        ("omnia", "3.10.7"),
+        ("turris", "4.0"),
+        ("turris", "3.10.7"),
+    ],
+    indirect=True
+)
+def test_get_data(
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, device, turris_os_version
+):
     res = infrastructure.process_message({
         "module": "web",
         "action": "get_data",
@@ -179,9 +164,24 @@ def test_set_language_missing_data(
     assert "errors" in res
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+        ("mox", "3.10.7"),
+        ("omnia", "4.0"),
+        ("omnia", "3.10.7"),
+        ("turris", "4.0"),
+        ("turris", "3.10.7"),
+    ],
+    indirect=True
+)
 def test_get_guide(
-    file_root_init, uci_configs_init, infrastructure, ubusd_test, device_version_matrix,
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "web",
         "action": "get_guide",
@@ -194,29 +194,48 @@ def test_get_guide(
     }
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+        ("mox", "3.10.7"),
+        ("omnia", "4.0"),
+        ("omnia", "3.10.7"),
+        ("turris", "4.0"),
+        ("turris", "3.10.7"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
-def test_get_guide_openwrt_available(
-    file_root_init, uci_configs_init, infrastructure, ubusd_test, device_version_matrix,
+def test_get_guide_openwrt(
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
 
     res = infrastructure.process_message({
         "module": "web",
         "action": "get_guide",
         "kind": "request",
     })
-    assert set(res["data"]["available_workflows"]) == set(device_version_matrix[2])
+    assert set(res["data"]["available_workflows"]) == \
+        set(EXPECTED_WORKFLOWS[device, turris_os_version])
+    assert res["data"]["recommended_workflow"] == RECOMMENDED_WORKFLOWS[device, turris_os_version]
 
 
-@pytest.mark.skip(reason="waiting for hw detect to be finished")
-@pytest.mark.only_backends(['openwrt'])
-def test_get_guide_openwrt_recommended(file_root_init, uci_configs_init, infrastructure, ubusd_test):
-    # TODO ...
-    pass
-
-
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_guide(
-    file_root_init, uci_configs_init, infrastructure, ubusd_test, newer, mox
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "web",
         "action": "update_guide",
@@ -227,12 +246,28 @@ def test_update_guide(
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {u"result"}
 
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+        ("mox", "3.10.7"),
+        ("omnia", "4.0"),
+        ("omnia", "3.10.7"),
+        ("turris", "4.0"),
+        ("turris", "3.10.7"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 @pytest.mark.parametrize("workflow", list(profiles.WORKFLOWS))
 def test_update_guide_openwrt(
     file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test,
-    network_restart_command, workflow, device_version_matrix, lock_backend
+    network_restart_command, workflow, lock_backend, device, turris_os_version,
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     uci = get_uci_module(lock_backend)
 
     with uci.UciBackend() as backend:
@@ -249,7 +284,7 @@ def test_update_guide_openwrt(
         "kind": "request",
         "data": {"enabled": True, "workflow": workflow},
     })
-    assert res["data"]["result"] is (workflow in device_version_matrix[2])
+    assert res["data"]["result"] is (workflow in EXPECTED_WORKFLOWS[device, turris_os_version])
 
     with uci.UciBackend() as backend:
         data = backend.read()
@@ -268,7 +303,19 @@ def test_update_guide_openwrt(
         assert orig == new
 
 
-def test_reset_guide(file_root_init, uci_configs_init, infrastructure, ubusd_test, newer, mox):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_reset_guide(
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, device, turris_os_version
+):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "web",
         "action": "reset_guide",
@@ -318,11 +365,26 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, ubusd_tes
     assert res["data"]["guide"]["passed"] == []
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+        ("mox", "3.10.7"),
+        ("omnia", "4.0"),
+        ("omnia", "3.10.7"),
+        ("turris", "4.0"),
+        ("turris", "3.10.7"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_reset_guide_openwrt(
-    file_root_init, uci_configs_init, infrastructure, ubusd_test, device_version_matrix,
-    lock_backend,
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, lock_backend,
+    device, turris_os_version,
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     uci = get_uci_module(lock_backend)
 
     res = infrastructure.process_message({
@@ -347,7 +409,8 @@ def test_reset_guide_openwrt(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is True
-    assert (res["data"]["guide"]["workflow"] in device_version_matrix[2]) or not device_version_matrix[2]
+    allowed_workflows = EXPECTED_WORKFLOWS[device, turris_os_version]
+    assert (res["data"]["guide"]["workflow"] in allowed_workflows) or not allowed_workflows
     assert res["data"]["guide"]["passed"] == []
 
     res = infrastructure.process_message({
@@ -356,24 +419,22 @@ def test_reset_guide_openwrt(
         "kind": "request",
         "data": {
             "enabled": False,
-            "workflow": device_version_matrix[2][0]
-                if device_version_matrix[2] else profiles.WORKFLOW_OLD
+            "workflow": allowed_workflows[0] if allowed_workflows else profiles.WORKFLOW_OLD
         },
     })
-    assert res["data"]["result"] is bool(device_version_matrix[2])
+    assert res["data"]["result"] is bool(allowed_workflows)
 
-    if device_version_matrix[2]:
-        device, version, _ = device_version_matrix
+    if allowed_workflows:
         res = infrastructure.process_message({
             "module": "web",
             "action": "get_data",
             "kind": "request",
         })
         assert res["data"]["guide"]["enabled"] is False
-        assert (res["data"]["guide"]["workflow"] in device_version_matrix[2]) or not device_version_matrix[2]
+        assert (res["data"]["guide"]["workflow"] in allowed_workflows) or not allowed_workflows
         assert res["data"]["guide"]["passed"] == ['profile']
         assert res["data"]["device"] == device
-        assert res["data"]["turris_os_version"] == version
+        assert res["data"]["turris_os_version"] == turris_os_version
 
     res = infrastructure.process_message({
         "module": "web",
@@ -397,10 +458,17 @@ def test_reset_guide_openwrt(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is True
-    assert (res["data"]["guide"]["workflow"] in device_version_matrix[2]) or not device_version_matrix[2]
+    assert (res["data"]["guide"]["workflow"] in allowed_workflows) or not allowed_workflows
     assert res["data"]["guide"]["passed"] == []
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.parametrize(
     "old_workflow,new_workflow", [
         (profiles.WORKFLOW_OLD, profiles.WORKFLOW_OLD),
@@ -410,8 +478,11 @@ def test_reset_guide_openwrt(
 )
 def test_walk_through_guide(
     file_root_init, init_script_result, uci_configs_init, infrastructure, ubusd_test,
-    network_restart_command, old_workflow, new_workflow, mox, newer,
+    network_restart_command, old_workflow, new_workflow, device, turris_os_version,
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "web",
         "action": "reset_guide",

@@ -20,6 +20,7 @@
 import logging
 import os
 import sys
+import turrishw
 
 from foris_controller import profiles
 from foris_controller_backends.about import SystemInfoFiles
@@ -67,17 +68,18 @@ class WebUciCommands(object):
                 return profiles.WORKFLOW_OLD
         return profiles.WORKFLOW_MIN
 
-
     @staticmethod
     def _detect_recommended_workflow():
-        if int(SystemInfoFiles().get_os_version().split(".", 1)[0]) < 4:
+        if int(SystemInfoFiles().get_os_version().split(".", 1)[0]) > 3:
             if SystemInfoFiles().get_model() == "turris":
                 return profiles.WORKFLOW_OLD
             else:
-                # TODO use hw detect to detect the right one
-                return profiles.WORKFLOW_ROUTER
-        return profiles.WORKFLOW_OLD
+                if len(turrishw.get_ifaces()) > 1:
+                    return profiles.WORKFLOW_ROUTER
+                else:
+                    return profiles.WORKFLOW_MIN  # TODO server workflow goes here
 
+        return profiles.WORKFLOW_OLD
 
     @staticmethod
     def _detect_available_workflows():
@@ -86,8 +88,10 @@ class WebUciCommands(object):
             if model == "turris":
                 return [profiles.WORKFLOW_OLD]
             else:
-                # TODO use hw detect add more constrains
-                return [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
+                if len(turrishw.get_ifaces()) > 1:
+                    return [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
+                else:
+                    return [profiles.MIN]  # TODO server workflow goes here
         if model in ["turris", "omnia"]:
             return [profiles.WORKFLOW_OLD]
         return []

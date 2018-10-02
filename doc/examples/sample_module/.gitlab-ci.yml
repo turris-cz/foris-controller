@@ -3,6 +3,12 @@ stages:
 
 .run_script: &run_script
   script:
+    - git clone https://gitlab.labs.nic.cz/turris/turrishw.git
+    - cd turrishw
+    - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)
+    - pip install .
+    - cd ..
+
     - git clone https://gitlab.labs.nic.cz/turris/foris-schema.git
     - cd foris-schema
     - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)

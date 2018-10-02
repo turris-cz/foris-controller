@@ -21,11 +21,9 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, init_script_result,
-    only_backends,
+    only_backends, device, turris_os_version
 )
 from foris_controller_testtools.utils import check_service_result
-
-from .test_web import mox, newer
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -40,7 +38,14 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "dns_from_dhcp_enabled" in res["data"].keys()
 
 
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test, mox, newer):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_update_settings(uci_configs_init, infrastructure, ubusd_test, device, turris_os_version):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -101,7 +106,14 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test, mox, newe
     }
 
 
-def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test, mox, newer):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test, device, turris_os_version):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -179,9 +191,16 @@ def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test, m
     assert res['data']["dns_from_dhcp_domain"] == "test"
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_service_restart(
-    uci_configs_init, init_script_result, infrastructure, ubusd_test, mox, newer
+    uci_configs_init, init_script_result, infrastructure, ubusd_test, device, turris_os_version,
 ):
 
     res = infrastructure.process_message({

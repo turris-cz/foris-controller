@@ -25,10 +25,8 @@ import random
 import string
 
 from foris_controller_testtools.fixtures import (
-    uci_configs_init, infrastructure, ubusd_test, only_backends
+    uci_configs_init, infrastructure, ubusd_test, only_backends, device, turris_os_version
 )
-
-from .test_web import mox, newer
 
 PASS_PATH = "/tmp/passwd_input"
 
@@ -47,7 +45,16 @@ def pass_file():
         pass
 
 
-def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd_test, newer, mox):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_set_and_check_system(
+    uci_configs_init, pass_file, infrastructure, ubusd_test, device, turris_os_version,
+):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)
@@ -80,7 +87,16 @@ def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, ubusd
     assert res["data"]["status"] != u"good"
 
 
-def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, ubusd_test, mox, newer):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_set_and_check_foris(
+    uci_configs_init, pass_file, infrastructure, ubusd_test, device, turris_os_version,
+):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)

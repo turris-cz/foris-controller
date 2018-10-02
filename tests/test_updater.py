@@ -28,11 +28,10 @@ from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
-    clean_reboot_indicator, updater_languages, updater_userlists
+    clean_reboot_indicator, updater_languages, updater_userlists, device, turris_os_version
 )
 from foris_controller_testtools.utils import set_approval, get_uci_module
 
-from .test_web import mox, newer
 
 def wait_for_updater_run_finished(notifications, infrastructure):
     filters = [("updater", "run")]
@@ -88,10 +87,17 @@ def test_get_settings(
     get("xx")
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_settings(
     updater_languages, updater_userlists,
     uci_configs_init, infrastructure, ubusd_test,
-    newer, mox,
+    device, turris_os_version,
 ):
 
     def update_settings(new_settings, expected=None):
@@ -163,10 +169,17 @@ def test_update_settings(
     })
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
     updater_languages, updater_userlists, uci_configs_init, infrastructure,
-    ubusd_test, newer, mox
+    ubusd_test, device, turris_os_version
 ):
     filters = [("updater", "run")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -186,10 +199,17 @@ def test_update_settings_openwrt(
     wait_for_updater_run_finished(notifications, infrastructure)
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_uci(
     updater_languages, updater_userlists, uci_configs_init, lock_backend, infrastructure,
-    ubusd_test, newer, mox
+    ubusd_test, device, turris_os_version,
 ):
 
     uci = get_uci_module(lock_backend)
@@ -538,10 +558,17 @@ def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
     wait_for_updater_run_finished(notifications, infrastructure)
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_get_enabled(
     updater_languages, updater_userlists,
     uci_configs_init, infrastructure, ubusd_test,
-    newer, mox
+    device, turris_os_version,
 ):
 
     res = infrastructure.process_message({

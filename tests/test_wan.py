@@ -22,11 +22,10 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
-    network_restart_command
+    network_restart_command, device, turris_os_version
 )
 from foris_controller_testtools.utils import network_restart_was_called, get_uci_module
 
-from .test_web import mox, newer
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
 
@@ -56,9 +55,16 @@ def test_get_wan_status(uci_configs_init, infrastructure, ubusd_test):
     assert "proto" in res["data"].keys()
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_settings(
     uci_configs_init, infrastructure, ubusd_test,
-    network_restart_command, newer, mox,
+    network_restart_command, device, turris_os_version,
 ):
     filters = [("wan", "update_settings")]
     def update(input_data, output_data, notification_data):
@@ -451,10 +457,17 @@ def test_update_settings(
     )
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_wan_openwrt_backend(
     uci_configs_init, lock_backend, infrastructure, ubusd_test,
-    network_restart_command, newer, mox,
+    network_restart_command, device, turris_os_version,
 ):
 
     uci = get_uci_module(lock_backend)
@@ -798,9 +811,16 @@ def test_wan_openwrt_backend(
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_wrong_update(
     uci_configs_init, infrastructure, ubusd_test,
-    network_restart_command, newer, mox,
+    network_restart_command, device, turris_os_version,
 ):
 
     def update(data):
@@ -1037,10 +1057,17 @@ def test_connection_test(uci_configs_init, infrastructure, ubusd_test):
     assert "data" in res['data']
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_missing_wan6_openwrt(
     uci_configs_init, lock_backend, infrastructure, ubusd_test,
-    network_restart_command, newer, mox,
+    network_restart_command, device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
     with uci.UciBackend() as backend:

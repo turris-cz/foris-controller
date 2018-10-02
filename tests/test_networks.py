@@ -20,44 +20,29 @@
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, FILE_ROOT_PATH,
-    init_script_result, network_restart_command,
+    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
+    init_script_result, network_restart_command, device, turris_os_version,
 )
 
 from foris_controller_testtools.utils import (
-    sh_was_called, get_uci_module, FileFaker, network_restart_was_called
+    sh_was_called, get_uci_module, FileFaker, network_restart_was_called, TURRISHW_ROOT,
+    prepare_turrishw_root,
 )
 
-from .test_web import newer
 
-
-@pytest.fixture(
-    params=[
-        ("mox", "CZ.NIC Turris Mox Board"),
-        ("omnia", "Turris Omnia"),
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "4.0"),
+        ("mox", "4.0"),
     ],
-    ids=["mox", "omnia"],
-    scope="function"
+    indirect=True
 )
-def mox_and_omnia(request):
-    device, device_str = request.param
-    with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, device_str + "\n"):
-        yield device
+def test_get_settings(uci_configs_init, infrastructure, ubusd_test, device, turris_os_version):
 
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
 
-@pytest.fixture(params=["Turris Omnia"], ids=["omnia"], scope="function")
-def only_omnia(request):
-    with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, request.param + "\n"):
-        yield "omnia"
-
-
-@pytest.fixture(params=["Turris 1.X"], ids=["turris"], scope="function")
-def only_turris(request):
-    with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, request.param + "\n"):
-        yield "turris"
-
-
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer):
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -70,9 +55,20 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mox_and_omni
     assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "4.0"),
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_settings(
-    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     filters = [("networks", "update_settings")]
     res = infrastructure.process_message({
         "module": "networks",
@@ -140,17 +136,28 @@ def test_update_settings(
         "kind": "request",
     })
     assert res["data"]["networks"]["wan"][0]["id"] == wan_port
-    assert [e["id"] for e in res["data"]["networks"]["lan"]] == lan_ports
-    assert [e["id"] for e in res["data"]["networks"]["guest"]] == guest_ports
-    assert [e["id"] for e in res["data"]["networks"]["none"]] == none_ports
+    assert {e["id"] for e in res["data"]["networks"]["lan"]} == set(lan_ports)
+    assert {e["id"] for e in res["data"]["networks"]["guest"]} == set(guest_ports)
+    assert {e["id"] for e in res["data"]["networks"]["none"]} == set(none_ports)
     assert res["data"]["firewall"] == {
         "ssh_on_wan": True, "http_on_wan": False, "https_on_wan": True
     }
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "4.0"),
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_settings_empty_wan(
-    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     filters = [("networks", "update_settings")]
     res = infrastructure.process_message({
         "module": "networks",
@@ -227,9 +234,19 @@ def test_update_settings_empty_wan(
     }
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_settings_more_wans(
-    uci_configs_init, infrastructure, ubusd_test, only_omnia, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -285,9 +302,19 @@ def test_update_settings_more_wans(
     assert res["data"]["firewall"] == orig_firewall
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_settings_missing_assign(
-    uci_configs_init, infrastructure, ubusd_test, only_omnia, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -344,9 +371,19 @@ def test_update_settings_missing_assign(
     assert res["data"]["firewall"] == orig_firewall
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 def test_update_settings_unknown_assign(
-    uci_configs_init, infrastructure, ubusd_test, mox_and_omnia, newer, network_restart_command
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -404,11 +441,22 @@ def test_update_settings_unknown_assign(
     assert res["data"]["firewall"] == orig_firewall
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "4.0"),
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test, mox_and_omnia, newer,
-    network_restart_command
+    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test,
+    network_restart_command, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     uci = get_uci_module(lock_backend)
 
     res = infrastructure.process_message({
@@ -495,10 +543,22 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "dest_port") == "443"
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "3.10.7"),
+        ("turris", "3.10.7"),
+        ("turris", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
-def test_get_settings_openwrt_turris(
-    uci_configs_init, lock_backend, infrastructure, ubusd_test, only_turris
+def test_get_settings_openwrt_unsupported(
+    uci_configs_init, lock_backend, infrastructure, ubusd_test, device, turris_os_version
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "networks",
         "action": "get_settings",
@@ -510,10 +570,22 @@ def test_get_settings_openwrt_turris(
     assert len(ports) == 0
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "3.10.7"),
+        ("turris", "3.10.7"),
+        ("turris", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
-def test_update_settings_openwrt_turris(
-    uci_configs_init, lock_backend, infrastructure, ubusd_test, only_turris
+def test_update_settings_openwrt_unsupported(
+    uci_configs_init, lock_backend, infrastructure, ubusd_test, device, turris_os_version,
 ):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message({
         "module": "networks",
         "action": "update_settings",
