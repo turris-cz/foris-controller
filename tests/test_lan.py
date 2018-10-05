@@ -37,14 +37,20 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "ip" in res["data"].keys()
-    assert "netmask" in res["data"].keys()
-    assert "dhcp" in res["data"].keys()
-    assert "enabled" in res["data"]["dhcp"].keys()
-    assert "start" in res["data"]["dhcp"].keys()
-    assert "limit" in res["data"]["dhcp"].keys()
-    assert "lease_time" in res["data"]["dhcp"].keys()
-    assert set(res["data"].keys()) == {"ip", "netmask", "dhcp"}
+    assert set(res["data"].keys()) == {"mode", "mode_managed", "mode_unmanaged"}
+    assert res["data"]["mode"] in ["managed", "unmanaged"]
+
+    assert set(res["data"]["mode_managed"].keys()) == {"router_ip", "netmask", "dhcp"}
+    assert set(res["data"]["mode_managed"]["dhcp"].keys()) == {
+        "enabled", "start", "limit", "lease_time"
+    }
+
+    assert set(res["data"]["mode_unmanaged"].keys()) == {"lan_type", "lan_static", "lan_dhcp"}
+    assert res["data"]["mode_unmanaged"]["lan_type"] in ["static", "dhcp", "none"]
+    assert set(res["data"]["mode_unmanaged"]["lan_dhcp"].keys()) in [{"hostname"}, set()]
+    assert set(res["data"]["mode_unmanaged"]["lan_static"].keys()).issubset({
+        "ip",  "netmask", "gateway", "dns1", "dns2"
+    })
 
 
 def test_update_settings(uci_configs_init, infrastructure, ubusd_test, network_restart_command):
@@ -81,29 +87,103 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test, network_r
         assert match_subdict(data, res["data"])
 
     update({
-        u"ip": u"192.168.5.8",
-        u"netmask": u"255.255.255.0",
-        u"dhcp": {u"enabled": False},
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"192.168.5.8",
+            u"netmask": u"255.255.255.0",
+            u"dhcp": {u"enabled": False},
+        }
     })
     update({
-        u"ip": u"10.0.0.3",
-        u"netmask": u"255.255.0.0",
-        u"dhcp": {u"enabled": False},
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.0.0.3",
+            u"netmask": u"255.255.0.0",
+            u"dhcp": {u"enabled": False},
+        }
     })
     update({
-        u"ip": u"10.1.0.3",
-        u"netmask": u"255.252.0.0",
-        u"dhcp": {
-            u"enabled": True,
-            u"start": 10,
-            u"limit": 50,
-            u"lease_time":  24 * 60 * 60 + 1,
-        },
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.1.0.3",
+            u"netmask": u"255.252.0.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 1,
+            },
+        }
     })
     update({
-        u"ip": u"10.2.0.3",
-        u"netmask": u"255.255.0.0",
-        u"dhcp": {u"enabled": False},
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.2.0.3",
+            u"netmask": u"255.255.0.0",
+            u"dhcp": {u"enabled": False},
+        }
+    })
+
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"dhcp",
+            u"lan_dhcp": {u"hostname": "bogatyr"},
+        }
+    })
+
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"dhcp",
+            u"lan_dhcp": {},
+        }
+    })
+
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+            },
+        }
+    })
+
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+                u"dns1": "1.1.1.1",
+            },
+        }
+    })
+
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+                u"dns1": "1.1.1.2",
+                u"dns2": "8.8.8.8",
+            },
+        }
+    })
+
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"none",
+        }
     })
 
 
@@ -119,44 +199,127 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
         assert "errors" in res
 
     update({
-        u"ip": u"10.1.0.3",
-        u"netmask": u"255.255.0.0",
-        u"dhcp": {
-            u"enabled": False,
-            u"start": 10,
-            u"limit": 50,
-            u"lease_time":  24 * 60 * 60 + 2,
-        },
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.1.0.3",
+            u"netmask": u"255.255.0.0",
+            u"dhcp": {
+                u"enabled": False,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 2,
+            },
+        }
     })
     update({
-        u"ip": u"10.1.0.3",
-        u"netmask": u"255.250.0.0",
-        u"dhcp": {
-            u"enabled": True,
-            u"start": 10,
-            u"limit": 50,
-            u"lease_time":  24 * 60 * 60 + 3,
-        },
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.1.0.3",
+            u"netmask": u"255.250.0.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 3,
+            },
+        }
     })
     update({
-        u"ip": u"10.1.0.256",
-        u"netmask": u"255.255.0.0",
-        u"dhcp": {
-            u"enabled": True,
-            u"start": 10,
-            u"limit": 50,
-            u"lease_time":  24 * 60 * 60 + 4,
-        },
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.1.0.256",
+            u"netmask": u"255.255.0.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 4,
+            },
+        }
     })
     update({
-        u"ip": u"10.1.0.1",
-        u"netmask": u"255.255.0.0",
-        u"dhcp": {
-            u"enabled": True,
-            u"start": 10,
-            u"limit": 50,
-            u"lease_time": 119,  # too small
-        },
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.1.0.1",
+            u"netmask": u"255.255.0.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time": 119,  # too small
+            },
+        }
+    })
+
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"dhcp",
+        }
+    })
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.256",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+            },
+        }
+    })
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.250.0.0",
+                u"gateway": u"10.4.0.1",
+            },
+        }
+    })
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.256.1",
+            },
+        }
+    })
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+                u"dns1": "192.168.256.1",
+            },
+        }
+    })
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+                u"dns2": "192.168.256.1",
+            },
+        }
+    })
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"none",
+            u"lan_none": {},
+        }
     })
 
 
@@ -185,21 +348,24 @@ def test_dhcp_lease(
         "action": "get_settings",
         "kind": "request",
     })
-    assert res["data"]["dhcp"]["lease_time"] == api_val
+    assert res["data"]["mode_managed"]["dhcp"]["lease_time"] == api_val
 
     res = infrastructure.process_message({
         "module": "lan",
         "action": "update_settings",
         "kind": "request",
         "data": {
-            "ip": "10.1.0.3",
-            "netmask": "255.252.0.0",
-            "dhcp": {
-                "enabled": True,
-                "start": 10,
-                "limit": 50,
-                "lease_time": api_val,
-            },
+            "mode": "managed",
+            "mode_managed": {
+                "router_ip": "10.1.0.3",
+                "netmask": "255.252.0.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": api_val,
+                },
+            }
         }
     })
     assert res["data"]["result"]
@@ -208,3 +374,164 @@ def test_dhcp_lease(
         data = backend.read()
 
     assert uci.get_option_named(data, "dhcp", "lan", "leasetime") == new_backend_val
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_update_settings_openwrt(
+    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+):
+    uci = get_uci_module(lock_backend)
+
+    def update(data):
+        res = infrastructure.process_message({
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": data
+        })
+        assert res["data"]["result"]
+
+        with uci.UciBackend() as backend:
+            return backend.read()
+
+    data = update({
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"192.168.5.8",
+            u"netmask": u"255.255.255.0",
+            u"dhcp": {u"enabled": False},
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "managed"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "static"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "192.168.5.8"
+    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.255.255.0"
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+    data = update({
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.1.0.3",
+            u"netmask": u"255.252.0.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time": 0,
+            },
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "managed"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "static"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.1.0.3"
+    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.252.0.0"
+    assert not uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "start") == "10"
+    assert uci.get_option_named(data, "dhcp", "lan", "limit") == "50"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcp_option") == ["6,10.1.0.3"]
+
+    data = update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"dhcp",
+            u"lan_dhcp": {u"hostname": "bogatyr"},
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "lan", "hostname") == "bogatyr"
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+    data = update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"dhcp",
+            u"lan_dhcp": {},
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "lan", "hostname") == "bogatyr"
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+    data = update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"dhcp",
+            u"lan_dhcp": {u"hostname": ""},
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "dhcp"
+    assert uci.get_option_named(data, "network", "lan", "hostname", "") == ""
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+    data = update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+            },
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "static"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.4.0.2"
+    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.254.0.0"
+    assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.1"
+    assert uci.get_option_named(data, "network", "lan", "dns", []) == []
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+    data = update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.5.0.2",
+                u"netmask": u"255.255.254.0",
+                u"gateway": u"10.4.0.8",
+                u"dns1": "1.1.1.1",
+            },
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "static"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.5.0.2"
+    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.255.254.0"
+    assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.8"
+    assert uci.get_option_named(data, "network", "lan", "dns") == ["1.1.1.1"]
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+    data = update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"static",
+            u"lan_static": {
+                u"ip": u"10.4.0.2",
+                u"netmask": u"255.254.0.0",
+                u"gateway": u"10.4.0.1",
+                u"dns1": "1.1.1.2",
+                u"dns2": "8.8.8.8",
+            },
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "static"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.4.0.2"
+    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.254.0.0"
+    assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.1"
+    assert uci.get_option_named(data, "network", "lan", "dns") == ["8.8.8.8", "1.1.1.2"]
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+    data = update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"none",
+        }
+    })
+    assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
+    assert uci.get_option_named(data, "network", "lan", "proto") == "none"
+    assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))

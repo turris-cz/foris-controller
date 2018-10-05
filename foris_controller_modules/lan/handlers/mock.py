@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import copy
 import logging
 
 from foris_controller.handler_base import BaseMockHandler
@@ -28,13 +29,29 @@ logger = logging.getLogger(__name__)
 
 
 class MockLanHandler(Handler, BaseMockHandler):
-    router_ip = "192.168.1.1"
-    netmask = "255.255.255.0"
-    dhcp = {
-        "enabled": False,
-        "start": 100,
-        "limit": 150,
-        "lease_time": 120,
+    mode = "managed"
+    mode_managed = {
+        "router_ip": "192.168.1.1",
+        "netmask": "255.255.255.0",
+        "dhcp": {
+            "enabled": False,
+            "start": 100,
+            "limit": 150,
+            "lease_time": 120,
+        }
+    }
+    mode_unmanaged = {
+        "lan_type": "none",
+        "lan_dhcp": {
+            "hostname": None,
+        },
+        "lan_static": {
+            "ip": "192.168.1.10",
+            "netmask": "255.255.255.0",
+            "gateway": "192.168.1.1",
+            "dns1": None,
+            "dns2": None,
+        },
     }
 
     @logger_wrapper(logger)
@@ -44,10 +61,19 @@ class MockLanHandler(Handler, BaseMockHandler):
         :returns: current lan settiongs
         :rtype: str
         """
+        mode_unmanaged = copy.deepcopy(MockLanHandler.mode_unmanaged)
+
+        if not mode_unmanaged["lan_dhcp"]["hostname"]:
+            del mode_unmanaged["lan_dhcp"]["hostname"]
+        if not mode_unmanaged["lan_static"]["dns1"]:
+            del mode_unmanaged["lan_static"]["dns1"]
+        if not mode_unmanaged["lan_static"]["dns2"]:
+            del mode_unmanaged["lan_static"]["dns2"]
+
         result = {
-            "ip": self.router_ip,
-            "netmask": self.netmask,
-            "dhcp": self.dhcp,
+            "mode": MockLanHandler.mode,
+            "mode_managed": MockLanHandler.mode_managed,
+            "mode_unmanaged": mode_unmanaged,
         }
         return result
 
@@ -57,10 +83,36 @@ class MockLanHandler(Handler, BaseMockHandler):
         :returns: True if update passes
         :rtype: bool
         """
-        self.router_ip = new_settings["ip"]
-        self.netmask = new_settings["netmask"]
-        self.dhcp["enabled"] = new_settings["dhcp"]["enabled"]
-        self.dhcp["start"] = new_settings["dhcp"].get("start", self.dhcp["start"])
-        self.dhcp["limit"] = new_settings["dhcp"].get("limit", self.dhcp["limit"])
-        self.dhcp["lease_time"] = new_settings["dhcp"].get("lease_time", self.dhcp["lease_time"])
+        MockLanHandler.mode = new_settings["mode"]
+        if new_settings["mode"] == "managed":
+            mode = new_settings["mode_managed"]
+            self.mode_managed["router_ip"] = mode["router_ip"]
+            self.mode_managed["netmask"] = mode["netmask"]
+            self.mode_managed["dhcp"]["enabled"] = mode["dhcp"]["enabled"]
+            self.mode_managed["dhcp"]["start"] = mode["dhcp"].get(
+                "start", self.mode_managed["dhcp"]["start"])
+            self.mode_managed["dhcp"]["limit"] = mode["dhcp"].get(
+                "limit", self.mode_managed["dhcp"]["limit"])
+            self.mode_managed["dhcp"]["lease_time"] = mode["dhcp"].get(
+                "lease_time", self.mode_managed["dhcp"]["lease_time"])
+        elif new_settings["mode"] == "unmanaged":
+            self.mode_unmanaged["lan_type"] = new_settings["mode_unmanaged"]["lan_type"]
+            if new_settings["mode_unmanaged"]["lan_type"] == "dhcp":
+                hostname = new_settings["mode_unmanaged"]["lan_dhcp"].get("hostname")
+                if hostname:
+                    self.mode_unmanaged["lan_dhcp"]["hostname"] = hostname
+            elif new_settings["mode_unmanaged"]["lan_type"] == "static":
+                self.mode_unmanaged["lan_static"] = {
+                    "ip": new_settings["mode_unmanaged"]["lan_static"]["ip"],
+                    "netmask": new_settings["mode_unmanaged"]["lan_static"]["netmask"],
+                    "gateway": new_settings["mode_unmanaged"]["lan_static"]["gateway"],
+                }
+                dns1 = new_settings["mode_unmanaged"]["lan_static"].get("dns1")
+                self.mode_unmanaged["lan_static"]["dns1"] = dns1
+                dns2 = new_settings["mode_unmanaged"]["lan_static"].get("dns2")
+                self.mode_unmanaged["lan_static"]["dns2"] = dns2
+
+            elif new_settings["mode_unmanaged"]["lan_type"] == "none":
+                pass
+
         return True

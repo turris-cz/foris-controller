@@ -1,4 +1,109 @@
 {
+    "definitions": {
+        "lan_mode": {"enum": ["managed", "unmanaged"]},
+        "lan_type": {
+            "allOf": [
+                {"enum": ["dhcp", "static", "none"]},
+                {"$ref": "#/definitions/network_settings_4_type"}
+            ]
+        },
+        "lan_unmanaged_settings_get": {
+            "description": "this devices manages lan (acts like a router)",
+            "type": "object",
+            "properties": {
+                "lan_type": {"$ref": "#/definitions/lan_type"},
+                "lan_dhcp": {"$ref": "#/definitions/network_settings_4_dhcp"},
+                "lan_static": {"$ref": "#/definitions/network_settings_4_static"}
+            },
+            "additionalProperties": false,
+            "required": ["lan_type", "lan_dhcp", "lan_static"]
+        },
+        "lan_unmanaged_settings_set": {
+            "description": "this devices manages lan (acts like a router)",
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "lan_type": {"allOf": [{"$ref": "#/definitions/lan_type"}, {"enum": ["dhcp"]}]},
+                        "lan_dhcp": {"$ref": "#/definitions/network_settings_4_dhcp"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["lan_type", "lan_dhcp"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "lan_type": {"allOf": [{"$ref": "#/definitions/lan_type"}, {"enum": ["static"]}]},
+                        "lan_static": {"$ref": "#/definitions/network_settings_4_static"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["lan_type", "lan_static"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "lan_type": {"allOf": [{"$ref": "#/definitions/lan_type"}, {"enum": ["none"]}]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["lan_type"]
+                }
+            ]
+        },
+        "lan_managed_settings_get": {
+            "description": "this device doesn't manage lan network it acts as a client",
+            "type": "object",
+            "properties": {
+                "router_ip": { "format": "ipv4", "description": "router IP in lan network"},
+                "netmask": { "format": "ipv4netmask", "type": "string" },
+                "dhcp": {"$ref": "#/definitions/dhcp_settings_get"}
+            },
+            "additionalProperties": false,
+            "required": ["router_ip", "netmask", "dhcp"]
+        },
+        "lan_managed_settings_set": {
+            "description": "this device doesn't manage lan network it acts as a client",
+            "type": "object",
+            "properties": {
+                "router_ip": { "format": "ipv4", "description": "router IP in lan network"},
+                "netmask": { "format": "ipv4netmask", "type": "string" },
+                "dhcp": {"$ref": "#/definitions/dhcp_settings_set"}
+            },
+            "additionalProperties": false,
+            "required": ["router_ip", "netmask", "dhcp"]
+        },
+        "lan_settings_get": {
+            "type": "object",
+            "properties": {
+                    "mode": {"$ref": "#/definitions/lan_mode"},
+                    "mode_managed": {"$ref": "#/definitions/lan_managed_settings_get"},
+                    "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_get"}
+            },
+            "additionalProperties": false,
+            "required": ["mode", "mode_managed", "mode_unmanaged"]
+        },
+        "lan_settings_set": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "mode": {"allOf": [{"$ref": "#/definitions/lan_mode"}, {"enum": ["managed"]}]},
+                        "mode_managed": {"$ref": "#/definitions/lan_managed_settings_set"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["mode", "mode_managed"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "mode": {"allOf": [{"$ref": "#/definitions/lan_mode"}, {"enum": ["unmanaged"]}]},
+                        "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_set"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["mode", "mode_unmanaged"]
+                }
+            ]
+        }
+    },
     "oneOf": [
         {
             "description": "request to get lan settings",
@@ -15,16 +120,7 @@
                 "module": {"enum": ["lan"]},
                 "kind": {"enum": ["reply"]},
                 "action": {"enum": ["get_settings"]},
-                "data": {
-                    "type": "object",
-                    "properties": {
-                        "ip": { "format": "ipv4", "description": "router IP in lan network"},
-                        "netmask": { "format": "ipv4netmask", "type": "string" },
-                        "dhcp": {"$ref": "#/definitions/dhcp_settings_get"}
-                    },
-                    "additionalProperties": false,
-                    "required": ["ip", "netmask", "dhcp"]
-                }
+                "data": {"$ref": "#/definitions/lan_settings_get"}
             },
             "additionalProperties": false,
             "required": ["data"]
@@ -35,16 +131,7 @@
                 "module": {"enum": ["lan"]},
                 "kind": {"enum": ["request"]},
                 "action": {"enum": ["update_settings"]},
-                "data": {
-                    "type": "object",
-                    "properties": {
-                        "ip": { "format": "ipv4", "description": "router IP in lan network"},
-                        "netmask": { "format": "ipv4netmask", "type": "string" },
-                        "dhcp": {"$ref": "#/definitions/dhcp_settings_set"}
-                    },
-                    "additionalProperties": false,
-                    "required": ["ip", "netmask", "dhcp"]
-                }
+                "data": {"$ref": "#/definitions/lan_settings_set"}
             },
             "additionalProperties": false
         },
@@ -72,16 +159,7 @@
                 "module": {"enum": ["lan"]},
                 "kind": {"enum": ["notification"]},
                 "action": {"enum": ["update_settings"]},
-                "data": {
-                    "type": "object",
-                    "properties": {
-                        "ip": { "format": "ipv4", "description": "router IP in lan network"},
-                        "netmask": { "format": "ipv4netmask", "type": "string" },
-                        "dhcp": {"$ref": "#/definitions/dhcp_settings_set"}
-                    },
-                    "additionalProperties": false,
-                    "required": ["ip", "netmask", "dhcp"]
-                }
+                "data": {"$ref": "#/definitions/lan_settings_set"}
             },
             "additionalProperties": false
         }
