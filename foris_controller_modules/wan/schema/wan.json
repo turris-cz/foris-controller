@@ -15,34 +15,11 @@
             },
             "additionalProperties": false
         },
-        "wan_type": {"enum": ["dhcp", "static", "pppoe", "none"]},
-        "wan_dhcp": {
-            "type": "object",
-            "properties": {
-                "hostname": { "type": "string", "description": "hostname provided to DHCP server (optional)" }
-            },
-            "additionalProperties": false
-        },
-        "wan_static": {
-            "type": "object",
-            "properties": {
-                "ip": { "format": "ipv4", "type": "string", "description": "router IP address in wan network"},
-                "netmask": { "format": "ipv4netmask", "type": "string" },
-                "gateway": { "format": "ipv4", "type": "string" },
-                "dns1": { "format": "ipv4", "type": "string", "description": "DNS server 1" },
-                "dns2": { "format": "ipv4", "type": "string", "description": "DNS server 2" }
-            },
-            "required": ["ip", "netmask", "gateway"],
-            "additionalProperties": false
-        },
-        "wan_pppoe": {
-            "type": "object",
-            "properties": {
-                "username": { "type": "string" },
-                "password": { "type": "string" }
-            },
-            "required": ["username", "password"],
-            "additionalProperties": false
+        "wan_type": {
+            "allOf": [
+                {"enum": ["dhcp", "static", "pppoe", "none"]},
+                {"$ref": "#/definitions/network_settings_4_type"}
+            ]
         },
         "wan_settings": {
             "oneOf": [
@@ -50,7 +27,7 @@
                     "type": "object",
                     "properties": {
                         "wan_type": {"allOf": [{"$ref": "#/definitions/wan_type"}, {"enum": ["dhcp"]}]},
-                        "wan_dhcp": {"$ref": "#/definitions/wan_dhcp"}
+                        "wan_dhcp": {"$ref": "#/definitions/network_settings_4_dhcp"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_type", "wan_dhcp"]
@@ -59,7 +36,7 @@
                     "type": "object",
                     "properties": {
                         "wan_type": {"allOf": [{"$ref": "#/definitions/wan_type"}, {"enum": ["static"]}]},
-                        "wan_static": {"$ref": "#/definitions/wan_static"}
+                        "wan_static": {"$ref": "#/definitions/network_settings_4_static"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_type", "wan_static"]
@@ -68,7 +45,7 @@
                     "type": "object",
                     "properties": {
                         "wan_type": {"allOf": [{"$ref": "#/definitions/wan_type"}, {"enum": ["pppoe"]}]},
-                        "wan_pppoe": {"$ref": "#/definitions/wan_pppoe"}
+                        "wan_pppoe": {"$ref": "#/definitions/network_settings_4_pppoe"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_type", "wan_pppoe"]
@@ -83,77 +60,13 @@
                 }
             ]
         },
-        "wan6_type": {"enum": ["none", "static", "dhcpv6", "6to4", "6in4"]},
-        "wan6_static": {
-            "type": "object",
-            "properties": {
-                "ip": { "format": "ipv6prefix", "type": "string", "description": "router IPv6 address with prefix in wan network"},
-                "network": { "format": "ipv6prefix", "type": "string" },
-                "gateway": { "format": "ipv6", "type": "string" },
-                "dns1": { "format": "ipv6", "type": "string", "description": "DNS server 1" },
-                "dns2": { "format": "ipv6", "type": "string", "description": "DNS server 2" }
-            },
-            "required": ["ip", "network", "gateway"],
-            "additionalProperties": false
-        },
-        "wan6_dhcpv6": {
-            "type": "object",
-            "properties": {
-                "duid": {
-                    "oneOf": [
-                        {"enum": [""]},
-                        {"$ref": "#/definitions/duid"}
-                    ]
-                }
-            },
-            "required": ["duid"],
-            "additionalProperties": false
-        },
-        "wan6_6to4": {
-            "type": "object",
-            "properties": {
-                "ipv4_address": {
-                    "oneOf": [
-                        {"enum": [""]},
-                        {"format": "ipv4", "type": "string"}
-                    ]
-                }
-            },
-            "required": ["ipv4_address"],
-            "additionalProperties": false
+        "wan6_type": {
+            "allOf":[
+                {"enum": ["none", "static", "dhcpv6", "6to4", "6in4"]},
+                {"$ref": "#/definitions/network_settings_6_type"}
+            ]
         },
         "wan6_6in4": {
-            "type": "object",
-            "properties": {
-                "mtu": {"$ref": "#/definitions/mtu"},
-                "server_ipv4": {"format": "ipv4", "type": "string"},
-                "ipv6_prefix": {"format": "ipv6prefix", "type": "string"},
-                "dynamic_ipv4": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "enabled": {"enum": [false]}
-                            },
-                            "required": ["enabled"],
-                            "additionalProperties": false
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "enabled": {"enum": [true]},
-                                "tunnel_id": {"type": "string", "minLength": 1},
-                                "username": {"type": "string", "minLength": 1},
-                                "password_or_key": {"type": "string", "minLength": 1}
-                            },
-                            "required": ["enabled", "tunnel_id", "username", "password_or_key"],
-                            "additionalProperties": false
-                        }
-                    ]
-                }
-            },
-            "required": ["mtu", "server_ipv4", "ipv6_prefix", "dynamic_ipv4"],
-            "additionalProperties": false
         },
         "wan6_settings": {
             "oneOf": [
@@ -179,7 +92,7 @@
                                 {"enum": ["dhcpv6"]}
                             ]
                         },
-                        "wan6_dhcpv6": {"$ref": "#/definitions/wan6_dhcpv6"}
+                        "wan6_dhcpv6": {"$ref": "#/definitions/network_settings_6_dhcpv6"}
                     },
                     "additionalProperties": false,
                     "required": ["wan6_type", "wan6_dhcpv6"]
@@ -193,7 +106,7 @@
                                 {"enum": ["static"]}
                             ]
                         },
-                        "wan6_static": {"$ref": "#/definitions/wan6_static"}
+                        "wan6_static": {"$ref": "#/definitions/network_settings_6_static"}
                     },
                     "additionalProperties": false,
                     "required": ["wan6_type", "wan6_static"]
@@ -207,7 +120,7 @@
                                 {"enum": ["6to4"]}
                             ]
                         },
-                        "wan6_6to4": {"$ref": "#/definitions/wan6_6to4"}
+                        "wan6_6to4": {"$ref": "#/definitions/network_settings_6_6to4"}
                     },
                     "additionalProperties": false,
                     "required": ["wan6_type", "wan6_6to4"]
@@ -221,31 +134,10 @@
                                 {"enum": ["6in4"]}
                             ]
                         },
-                        "wan6_6in4": {"$ref": "#/definitions/wan6_6in4"}
+                        "wan6_6in4": {"$ref": "#/definitions/network_settings_6_6in4"}
                     },
                     "additionalProperties": false,
                     "required": ["wan6_type", "wan6_6in4"]
-                }
-            ]
-        },
-        "mac_settings": {
-            "oneOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "custom_mac_enabled": {"enum": [true]},
-                        "custom_mac": {"format": "macaddress", "type": "string"}
-                    },
-                    "additionalProperties": false,
-                    "required": ["custom_mac_enabled", "custom_mac"]
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "custom_mac_enabled": {"enum": [false]}
-                    },
-                    "additionalProperties": false,
-                    "required": ["custom_mac_enabled"]
                 }
             ]
         }
@@ -271,7 +163,7 @@
                     "properties": {
                         "wan_settings": {"$ref": "#/definitions/wan_settings"},
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
-                        "mac_settings": {"$ref": "#/definitions/mac_settings"}
+                        "mac_settings": {"$ref": "#/definitions/custom_mac_address"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_settings", "wan6_settings", "mac_settings"]
@@ -291,7 +183,7 @@
                     "properties": {
                         "wan_settings": {"$ref": "#/definitions/wan_settings"},
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
-                        "mac_settings": {"$ref": "#/definitions/mac_settings"}
+                        "mac_settings": {"$ref": "#/definitions/custom_mac_address"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_settings", "wan6_settings", "mac_settings"]
