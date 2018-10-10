@@ -89,6 +89,7 @@ class MockWebHandler(Handler, BaseMockHandler):
             from foris_controller_modules.time.handlers import MockTimeHandler
             from foris_controller_modules.dns.handlers import MockDnsHandler
             from foris_controller_modules.updater.handlers import MockUpdaterHandler
+            from foris_controller_modules.lan.handlers import MockLanHandler
             # Clean passed in mock backend
             for e in [
                 MockPasswordHandler,
@@ -96,6 +97,7 @@ class MockWebHandler(Handler, BaseMockHandler):
                 MockTimeHandler,
                 MockDnsHandler,
                 MockUpdaterHandler,
+                MockLanHandler,
             ]:
                 e.guide_set.set(False)
         return True
@@ -107,12 +109,14 @@ class MockWebHandler(Handler, BaseMockHandler):
         from foris_controller_modules.dns.handlers import MockDnsHandler
         from foris_controller_modules.updater.handlers import MockUpdaterHandler
         from foris_controller_modules.networks.handlers import MockNetworksHandler
+        from foris_controller_modules.lan.handlers import MockLanHandler
         passed = [
             e[0] for e in [
                 ("password", MockPasswordHandler),
                 ("profile", MockWebHandler),
                 ("networks", MockNetworksHandler),
                 ("wan", MockWanHandler),
+                ("lan", MockLanHandler),
                 ("time", MockTimeHandler),
                 ("dns", MockDnsHandler),
                 ("updater", MockUpdaterHandler),
@@ -165,6 +169,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         from foris_controller_modules.dns.handlers import MockDnsHandler
         from foris_controller_modules.updater.handlers import MockUpdaterHandler
         from foris_controller_modules.networks.handlers import MockNetworksHandler
+        from foris_controller_modules.lan.handlers import MockLanHandler
         MockPasswordHandler.guide_set.set(False)
         MockWebHandler.guide_set.set(False)
         MockNetworksHandler.guide_set.set(False)
@@ -172,6 +177,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         MockTimeHandler.guide_set.set(False)
         MockDnsHandler.guide_set.set(False)
         MockUpdaterHandler.guide_set.set(False)
+        MockLanHandler.guide_set.set(False)
         MockWebHandler.guide_workflow = new_workflow
         MockWebHandler.guide_enabled = True
         return True

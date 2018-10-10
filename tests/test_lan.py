@@ -23,7 +23,7 @@ from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
-    network_restart_command
+    network_restart_command, device, turris_os_version
 )
 from foris_controller_testtools.utils import (
     match_subdict, get_uci_module, check_service_result
@@ -53,7 +53,17 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     })
 
 
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test, network_restart_command):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_update_settings(
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    device, turris_os_version,
+):
     filters = [("lan", "update_settings")]
 
     def update(data):
@@ -187,7 +197,17 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test, network_r
     })
 
 
-def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_restart_command):
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_wrong_update(
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    device, turris_os_version,
+):
 
     def update(data):
         res = infrastructure.process_message({
@@ -324,6 +344,13 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
 
 
 @pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.parametrize(
     "orig_backend_val,api_val,new_backend_val", [
         ["", 12 * 60 * 60, "43200"],
         ["infinite", 0, "infinite"],
@@ -336,7 +363,7 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
 @pytest.mark.only_backends(['openwrt'])
 def test_dhcp_lease(
     uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
-    orig_backend_val, api_val, new_backend_val,
+    orig_backend_val, api_val, new_backend_val, device, turris_os_version, 
 ):
     uci = get_uci_module(lock_backend)
 
@@ -376,9 +403,17 @@ def test_dhcp_lease(
     assert uci.get_option_named(data, "dhcp", "lan", "leasetime") == new_backend_val
 
 
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
     uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
 

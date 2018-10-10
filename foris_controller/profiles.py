@@ -21,6 +21,7 @@
 WORKFLOW_OLD = "old"
 WORKFLOW_ROUTER = "router"
 WORKFLOW_MIN = "min"
+WORKFLOW_BRIDGE = "bridge"
 
 STEP_PASSWORD = "password"
 STEP_PROFILE = "profile"
@@ -29,6 +30,7 @@ STEP_WAN = "wan"
 STEP_TIME = "time"
 STEP_DNS = "dns"
 STEP_UPDATER = "updater"
+STEP_LAN = "lan"
 
 
 WORKFLOWS = {
@@ -51,6 +53,15 @@ WORKFLOWS = {
     WORKFLOW_MIN: [
         STEP_PASSWORD,
         STEP_PROFILE,
+    ],
+    WORKFLOW_BRIDGE: [
+        STEP_PASSWORD,
+        STEP_PROFILE,
+        STEP_NETWORKS,
+        STEP_LAN,
+        STEP_TIME,
+        STEP_DNS,
+        STEP_UPDATER,
     ],
 }
 

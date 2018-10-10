@@ -19,6 +19,7 @@
 
 import logging
 
+from foris_controller.exceptions import UciException
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, store_bool
 )
@@ -151,4 +152,13 @@ class LanUci(object):
                 elif mode_unmanaged["lan_type"] == "none":
                     pass  # no need to handle
 
+        # update wizard passed in foris web (best effort)
+        try:
+            from foris_controller_backends.web import WebUciCommands
+            WebUciCommands.update_passed("lan")
+        except UciException:
+            pass
+
         MaintainCommands().restart_network()
+
+        return True

@@ -1,7 +1,7 @@
 {
     "definitions": {
-        "guide_workflows": {"enum": ["min", "old", "router"]},
-        "guide_steps": {"enum": ["password", "profile", "networks", "wan", "time", "dns", "updater"]},
+        "guide_workflows": {"enum": ["min", "old", "router", "bridge"]},
+        "guide_steps": {"enum": ["password", "profile", "networks", "wan", "time", "dns", "updater", "lan"]},
         "guide": {
             "oneOf": [
                 {

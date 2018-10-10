@@ -36,7 +36,7 @@ NEW_WORKFLOWS = [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
 EXPECTED_WORKFLOWS = {
     ("mox", "4.0"): NEW_WORKFLOWS,
     ("mox", "3.10.7"): [],
-    ("omnia", "4.0"): [profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER],
+    ("omnia", "4.0"): [profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER, profiles.WORKFLOW_BRIDGE],
     ("omnia", "3.10.7"): [profiles.WORKFLOW_OLD],
     ("turris", "4.0"): [profiles.WORKFLOW_OLD],
     ("turris", "3.10.7"): [profiles.WORKFLOW_OLD],
@@ -634,6 +634,21 @@ def test_walk_through_guide(
         }
         pass_step(msg, passed, target_workflow, enabled)
 
+    def lan_step(passed, target_workflow, enabled):
+        msg = {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "unmanaged",
+                "mode_unmanaged": {
+                    "lan_type": "dhcp",
+                    "lan_dhcp": {},
+                }
+            }
+        }
+        pass_step(msg, passed, target_workflow, enabled)
+
     MAP = {
         "password": password_step,
         "profile": profile_step,
@@ -642,6 +657,7 @@ def test_walk_through_guide(
         "time": time_step,
         "dns": dns_step,
         "updater": updater_step,
+        "lan": lan_step,
     }
 
     passed = []

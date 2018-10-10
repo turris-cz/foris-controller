@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockLanHandler(Handler, BaseMockHandler):
+    guide_set = BaseMockHandler._manager.Value(bool, False)
     mode = "managed"
     mode_managed = {
         "router_ip": "192.168.1.1",
@@ -115,4 +116,5 @@ class MockLanHandler(Handler, BaseMockHandler):
             elif new_settings["mode_unmanaged"]["lan_type"] == "none":
                 pass
 
+        MockLanHandler.guide_set.set(True)
         return True
