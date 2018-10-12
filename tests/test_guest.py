@@ -23,11 +23,45 @@ from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
-    network_restart_command
+    network_restart_command, FILE_ROOT_PATH
 )
 from foris_controller_testtools.utils import (
-    match_subdict, network_restart_was_called, get_uci_module, check_service_result
+    match_subdict, network_restart_was_called, get_uci_module, check_service_result, FileFaker
 )
+
+
+@pytest.fixture(scope="function")
+def guest_dnsmasq_files():
+    leases = "\n".join([
+        "1539350286 16:25:34:43:52:61 10.10.2.1 first *",
+        "1539350388 94:85:76:67:58:49 10.10.1.1 * *",
+    ])
+    conntrack = "\n".join([
+        "ipv4     2 udp      17 30 src=10.10.2.1 dst=217.31.202.100 sport=36378 dport=123 "
+        "packets=1 bytes=76 src=217.31.202.100 dst=172.20.6.87 sport=123 dport=36378 packets=1 "
+        "bytes=76 mark=0 zone=0 use=2",
+        "ipv4     2 unknown  2 491 src=0.0.0.0 dst=224.0.0.1 packets=509 bytes=16288 [UNREPLIED] "
+        "src=224.0.0.1 dst=0.0.0.0 packets=0 bytes=0 mark=0 zone=0 use=2",
+        "ipv4     2 tcp      6 7383 ESTABLISHED src=172.20.6.100 dst=172.20.6.87 sport=48328 "
+        "dport=80 packets=282 bytes=18364 src=172.20.6.87 dst=172.20.6.100 sport=80 dport=48328 "
+        "packets=551 bytes=31002 [ASSURED] mark=0 zone=0 use=2",
+        "ipv4     2 udp      17 30 src=10.111.222.213 dst=37.157.198.150 sport=60162 dport=123 "
+        "packets=1 bytes=76 src=37.157.198.150 dst=172.20.6.87 sport=123 dport=60162 packets=1 "
+        "bytes=76 mark=0 zone=0 use=2",
+        "ipv4     2 udp      17 34 src=10.111.222.213 dst=80.211.195.36 sport=57085 dport=123 "
+        "packets=1 bytes=76 src=80.211.195.36 dst=172.20.6.87 sport=123 dport=57085 packets=1 "
+        "bytes=76 mark=0 zone=0 use=2",
+        "ipv4     2 tcp      6 7440 ESTABLISHED src=172.20.6.100 dst=172.20.6.87 sport=35774 "
+        "dport=22 packets=244 bytes=17652 src=172.20.6.87 dst=172.20.6.100 sport=22 dport=35774 "
+        "packets=190 bytes=16637 [ASSURED] mark=0 zone=0 use=2",
+        "ipv4     2 udp      17 173 src=127.0.0.1 dst=127.0.0.1 sport=42365 dport=53 packets=2 "
+        "bytes=120 src=127.0.0.1 dst=127.0.0.1 sport=53 dport=42365 packets=2 bytes=164 [ASSURED] "
+        "mark=0 zone=0 use=2",
+    ])
+    with \
+            FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file, \
+            FileFaker(FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack) as conntrack_file:
+        yield lease_file, conntrack_file
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -39,7 +73,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {"enabled", "ip", "netmask", "dhcp", "interface_count", "qos"}
     assert set(res["data"]["qos"].keys()) == {"enabled", "upload", "download"}
-    assert set(res["data"]["dhcp"].keys()) == {"enabled", "start", "limit", "lease_time"}
+    assert set(res["data"]["dhcp"].keys()) == {"enabled", "start", "limit", "lease_time", "clients"}
 
 
 def test_update_settings(
@@ -388,3 +422,116 @@ def test_dhcp_lease(
         data = backend.read()
 
     assert uci.get_option_named(data, "dhcp", "guest_turris", "leasetime") == new_backend_val
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_dhcp_clients(
+    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test,
+    network_restart_command, guest_dnsmasq_files,
+):
+    def update(data, clients):
+        res = infrastructure.process_message({
+            "module": "guest",
+            "action": "update_settings",
+            "kind": "request",
+            "data": data
+        })
+        assert res == {
+            u'action': u'update_settings',
+            u'data': {u'result': True},
+            u'kind': u'reply',
+            u'module': u'guest'
+        }
+        res = infrastructure.process_message({
+            "module": "guest",
+            "action": "get_settings",
+            "kind": "request",
+        })
+        assert res["data"]["dhcp"]["clients"] == clients
+
+    # Return both
+    update({
+        u"enabled": True,
+        u"ip": u"10.10.0.1",
+        u"netmask": u"255.255.252.0",
+        u"dhcp": {
+            u"enabled": True,
+            u"start": 10,
+            u"limit": 50,
+            u"lease_time": 24 * 60 * 60 + 1,
+        },
+        u"qos": {u"enabled": False},
+    }, [
+        {
+            "ip": "10.10.2.1", "mac": "16:25:34:43:52:61",
+            "expires": 1539350286, "active": True, "hostname": "first"
+        },
+        {
+            "ip": "10.10.1.1", "mac": "94:85:76:67:58:49",
+            "expires": 1539350388, "active": False, "hostname": "*"
+        }
+    ])
+
+    # Return empty when disabled
+    update({
+        u"enabled": True,
+        u"ip": u"10.10.0.1",
+        u"netmask": u"255.255.252.0",
+        u"dhcp": {
+            u"enabled": False,
+        },
+        u"qos": {u"enabled": False},
+    }, [])
+
+    # Return first
+    update({
+        u"enabled": True,
+        u"ip": u"10.10.2.1",
+        u"netmask": u"255.255.255.0",
+        u"dhcp": {
+            u"enabled": True,
+            u"start": 10,
+            u"limit": 50,
+            u"lease_time": 24 * 60 * 60 + 1,
+        },
+        u"qos": {u"enabled": False},
+    }, [
+        {
+            "ip": "10.10.2.1", "mac": "16:25:34:43:52:61",
+            "expires": 1539350286, "active": True, "hostname": "first"
+        },
+    ])
+
+    # Return second
+    update({
+        u"enabled": True,
+        u"ip": u"10.10.1.1",
+        u"netmask": u"255.255.255.0",
+        u"dhcp": {
+            u"enabled": True,
+            u"start": 10,
+            u"limit": 50,
+            u"lease_time": 24 * 60 * 60 + 1,
+        },
+        u"qos": {u"enabled": False},
+    }, [
+        {
+            "ip": "10.10.1.1", "mac": "94:85:76:67:58:49",
+            "expires": 1539350388, "active": False, "hostname": "*"
+        }
+    ])
+
+    # Missed range
+    update({
+        u"enabled": True,
+        u"ip": u"192.168.1.1",
+        u"netmask": u"255.255.0.0",
+        u"dhcp": {
+            u"enabled": True,
+            u"start": 10,
+            u"limit": 50,
+            u"lease_time": 24 * 60 * 60 + 1,
+        },
+        u"qos": {u"enabled": False},
+    }, [
+    ])

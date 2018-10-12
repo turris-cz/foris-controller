@@ -20,13 +20,46 @@
 import logging
 
 from foris_controller.exceptions import UciException
+from foris_controller.utils import IPv4
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, store_bool
 )
 
+from foris_controller_backends.files import BaseFile, path_exists
+
 from foris_controller_backends.maintain import MaintainCommands
 
 logger = logging.getLogger(__name__)
+
+
+class LanFiles(BaseFile):
+    DNSMASQ_LEASE_FILE = "/tmp/dhcp.leases"
+    CONNTRACK_FILE = "/proc/net/nf_conntrack"
+
+    def get_dhcp_clients(self, network, netmask):
+        if not path_exists(LanFiles.DNSMASQ_LEASE_FILE):
+            return []
+        lines = self._file_content(LanFiles.DNSMASQ_LEASE_FILE).strip("\n \t").split("\n")
+        conntrack = self._file_content(LanFiles.CONNTRACK_FILE)
+        res = []
+        for line in lines:
+            try:
+                timestamp, mac, ip, hostname, _ = line.split(" ")
+                timestamp = int(timestamp)
+            except ValueError:
+                continue
+
+            # filter by network and netmask
+            if IPv4.normalize_subnet(ip, netmask) == IPv4.normalize_subnet(network, netmask):
+                res.append({
+                    "expires": timestamp,
+                    "mac": mac,
+                    "ip": ip,
+                    "hostname": hostname,
+                    "active": ("src=%s " % ip) in conntrack or ("dst=%s " % ip) in conntrack,
+                })
+
+        return res
 
 
 class LanUci(object):
@@ -66,6 +99,11 @@ class LanUci(object):
         mode_managed["dhcp"]["lease_time"] = LanUci._normalize_lease(
             get_option_named(dhcp_data, "dhcp", "lan", "leasetime", self.DEFAULT_LEASE_TIME)
         )
+        if mode_managed["dhcp"]["enabled"]:
+            mode_managed["dhcp"]["clients"] = LanFiles().get_dhcp_clients(
+                mode_managed["router_ip"], mode_managed["netmask"])
+        else:
+            mode_managed["dhcp"]["clients"] = []
 
         mode_unmanaged = {}
         mode_unmanaged["lan_type"] = get_option_named(network_data, "network", "lan", "proto")

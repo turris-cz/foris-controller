@@ -36,6 +36,16 @@ class MockGuestHandler(Handler, BaseMockHandler):
         "start": 100,
         "limit": 150,
         "lease_time": 12 * 60 * 60,
+        "clients": [
+            {
+                "ip": "10.10.2.1", "mac": "16:25:34:43:52:61",
+                "expires": 1539350286, "active": True, "hostname": "first"
+            },
+            {
+                "ip": "10.10.1.1", "mac": "94:85:76:67:58:49",
+                "expires": 1539350388, "active": False, "hostname": ""
+            }
+        ]
     }
     qos = {
         "enabled": False,

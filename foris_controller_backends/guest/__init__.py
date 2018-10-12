@@ -24,7 +24,7 @@ from foris_controller_backends.uci import (
 )
 from foris_controller.exceptions import UciRecordNotFound, UciException
 
-from foris_controller_backends.lan import LanUci
+from foris_controller_backends.lan import LanUci, LanFiles
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.services import OpenwrtServices
 
@@ -84,6 +84,8 @@ class GuestUci(object):
                 GuestUci.DEFAULT_GUEST_DHCP_LEASE_TIME
             )
         )
+        guest["dhcp"]["clients"] = LanFiles().get_dhcp_clients(guest["ip"], guest["netmask"]) \
+            if guest["dhcp"]["enabled"] else []
 
         from foris_controller_backends.networks import NetworksUci
         guest["interface_count"] = NetworksUci.get_interface_count(network_data, "guest")

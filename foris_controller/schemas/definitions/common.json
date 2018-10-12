@@ -23,9 +23,24 @@
                 "enabled": {"type": "boolean"},
                 "start": {"type": "integer", "minimum": 1},
                 "limit": {"type": "integer", "minimum": 1},
-                "lease_time": {"$ref": "#/definitions/dhcp_lease_time"}
+                "lease_time": {"$ref": "#/definitions/dhcp_lease_time"},
+                "clients": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "expires": {"type": "integer", "minimum": 0, "description": "timestamp format"},
+                            "ip": {"type": "string", "format": "ipv4"},
+                            "mac": {"type": "string", "format": "macaddress"},
+                            "hostname": {"type": "string"},
+                            "active": {"type": "boolean"}
+                        },
+                        "required": ["expires", "ip", "mac", "hostname", "active"],
+                        "additionalProperties": false
+                    }
+                }
             },
-            "required": ["enabled", "start", "limit", "lease_time"],
+            "required": ["enabled", "start", "limit", "lease_time", "clients"],
             "additionalProperties": false
         },
         "dhcp_settings_set": {

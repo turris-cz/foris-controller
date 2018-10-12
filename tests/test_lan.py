@@ -23,11 +23,45 @@ from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
-    network_restart_command, device, turris_os_version
+    network_restart_command, device, turris_os_version, FILE_ROOT_PATH
 )
 from foris_controller_testtools.utils import (
-    match_subdict, get_uci_module, check_service_result
+    match_subdict, get_uci_module, check_service_result, FileFaker
 )
+
+
+@pytest.fixture(scope="function")
+def lan_dnsmasq_files():
+    leases = "\n".join([
+        "1539350186 11:22:33:44:55:66 192.168.1.1 prvni *",
+        "1539350188 99:88:77:66:55:44 192.168.2.1 * *",
+    ])
+    conntrack = "\n".join([
+        "ipv4     2 udp      17 30 src=10.10.2.1 dst=217.31.202.100 sport=36378 dport=123 "
+        "packets=1 bytes=76 src=217.31.202.100 dst=172.20.6.87 sport=123 dport=36378 packets=1 "
+        "bytes=76 mark=0 zone=0 use=2",
+        "ipv4     2 unknown  2 491 src=0.0.0.0 dst=224.0.0.1 packets=509 bytes=16288 [UNREPLIED] "
+        "src=224.0.0.1 dst=0.0.0.0 packets=0 bytes=0 mark=0 zone=0 use=2",
+        "ipv4     2 tcp      6 7383 ESTABLISHED src=172.20.6.100 dst=172.20.6.87 sport=48328 "
+        "dport=80 packets=282 bytes=18364 src=172.20.6.87 dst=172.20.6.100 sport=80 dport=48328 "
+        "packets=551 bytes=31002 [ASSURED] mark=0 zone=0 use=2",
+        "ipv4     2 udp      17 30 src=10.111.222.213 dst=37.157.198.150 sport=60162 dport=123 "
+        "packets=1 bytes=76 src=37.157.198.150 dst=172.20.6.87 sport=123 dport=60162 packets=1 "
+        "bytes=76 mark=0 zone=0 use=2",
+        "ipv4     2 udp      17 34 src=10.111.222.213 dst=192.168.1.1 sport=57085 dport=123 "
+        "packets=1 bytes=76 src=80.211.195.36 dst=172.20.6.87 sport=123 dport=57085 packets=1 "
+        "bytes=76 mark=0 zone=0 use=2",
+        "ipv4     2 tcp      6 7440 ESTABLISHED src=172.20.6.100 dst=172.20.6.87 sport=35774 "
+        "dport=22 packets=244 bytes=17652 src=172.20.6.87 dst=172.20.6.100 sport=22 dport=35774 "
+        "packets=190 bytes=16637 [ASSURED] mark=0 zone=0 use=2",
+        "ipv4     2 udp      17 173 src=127.0.0.1 dst=127.0.0.1 sport=42365 dport=53 packets=2 "
+        "bytes=120 src=127.0.0.1 dst=127.0.0.1 sport=53 dport=42365 packets=2 bytes=164 [ASSURED] "
+        "mark=0 zone=0 use=2",
+    ])
+    with \
+            FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file, \
+            FileFaker(FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack) as conntrack_file:
+        yield lease_file, conntrack_file
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
@@ -42,7 +76,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
     assert set(res["data"]["mode_managed"].keys()) == {"router_ip", "netmask", "dhcp"}
     assert set(res["data"]["mode_managed"]["dhcp"].keys()) == {
-        "enabled", "start", "limit", "lease_time"
+        "enabled", "start", "limit", "lease_time", "clients"
     }
 
     assert set(res["data"]["mode_unmanaged"].keys()) == {"lan_type", "lan_static", "lan_dhcp"}
@@ -363,7 +397,7 @@ def test_wrong_update(
 @pytest.mark.only_backends(['openwrt'])
 def test_dhcp_lease(
     uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
-    orig_backend_val, api_val, new_backend_val, device, turris_os_version, 
+    orig_backend_val, api_val, new_backend_val, device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
 
@@ -570,3 +604,137 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "none"
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_dhcp_clients(
+    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    device, turris_os_version, lan_dnsmasq_files
+):
+    def update(data, clients):
+        res = infrastructure.process_message({
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": data
+        })
+        assert res == {
+            u'action': u'update_settings',
+            u'data': {u'result': True},
+            u'kind': u'reply',
+            u'module': u'lan'
+        }
+        res = infrastructure.process_message({
+            "module": "lan",
+            "action": "get_settings",
+            "kind": "request",
+        })
+        assert res["data"]["mode_managed"]["dhcp"]["clients"] == clients
+
+    # Return both
+    update({
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"192.168.1.1",
+            u"netmask": u"255.252.0.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 1,
+            },
+        }
+    }, [
+        {
+            "ip": "192.168.1.1", "mac": "11:22:33:44:55:66",
+            "expires": 1539350186, "active": True, "hostname": "prvni"
+        },
+        {
+            "ip": "192.168.2.1", "mac": "99:88:77:66:55:44",
+            "expires": 1539350188, "active": False, "hostname": "*"
+        }
+    ])
+
+    # Return other mode
+    update({
+        "mode": "unmanaged",
+        "mode_unmanaged": {
+            u"lan_type": u"dhcp",
+            u"lan_dhcp": {u"hostname": "bogatyr"},
+        }
+    }, [])
+
+    # Return empty when disabled
+    update({
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"192.168.1.1",
+            u"netmask": u"255.252.0.0",
+            u"dhcp": {
+                u"enabled": False,
+            },
+        }
+    }, [])
+
+    # Return first
+    update({
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"192.168.1.1",
+            u"netmask": u"255.255.255.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 1,
+            },
+        }
+    }, [
+        {
+            "ip": "192.168.1.1", "mac": "11:22:33:44:55:66",
+            "expires": 1539350186, "active": True, "hostname": "prvni"
+        },
+    ])
+
+    # Return second
+    update({
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"192.168.2.1",
+            u"netmask": u"255.255.255.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 1,
+            },
+        }
+    }, [
+        {
+            "ip": "192.168.2.1", "mac": "99:88:77:66:55:44",
+            "expires": 1539350188, "active": False, "hostname": "*"
+        }
+    ])
+
+    # Missed range
+    update({
+        "mode": "managed",
+        "mode_managed": {
+            u"router_ip": u"10.1.0.3",
+            u"netmask": u"255.252.0.0",
+            u"dhcp": {
+                u"enabled": True,
+                u"start": 10,
+                u"limit": 50,
+                u"lease_time":  24 * 60 * 60 + 1,
+            },
+        }
+    }, [])

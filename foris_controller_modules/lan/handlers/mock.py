@@ -39,6 +39,16 @@ class MockLanHandler(Handler, BaseMockHandler):
             "start": 100,
             "limit": 150,
             "lease_time": 120,
+            "clients": [
+                {
+                    "ip": "192.168.1.1", "mac": "11:22:33:44:55:66",
+                    "expires": 1539350186, "active": True, "hostname": "prvni"
+                },
+                {
+                    "ip": "192.168.2.1", "mac": "99:88:77:66:55:44",
+                    "expires": 1539350188, "active": False, "hostname": "*"
+                }
+            ]
         }
     }
     mode_unmanaged = {
