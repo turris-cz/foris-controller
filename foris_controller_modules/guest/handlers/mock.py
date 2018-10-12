@@ -50,12 +50,15 @@ class MockGuestHandler(Handler, BaseMockHandler):
         :returns: current guest settiongs
         :rtype: str
         """
+        from foris_controller_modules.networks.handlers.mock import MockNetworksHandler
+
         result = {
             "enabled": MockGuestHandler.enabled,
             "ip": MockGuestHandler.router_ip,
             "netmask": MockGuestHandler.netmask,
             "dhcp": MockGuestHandler.dhcp,
             "qos": MockGuestHandler.qos,
+            "interface_count": len(MockNetworksHandler.networks["guest"])
         }
         return result
 

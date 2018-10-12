@@ -118,10 +118,13 @@ class MockWanHandler(Handler, BaseMockHandler):
         :returns: current wan settiongs
         :rtype: str
         """
+        from foris_controller_modules.networks.handlers.mock import MockNetworksHandler
+
         res = {
             "wan_settings": {"wan_type": self.wan_type},
             "wan6_settings": {"wan6_type": self.wan6_type},
             "mac_settings": {"custom_mac_enabled": self.custom_mac_enabled},
+            "interface_count": len(MockNetworksHandler.networks["wan"])
         }
         if self.wan_type == "dhcp":
             if self.wan_dhcp["hostname"]:

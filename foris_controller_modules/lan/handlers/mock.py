@@ -71,10 +71,13 @@ class MockLanHandler(Handler, BaseMockHandler):
         if not mode_unmanaged["lan_static"]["dns2"]:
             del mode_unmanaged["lan_static"]["dns2"]
 
+        from foris_controller_modules.networks.handlers.mock import MockNetworksHandler
+
         result = {
             "mode": MockLanHandler.mode,
             "mode_managed": MockLanHandler.mode_managed,
             "mode_unmanaged": mode_unmanaged,
+            "interface_count": len(MockNetworksHandler.networks["lan"])
         }
         return result
 

@@ -106,10 +106,13 @@ class WanUci(object):
         mac_settings = {"custom_mac_enabled": True, "custom_mac": custom_mac} if custom_mac \
             else {"custom_mac_enabled": False}
 
+        from foris_controller_backends.networks import NetworksUci
+
         return {
             "wan_settings": wan_settings,
             "wan6_settings": wan6_settings,
             "mac_settings": mac_settings,
+            "interface_count": NetworksUci.get_interface_count(network_data, "wan")
         }
 
     def update_settings(self, wan_settings, wan6_settings, mac_settings):

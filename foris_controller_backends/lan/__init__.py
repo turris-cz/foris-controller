@@ -82,10 +82,14 @@ class LanUci(object):
         dns = get_option_named(network_data, "network", "lan", "dns", [])
         dns = reversed(dns)  # dns with higher priority should be added last
         mode_unmanaged["lan_static"].update(zip(("dns1", "dns2"), dns))
+
+        from foris_controller_backends.networks import NetworksUci
+
         return {
             "mode": mode,
             "mode_managed": mode_managed,
             "mode_unmanaged": mode_unmanaged,
+            "interface_count": NetworksUci.get_interface_count(network_data, "lan")
         }
 
     def update_settings(self, mode, mode_managed=None, mode_unmanaged=None):

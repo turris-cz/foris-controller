@@ -85,6 +85,9 @@ class GuestUci(object):
             )
         )
 
+        from foris_controller_backends.networks import NetworksUci
+        guest["interface_count"] = NetworksUci.get_interface_count(network_data, "guest")
+
         return guest
 
     @staticmethod

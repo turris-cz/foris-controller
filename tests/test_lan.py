@@ -37,7 +37,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert set(res["data"].keys()) == {"mode", "mode_managed", "mode_unmanaged"}
+    assert set(res["data"].keys()) == {"mode", "mode_managed", "mode_unmanaged", "interface_count"}
     assert res["data"]["mode"] in ["managed", "unmanaged"]
 
     assert set(res["data"]["mode_managed"].keys()) == {"router_ip", "netmask", "dhcp"}

@@ -58,10 +58,12 @@ class MockNetworksHandler(Handler, BaseMockHandler):
             {"id": "wwan1", "kind": "3g", "description": "MPCI1", "state": "down", "link_speed": 0},
         ],
     }
-    networks = copy.deepcopy(DEFAULT_NETWORKS)
+    networks = BaseMockHandler._manager.dict(dict(copy.deepcopy(DEFAULT_NETWORKS)))
+    networks_lock = BaseMockHandler._manager.Lock()
 
     def _cleanup(self):
-        self.networks = copy.deepcopy(MockNetworksHandler.DEFAULT_NETWORKS)
+        MockNetworksHandler.networks = BaseMockHandler._manager.dict(
+            dict(copy.deepcopy(MockNetworksHandler)))
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -73,7 +75,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
         res = {
             "device": MockNetworksHandler.device,
             "firewall": MockNetworksHandler.firewall,
-            "networks": MockNetworksHandler.networks,
+            "networks": dict(MockNetworksHandler.networks),
         }
         return copy.deepcopy(res)
 
@@ -85,23 +87,27 @@ class MockNetworksHandler(Handler, BaseMockHandler):
         :rtype: bool
         """
         MockNetworksHandler.guide_set.set(True)
-        ports = []
-        for net_name in MockNetworksHandler.networks:
-            ports += MockNetworksHandler.networks[net_name]
-        ports_map = {e["id"]: e for e in ports}
 
-        new_nets = {e: [] for e in MockNetworksHandler.networks}
-        try:
-            for net_name in MockNetworksHandler.networks:
-                for port_id in new_settings["networks"][net_name]:
-                    new_nets[net_name].append(ports_map.pop(port_id))
-        except KeyError:
-            return False
+        with MockNetworksHandler.networks_lock:
+            ports = []
+            for net_name in MockNetworksHandler.networks.keys():
+                ports += MockNetworksHandler.networks[net_name]
+            ports_map = {e["id"]: e for e in ports}
 
-        if ports_map:  # some ports were not assigned
-            return False
+            new_nets = {e: [] for e in MockNetworksHandler.networks.keys()}
+            try:
+                for net_name in MockNetworksHandler.networks.keys():
+                    for port_id in new_settings["networks"][net_name]:
+                        new_nets[net_name].append(ports_map.pop(port_id))
+            except KeyError:
+                return False
 
-        MockNetworksHandler.networks = new_nets
+            if ports_map:  # some ports were not assigned
+                return False
+
+            for key in new_nets.keys():
+                MockNetworksHandler.networks[key] = new_nets[key]
+
         MockNetworksHandler.firewall = new_settings["firewall"]
 
         return True

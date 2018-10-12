@@ -42,7 +42,8 @@ class NetworksUci(object):
                 res.append(ports_map.pop(interface))
         return res
 
-    def _detect_ports(self):
+    @staticmethod
+    def detect_ports():
         res = []
         try:
             for k, v in turrishw.get_ifaces().items():
@@ -53,13 +54,30 @@ class NetworksUci(object):
             res = []  # when turrishw get fail -> return empty dict
         return sorted(res, key=lambda x: x["id"])
 
+    @staticmethod
+    def get_interface_count(network_data, network_name):
+        """ returns a count of iterfaces corresponding to the network
+        """
+
+        # TODO handle wireless devices
+        try:
+            hw_interfaces = turrishw.get_ifaces()[network_name]
+        except Exception:
+            hw_interfaces = []
+        # convert guest name
+        network_name = "guest_turris" if network_name == "guest" else network_name
+        config_interfaces = get_option_named(network_data, "network", "guest_turris", "ifname", [])
+        config_interfaces = config_interfaces if isinstance(config_interfaces, (list, tuple)) \
+            else [config_interfaces]
+        return len(set(hw_interfaces).intersection(config_interfaces))
+
     def get_settings(self):
         """ Get current wifi settings
         :returns: {"device": {}, "networks": [{...},]}
         "rtype: dict
         """
 
-        ports = self._detect_ports()
+        ports = self.detect_ports()
         ports_map = {e["id"]: e for e in ports}
 
         with UciBackend() as backend:
@@ -109,7 +127,7 @@ class NetworksUci(object):
         lan_ifs = networks["lan"]
         guest_ifs = networks["guest"]
         none_ifs = networks["none"]
-        ports = self._detect_ports()
+        ports = self.detect_ports()
 
         # check valid ports
         if {e["id"] for e in ports} != {e for e in wan_ifs + lan_ifs + guest_ifs + none_ifs}:

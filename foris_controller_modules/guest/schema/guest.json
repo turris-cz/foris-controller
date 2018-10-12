@@ -55,9 +55,10 @@
                 "ip": { "format": "ipv4", "description": "router IP in guest network"},
                 "netmask": { "format": "ipv4netmask", "type": "string" },
                 "dhcp": {"$ref": "#/definitions/dhcp_settings_get"},
-                "qos": {"$ref": "#/definitions/qos_get"}
+                "qos": {"$ref": "#/definitions/qos_get"},
+                "interface_count": {"type": "integer", "minimum": 0}
             },
-            "required": ["enabled", "ip", "netmask", "dhcp"],
+            "required": ["enabled", "ip", "netmask", "dhcp", "interface_count"],
             "additionalProperties": false
         },
         "guest_network_set": {

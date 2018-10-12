@@ -163,10 +163,11 @@
                     "properties": {
                         "wan_settings": {"$ref": "#/definitions/wan_settings"},
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
-                        "mac_settings": {"$ref": "#/definitions/custom_mac_address"}
+                        "mac_settings": {"$ref": "#/definitions/custom_mac_address"},
+                        "interface_count": {"type": "integer", "minimum": 0}
                     },
                     "additionalProperties": false,
-                    "required": ["wan_settings", "wan6_settings", "mac_settings"]
+                    "required": ["wan_settings", "wan6_settings", "mac_settings", "interface_count"]
                 }
             },
             "additionalProperties": false,

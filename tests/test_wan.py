@@ -24,7 +24,9 @@ from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
     network_restart_command, device, turris_os_version
 )
-from foris_controller_testtools.utils import network_restart_was_called, get_uci_module
+from foris_controller_testtools.utils import (
+    network_restart_was_called, get_uci_module, match_subdict
+)
 
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
@@ -37,9 +39,9 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "wan_settings" in res["data"].keys()
-    assert "wan6_settings" in res["data"].keys()
-    assert "mac_settings" in res["data"].keys()
+    assert set(res["data"].keys()) == {
+        "wan_settings", "wan6_settings", "mac_settings", "interface_count"
+    }
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -95,7 +97,7 @@ def test_update_settings(
         assert res["module"] == "wan"
         assert res["action"] == "get_settings"
         assert res["kind"] == "reply"
-        assert output_data == res["data"]
+        assert match_subdict(output_data, res["data"])
 
     update(
         {

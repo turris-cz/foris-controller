@@ -76,10 +76,11 @@
             "properties": {
                     "mode": {"$ref": "#/definitions/lan_mode"},
                     "mode_managed": {"$ref": "#/definitions/lan_managed_settings_get"},
-                    "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_get"}
+                    "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_get"},
+                    "interface_count": {"type": "integer", "minimum": 0}
             },
             "additionalProperties": false,
-            "required": ["mode", "mode_managed", "mode_unmanaged"]
+            "required": ["mode", "mode_managed", "mode_unmanaged", "interface_count"]
         },
         "lan_settings_set": {
             "oneOf": [

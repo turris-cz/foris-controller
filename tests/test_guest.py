@@ -37,17 +37,9 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "enabled" in res["data"].keys()
-    assert "ip" in res["data"].keys()
-    assert "netmask" in res["data"].keys()
-    assert "dhcp" in res["data"].keys()
-    assert "enabled" in res["data"]["dhcp"].keys()
-    assert "start" in res["data"]["dhcp"].keys()
-    assert "limit" in res["data"]["dhcp"].keys()
-    assert "qos" in res["data"].keys()
-    assert "enabled" in res["data"]["qos"].keys()
-    assert "upload" in res["data"]["qos"].keys()
-    assert "download" in res["data"]["qos"].keys()
+    assert set(res["data"].keys()) == {"enabled", "ip", "netmask", "dhcp", "interface_count", "qos"}
+    assert set(res["data"]["qos"].keys()) == {"enabled", "upload", "download"}
+    assert set(res["data"]["dhcp"].keys()) == {"enabled", "start", "limit", "lease_time"}
 
 
 def test_update_settings(
