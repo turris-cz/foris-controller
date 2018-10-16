@@ -1,3 +1,13 @@
+0.10.8 (2018-10-16)
+-------------------
+
+* lan+guest: show list of connected DHCP clients
+* wan+lan+guest: display interface count
+* lan: unmanaged mode added (device can act as a client /DHCP or static/ on LAN)
+* guide: bridge workflow added
+* turrishw integration (currently it obtains information about network interfaces)
+* wifi: detect fix
+
 0.10.7 (2018-09-26)
 -------------------
 
