@@ -53,7 +53,9 @@ class GuestUci(object):
             and test(firewall_data, "firewall", "guest_turris_dns_rule", "enabled")
 
     @staticmethod
-    def get_guest_network_settings(network_data, firewall_data, dhcp_data, sqm_data):
+    def get_guest_network_settings(
+        network_data, firewall_data, dhcp_data, sqm_data, wireless_data
+    ):
         guest = {}
         guest["enabled"] = GuestUci.get_guest_enabled(network_data, firewall_data, dhcp_data)
 
@@ -88,7 +90,9 @@ class GuestUci(object):
             if guest["dhcp"]["enabled"] else []
 
         from foris_controller_backends.networks import NetworksUci
-        guest["interface_count"] = NetworksUci.get_interface_count(network_data, "guest")
+        guest["interface_count"] = NetworksUci.get_interface_count(
+            network_data, wireless_data, "guest"
+        )
 
         return guest
 
@@ -257,7 +261,8 @@ class GuestUci(object):
             network = backend.read("network")
             sqm = backend.read("sqm")
             dhcp = backend.read("dhcp")
-        return GuestUci.get_guest_network_settings(network, firewall, dhcp, sqm)
+            wireless = backend.read("wireless")
+        return GuestUci.get_guest_network_settings(network, firewall, dhcp, sqm, wireless)
 
     def update_settings(self, **new_settings):
         with UciBackend() as backend:

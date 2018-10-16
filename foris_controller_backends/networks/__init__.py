@@ -24,9 +24,11 @@ import turrishw
 from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
-from foris_controller_backends.uci import UciBackend, get_option_named, store_bool, parse_bool
+from foris_controller_backends.uci import (
+    UciBackend, get_option_named, store_bool, parse_bool, get_sections_by_type
+)
 
-from foris_controller.exceptions import UciException
+from foris_controller.exceptions import UciException, UciRecordNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -55,21 +57,37 @@ class NetworksUci(object):
         return sorted(res, key=lambda x: x["id"])
 
     @staticmethod
-    def get_interface_count(network_data, network_name):
+    def get_interface_count(network_data, wireless_data, network_name):
         """ returns a count of iterfaces corresponding to the network
         """
-
-        # TODO handle wireless devices
-        try:
-            hw_interfaces = turrishw.get_ifaces()[network_name]
-        except Exception:
-            hw_interfaces = []
         # convert guest name
         network_name = "guest_turris" if network_name == "guest" else network_name
-        config_interfaces = get_option_named(network_data, "network", "guest_turris", "ifname", [])
+
+        wifi_iface_count = 0
+        try:
+            enabled_radios = {
+                e["name"]
+                for e in get_sections_by_type(wireless_data, "wireless", "wifi-device")
+                if not parse_bool(e["data"].get("disabled", "0"))
+            }
+
+            for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface"):
+                if not parse_bool(section["data"].get("disabled", "0")) and \
+                        section["data"]["device"] in enabled_radios and \
+                        section["data"]["network"] == network_name:
+                            wifi_iface_count += 1
+
+        except UciRecordNotFound:
+            pass
+
+        try:
+            hw_interfaces = [e for e in turrishw.get_ifaces().keys()]
+        except Exception:
+            hw_interfaces = []
+        config_interfaces = get_option_named(network_data, "network", network_name, "ifname", [])
         config_interfaces = config_interfaces if isinstance(config_interfaces, (list, tuple)) \
             else [config_interfaces]
-        return len(set(hw_interfaces).intersection(config_interfaces))
+        return len(set(hw_interfaces).intersection(config_interfaces)) + wifi_iface_count
 
     def get_settings(self):
         """ Get current wifi settings

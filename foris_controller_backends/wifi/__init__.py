@@ -121,12 +121,12 @@ class WifiUci(object):
 
         if not phy_name:
             # failed to get device name
-            return None
+            return []
 
         retval, stdout, _ = BaseCmdLine._run_command("/usr/sbin/iw", "phy", phy_name, "info")
         stdout = stdout.decode("utf-8")
         if retval != 0:
-            return None
+            return []
 
         # read dat from iw command
         bands = []
@@ -147,7 +147,7 @@ class WifiUci(object):
 
         if not reached:
             # Band not present, something went wrong
-            return None
+            return []
         else:
             band = WifiUci._get_band(band_lines)
             if band:
@@ -353,7 +353,7 @@ class WifiUci(object):
                                 device_section["data"].get("path", None),
                                 device_section["data"].get("macaddr", None),
                             )
-                            if e["hwmode"] == device["hwmode"]
+                            if e and e["hwmode"] == device["hwmode"]
                         ]
                         if len(bands) != 1:
                             raise ValueError()

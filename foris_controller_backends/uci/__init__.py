@@ -82,7 +82,7 @@ def get_option_named(data, config, section, option, default=None):
 
 def get_sections_by_type(data, config, section_type):
     """
-    anonymous section
+    get sections of specified type (anonymous as well as named)
     """
     res = get_config(data, config)
     res = [

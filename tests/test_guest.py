@@ -18,16 +18,21 @@
 #
 
 import pytest
+import os
 
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
-    network_restart_command, FILE_ROOT_PATH
+    network_restart_command, FILE_ROOT_PATH, file_root_init, device, turris_os_version,
 )
 from foris_controller_testtools.utils import (
-    match_subdict, network_restart_was_called, get_uci_module, check_service_result, FileFaker
+    match_subdict, network_restart_was_called, get_uci_module, check_service_result, FileFaker,
+    prepare_turrishw
 )
+
+
+WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
 
 
 @pytest.fixture(scope="function")
@@ -535,3 +540,247 @@ def test_dhcp_clients(
         u"qos": {u"enabled": False},
     }, [
     ])
+
+
+@pytest.mark.file_root_path(WIFI_ROOT_PATH)
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_interface_count(
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    device, turris_os_version,
+):
+    prepare_turrishw("mox")  # plain mox without any boards
+
+    def set_and_test(networks, wifi_devices, count):
+        res = infrastructure.process_message({
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": {
+                    "ssh_on_wan": False,
+                    "http_on_wan": False,
+                    "https_on_wan": False,
+                },
+                "networks": networks
+            }
+        })
+        assert res["data"] == {"result": True}
+        res = infrastructure.process_message({
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {"devices": wifi_devices}
+        })
+        assert res["data"] == {"result": True}
+        res = infrastructure.process_message({
+            "module": "guest",
+            "action": "get_settings",
+            "kind": "request",
+        })
+        assert res["data"]["interface_count"] == count
+
+    # No wifi no interfaces
+    set_and_test(
+        {
+            "wan": [],
+            "lan": [],
+            "guest": [],
+            "none": ["eth0"],
+        },
+        [
+            {
+                "id": 0,
+                "enabled": False,
+            },
+            {
+                "id": 1,
+                "enabled": False,
+            },
+        ],
+        0
+    )
+
+    # Single interface no wifi
+    set_and_test(
+        {
+            "wan": [],
+            "lan": [],
+            "guest": ["eth0"],
+            "none": [],
+        },
+        [
+            {
+                "id": 0,
+                "enabled": False,
+            },
+            {
+                "id": 1,
+                "enabled": False,
+            },
+        ],
+        1
+    )
+
+    # One wifi no interface
+    set_and_test(
+        {
+            "wan": ["eth0"],
+            "lan": [],
+            "guest": [],
+            "none": [],
+        },
+        [
+            {
+                "id": 0,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testik",
+                    "password": "ssapssap",
+                },
+            },
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": False,
+                },
+            },
+        ],
+        1
+    )
+    set_and_test(
+        {
+            "wan": [],
+            "lan": ["eth0"],
+            "guest": [],
+            "none": [],
+        },
+        [
+            {
+                "id": 0,
+                "enabled": False,
+            },
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testik",
+                    "password": "ssapssap",
+                },
+            },
+        ],
+        1
+    )
+
+    # two wifis no iterface
+    set_and_test(
+        {
+            "wan": [],
+            "lan": ["eth0"],
+            "guest": [],
+            "none": [],
+        },
+        [
+            {
+                "id": 0,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testikx",
+                    "password": "ssapssapx",
+                },
+            },
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 8,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testik",
+                    "password": "ssapssap",
+                },
+            },
+        ],
+        2
+    )
+
+    # interface and wifis enabled
+    set_and_test(
+        {
+            "wan": [],
+            "lan": [],
+            "guest": ["eth0"],
+            "none": [],
+        },
+        [
+            {
+                "id": 0,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testikx",
+                    "password": "ssapssapx",
+                },
+            },
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 8,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testik",
+                    "password": "ssapssap",
+                },
+            },
+        ],
+        3
+    )

@@ -84,6 +84,7 @@ class LanUci(object):
         with UciBackend() as backend:
             network_data = backend.read("network")
             dhcp_data = backend.read("dhcp")
+            wireless_data = backend.read("wireless")
 
         mode = get_option_named(network_data, "network", "lan", "_turris_mode", "managed")
 
@@ -127,7 +128,9 @@ class LanUci(object):
             "mode": mode,
             "mode_managed": mode_managed,
             "mode_unmanaged": mode_unmanaged,
-            "interface_count": NetworksUci.get_interface_count(network_data, "lan")
+            "interface_count": NetworksUci.get_interface_count(
+                network_data, wireless_data, "lan"
+            ),
         }
 
     def update_settings(self, mode, mode_managed=None, mode_unmanaged=None):
