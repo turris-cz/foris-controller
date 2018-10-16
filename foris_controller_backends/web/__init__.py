@@ -77,7 +77,7 @@ class WebUciCommands(object):
                 if len(turrishw.get_ifaces()) > 1:
                     return profiles.WORKFLOW_ROUTER
                 else:
-                    return profiles.WORKFLOW_MIN  # TODO server workflow goes here
+                    return profiles.WORKFLOW_BRIDGE
 
         return profiles.WORKFLOW_OLD
 
@@ -91,7 +91,9 @@ class WebUciCommands(object):
                 if len(turrishw.get_ifaces()) > 1:
                     return [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
                 else:
-                    return [profiles.MIN]  # TODO server workflow goes here
+                    return [
+                        profiles.WORKFLOW_MIN, profiles.WORKFLOW_BRIDGE,
+                    ]
         if model in ["turris", "omnia"]:
             return [profiles.WORKFLOW_OLD]
         return []

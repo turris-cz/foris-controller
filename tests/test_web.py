@@ -26,7 +26,7 @@ from foris_controller_testtools.fixtures import (
     init_script_result, FILE_ROOT_PATH, network_restart_command, lock_backend,
     device, turris_os_version,
 )
-from foris_controller_testtools.utils import FileFaker, get_uci_module, prepare_turrishw_root
+from foris_controller_testtools.utils import FileFaker, get_uci_module, prepare_turrishw_root, prepare_turrishw
 from foris_controller import profiles
 from foris_controller.exceptions import UciRecordNotFound
 
@@ -43,7 +43,6 @@ EXPECTED_WORKFLOWS = {
 }
 
 RECOMMENDED_WORKFLOWS = {
-    ("mox", "4.0"): profiles.WORKFLOW_ROUTER,
     ("mox", "3.10.7"): profiles.WORKFLOW_OLD,
     ("omnia", "4.0"): profiles.WORKFLOW_ROUTER,
     ("omnia", "3.10.7"): profiles.WORKFLOW_OLD,
@@ -197,7 +196,6 @@ def test_get_guide(
 @pytest.mark.parametrize(
     "device,turris_os_version",
     [
-        ("mox", "4.0"),
         ("mox", "3.10.7"),
         ("omnia", "4.0"),
         ("omnia", "3.10.7"),
@@ -221,6 +219,52 @@ def test_get_guide_openwrt(
     assert set(res["data"]["available_workflows"]) == \
         set(EXPECTED_WORKFLOWS[device, turris_os_version])
     assert res["data"]["recommended_workflow"] == RECOMMENDED_WORKFLOWS[device, turris_os_version]
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_get_guide_mox_variants(
+    file_root_init, uci_configs_init, infrastructure, ubusd_test, device, turris_os_version
+):
+
+    prepare_turrishw("mox")
+    res = infrastructure.process_message({
+        "module": "web",
+        "action": "get_guide",
+        "kind": "request",
+    })
+    assert set(res["data"]["available_workflows"]) == {
+        profiles.WORKFLOW_MIN, profiles.WORKFLOW_BRIDGE
+    }
+    assert res["data"]["recommended_workflow"] == profiles.WORKFLOW_BRIDGE
+
+    prepare_turrishw("mox+C")
+    res = infrastructure.process_message({
+        "module": "web",
+        "action": "get_guide",
+        "kind": "request",
+    })
+    assert set(res["data"]["available_workflows"]) == {
+        profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER, profiles.WORKFLOW_BRIDGE
+    }
+    assert res["data"]["recommended_workflow"] == profiles.WORKFLOW_ROUTER
+
+    prepare_turrishw("mox+EEC")
+    res = infrastructure.process_message({
+        "module": "web",
+        "action": "get_guide",
+        "kind": "request",
+    })
+    assert set(res["data"]["available_workflows"]) == {
+        profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER, profiles.WORKFLOW_BRIDGE
+    }
+    assert res["data"]["recommended_workflow"] == profiles.WORKFLOW_ROUTER
 
 
 @pytest.mark.parametrize(
