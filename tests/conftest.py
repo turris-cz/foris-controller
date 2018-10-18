@@ -57,7 +57,7 @@ def file_root():
 @pytest.fixture(scope="module")
 def controller_modules():
     return [
-        "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan", "time",
+        "about", "web", "dns", "maintain", "password", "updater", "lan", "time",
         "wan", "router_notifications", "wifi", "networks", "guest",
     ]
 
