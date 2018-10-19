@@ -38,7 +38,6 @@ class AboutModule(BaseModule):
         res.update(self.handler.get_device_info())
         res.update(self.handler.get_serial())
         res.update(self.handler.get_temperature())
-        res.update(self.handler.get_sending_info())
         return res
 
     def action_get_registration_number(self, data):
@@ -76,7 +75,6 @@ class AboutModule(BaseModule):
     'get_device_info',
     'get_serial',
     'get_temperature',
-    'get_sending_info',
     'get_registration_number',
     'get_contract_status',
     'update_contract_status',

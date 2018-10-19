@@ -24,7 +24,7 @@ from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.about import (
     AtshaCmds, SystemInfoCmds, TemperatureCmds, ServerUplinkCmds,
-    SendingFiles, SystemInfoFiles, ServerUplinkFiles
+    SystemInfoFiles, ServerUplinkFiles
 )
 
 from .. import Handler
@@ -36,7 +36,6 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
     atsha_cmds = AtshaCmds()
     temperature_cmds = TemperatureCmds()
-    sending_files = SendingFiles()
     system_info_cmds = SystemInfoCmds()
     system_info_files = SystemInfoFiles()
     server_uplink_files = ServerUplinkFiles()
@@ -75,15 +74,6 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
         return {
             "temperature": {"CPU": self.temperature_cmds.get_cpu_temperature()},
         }
-
-    @logger_wrapper(logger)
-    def get_sending_info(self):
-        """ Obtains info whether the router is sending data to our servers
-
-        :returns: result
-        :rtype: dict
-        """
-        return self.sending_files.get_sending_info()
 
     @logger_wrapper(logger)
     def get_registration_number(self):

@@ -40,8 +40,6 @@ def test_get(infrastructure, ubusd_test):
         u"os_version",
         u"kernel",
         u"temperature",
-        u"firewall_status",
-        u"ucollect_status",
     }
 
 

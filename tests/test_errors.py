@@ -49,8 +49,6 @@ def test_wrong_input_kind(infrastructure, ubusd_test):
             "os_version": "3.7",
             "serial": "0000000B00009CD6",
             "temperature": {"CPU": 73},
-            "firewall_status": {"state": "online", "last_check": 1501857960},
-            "ucollect_status": {"state": "offline", "last_check": 1501857970},
         },
     })
     assert res == {
