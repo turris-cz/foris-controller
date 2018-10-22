@@ -30,6 +30,12 @@ logger = logging.getLogger(__name__)
 class MockDnsHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
     forwarding_enabled = True
+    forwarder = ""
+    available_forwarders = [
+        {"name": "", "description": ""},
+        {"name": "odvr-nic-dns", "description": "CZ.NIC"},
+        {"name": "quad9-normal", "description": "Quad9"},
+    ]
     dnssec_enabled = True
     dns_from_dhcp_enabled = False
     dns_from_dhcp_domain = None
@@ -43,6 +49,8 @@ class MockDnsHandler(Handler, BaseMockHandler):
         """
         result = {
             "forwarding_enabled": MockDnsHandler.forwarding_enabled,
+            "forwarder": MockDnsHandler.forwarder,
+            "available_forwarders": MockDnsHandler.available_forwarders,
             "dnssec_enabled": MockDnsHandler.dnssec_enabled,
             "dns_from_dhcp_enabled": MockDnsHandler.dns_from_dhcp_enabled,
         }
@@ -52,12 +60,14 @@ class MockDnsHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def update_settings(
-            self, forwarding_enabled, dnssec_enabled, dns_from_dhcp_enabled,
+            self, forwarding_enabled, dnssec_enabled, dns_from_dhcp_enabled, forwarder=None,
             dns_from_dhcp_domain=None):
         """ Mocks updates current dns settings
 
         :param forwarding_enabled: set whether the forwarding is enabled
         :type forwarding_enabled: bool
+        :param forwarder: which forwarder will be used
+        :type forwarder: str
         :param dnssec_enabled: set whether dnssec is enabled
         :type dnssec_enabled: bool
         :param dns_from_dhcp_enabled: set whether dns from dhcp is enabled
@@ -67,6 +77,12 @@ class MockDnsHandler(Handler, BaseMockHandler):
         :returns: True if update passes
         :rtype: bool
         """
+        if forwarding_enabled:
+            if forwarder in [e["name"] for e in MockDnsHandler.available_forwarders]:
+                MockDnsHandler.forwarder = forwarder
+            else:
+                return False
+
         MockDnsHandler.forwarding_enabled = forwarding_enabled
         MockDnsHandler.dnssec_enabled = dnssec_enabled
         MockDnsHandler.dns_from_dhcp_enabled = dns_from_dhcp_enabled

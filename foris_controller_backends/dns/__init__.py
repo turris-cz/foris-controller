@@ -18,14 +18,32 @@
 #
 
 import logging
+import os
 
 from foris_controller_backends.uci import (
     UciBackend, get_option_anonymous, get_option_named, parse_bool, store_bool
 )
+from foris_controller_backends.files import BaseMatch, BaseFile
 from foris_controller_backends.services import OpenwrtServices
 from foris_controller.exceptions import UciRecordNotFound, UciException
 
 logger = logging.getLogger(__name__)
+
+
+class DnsFiles(object):
+    RESOLVERS_DIR = "/etc/resolver/dns_servers/"
+
+    @staticmethod
+    def get_available_resolvers():
+        res = [{"name": "", "description": ""}]  # default resovler -> forward to provider's dns
+        for e in BaseMatch.list_files([os.path.join(DnsFiles.RESOLVERS_DIR, "*.conf")]):
+            name = os.path.basename(e)[:-len(".conf")]
+            description = BaseFile()._read_and_parse(
+                os.path.join(DnsFiles.RESOLVERS_DIR, name + ".conf"), r'description="([^"]*)"',
+                (1, )
+            )
+            res.append({"name": name, "description": description})
+        return res
 
 
 class DnsUciCommands(object):
@@ -38,12 +56,16 @@ class DnsUciCommands(object):
 
         forwarding_enabled = parse_bool(
             get_option_named(resolver_data, "resolver", "common", "forward_upstream"))
+        forwarder = get_option_named(resolver_data, "resolver", "common", "forward_custom", "")
         dnssec_enabled = not parse_bool(
             get_option_named(resolver_data, "resolver", "common", "ignore_root_key", "0"))
         dns_from_dhcp_enabled = parse_bool(
             get_option_named(resolver_data, "resolver", "common", "dynamic_domains", "0"))
         res = {
-            "forwarding_enabled": forwarding_enabled, "dnssec_enabled": dnssec_enabled,
+            "forwarding_enabled": forwarding_enabled,
+            "forwarder": forwarder,
+            "available_forwarders": DnsFiles.get_available_resolvers(),
+            "dnssec_enabled": dnssec_enabled,
             "dns_from_dhcp_enabled": dns_from_dhcp_enabled
         }
         try:
@@ -56,7 +78,10 @@ class DnsUciCommands(object):
 
     def update_settings(
             self, forwarding_enabled, dnssec_enabled, dns_from_dhcp_enabled,
-            dns_from_dhcp_domain=None):
+            forwarder=None, dns_from_dhcp_domain=None):
+
+        if forwarder and forwarder not in [e["name"] for e in DnsFiles.get_available_resolvers()]:
+            return False
 
         with UciBackend() as backend:
             backend.set_option(
@@ -68,6 +93,9 @@ class DnsUciCommands(object):
             if dns_from_dhcp_domain:
                 backend.set_option(
                     "dhcp", "@dnsmasq[0]", "local", "/%s/" % dns_from_dhcp_domain.strip("/"))
+            if forwarder is not None:
+                backend.set_option("resolver", "common", "forward_custom", forwarder)
+
 
         # update wizard passed in foris web (best effort)
         try:

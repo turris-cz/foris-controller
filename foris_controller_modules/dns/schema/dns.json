@@ -1,4 +1,16 @@
 {
+    "definitions": {
+        "forwarder_name": {"type": "string"},
+        "forwarder": {
+            "type": "object",
+            "properties": {
+                "name": {"$ref": "#/definitions/forwarder_name"},
+                "description": {"type": "string"}
+            },
+            "required": ["name", "description"],
+            "additionalProperties": false
+        }
+    },
     "oneOf": [
         {
             "description": "request to get dns settings",
@@ -19,6 +31,12 @@
                     "type": "object",
                     "properties": {
                         "forwarding_enabled": { "type": "boolean" },
+                        "forwarder": {"$ref": "#/definitions/forwarder_name"},
+                        "available_forwarders": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/forwarder"},
+                            "minItems": 1
+                        },
                         "dnssec_enabled": { "type": "boolean" },
                         "dns_from_dhcp_enabled": { "type": "boolean" },
                         "dns_from_dhcp_domain": { "type": "string" }
@@ -37,15 +55,34 @@
                 "kind": {"enum": ["request"]},
                 "action": {"enum": ["update_settings"]},
                 "data": {
-                    "type": "object",
-                    "properties": {
-                        "forwarding_enabled": { "type": "boolean" },
-                        "dnssec_enabled": { "type": "boolean" },
-                        "dns_from_dhcp_enabled": { "type": "boolean" },
-                        "dns_from_dhcp_domain": { "type": "string" }
-                    },
-                    "additionalProperties": false,
-                    "required": ["forwarding_enabled", "dnssec_enabled", "dns_from_dhcp_enabled"]
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "forwarding_enabled": { "enum": [false]},
+                                "dnssec_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_domain": { "type": "string" }
+                            },
+                            "additionalProperties": false,
+                            "required": ["forwarding_enabled", "dnssec_enabled", "dns_from_dhcp_enabled"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "forwarding_enabled": { "enum": [true]},
+                                "forwarder": {"$ref": "#/definitions/forwarder_name"},
+                                "dnssec_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_domain": { "type": "string" }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "forwarding_enabled", "forwarder", "dnssec_enabled",
+                                "dns_from_dhcp_enabled"
+                            ]
+                        }
+                    ]
                 }
             },
             "additionalProperties": false
@@ -75,15 +112,34 @@
                 "kind": {"enum": ["notification"]},
                 "action": {"enum": ["update_settings"]},
                 "data": {
-                    "type": "object",
-                    "properties": {
-                        "forwarding_enabled": { "type": "boolean" },
-                        "dnssec_enabled": { "type": "boolean" },
-                        "dns_from_dhcp_enabled": { "type": "boolean" },
-                        "dns_from_dhcp_domain": { "type": "string" }
-                    },
-                    "additionalProperties": false,
-                    "required": ["forwarding_enabled", "dnssec_enabled", "dns_from_dhcp_enabled"]
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "forwarding_enabled": { "enum": [false]},
+                                "dnssec_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_domain": { "type": "string" }
+                            },
+                            "additionalProperties": false,
+                            "required": ["forwarding_enabled", "dnssec_enabled", "dns_from_dhcp_enabled"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "forwarding_enabled": { "enum": [true]},
+                                "forwarder": {"$ref": "#/definitions/forwarder_name"},
+                                "dnssec_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_enabled": { "type": "boolean" },
+                                "dns_from_dhcp_domain": { "type": "string" }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "forwarding_enabled", "forwarder", "dnssec_enabled",
+                                "dns_from_dhcp_enabled"
+                            ]
+                        }
+                    ]
                 }
             },
             "additionalProperties": false
