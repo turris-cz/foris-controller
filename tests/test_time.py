@@ -239,7 +239,7 @@ def test_openwrt_complex(
         }
     })
     assert res["data"]["result"] is True
-    check_service_result("sysntpd", True, "restart")
+    check_service_result("sysntpd", "restart", True)
 
     uci = get_uci_module(lock_backend)
     with uci.UciBackend() as backend:
@@ -267,7 +267,7 @@ def test_openwrt_complex(
         }
     })
     assert res["data"]["result"] is True
-    check_service_result("sysntpd", True, "stop")
+    check_service_result("sysntpd", "stop", True)
 
     uci = get_uci_module(lock_backend)
     with uci.UciBackend() as backend:

@@ -183,9 +183,9 @@ def test_update_settings_openwrt(
         infrastructure.get_notifications(notifications, filters=filters)  # needed just for waiting
         assert network_restart_was_called([])
         if data["enabled"] and data["qos"]["enabled"]:
-            check_service_result("sqm", True, "enable")
+            check_service_result("sqm", "enable", True)
         else:
-            check_service_result("sqm", True, "disable")
+            check_service_result("sqm", "disable", True)
 
     # test guest network
     update({

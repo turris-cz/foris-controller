@@ -213,4 +213,4 @@ def test_update_settings_service_restart(
             "dns_from_dhcp_enabled": False,
         }
     })
-    check_service_result("resolver", True, "restart")
+    check_service_result("resolver", "restart", True)

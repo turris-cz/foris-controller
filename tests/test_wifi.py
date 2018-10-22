@@ -25,7 +25,7 @@ from foris_controller_testtools.fixtures import (
     file_root_init, init_script_result, network_restart_command
 )
 from foris_controller_testtools.utils import (
-    match_subdict, check_service_result, get_uci_module, network_restart_was_called
+    match_subdict, get_uci_module, network_restart_was_called
 )
 
 

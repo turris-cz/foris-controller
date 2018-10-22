@@ -46,12 +46,18 @@ def test_service(action, custom_cmdline_root, init_script_result, service_class)
 
     with service_class() as services:
         getattr(services, action)("pass")
-        check_service_result("pass", True, action)
+        check_service_result("pass", action, clean=False)
+        check_service_result("pass", action, True)
+        check_service_result("pass", action, expected_found=False)
         with pytest.raises(ServiceCmdFailed):
             getattr(services, action)("fail")
-        check_service_result("fail", False, action)
+        check_service_result("fail", action, clean=False)
+        check_service_result("fail", action, False)
+        check_service_result("fail", action, expected_found=False)
         getattr(services, action)("fail", fail_on_error=False)
-        check_service_result("fail", False, action)
+        check_service_result("fail", action, clean=False)
+        check_service_result("fail", action, False)
+        check_service_result("fail", action, expected_found=False)
         with pytest.raises(ServiceCmdFailed):
             getattr(services, action)("non-existing")
         getattr(services, action)("non-existing", fail_on_error=False)

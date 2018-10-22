@@ -25,7 +25,7 @@ from foris_controller_testtools.fixtures import (
     network_restart_command, device, turris_os_version, FILE_ROOT_PATH, file_root_init
 )
 from foris_controller_testtools.utils import (
-    match_subdict, get_uci_module, check_service_result, FileFaker, prepare_turrishw
+    match_subdict, get_uci_module, FileFaker, prepare_turrishw
 )
 
 WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
