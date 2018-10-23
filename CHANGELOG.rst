@@ -1,3 +1,11 @@
+0.10.9 (2018-10-23)
+-------------------
+
+* dns: forwarders settings added
+* small test updates
+* about: firewall/ucollect sending info moved to foris-data_collect-module
+* data_collect: module moved to a separate module (foris-data_collect-module)
+
 0.10.8 (2018-10-16)
 -------------------
 
