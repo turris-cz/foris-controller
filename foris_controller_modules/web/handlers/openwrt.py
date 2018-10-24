@@ -63,7 +63,7 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         """
         return self.langs.list_languages()
 
-    def update_guide(self, enabled, workflow):
+    def update_guide(self, enabled, workflow=None):
         """ Updates guide settings
         :param enabled: is guide mode enabled
         :type enabled: bool

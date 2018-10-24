@@ -26,17 +26,26 @@ from foris_controller_testtools.fixtures import (
     init_script_result, FILE_ROOT_PATH, network_restart_command, lock_backend,
     device, turris_os_version,
 )
-from foris_controller_testtools.utils import FileFaker, get_uci_module, prepare_turrishw_root, prepare_turrishw
+from foris_controller_testtools.utils import (
+    FileFaker, get_uci_module, prepare_turrishw_root, prepare_turrishw
+)
 from foris_controller import profiles
 from foris_controller.exceptions import UciRecordNotFound
 
 
-NEW_WORKFLOWS = [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
+NEW_WORKFLOWS = [
+    e for e in profiles.WORKFLOWS if e not in profiles.WORKFLOW_OLD
+]
+
+START_WORKFLOWS = [profiles.WORKFLOW_OLD, profiles.WORKFLOW_UNSET]
+FINISH_WORKFLOWS = [e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_UNSET)]
 
 EXPECTED_WORKFLOWS = {
-    ("mox", "4.0"): NEW_WORKFLOWS,
+    ("mox", "4.0"): list(set(NEW_WORKFLOWS).intersection(set(FINISH_WORKFLOWS))),
     ("mox", "3.10.7"): [],
-    ("omnia", "4.0"): [profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER, profiles.WORKFLOW_BRIDGE],
+    ("omnia", "4.0"): [
+        profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER, profiles.WORKFLOW_BRIDGE
+    ],
     ("omnia", "3.10.7"): [profiles.WORKFLOW_OLD],
     ("turris", "4.0"): [profiles.WORKFLOW_OLD],
     ("turris", "3.10.7"): [profiles.WORKFLOW_OLD],
@@ -372,14 +381,14 @@ def test_reset_guide(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is True
-    assert res["data"]["guide"]["workflow"] in [profiles.WORKFLOW_MIN, profiles.WORKFLOW_OLD]
+    assert res["data"]["guide"]["workflow"] in [profiles.WORKFLOW_UNSET, profiles.WORKFLOW_OLD]
     assert res["data"]["guide"]["passed"] == []
 
     res = infrastructure.process_message({
         "module": "web",
         "action": "update_guide",
         "kind": "request",
-        "data": {"enabled": False, "workflow": profiles.WORKFLOW_ROUTER},
+        "data": {"enabled": False},
     })
     assert res["data"]["result"] is True
 
@@ -389,8 +398,7 @@ def test_reset_guide(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is False
-    assert res["data"]["guide"]["workflow"] == profiles.WORKFLOW_ROUTER
-    assert res["data"]["guide"]["passed"] == ['profile']
+    assert res["data"]["guide"]["passed"] == ['finished']
 
     res = infrastructure.process_message({
         "module": "web",
@@ -405,7 +413,7 @@ def test_reset_guide(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is True
-    assert res["data"]["guide"]["workflow"] in [profiles.WORKFLOW_MIN, profiles.WORKFLOW_OLD]
+    assert res["data"]["guide"]["workflow"] in [profiles.WORKFLOW_UNSET, profiles.WORKFLOW_OLD]
     assert res["data"]["guide"]["passed"] == []
 
 
@@ -442,7 +450,7 @@ def test_reset_guide_openwrt(
         data = backend.read()
 
     assert uci.get_option_named(data, "foris", "wizard", "workflow") in [
-        profiles.WORKFLOW_MIN, profiles.WORKFLOW_OLD
+        profiles.WORKFLOW_UNSET, profiles.WORKFLOW_OLD
     ]
     assert not uci.parse_bool(
         uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False)))
@@ -454,7 +462,8 @@ def test_reset_guide_openwrt(
     })
     assert res["data"]["guide"]["enabled"] is True
     allowed_workflows = EXPECTED_WORKFLOWS[device, turris_os_version]
-    assert (res["data"]["guide"]["workflow"] in allowed_workflows) or not allowed_workflows
+    possible_workflows = allowed_workflows + [profiles.WORKFLOW_UNSET]
+    assert (res["data"]["guide"]["workflow"] in possible_workflows) or not allowed_workflows
     assert res["data"]["guide"]["passed"] == []
 
     res = infrastructure.process_message({
@@ -463,10 +472,9 @@ def test_reset_guide_openwrt(
         "kind": "request",
         "data": {
             "enabled": False,
-            "workflow": allowed_workflows[0] if allowed_workflows else profiles.WORKFLOW_OLD
         },
     })
-    assert res["data"]["result"] is bool(allowed_workflows)
+    assert res["data"]["result"]
 
     if allowed_workflows:
         res = infrastructure.process_message({
@@ -475,8 +483,7 @@ def test_reset_guide_openwrt(
             "kind": "request",
         })
         assert res["data"]["guide"]["enabled"] is False
-        assert (res["data"]["guide"]["workflow"] in allowed_workflows) or not allowed_workflows
-        assert res["data"]["guide"]["passed"] == ['profile']
+        assert res["data"]["guide"]["passed"] == ['finished']
         assert res["data"]["device"] == device
         assert res["data"]["turris_os_version"] == turris_os_version
 
@@ -491,7 +498,7 @@ def test_reset_guide_openwrt(
         data = backend.read()
 
     assert uci.get_option_named(data, "foris", "wizard", "workflow") in [
-        profiles.WORKFLOW_MIN, profiles.WORKFLOW_OLD
+        profiles.WORKFLOW_UNSET, profiles.WORKFLOW_OLD
     ]
     assert not uci.parse_bool(
         uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False)))
@@ -502,7 +509,7 @@ def test_reset_guide_openwrt(
         "kind": "request",
     })
     assert res["data"]["guide"]["enabled"] is True
-    assert (res["data"]["guide"]["workflow"] in allowed_workflows) or not allowed_workflows
+    assert (res["data"]["guide"]["workflow"] in possible_workflows) or not allowed_workflows
     assert res["data"]["guide"]["passed"] == []
 
 
@@ -517,7 +524,7 @@ def test_reset_guide_openwrt(
     "old_workflow,new_workflow", [
         (profiles.WORKFLOW_OLD, profiles.WORKFLOW_OLD),
     ] + [
-        (profiles.WORKFLOW_MIN, e) for e in NEW_WORKFLOWS
+        (profiles.WORKFLOW_UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))
     ]
 )
 def test_walk_through_guide(
@@ -541,7 +548,7 @@ def test_walk_through_guide(
     })
     assert old_workflow == res["data"]["guide"]["workflow"]
 
-    def get_passed(passed, workflow, enabled):
+    def check_passed(passed, workflow, enabled):
         res = infrastructure.process_message({
             "module": "web",
             "action": "get_data",
@@ -559,7 +566,7 @@ def test_walk_through_guide(
     def pass_step(msg, passed, target_workflow, enabled):
         res = infrastructure.process_message(msg)
         assert res["data"]["result"] is True
-        get_passed(passed, target_workflow, enabled)
+        check_passed(passed, target_workflow, enabled)
 
     def password_step(passed, target_workflow, enabled):
         # Update password
@@ -693,6 +700,16 @@ def test_walk_through_guide(
         }
         pass_step(msg, passed, target_workflow, enabled)
 
+    def finished_step(passed, target_workflow, enabled):
+        # Update guide
+        msg = {
+            "module": "web",
+            "action": "update_guide",
+            "kind": "request",
+            "data": {"enabled": False},
+        }
+        pass_step(msg, passed, target_workflow, enabled)
+
     MAP = {
         "password": password_step,
         "profile": profile_step,
@@ -702,16 +719,18 @@ def test_walk_through_guide(
         "dns": dns_step,
         "updater": updater_step,
         "lan": lan_step,
+        "finished": finished_step,
     }
 
     passed = []
 
-    get_passed(passed, old_workflow, True)
+    check_passed(passed, old_workflow, True)
     active_workflow = old_workflow
     for step in profiles.WORKFLOWS[old_workflow]:
+        last = set(profiles.WORKFLOWS[active_workflow]) != set(passed + [step])
         if step == profiles.STEP_PROFILE:
             active_workflow = new_workflow
-        last = set(profiles.WORKFLOWS[active_workflow]) != set(passed + [step])
+            break
         MAP[step](passed + [step], active_workflow, last)
         passed.append(step)
     for step in profiles.WORKFLOWS[active_workflow]:

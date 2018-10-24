@@ -30,10 +30,16 @@ from foris_controller import profiles
             profiles.STEP_TIME,
             profiles.STEP_DNS,
             profiles.STEP_UPDATER,
+            profiles.STEP_FINISHED,
+        ]),
+        (profiles.WORKFLOW_UNSET, [
+            profiles.STEP_PASSWORD,
+            profiles.STEP_PROFILE,
         ]),
         (profiles.WORKFLOW_MIN, [
             profiles.STEP_PASSWORD,
             profiles.STEP_PROFILE,
+            profiles.STEP_FINISHED,
         ]),
         (profiles.WORKFLOW_ROUTER, [
             profiles.STEP_PASSWORD,
@@ -43,9 +49,13 @@ from foris_controller import profiles
             profiles.STEP_TIME,
             profiles.STEP_DNS,
             profiles.STEP_UPDATER,
+            profiles.STEP_FINISHED,
         ]),
     ],
-    ids=[profiles.WORKFLOW_OLD, profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER],
+    ids=[
+        profiles.WORKFLOW_OLD, profiles.WORKFLOW_UNSET,
+        profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER
+    ],
 )
 def all_profiles(request):
     yield request.param[0], request.param[1][:]
@@ -64,9 +74,14 @@ def test_strait_workflow(all_profiles):
 
 @pytest.fixture(
     params=[
+        (profiles.WORKFLOW_UNSET, [
+            profiles.STEP_PASSWORD,
+            profiles.STEP_PROFILE,
+        ]),
         (profiles.WORKFLOW_MIN, [
             profiles.STEP_PASSWORD,
             profiles.STEP_PROFILE,
+            profiles.STEP_FINISHED,
         ]),
         (profiles.WORKFLOW_ROUTER, [
             profiles.STEP_PASSWORD,
@@ -76,9 +91,10 @@ def test_strait_workflow(all_profiles):
             profiles.STEP_TIME,
             profiles.STEP_DNS,
             profiles.STEP_UPDATER,
+            profiles.STEP_FINISHED,
         ]),
     ],
-    ids=[profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER],
+    ids=[profiles.WORKFLOW_UNSET, profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER],
 )
 def profile_changable(request):
     yield request.param[0], request.param[1][:]

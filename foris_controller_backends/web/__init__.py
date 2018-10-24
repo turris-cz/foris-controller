@@ -66,7 +66,7 @@ class WebUciCommands(object):
         else:
             if SystemInfoFiles().get_model() == "turris":
                 return profiles.WORKFLOW_OLD
-        return profiles.WORKFLOW_MIN
+        return profiles.WORKFLOW_UNSET
 
     @staticmethod
     def _detect_recommended_workflow():
@@ -89,7 +89,12 @@ class WebUciCommands(object):
                 return [profiles.WORKFLOW_OLD]
             else:
                 if len(turrishw.get_ifaces()) > 1:
-                    return [e for e in profiles.WORKFLOWS if e != profiles.WORKFLOW_OLD]
+                    return [
+                        e for e in profiles.WORKFLOWS if e not in (
+                            profiles.WORKFLOW_OLD,
+                            profiles.WORKFLOW_UNSET,
+                        )
+                    ]
                 else:
                     return [
                         profiles.WORKFLOW_MIN, profiles.WORKFLOW_BRIDGE,
@@ -120,15 +125,21 @@ class WebUciCommands(object):
             res["next_step"] = next_step
         return res
 
-    def update_guide(self, enabled, workflow):
-        if workflow not in WebUciCommands._detect_available_workflows():
-            return False
-        with UciBackend() as backend:
-            backend.add_section("foris", "config", "wizard")
-            backend.set_option("foris", "wizard", "finished", store_bool(not enabled))
-            backend.set_option("foris", "wizard", "workflow", workflow)
+    def update_guide(self, enabled, workflow=None):
+        if enabled:
+            if workflow not in WebUciCommands._detect_available_workflows():
+                return False
+            with UciBackend() as backend:
+                backend.add_section("foris", "config", "wizard")
+                backend.set_option("foris", "wizard", "finished", store_bool(False))
+                backend.set_option("foris", "wizard", "workflow", workflow)
 
-        WebUciCommands.update_passed("profile")
+            WebUciCommands.update_passed("profile")
+        else:
+            with UciBackend() as backend:
+                backend.add_section("foris", "config", "wizard")
+                backend.set_option("foris", "wizard", "finished", store_bool(True))
+            WebUciCommands.update_passed("finished")
 
         return True
 
@@ -151,7 +162,8 @@ class WebUciCommands(object):
                 passed += [step]
                 backend.add_section("foris", "config", "wizard")
                 backend.replace_list("foris", "wizard", "passed", passed)
-            workflow = get_option_named(data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
+            workflow = get_option_named(
+                data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
             if set(profiles.WORKFLOWS[workflow]).issubset(set(passed)):
                 backend.add_section("foris", "config", "wizard")
                 backend.set_option("foris", "wizard", "finished", store_bool(True))
@@ -159,7 +171,8 @@ class WebUciCommands(object):
     def get_guide(self):
         with UciBackend() as backend:
             data = backend.read("foris")
-        current_workflow = get_option_named(data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
+        current_workflow = get_option_named(
+            data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
         recommended_workflow = WebUciCommands._detect_recommended_workflow()
         available_workflows = WebUciCommands._detect_available_workflows()
         return {

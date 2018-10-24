@@ -18,6 +18,7 @@
 #
 
 
+WORKFLOW_UNSET = "unset"
 WORKFLOW_OLD = "old"
 WORKFLOW_ROUTER = "router"
 WORKFLOW_MIN = "min"
@@ -31,6 +32,7 @@ STEP_TIME = "time"
 STEP_DNS = "dns"
 STEP_UPDATER = "updater"
 STEP_LAN = "lan"
+STEP_FINISHED = "finished"
 
 
 WORKFLOWS = {
@@ -40,6 +42,7 @@ WORKFLOWS = {
         STEP_TIME,
         STEP_DNS,
         STEP_UPDATER,
+        STEP_FINISHED,
     ],
     WORKFLOW_ROUTER: [
         STEP_PASSWORD,
@@ -49,10 +52,12 @@ WORKFLOWS = {
         STEP_TIME,
         STEP_DNS,
         STEP_UPDATER,
+        STEP_FINISHED,
     ],
     WORKFLOW_MIN: [
         STEP_PASSWORD,
         STEP_PROFILE,
+        STEP_FINISHED,
     ],
     WORKFLOW_BRIDGE: [
         STEP_PASSWORD,
@@ -62,6 +67,11 @@ WORKFLOWS = {
         STEP_TIME,
         STEP_DNS,
         STEP_UPDATER,
+        STEP_FINISHED,
+    ],
+    WORKFLOW_UNSET: [
+        STEP_PASSWORD,
+        STEP_PROFILE,
     ],
 }
 
