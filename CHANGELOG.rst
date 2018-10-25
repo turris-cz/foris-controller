@@ -1,3 +1,10 @@
+0.10.10 (2018-10-25)
+-------------------
+
+* about: remove contract related calls
+* lan: get_settings more resilent
+* web: new workflow (unset) and step(finished) added
+
 0.10.9 (2018-10-23)
 -------------------
 
