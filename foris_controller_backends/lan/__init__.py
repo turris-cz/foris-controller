@@ -66,6 +66,8 @@ class LanUci(object):
     DEFAULT_DHCP_START = 100
     DEFAULT_DHCP_LIMIT = 150
     DEFAULT_LEASE_TIME = 12 * 60 * 60
+    DEFAULT_ROUTER_IP = "192.168.1.1"
+    DEFAULT_NETMASK = "255.255.255.0"
 
     @staticmethod
     def _normalize_lease(value):
@@ -89,8 +91,10 @@ class LanUci(object):
         mode = get_option_named(network_data, "network", "lan", "_turris_mode", "managed")
 
         mode_managed = {"dhcp": {}}
-        mode_managed["router_ip"] = get_option_named(network_data, "network", "lan", "ipaddr")
-        mode_managed["netmask"] = get_option_named(network_data, "network", "lan", "netmask")
+        mode_managed["router_ip"] = get_option_named(
+            network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP)
+        mode_managed["netmask"] = get_option_named(
+            network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK)
         mode_managed["dhcp"]["enabled"] = not parse_bool(
             get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0"))
         mode_managed["dhcp"]["start"] = int(get_option_named(
@@ -111,11 +115,14 @@ class LanUci(object):
         hostname = get_option_named(network_data, "network", "lan", "hostname", "")
         mode_unmanaged["lan_dhcp"] = {"hostname": hostname} if hostname else {}
         mode_unmanaged["lan_static"] = {
-            "ip": get_option_named(network_data, "network", "lan", "ipaddr"),
-            "netmask": get_option_named(network_data, "network", "lan", "netmask"),
+            "ip": get_option_named(
+                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP),
+            "netmask": get_option_named(
+                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK),
             "gateway": get_option_named(
                 network_data, "network", "lan", "gateway",
-                get_option_named(network_data, "network", "lan", "ipaddr"),
+                get_option_named(
+                    network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP),
             ),
         }
         dns = get_option_named(network_data, "network", "lan", "dns", [])
