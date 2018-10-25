@@ -70,22 +70,3 @@ class MockAboutHandler(Handler, BaseMockHandler):
         :rtype: dict
         """
         return {"registration_number": "%016X" % random.randrange(2 ** 16)}
-
-    @logger_wrapper(logger)
-    def update_contract_status(self):
-        """ Mock update contract script
-
-        :returns: Mocked result
-        :rtype: dict
-        """
-        return {"result": True}
-
-    @logger_wrapper(logger)
-    def get_contract_status(self):
-        """ Returns fake contract status
-
-        :returns: Mocked result
-        :rtype: dict
-        """
-        choices = ["valid", "not_valid", "unknown"]
-        return {"contract_status": random.choice(choices)}

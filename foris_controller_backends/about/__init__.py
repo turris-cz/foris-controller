@@ -61,14 +61,6 @@ class SystemInfoCmds(BaseCmdLine):
         return self._trigger_and_parse(("/bin/uname", "-r"), r'^([^\s]+)$', (1, ))
 
 
-class ServerUplinkCmds(BaseCmdLine):
-    @writelock(server_uplink_lock, logger)
-    def update_contract_status(self):
-        """ Updates contract status
-        """
-        self._run_command_in_background("/usr/share/server-uplink/contract_valid.sh")
-
-
 class SystemInfoFiles(BaseFile):
     OS_RELEASE_PATH = "/etc/turris-version"
     MODEL_PATH = "/tmp/sysinfo/model"
@@ -116,7 +108,6 @@ class SystemInfoFiles(BaseFile):
 
 class ServerUplinkFiles(BaseFile):
     REGNUM_PATH = "/usr/share/server-uplink/registration_code"
-    CONTRACT_PATH = "/usr/share/server-uplink/contract_valid"
 
     @readlock(server_uplink_lock, logger)
     def get_registration_number(self):
@@ -131,19 +122,4 @@ class ServerUplinkFiles(BaseFile):
             # failed to read file -> return False
             res = False
 
-        return res
-
-    @readlock(server_uplink_lock, logger)
-    def get_contract_status(self):
-        """ Returns contract status
-
-        :returns: contract status
-        :rtype: str
-        """
-        try:
-            res = self._read_and_parse(ServerUplinkFiles.CONTRACT_PATH, r'^(\w+)$', (1, ))
-            res = "not_valid" if res != "valid" else "valid"
-        except:
-            # failed to read file -> return None
-            res = "unknown"
         return res

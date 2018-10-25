@@ -23,7 +23,7 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.about import (
-    AtshaCmds, SystemInfoCmds, TemperatureCmds, ServerUplinkCmds,
+    AtshaCmds, SystemInfoCmds, TemperatureCmds,
     SystemInfoFiles, ServerUplinkFiles
 )
 
@@ -39,7 +39,6 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
     system_info_cmds = SystemInfoCmds()
     system_info_files = SystemInfoFiles()
     server_uplink_files = ServerUplinkFiles()
-    server_uplink_cmds = ServerUplinkCmds()
 
     @logger_wrapper(logger)
     def get_device_info(self):
@@ -83,22 +82,3 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
         :rtype: dict
         """
         return {"registration_number": self.server_uplink_files.get_registration_number()}
-
-    @logger_wrapper(logger)
-    def get_contract_status(self):
-        """ Obtains the contract status
-
-        :returns: result
-        :rtype: dict
-        """
-        return {"contract_status": self.server_uplink_files.get_contract_status()}
-
-    @logger_wrapper(logger)
-    def update_contract_status(self):
-        """ Calls a script which updates the contract status
-
-        :returns: result
-        :rtype: dict
-        """
-        self.server_uplink_cmds.update_contract_status()
-        return {"result": True}

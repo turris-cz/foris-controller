@@ -50,34 +50,12 @@ class AboutModule(BaseModule):
         """
         return self.handler.get_registration_number()
 
-    def action_update_contract_status(self, data):
-        """ Call a script which updates contract status
-
-        :param data: input data (supposed to be {})
-        :type data: dict
-        :returns: result if the program has started (doesn't wait for it to finish)
-        :rtype: dict
-        """
-        return self.handler.update_contract_status()
-
-    def action_get_contract_status(self, data):
-        """ Obtains a status of the contract
-
-        :param data: input data (supposed to be {})
-        :type data: dict
-        :returns: contract status
-        :rtype: dict
-        """
-        return self.handler.get_contract_status()
-
 
 @wrap_required_functions([
     'get_device_info',
     'get_serial',
     'get_temperature',
     'get_registration_number',
-    'get_contract_status',
-    'update_contract_status',
 ])
 class Handler(object):
     pass
