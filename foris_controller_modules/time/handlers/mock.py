@@ -38,6 +38,17 @@ class MockTimeHandler(Handler, BaseMockHandler):
     how_to_set_time = "ntp"
     time = datetime.now()
     ntpdate_id_set = set()
+    ntp_servers = [
+        '217.31.202.100',
+        '195.113.144.201',
+        '195.113.144.238',
+        '2001:1488:ffff::100',
+        'ntp.nic.cz',
+        '0.openwrt.pool.ntp.org',
+        '1.openwrt.pool.ntp.org',
+        '2.openwrt.pool.ntp.org',
+        '3.openwrt.pool.ntp.org',
+    ]
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -51,6 +62,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
             "city": self.city,
             "time_settings": {
                 "how_to_set_time": self.how_to_set_time,
+                "ntp_servers": self.ntp_servers,
             },
             "timezone": self.timezone,
         }

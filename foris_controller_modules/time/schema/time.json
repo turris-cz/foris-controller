@@ -5,9 +5,19 @@
             "type": "object",
             "properties": {
                 "how_to_set_time": {"$ref": "#/definitions/how_to_set_time"},
-                "time": {"type": "string", "format": "date-time", "description": "local time"}
+                "time": {"type": "string", "format": "date-time", "description": "local time"},
+                "ntp_servers": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {"type": "string", "format": "hostname"},
+                            {"type": "string", "format": "ipv4"},
+                            {"type": "string", "format": "ipv6"}
+                        ]
+                    }
+                }
             },
-            "required": ["how_to_set_time", "time"],
+            "required": ["how_to_set_time", "time", "ntp_servers"],
             "additionalProperties": false
         },
         "time_set": {

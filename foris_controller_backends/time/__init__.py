@@ -72,12 +72,16 @@ class TimeUciCommands(object):
         except ValueError:
             region, city = "", ""
         ntp = parse_bool(get_option_named(system_data, "system", "ntp", "enabled", "1"))
+        ntp_servers = get_option_named(system_data, "system", "ntp", "server", [])
 
         return {
             "region": region,
             "city": city,
             "timezone": timezone,
-            "time_settings":  {"how_to_set_time": "ntp" if ntp else "manual"},
+            "time_settings":  {
+                "how_to_set_time": "ntp" if ntp else "manual",
+                "ntp_servers": ntp_servers,
+            },
         }
 
     def update_settings(self, region, city, timezone, how_to_set_time, time=None):

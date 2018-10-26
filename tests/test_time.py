@@ -104,6 +104,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     assert "timezone" in res["data"].keys()
     assert "time_settings" in res["data"].keys()
     assert "how_to_set_time" in res["data"]["time_settings"].keys()
+    assert "ntp_servers" in res["data"]["time_settings"].keys()
     assert "time" in res["data"]["time_settings"].keys()
 
 
