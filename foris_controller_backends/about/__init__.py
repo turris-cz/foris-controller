@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,18 +37,6 @@ class AtshaCmds(BaseCmdLine):
         """
         return self._trigger_and_parse(
             ("/usr/bin/atsha204cmd", "serial-number"), r'^([0-9a-fA-F]{16})$', (1, ))
-
-
-class TemperatureCmds(BaseCmdLine):
-    @writelock(i2c_lock, logger)
-    def get_cpu_temperature(self):
-        """ Obtains temperature from the cpu
-
-        :returns: temperature of cpu
-        :rtype: int
-        """
-        return int(self._trigger_and_parse(
-            ("/usr/bin/thermometer", ), r'^CPU:\s+([0-9]+)$', (1, )))
 
 
 class SystemInfoCmds(BaseCmdLine):

@@ -22,15 +22,7 @@
                         "board_name": {"type": "string"},
                         "serial": {"type": "string"},
                         "os_version": {"$ref": "#/definitions/turris_os_version"},
-                        "kernel": {"type": "string"},
-                        "temperature": {
-                            "type": "object",
-                            "properties": {
-                                "CPU": {"type": "number"}
-                            },
-                            "additionalProperties": false,
-                            "required": ["CPU"]
-                        }
+                        "kernel": {"type": "string"}
                     },
                     "additionalProperties": false
                 }

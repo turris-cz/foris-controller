@@ -54,15 +54,6 @@ class MockAboutHandler(Handler, BaseMockHandler):
         return {"serial": "0000000B00009CD6"}
 
     @logger_wrapper(logger)
-    def get_temperature(self):
-        """ Returns fake temperature
-
-        :returns: Mocked result
-        :rtype: dict
-        """
-        return {"temperature": {"CPU": 73}}
-
-    @logger_wrapper(logger)
     def get_registration_number(self):
         """ Returns fake registration number
 

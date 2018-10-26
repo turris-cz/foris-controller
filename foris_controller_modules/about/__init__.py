@@ -37,7 +37,6 @@ class AboutModule(BaseModule):
         res = {}
         res.update(self.handler.get_device_info())
         res.update(self.handler.get_serial())
-        res.update(self.handler.get_temperature())
         return res
 
     def action_get_registration_number(self, data):
@@ -54,7 +53,6 @@ class AboutModule(BaseModule):
 @wrap_required_functions([
     'get_device_info',
     'get_serial',
-    'get_temperature',
     'get_registration_number',
 ])
 class Handler(object):
