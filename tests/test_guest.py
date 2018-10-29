@@ -784,3 +784,43 @@ def test_interface_count(
         ],
         3
     )
+
+
+def test_update_settings_dhcp_range(
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command
+):
+    def update(ip, netmask, start, limit, result):
+        res = infrastructure.process_message({
+            "module": "guest",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                u"enabled": True,
+                u"ip": ip,
+                u"netmask": netmask,
+                u"dhcp": {
+                    u"enabled": True,
+                    u"start": start,
+                    u"limit": limit,
+                    u"lease_time": 24 * 60 * 60 + 1,
+                },
+                u"qos": {u"enabled": False},
+            }
+        })
+        assert res == {
+            u'action': u'update_settings',
+            u'data': {u'result': result},
+            u'kind': u'reply',
+            u'module': u'guest'
+        }
+    # default
+    update("192.168.1.1", "255.255.255.0", 150, 100, True)
+    # last
+    update("192.168.1.1", "255.255.255.0", 150, 105, True)
+    # first wrong
+    update("192.168.1.1", "255.255.255.0", 150, 106, False)
+    # other range
+    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
+    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
+    # too high number
+    update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)

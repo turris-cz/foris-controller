@@ -968,3 +968,54 @@ def test_interface_count(
         ],
         3
     )
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_update_settings_dhcp_range(
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    device, turris_os_version,
+):
+
+    def update(ip, netmask, start, limit, result):
+        res = infrastructure.process_message({
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    u"router_ip": ip,
+                    u"netmask": netmask,
+                    u"dhcp": {
+                        u"enabled": True,
+                        u"start": start,
+                        u"limit": limit,
+                        u"lease_time":  24 * 60 * 60 + 1,
+                    },
+                }
+            }
+        })
+        assert res == {
+            u'action': u'update_settings',
+            u'data': {u'result': result},
+            u'kind': u'reply',
+            u'module': u'lan'
+        }
+
+    # default
+    update("192.168.1.1", "255.255.255.0", 150, 100, True)
+    # last
+    update("192.168.1.1", "255.255.255.0", 150, 105, True)
+    # first wrong
+    update("192.168.1.1", "255.255.255.0", 150, 106, False)
+    # other range
+    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
+    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
+    # too high number
+    update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)

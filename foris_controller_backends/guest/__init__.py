@@ -23,6 +23,7 @@ from foris_controller_backends.uci import (
     parse_bool, get_option_named, store_bool, UciBackend
 )
 from foris_controller.exceptions import UciRecordNotFound, UciException
+from foris_controller.utils import IPv4
 
 from foris_controller_backends.lan import LanUci, LanFiles
 from foris_controller_backends.maintain import MaintainCommands
@@ -265,6 +266,18 @@ class GuestUci(object):
         return GuestUci.get_guest_network_settings(network, firewall, dhcp, sqm, wireless)
 
     def update_settings(self, **new_settings):
+        # test new_settings
+        if new_settings["enabled"] and new_settings["dhcp"]["enabled"]:
+            ip_norm = IPv4.normalize_subnet(new_settings["ip"], new_settings["netmask"])
+            start, limit = new_settings["dhcp"]["start"], new_settings["dhcp"]["limit"]
+            last_ip_num = IPv4.str_to_num(ip_norm) + start + limit
+            if last_ip_num >= 2 ** 32:  # ip overflow
+                return False
+            last_ip_norm = IPv4.normalize_subnet(
+                IPv4.num_to_str(last_ip_num), new_settings["netmask"])
+            if last_ip_norm != ip_norm:
+                return False
+
         with UciBackend() as backend:
             from foris_controller_backends.wifi import WifiUci
             # disable guest wifi when guest network is not enabled
@@ -281,3 +294,4 @@ class GuestUci(object):
                 services.disable("sqm", fail_on_error=False)
 
         MaintainCommands().restart_network()
+        return True

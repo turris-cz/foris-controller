@@ -150,6 +150,21 @@ class LanUci(object):
         :param mode_unmanaged: {"lan_type": "none/dhcp/static", "lan_static": {}, ...}
         :type mode_unmanaged: dict
         """
+
+        # test new_settings
+        if mode_managed and mode_managed["dhcp"]["enabled"]:
+            netmask = mode_managed["netmask"]
+            ip = mode_managed["router_ip"]
+            ip_norm = IPv4.normalize_subnet(ip, netmask)
+            start = mode_managed["dhcp"]["start"]
+            limit = mode_managed["dhcp"]["limit"]
+            last_ip_num = IPv4.str_to_num(ip_norm) + start + limit
+            if last_ip_num >= 2 ** 32:  # ip overflow
+                return False
+            last_ip_norm = IPv4.normalize_subnet(IPv4.num_to_str(last_ip_num), netmask)
+            if last_ip_norm != ip_norm:
+                return False
+
         with UciBackend() as backend:
             backend.add_section("network", "interface", "lan")
             backend.set_option("network", "lan", "_turris_mode", mode)

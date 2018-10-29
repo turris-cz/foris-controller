@@ -20,7 +20,7 @@
 import logging
 
 from foris_controller.handler_base import BaseMockHandler
-from foris_controller.utils import logger_wrapper
+from foris_controller.utils import logger_wrapper, IPv4
 
 from .. import Handler
 
@@ -78,6 +78,18 @@ class MockGuestHandler(Handler, BaseMockHandler):
         :returns: True if update passes
         :rtype: bool
         """
+
+        if new_settings["enabled"] and new_settings["dhcp"]["enabled"]:
+            ip_norm = IPv4.normalize_subnet(new_settings["ip"], new_settings["netmask"])
+            start, limit = new_settings["dhcp"]["start"], new_settings["dhcp"]["limit"]
+            last_ip_num = IPv4.str_to_num(ip_norm) + start + limit
+            if last_ip_num >= 2 ** 32:  # ip overflow
+                return False
+            last_ip_norm = IPv4.normalize_subnet(
+                IPv4.num_to_str(last_ip_num), new_settings["netmask"])
+            if last_ip_norm != ip_norm:
+                return False
+
         MockGuestHandler.enabled = new_settings["enabled"]
         if MockGuestHandler.enabled:
             MockGuestHandler.router_ip = new_settings["ip"]

@@ -242,6 +242,7 @@ def get_validator_dirs(filter_modules, module_paths=[]):
     return schema_dirs, definition_dirs
 
 
+#  TODO can be removed after removing compatibility with python2
 class IPv4(object):
     @staticmethod
     def str_to_num(ip_str):

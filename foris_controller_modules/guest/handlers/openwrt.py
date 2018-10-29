@@ -50,5 +50,4 @@ class OpenwrtGuestHandler(Handler, BaseOpenwrtHandler):
         :return: True if update passes
         :rtype: boolean
         """
-        self.uci.update_settings(**new_settings)
-        return True
+        return self.uci.update_settings(**new_settings)
