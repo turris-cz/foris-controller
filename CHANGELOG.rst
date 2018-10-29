@@ -1,5 +1,11 @@
+0.10.11 (2018-10-29)
+--------------------
+
+* time: display list of ntp servers used in get_settings
+* about: remove temperature
+
 0.10.10 (2018-10-25)
--------------------
+--------------------
 
 * about: remove contract related calls
 * lan: get_settings more resilent
