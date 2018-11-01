@@ -126,6 +126,7 @@ class LanUci(object):
             ),
         }
         dns = get_option_named(network_data, "network", "lan", "dns", [])
+        dns = dns if isinstance(dns, (list, tuple)) else [dns]
         dns = reversed(dns)  # dns with higher priority should be added last
         mode_unmanaged["lan_static"].update(zip(("dns1", "dns2"), dns))
 

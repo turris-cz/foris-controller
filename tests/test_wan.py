@@ -1109,3 +1109,63 @@ def test_missing_wan6_openwrt(
 
     assert uci.get_option_named(data, "network", "wan6", "proto") == "dhcpv6"
     assert uci.get_option_named(data, "network", "wan6", "ifname") == "@wan"
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_get_settings_dns_option(
+    uci_configs_init, lock_backend, infrastructure, ubusd_test,
+    network_restart_command, device, turris_os_version,
+):
+    uci = get_uci_module(lock_backend)
+
+    res = infrastructure.process_message({
+        "module": "wan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            'wan_settings': {
+                'wan_type': 'static',
+                'wan_static': {
+                    "ip": "10.0.0.10",
+                    "netmask": "255.255.0.0",
+                    "gateway": "10.0.0.1",
+                    "dns1": "10.0.0.1",
+                    "dns2": "8.8.8.8",
+                }
+            },
+            'wan6_settings': {
+                'wan6_type': 'static',
+                'wan6_static': {
+                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
+                    "network": "2001:1488:fffe:6::/60",
+                    "gateway": "2001:1488:fffe:6::1",
+                    "dns1": "2001:1488:fffe:6::1",
+                    "dns2": "2001:4860:4860::8888",
+                },
+            },
+            'mac_settings': {'custom_mac_enabled': False},
+        },
+    })
+    assert res["data"]["result"]
+
+    with uci.UciBackend() as backend:
+        backend.del_option("network", "wan", "dns")
+        backend.set_option("network", "wan", "dns", "1.1.1.1")
+        backend.del_option("network", "wan6", "dns")
+        backend.set_option("network", "wan6", "dns", "2001:4860:4860::9999")
+
+    res = infrastructure.process_message({
+        "module": "wan",
+        "action": "get_settings",
+        "kind": "request",
+    })
+
+    assert res["data"]["wan_settings"]["wan_static"]["dns1"] == "1.1.1.1"
+    assert res["data"]["wan6_settings"]["wan6_static"]["dns1"] == "2001:4860:4860::9999"

@@ -1019,3 +1019,49 @@ def test_update_settings_dhcp_range(
     update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
     # too high number
     update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_get_settings_dns_option(
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    device, turris_os_version,
+):
+    uci = get_uci_module(lock_backend)
+
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "unmanaged",
+            "mode_unmanaged": {
+                u"lan_type": u"static",
+                u"lan_static": {
+                    u"ip": u"10.4.0.2",
+                    u"netmask": u"255.254.0.0",
+                    u"gateway": u"10.4.0.1",
+                    u"dns1": "2.2.2.2",
+                    u"dns2": "8.8.8.8",
+                },
+            }
+        }
+    })
+    assert res["data"]["result"]
+
+    with uci.UciBackend() as backend:
+        backend.del_option("network", "lan", "dns")
+        backend.set_option("network", "lan", "dns", "1.1.1.1")
+
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert res["data"]["mode_unmanaged"]["lan_static"]["dns1"] == "1.1.1.1"
