@@ -60,6 +60,10 @@ class WebUciCommands(object):
         return True
 
     @staticmethod
+    def _get_configurable_ifaces():
+        return [k for k, v in turrishw.get_ifaces().items() if v['type'] != 'wifi']
+
+    @staticmethod
     def _detect_basic_workflow():
         if int(SystemInfoFiles().get_os_version().split(".", 1)[0]) < 4:
             return profiles.WORKFLOW_OLD
@@ -74,7 +78,7 @@ class WebUciCommands(object):
             if SystemInfoFiles().get_model() == "turris":
                 return profiles.WORKFLOW_OLD
             else:
-                if len(turrishw.get_ifaces()) > 1:
+                if len(WebUciCommands._get_configurable_ifaces()) > 1:
                     return profiles.WORKFLOW_ROUTER
                 else:
                     return profiles.WORKFLOW_BRIDGE
@@ -88,7 +92,7 @@ class WebUciCommands(object):
             if model == "turris":
                 return [profiles.WORKFLOW_OLD]
             else:
-                if len(turrishw.get_ifaces()) > 1:
+                if len(WebUciCommands._get_configurable_ifaces()) > 1:
                     return [
                         e for e in profiles.WORKFLOWS if e not in (
                             profiles.WORKFLOW_OLD,

@@ -5,12 +5,14 @@
             "type": "object",
             "properties": {
                 "id": {"$ref": "#/definitions/interface_id"},
-                "kind": {"enum": ["eth", "usb", "3g", "4g"]},
-                "description": {"type": "string"},
+                "type": {"enum": ["eth", "wifi", "3g", "4g"]},
+                "bus": {"enum": ["eth", "pci", "usb"]},
+                "slot": {"type": "string"},
                 "state": {"enum": ["up", "down"]},
+                "module_id": {"type": "integer", "minimum": 0},
                 "link_speed": {"type": "integer", "minimum": 0}
             },
-            "required": ["id", "kind", "state", "description", "link_speed"],
+            "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed"],
             "additionalProperties": false
         },
         "firewall_settings": {

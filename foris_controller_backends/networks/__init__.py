@@ -45,12 +45,11 @@ class NetworksUci(object):
         return res
 
     @staticmethod
-    def detect_ports():
+    def detect_interfaces():
         res = []
         try:
             for k, v in turrishw.get_ifaces().items():
                 v["id"] = k
-                v["kind"] = "eth"  # TODO hw detect should return which bus is used
                 res.append(v)
         except Exception:
             res = []  # when turrishw get fail -> return empty dict
@@ -95,7 +94,7 @@ class NetworksUci(object):
         "rtype: dict
         """
 
-        ports = self.detect_ports()
+        ports = self.detect_interfaces()
         ports_map = {e["id"]: e for e in ports}
 
         with UciBackend() as backend:
@@ -145,7 +144,7 @@ class NetworksUci(object):
         lan_ifs = networks["lan"]
         guest_ifs = networks["guest"]
         none_ifs = networks["none"]
-        ports = self.detect_ports()
+        ports = self.detect_interfaces()
 
         # check valid ports
         if {e["id"] for e in ports} != {e for e in wan_ifs + lan_ifs + guest_ifs + none_ifs}:

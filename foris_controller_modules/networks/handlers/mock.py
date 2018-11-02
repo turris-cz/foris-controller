@@ -41,21 +41,48 @@ class MockNetworksHandler(Handler, BaseMockHandler):
     }
     DEFAULT_NETWORKS = {
         "wan": [
-            {"id": "eth2", "kind": "eth", "description": "WAN", "state": "up", "link_speed": 1000},
+            {
+                "id": "eth2", "type": "eth", "slot": "WAN", "state": "up", "link_speed": 1000,
+                "bus": "eth", "module_id": 0,
+            },
         ],
         "lan": [
-            {"id": "lan0", "kind": "eth", "description": "LAN0", "state": "down", "link_speed": 0},
-            {"id": "lan1", "kind": "eth", "description": "LAN1", "state": "down", "link_speed": 0},
-            {"id": "lan2", "kind": "eth", "description": "LAN2", "state": "up", "link_speed": 100},
-            {"id": "lan3", "kind": "eth", "description": "LAN3", "state": "down", "link_speed": 0},
-            {"id": "lan4", "kind": "eth", "description": "LAN4", "state": "down", "link_speed": 0},
+            {
+                "id": "lan0", "type": "eth", "slot": "LAN0", "state": "down", "link_speed": 0,
+                "bus": "eth", "module_id": 0,
+            },
+            {
+                "id": "lan1", "type": "eth", "slot": "LAN1", "state": "down", "link_speed": 0,
+                "bus": "eth", "module_id": 0,
+            },
+            {
+                "id": "lan2", "type": "eth", "slot": "LAN2", "state": "up", "link_speed": 100,
+                "bus": "eth", "module_id": 0,
+            },
+            {
+                "id": "lan3", "type": "eth", "slot": "LAN3", "state": "down", "link_speed": 0,
+                "bus": "eth", "module_id": 0,
+            },
+            {
+                "id": "lan4", "type": "eth", "slot": "LAN4", "state": "down", "link_speed": 0,
+                "bus": "eth", "module_id": 0,
+            },
         ],
         "guest": [
-            {"id": "eth3", "kind": "usb", "description": "USB-0", "state": "down", "link_speed": 0},
+            {
+                "id": "eth3", "type": "eth", "slot": "0", "state": "down", "link_speed": 0,
+                "bus": "usb", "module_id": 0,
+            },
         ],
         "none": [
-            {"id": "wwan0", "kind": "4g", "description": "MPCI1", "state": "down", "link_speed": 0},
-            {"id": "wwan1", "kind": "3g", "description": "MPCI1", "state": "down", "link_speed": 0},
+            {
+                "id": "wwan0", "type": "4g", "slot": "MPCI1", "state": "down", "link_speed": 0,
+                "bus": "pci", "module_id": 0,
+            },
+            {
+                "id": "wwan1", "type": "3g", "slot": "MPCI1", "state": "down", "link_speed": 0,
+                "bus": "pci", "module_id": 0,
+            },
         ],
     }
     networks = BaseMockHandler._manager.dict(dict(copy.deepcopy(DEFAULT_NETWORKS)))
