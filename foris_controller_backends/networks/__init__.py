@@ -47,9 +47,12 @@ class NetworksUci(object):
     @staticmethod
     def detect_interfaces():
         res = []
+        interfaces = turrishw.get_ifaces()
+        logger.debug("interfaces from turrishw: %s", interfaces)
         try:
-            for k, v in turrishw.get_ifaces().items():
+            for k, v in interfaces.items():
                 v["id"] = k
+                v["configurable"] = False if v["type"] == "wifi" else True
                 res.append(v)
         except Exception:
             res = []  # when turrishw get fail -> return empty dict
@@ -145,6 +148,7 @@ class NetworksUci(object):
         guest_ifs = networks["guest"]
         none_ifs = networks["none"]
         ports = self.detect_interfaces()
+        ports = [e for e in ports if e["configurable"]]
 
         # check valid ports
         if {e["id"] for e in ports} != {e for e in wan_ifs + lan_ifs + guest_ifs + none_ifs}:

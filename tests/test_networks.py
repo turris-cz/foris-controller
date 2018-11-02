@@ -79,6 +79,10 @@ def test_update_settings(
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
 
+    # filter non-configurable ports
+    non_configurable = [e["id"] for e in ports if not e["configurable"]]
+    ports = [e for e in ports if e["configurable"]]
+
     wan_port = ports.pop()["id"]
     ports = reversed(ports)
     lan_ports, guest_ports, none_ports = [], [], []
@@ -138,7 +142,7 @@ def test_update_settings(
     assert res["data"]["networks"]["wan"][0]["id"] == wan_port
     assert {e["id"] for e in res["data"]["networks"]["lan"]} == set(lan_ports)
     assert {e["id"] for e in res["data"]["networks"]["guest"]} == set(guest_ports)
-    assert {e["id"] for e in res["data"]["networks"]["none"]} == set(none_ports)
+    assert {e["id"] for e in res["data"]["networks"]["none"]} == set(none_ports + non_configurable)
     assert res["data"]["firewall"] == {
         "ssh_on_wan": True, "http_on_wan": False, "https_on_wan": True
     }
@@ -167,6 +171,10 @@ def test_update_settings_empty_wan(
     # get ports
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+
+    # filter non-configurable ports
+    non_configurable = [e["id"] for e in ports if not e["configurable"]]
+    ports = [e for e in ports if e["configurable"]]
 
     ports = reversed(ports)
     lan_ports, guest_ports, none_ports = [], [], []
@@ -226,7 +234,7 @@ def test_update_settings_empty_wan(
     assert res["data"]["networks"]["wan"] == []
     assert {e["id"] for e in res["data"]["networks"]["lan"]} == set(lan_ports)
     assert {e["id"] for e in res["data"]["networks"]["guest"]} == set(guest_ports)
-    assert {e["id"] for e in res["data"]["networks"]["none"]} == set(none_ports)
+    assert {e["id"] for e in res["data"]["networks"]["none"]} == set(none_ports + non_configurable)
     assert res["data"]["firewall"] == {
         "ssh_on_wan": False,
         "http_on_wan": True,
@@ -260,6 +268,9 @@ def test_update_settings_more_wans(
     # get ports
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+
+    # filter non-configurable ports
+    ports = [e for e in ports if e["configurable"]]
 
     assert len(list(ports)) > 2
 
@@ -328,6 +339,9 @@ def test_update_settings_missing_assign(
     # get ports
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+
+    # filter non-configurable ports
+    ports = [e for e in ports if e["configurable"]]
 
     assert len(list(ports)) > 1
     ports.pop()
@@ -398,6 +412,9 @@ def test_update_settings_unknown_assign(
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
 
+    # filter non-configurable ports
+    ports = [e for e in ports if e["configurable"]]
+
     assert len(list(ports)) > 0
 
     wan_ports = [ports.pop()["id"]]
@@ -412,6 +429,74 @@ def test_update_settings_unknown_assign(
             none_ports.append(port["id"])
 
     lan_ports.append("eth-0-9")
+
+    res = infrastructure.process_message({
+        "module": "networks",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "firewall": orig_firewall,
+            "networks": {
+                "wan": wan_ports,
+                "lan": lan_ports,
+                "guest": guest_ports,
+                "none": none_ports,
+            }
+        }
+    })
+    assert res["data"] == {"result": False}
+
+    res = infrastructure.process_message({
+        "module": "networks",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert res["data"]["networks"]["wan"] == orig_wan
+    assert res["data"]["networks"]["lan"] == orig_lan
+    assert res["data"]["networks"]["guest"] == orig_guest
+    assert res["data"]["networks"]["none"] == orig_none
+    assert res["data"]["firewall"] == orig_firewall
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("omnia", "4.0"),
+    ],
+    indirect=True
+)
+def test_update_settings_set_non_configurable(
+    uci_configs_init, infrastructure, ubusd_test, network_restart_command, device, turris_os_version
+):
+    if infrastructure.backend_name in ['openwrt']:
+        prepare_turrishw_root(device, turris_os_version)
+
+    res = infrastructure.process_message({
+        "module": "networks",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    orig_wan = res["data"]["networks"]["wan"]
+    orig_lan = res["data"]["networks"]["lan"]
+    orig_guest = res["data"]["networks"]["guest"]
+    orig_none = res["data"]["networks"]["none"]
+    orig_firewall = res["data"]["firewall"]
+    # get ports
+    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
+        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+
+    assert len(list(ports)) > 0
+
+    wan_ports = [ports.pop()["id"]]
+    ports = reversed(ports)
+    lan_ports, guest_ports, none_ports = [], [], []
+    for i, port in enumerate(ports):
+        if i % 3 == 0:
+            lan_ports.append(port["id"])
+        elif i % 3 == 1:
+            guest_ports.append(port["id"])
+        elif i % 3 == 2:
+            none_ports.append(port["id"])
 
     res = infrastructure.process_message({
         "module": "networks",
@@ -467,6 +552,9 @@ def test_update_settings_openwrt(
     # get ports
     ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
         + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+
+    # filter non-configurable ports
+    ports = [e for e in ports if e["configurable"]]
 
     wan_port = ports.pop()["id"]
     ports = reversed(ports)

@@ -516,7 +516,7 @@ def test_reset_guide_openwrt(
 @pytest.mark.parametrize(
     "device,turris_os_version",
     [
-        ("mox", "4.0"),
+        ("omnia", "4.0"),
     ],
     indirect=True
 )
@@ -597,6 +597,7 @@ def test_walk_through_guide(
         })
         ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
             + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+        ports = [e for e in ports if e["configurable"]]
         wan_port = ports.pop()["id"]
         lan_ports, guest_ports, none_ports = [], [], []
         for i, port in enumerate(ports):

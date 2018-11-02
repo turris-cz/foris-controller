@@ -10,9 +10,10 @@
                 "slot": {"type": "string"},
                 "state": {"enum": ["up", "down"]},
                 "module_id": {"type": "integer", "minimum": 0},
-                "link_speed": {"type": "integer", "minimum": 0}
+                "link_speed": {"type": "integer", "minimum": 0},
+                "configurable": {"type": "boolean"}
             },
-            "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed"],
+            "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable"],
             "additionalProperties": false
         },
         "firewall_settings": {
