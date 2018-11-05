@@ -985,3 +985,17 @@ def test_get_settings_and_reset(
     assert "devices" in res["data"].keys()
     # test initial situation (based on default omnia settings)
     assert res["data"]["devices"] == DEFAULT_CONFIG
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(['openwrt'])
+def test_get_settings_missing_wireless(
+    file_root_init, uci_configs_init, lock_backend, infrastructure, ubusd_test,
+):
+    os.unlink(os.path.join(uci_configs_init[0], "wireless"))
+    res = infrastructure.process_message({
+        "module": "wifi",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}

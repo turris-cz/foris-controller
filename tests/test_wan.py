@@ -1169,3 +1169,14 @@ def test_get_settings_dns_option(
 
     assert res["data"]["wan_settings"]["wan_static"]["dns1"] == "1.1.1.1"
     assert res["data"]["wan6_settings"]["wan6_static"]["dns1"] == "2001:4860:4860::9999"
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure, ubusd_test):
+    os.unlink(os.path.join(uci_configs_init[0], "wireless"))
+    res = infrastructure.process_message({
+        "module": "wan",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}

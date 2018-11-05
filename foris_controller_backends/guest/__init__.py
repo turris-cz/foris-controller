@@ -262,7 +262,10 @@ class GuestUci(object):
             network = backend.read("network")
             sqm = backend.read("sqm")
             dhcp = backend.read("dhcp")
-            wireless = backend.read("wireless")
+            try:
+                wireless = backend.read("wireless")
+            except UciException:
+                wireless = {}
         return GuestUci.get_guest_network_settings(network, firewall, dhcp, sqm, wireless)
 
     def update_settings(self, **new_settings):

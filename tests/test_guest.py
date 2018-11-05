@@ -824,3 +824,14 @@ def test_update_settings_dhcp_range(
     update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
     # too high number
     update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure, ubusd_test):
+    os.unlink(os.path.join(uci_configs_init[0], "wireless"))
+    res = infrastructure.process_message({
+        "module": "guest",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert set(res.keys()) == {"action", "kind", "data", "module"}

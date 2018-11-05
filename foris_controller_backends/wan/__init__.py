@@ -40,7 +40,10 @@ class WanUci(object):
 
         with UciBackend() as backend:
             network_data = backend.read("network")
-            wireless_data = backend.read("wireless")
+            try:
+                wireless_data = backend.read("wireless")
+            except UciException:
+                wireless_data = {}
 
         # WAN
         wan_settings = {}

@@ -86,7 +86,10 @@ class LanUci(object):
         with UciBackend() as backend:
             network_data = backend.read("network")
             dhcp_data = backend.read("dhcp")
-            wireless_data = backend.read("wireless")
+            try:
+                wireless_data = backend.read("wireless")
+            except UciException:
+                wireless_data = {}
 
         mode = get_option_named(network_data, "network", "lan", "_turris_mode", "managed")
 
