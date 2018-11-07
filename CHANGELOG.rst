@@ -1,3 +1,12 @@
+0.10.12 (2018-11-07)
+--------------------
+
+* lan+wan+guest: handle missing wireless config
+* networks: configurable and non-configurable interfaces
+* turrishw: api update
+* lan+wan: uci option fix when reading dns servers
+* lan+guest: check dhcp range
+
 0.10.11 (2018-10-29)
 --------------------
 
