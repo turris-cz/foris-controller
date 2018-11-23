@@ -9,39 +9,8 @@ stages:
   script:
     - source /tmp/test/bin/activate
 
-    - git clone https://gitlab.labs.nic.cz/turris/turrishw.git
-    - cd turrishw
-    - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)
-    - pip install .
-    - cd ..
+    - pip install .[testsuite]
 
-    - git clone https://gitlab.labs.nic.cz/turris/foris-schema.git
-    - cd foris-schema
-    - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)
-    - pip install .
-    - cd ..
-
-    - git clone https://gitlab.labs.nic.cz/turris/foris-controller.git
-    - cd foris-controller
-    - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)
-    - pip install .
-    - cd ..
-
-    - git clone https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git
-    - cd foris-controller-testtools
-    - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)
-    - pip install .
-    - cd ..
-
-    - pip install .
-
-    - git clone https://gitlab.labs.nic.cz/turris/foris-client.git
-    - cd foris-client
-    - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)
-    - pip install .
-    - cd ..
-
-    - rm -rf {foris-controller,foris-schema,foris-controller-testtools,foris-client}
     - python setup.py test
     - python setup.py test --addopts="--backend openwrt"
 

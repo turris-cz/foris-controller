@@ -25,8 +25,8 @@ setup(
     scripts=[],
     description=DESCRIPTION,
     long_description=open('README.rst').read(),
-    requires=[
-        'foris_controller',
+    install_requires=[
+        "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller.git",
     ],
     setup_requires=[
         'pytest-runner',
