@@ -1,8 +1,14 @@
+before_script:
+  - pip install virtualenv
+  - virtualenv -p "$(which python)" /tmp/test
+
 stages:
   - test
 
 .run_script: &run_script
   script:
+    - source /tmp/test/bin/activate
+
     - git clone https://gitlab.labs.nic.cz/turris/turrishw.git
     - cd turrishw
     - (git checkout refs/remotes/origin/${CI_COMMIT_REF_NAME} || true)

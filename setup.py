@@ -102,22 +102,27 @@ setup(
     license='COPYING',
     description=DESCRIPTION,
     long_description=open('README.rst').read(),
-    requires=[
-        'foris_schema',
-        'prctl',
-        'pbkdf2',
-        'svupdater',
-        'turrishw',
+    install_requires=[
+        "foris-schema @ git+https://gitlab.labs.nic.cz/turris/foris-schema.git",
+        "python-prctl",
+        "pbkdf2",
+        "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater.git#egg=svupdater&subdirectory=src/supervisor",
+        "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
+        "ubus @ git+https://gitlab.labs.nic.cz/turris/python-ubus.git",
     ],
     setup_requires=[
         'pytest-runner',
     ],
     tests_require=[
         'pytest',
-        'foris-controller-testtools',
+        'foris_controller_testtools',
     ],
     extras_require={
-        'client-socket': ["foris-client"],
+        'client-socket': ["foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git"],
+        'testsuite': [
+            "foris-controller-testtools @ git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git",
+            "foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git",
+        ]
     },
     entry_points={
         "console_scripts": [
