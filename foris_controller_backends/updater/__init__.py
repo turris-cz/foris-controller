@@ -18,17 +18,13 @@
 #
 
 import logging
-import svupdater
-import svupdater.approvals
-import svupdater.exceptions
-import svupdater.hook
-import svupdater.l10n
-import svupdater.lists
 
 from datetime import datetime
 
-from svupdater.exceptions import ExceptionUpdaterApproveInvalid
-
+from foris_controller.updater import (
+    svupdater, svupdater_approvals, svupdater_exceptions,
+    svupdater_hook, svupdater_l10n, svupdater_lists
+)
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, store_bool
 )
@@ -117,10 +113,10 @@ class UpdaterUci(object):
             backend.set_option("updater", "override", "disable", store_bool(not enabled))
 
         if user_lists is not None:
-            svupdater.lists.update_userlists(user_lists)
+            svupdater_lists.update_userlists(user_lists)
 
         if languages is not None:
-            svupdater.l10n.update_languages(languages)
+            svupdater_l10n.update_languages(languages)
 
         # update wizard passed in foris web (best effort)
         try:
@@ -132,7 +128,7 @@ class UpdaterUci(object):
         if enabled:
             try:
                 svupdater.run()
-            except svupdater.exceptions.ExceptionUpdaterDisabled:
+            except svupdater_exceptions.ExceptionUpdaterDisabled:
                 pass  # failed to run updater, but settings were updated
 
         return True
@@ -155,7 +151,7 @@ class Updater(object):
         :rtype: dict
         """
         logger.debug("Try to get current approval.")
-        approval = svupdater.approvals.current()
+        approval = svupdater_approvals.current()
         logger.debug("Approval obtained: %s", approval)
         if approval:
             approval["present"] = True
@@ -174,7 +170,7 @@ class Updater(object):
 
     def get_user_lists(self, lang):
         logger.debug("Getting user lists for '%s'", lang)
-        user_lists = svupdater.lists.userlists(lang)
+        user_lists = svupdater_lists.userlists(lang)
         logger.debug("Userlists obtained: %s", user_lists)
         return [
             {
@@ -186,7 +182,7 @@ class Updater(object):
 
     def get_languages(self):
         logger.debug("Getting languages")
-        languages = svupdater.l10n.languages()
+        languages = svupdater_l10n.languages()
         logger.debug("Languages obtained: %s", languages)
         return [{"code": k, "enabled": v} for k, v in languages.items()]
 
@@ -195,18 +191,18 @@ class Updater(object):
         """
         try:
             logger.debug("Resolving approval %s (->%s)", approval_id, solution)
-            svupdater.approvals.approve(approval_id) if solution == "grant" \
-                else svupdater.approvals.deny(approval_id)
+            svupdater_approvals.approve(approval_id) if solution == "grant" \
+                else svupdater_approvals.deny(approval_id)
             logger.debug("Approval resolved %s (->%s)", approval_id, solution)
 
             # Run updater after approval was granted
             if solution == "grant":
                 try:
                     self.run(False)
-                except svupdater.exceptions.ExceptionUpdaterDisabled:
+                except svupdater_exceptions.ExceptionUpdaterDisabled:
                     pass  # updater failed to run, but approval was resolved
 
-        except ExceptionUpdaterApproveInvalid:
+        except svupdater_exceptions.ExceptionUpdaterApproveInvalid:
             logger.warning("Failed to resolve approval %s (->%s)", approval_id, solution)
 
             return False
@@ -223,7 +219,7 @@ class Updater(object):
             hooks = ["/usr/bin/maintain-reboot-needed"] if set_reboot_indicator else []
             svupdater.run(hooklist=hooks)
             logger.debug("Updater triggered")
-        except svupdater.exceptions.ExceptionUpdaterDisabled:
+        except svupdater_exceptions.ExceptionUpdaterDisabled:
             return False
 
         return True

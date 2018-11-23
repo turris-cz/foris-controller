@@ -19,16 +19,12 @@
 
 import logging
 import os
-import svupdater
-import svupdater.exceptions
-import svupdater.hook
 
-from foris_controller_backends.uci import (
-    UciBackend, get_option_named
+from foris_controller.updater import (
+    svupdater, svupdater_exceptions, svupdater_hook
 )
 from foris_controller_backends.cmdline import BackendCommandFailed, BaseCmdLine
 
-from foris_controller.exceptions import UciRecordNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +57,7 @@ class MaintainCommands(BaseCmdLine):
         # start updater and prepare for reboot
         try:
             svupdater.run(hooklist=["/usr/bin/maintain-reboot-needed"])
-        except svupdater.exceptions.ExceptionUpdaterDisabled:
+        except svupdater_exceptions.ExceptionUpdaterDisabled:
             pass  # failed to start updater, but configuration was restored
 
         return True
