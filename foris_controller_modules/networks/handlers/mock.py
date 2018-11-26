@@ -76,11 +76,11 @@ class MockNetworksHandler(Handler, BaseMockHandler):
         ],
         "none": [
             {
-                "id": "wwan0", "type": "4g", "slot": "MPCI1", "state": "down", "link_speed": 0,
+                "id": "wwan0", "type": "wwan", "slot": "MPCI1", "state": "down", "link_speed": 0,
                 "bus": "pci", "module_id": 0, "configurable": True,
             },
             {
-                "id": "wwan1", "type": "3g", "slot": "MPCI2", "state": "down", "link_speed": 0,
+                "id": "wwan1", "type": "wwan", "slot": "MPCI2", "state": "down", "link_speed": 0,
                 "bus": "pci", "module_id": 0, "configurable": True,
             },
             {

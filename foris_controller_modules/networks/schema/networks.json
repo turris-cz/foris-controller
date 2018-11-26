@@ -5,8 +5,8 @@
             "type": "object",
             "properties": {
                 "id": {"$ref": "#/definitions/interface_id"},
-                "type": {"enum": ["eth", "wifi", "3g", "4g"]},
-                "bus": {"enum": ["eth", "pci", "usb"]},
+                "type": {"enum": ["eth", "wifi", "wwan"]},
+                "bus": {"enum": ["eth", "pci", "usb", "sdio", "sfp"]},
                 "slot": {"type": "string"},
                 "state": {"enum": ["up", "down"]},
                 "module_id": {"type": "integer", "minimum": 0},

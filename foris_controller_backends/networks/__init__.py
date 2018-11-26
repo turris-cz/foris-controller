@@ -44,19 +44,87 @@ class NetworksUci(object):
                 res.append(ports_map.pop(interface))
         return res
 
+    def _find_enabled_networks_by_ifname(self, wireless_data, ifname):
+        """
+        :returns: None if no valid iterface section found, or list of networks (can be empty)
+        """
+        iface_sections = [
+            section for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
+            if section["data"].get("ifname") == ifname and section["data"].get("device")
+        ]
+        if not iface_sections:
+            return None
+        # iterate over sections
+        networks = []
+        for iface_section in iface_sections:
+            # checke whether interface is enabled
+            if parse_bool(iface_section["data"].get("disabled", "0")):
+                continue
+            # check whether the device is enabled
+            device_name = iface_section["data"]["device"]
+            try:
+                if parse_bool(
+                    get_option_named(wireless_data, "wireless", device_name, "disabled", "0")
+                ):
+                    continue  # device section disabled
+            except UciRecordNotFound:
+                continue  # section not found
+
+            # finally add network
+            network = iface_section["data"].get("network")
+            if network:
+                networks.append(network)
+
+        return networks
+
+    def _find_enabled_networks_by_macaddr(self, wireless_data, macaddr, ifname):
+        """
+        :returns: None if no valid device section found, or list of networks (can be empty)
+        """
+        device_sections = [
+            section for section in get_sections_by_type(wireless_data, "wireless", "wifi-device")
+            if section["data"].get("macaddr") == macaddr
+        ]
+        if not device_sections:
+            return None
+        networks = []
+        for device_section in device_sections:
+            if parse_bool(device_section["data"].get("disabled", "0")):
+                continue
+            interface_sections = [
+                section for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
+                if section["data"].get("device") == device_section["name"] and
+                not parse_bool(section["data"].get("disabled", "0")) and
+                (section["data"].get("ifname") == ifname or section["data"].get("ifname") is None)
+            ]
+            for interface_section in interface_sections:
+                network = interface_section["data"].get("network", None)
+                if network:
+                    networks.append(network)
+
+        return networks
+
     @staticmethod
     def detect_interfaces():
         res = []
+        res_wireless = []
+
         interfaces = turrishw.get_ifaces()
         logger.debug("interfaces from turrishw: %s", interfaces)
         try:
             for k, v in interfaces.items():
                 v["id"] = k
                 v["configurable"] = False if v["type"] == "wifi" else True
-                res.append(v)
+                if v["type"] == "wifi":
+                    v["configurable"] = False
+                    res_wireless.append(v)
+                else:
+                    v["configurable"] = True
+                    del v["macaddr"]
+                    res.append(v)
         except Exception:
-            res = []  # when turrishw get fail -> return empty dict
-        return sorted(res, key=lambda x: x["id"])
+            res = [], []  # when turrishw get fail -> return empty dict
+        return sorted(res, key=lambda x: x["id"]), sorted(res_wireless, key=lambda x: x["id"]),
 
     @staticmethod
     def get_interface_count(network_data, wireless_data, network_name):
@@ -97,17 +165,45 @@ class NetworksUci(object):
         "rtype: dict
         """
 
-        ports = self.detect_interfaces()
-        ports_map = {e["id"]: e for e in ports}
+        ifaces, wifi_ifaces = self.detect_interfaces()
+        iface_map = {e["id"]: e for e in ifaces}
 
         with UciBackend() as backend:
             network_data = backend.read("network")
             firewall_data = backend.read("firewall")
+            try:
+                wireless_data = backend.read("wireless")
+            except UciException:
+                wireless_data = {}  # wireless config missing
 
-        wan_network = self._prepare_network(network_data, "wan", ports_map)
-        lan_network = self._prepare_network(network_data, "lan", ports_map)
-        guest_network = self._prepare_network(network_data, "guest_turris", ports_map)
-        none_network = [e for e in ports_map.values()]  # reduced in _prepare_network using pop()
+        wan_network = self._prepare_network(network_data, "wan", iface_map)
+        lan_network = self._prepare_network(network_data, "lan", iface_map)
+        guest_network = self._prepare_network(network_data, "guest_turris", iface_map)
+        none_network = [e for e in iface_map.values()]  # reduced in _prepare_network using pop()
+
+        for record in wifi_ifaces:
+            networks = self._find_enabled_networks_by_ifname(wireless_data, record["id"])
+            macaddr = record.pop("macaddr")
+            if networks is None:
+                networks = self._find_enabled_networks_by_macaddr(
+                    wireless_data, macaddr, record["id"]
+                )
+                print(networks)
+
+            if networks is None:
+                networks = []  # always set undefined
+
+            for network in networks:
+                if network == "lan":
+                    lan_network.append(record)
+                elif network == "guest_turris":
+                    guest_network.append(record)
+                elif network == "wan":
+                    wan_network.append(record)
+
+            if len(networks) == 0:
+                none_network.append(record)
+
         # parse firewall options
         ssh_on_wan = parse_bool(
             get_option_named(firewall_data, "firewall", "wan_ssh_turris_rule", "enabled", "0"))
@@ -147,7 +243,7 @@ class NetworksUci(object):
         lan_ifs = networks["lan"]
         guest_ifs = networks["guest"]
         none_ifs = networks["none"]
-        ports = self.detect_interfaces()
+        ports, _ = self.detect_interfaces()
         ports = [e for e in ports if e["configurable"]]
 
         # check valid ports

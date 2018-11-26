@@ -26,7 +26,7 @@ from foris_controller_testtools.fixtures import (
 
 from foris_controller_testtools.utils import (
     sh_was_called, get_uci_module, FileFaker, network_restart_was_called, TURRISHW_ROOT,
-    prepare_turrishw_root,
+    prepare_turrishw_root, prepare_turrishw
 )
 
 
@@ -693,3 +693,93 @@ def test_update_settings_openwrt_unsupported(
         }
     })
     assert res["data"] == {"result": False}
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_wifi_devices(
+    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test,
+    network_restart_command, device, turris_os_version
+):
+    prepare_turrishw("mox+ALL")
+    uci = get_uci_module(lock_backend)
+    import turrishw
+    interfaces = turrishw.get_ifaces()
+    macaddr = [e['macaddr'] for e in interfaces.values() if e['type'] == 'wifi']
+    assert len(macaddr) == 1
+    macaddr = macaddr[0]
+
+    with uci.UciBackend() as backend:
+        # override wireless
+        backend.import_data(
+            """\
+config wifi-device 'radio0'
+	option type 'mac80211'
+	option macaddr '00:00:00:00:00:00'
+	option disabled '1'
+	option channel 'auto'
+	option hwmode '11g'
+	option htmode 'NOHT'
+
+config wifi-iface 'default_radio0'
+	option device 'radio0'
+	option network 'lan'
+	option mode 'ap'
+	option hidden '0'
+	option encryption 'psk2+ccmp'
+	option wpa_group_rekey '86400'
+	option key 'testtest'
+	option disabled '0'
+	option ssid 'Turris'
+
+config wifi-iface 'guest_iface_0'
+	option device 'radio0'
+	option mode 'ap'
+	option ssid 'Turris-guest'
+	option network 'guest_turris'
+	option encryption 'psk2+ccmp'
+	option wpa_group_rekey '86400'
+	option key 'testtest'
+	option ifname 'guest_turris_0'
+	option isolate '1'
+	option disabled '0'""",
+            "wireless"
+        )
+        backend.set_option('wireless', 'radio0', 'macaddr', macaddr)
+
+    res = infrastructure.process_message({
+        "module": "networks",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 1
+    assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 0
+
+    with uci.UciBackend() as backend:
+        backend.set_option("wireless", "radio0", "disabled", uci.store_bool(False))
+
+    res = infrastructure.process_message({
+        "module": "networks",
+        "action": "get_settings",
+        "kind": "request",
+    })
+    assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 0
+    assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 1
+
+    with uci.UciBackend() as backend:
+        backend.set_option("wireless", "default_radio0", "disabled", uci.store_bool(True))
+
+    res = infrastructure.process_message({
+        "module": "networks",
+        "action": "get_settings",
+        "kind": "request",
+    })
+
+    assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 1
+    assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 0
