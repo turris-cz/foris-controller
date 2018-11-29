@@ -115,14 +115,11 @@ setup(
     ],
     tests_require=[
         'pytest',
-        'foris_controller_testtools',
+        'foris-controller-testtools',
+        'foris-client',
     ],
     extras_require={
         'client-socket': ["foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git"],
-        'testsuite': [
-            "foris-controller-testtools @ git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git",
-            "foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git",
-        ]
     },
     entry_points={
         "console_scripts": [
@@ -130,6 +127,10 @@ setup(
             "foris-notify = foris_controller.notify.__main__:main",
         ]
     },
+    dependency_links=[
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git#egg=foris-controller-testtools",
+        "git+https://gitlab.labs.nic.cz/turris/foris-client.git#egg=foris-client",
+    ],
     include_package_data=True,
     zip_safe=False,
 )

@@ -36,12 +36,10 @@ setup(
         'foris-controller-testtools',
         'foris-client',
     ],
-    extras_require={
-        'testsuite': [
-            "foris-controller-testtools @ git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git",
-            "foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git",
-        ]
-    },
+    dependency_links=[
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git#egg=foris-controller-testtools",
+        "git+https://gitlab.labs.nic.cz/turris/foris-client.git#egg=foris-client",
+    ],
     include_package_data=True,
     zip_safe=False,
 )
