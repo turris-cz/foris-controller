@@ -98,6 +98,10 @@ setup(
         'foris_controller_modules.web': ['schema', 'schema/*.json'],
         'foris_controller_modules.wifi': ['schema', 'schema/*.json'],
     },
+    namespace_packages=[
+        'foris_controller_modules',
+        'foris_controller_backends',
+    ],
     url='https://gitlab.labs.nic.cz/turris/foris-controller',
     license='COPYING',
     description=DESCRIPTION,
