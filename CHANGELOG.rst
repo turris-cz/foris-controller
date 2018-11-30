@@ -1,3 +1,9 @@
+0.10.13 (2018-11-30)
+--------------------
+
+* setup.py: cleanup + PEP508 updated
+* networks: wifi handling updated
+
 0.10.12 (2018-11-07)
 --------------------
 
