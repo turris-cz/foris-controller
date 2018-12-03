@@ -85,7 +85,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
             },
             {
                 "id": "wlan0", "type": "wifi", "slot": "MPCI0", "state": "down", "link_speed": 0,
-                "bus": "pci", "module_id": 0, "configurable": False,
+                "bus": "pci", "module_id": 0, "configurable": False, "ssid": "testing-ssid",
             },
         ],
     }

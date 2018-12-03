@@ -759,6 +759,7 @@ config wifi-iface 'guest_iface_0'
         "kind": "request",
     })
     assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 1
+    assert [e["ssid"] for e in res['data']['networks']['none'] if e['type'] == 'wifi'] == [""]
     assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 0
 
     with uci.UciBackend() as backend:
@@ -771,6 +772,7 @@ config wifi-iface 'guest_iface_0'
     })
     assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 0
     assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 1
+    assert [e["ssid"] for e in res['data']['networks']['lan'] if e['type'] == 'wifi'] == ["Turris"]
 
     with uci.UciBackend() as backend:
         backend.set_option("wireless", "default_radio0", "disabled", uci.store_bool(True))

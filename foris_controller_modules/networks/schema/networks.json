@@ -1,20 +1,55 @@
 {
     "definitions": {
         "interface_id": {"type": "string", "minLength": 1, "pattern": "^[0-9a-z_-]*"},
+        "interface_link_speed": {"type": "integer", "minimum": 0},
+        "interface_module_id": {"type": "integer", "minimum": 0},
+        "interface_bus": {"enum": ["eth", "pci", "usb", "sdio", "sfp"]},
+        "interface_type": {"enum": ["eth", "wwan", "wifi"]},
+        "interface_state": {"enum": ["up", "down"]},
         "interface_record": {
-            "type": "object",
-            "properties": {
-                "id": {"$ref": "#/definitions/interface_id"},
-                "type": {"enum": ["eth", "wifi", "wwan"]},
-                "bus": {"enum": ["eth", "pci", "usb", "sdio", "sfp"]},
-                "slot": {"type": "string"},
-                "state": {"enum": ["up", "down"]},
-                "module_id": {"type": "integer", "minimum": 0},
-                "link_speed": {"type": "integer", "minimum": 0},
-                "configurable": {"type": "boolean"}
-            },
-            "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable"],
-            "additionalProperties": false
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/interface_id"},
+                        "type": {
+                            "allOf": [
+                                {"$ref": "#/definitions/interface_type"},
+                                {"enum": ["eth", "wwan"]}
+                            ]
+                        },
+                        "bus": {"$ref": "#/definitions/interface_bus"},
+                        "slot": {"type": "string"},
+                        "state": {"$ref": "#/definitions/interface_state"},
+                        "module_id": {"$ref": "#/definitions/interface_module_id"},
+                        "link_speed": {"$ref": "#/definitions/interface_link_speed"},
+                        "configurable": {"type": "boolean"}
+                    },
+                    "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/interface_id"},
+                        "type": {
+                            "allOf": [
+                                {"$ref": "#/definitions/interface_type"},
+                                {"enum": ["wifi"]}
+                            ]
+                        },
+                        "bus": {"$ref": "#/definitions/interface_bus"},
+                        "slot": {"type": "string"},
+                        "state": {"$ref": "#/definitions/interface_state"},
+                        "module_id": {"$ref": "#/definitions/interface_module_id"},
+                        "link_speed": {"$ref": "#/definitions/interface_link_speed"},
+                        "configurable": {"type": "boolean"},
+                        "ssid": {"type": "string", "minLength": 0, "maxLength": 32}
+                    },
+                    "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "ssid"],
+                    "additionalProperties": false
+                }
+            ]
         },
         "firewall_settings": {
             "type": "object",

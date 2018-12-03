@@ -46,7 +46,7 @@ class NetworksUci(object):
 
     def _find_enabled_networks_by_ifname(self, wireless_data, ifname):
         """
-        :returns: None if no valid iterface section found, or list of networks (can be empty)
+        :returns: None if no valid iterface section found, or list of (network, ssid) (can be empty)
         """
         iface_sections = [
             section for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
@@ -55,7 +55,7 @@ class NetworksUci(object):
         if not iface_sections:
             return None
         # iterate over sections
-        networks = []
+        result = []
         for iface_section in iface_sections:
             # checke whether interface is enabled
             if parse_bool(iface_section["data"].get("disabled", "0")):
@@ -70,16 +70,16 @@ class NetworksUci(object):
             except UciRecordNotFound:
                 continue  # section not found
 
-            # finally add network
+            # finally add network and its ssid
             network = iface_section["data"].get("network")
             if network:
-                networks.append(network)
+                result.append((network, iface_section["data"].get("ssid", "")))
 
-        return networks
+        return result
 
     def _find_enabled_networks_by_macaddr(self, wireless_data, macaddr, ifname):
         """
-        :returns: None if no valid device section found, or list of networks (can be empty)
+        :returns: None if no valid device section found, or list of (network, ssid) (can be empty)
         """
         device_sections = [
             section for section in get_sections_by_type(wireless_data, "wireless", "wifi-device")
@@ -87,7 +87,7 @@ class NetworksUci(object):
         ]
         if not device_sections:
             return None
-        networks = []
+        result = []
         for device_section in device_sections:
             if parse_bool(device_section["data"].get("disabled", "0")):
                 continue
@@ -100,9 +100,9 @@ class NetworksUci(object):
             for interface_section in interface_sections:
                 network = interface_section["data"].get("network", None)
                 if network:
-                    networks.append(network)
+                    result.append((network, interface_section["data"].get("ssid", "")))
 
-        return networks
+        return result
 
     @staticmethod
     def detect_interfaces():
@@ -182,18 +182,18 @@ class NetworksUci(object):
         none_network = [e for e in iface_map.values()]  # reduced in _prepare_network using pop()
 
         for record in wifi_ifaces:
-            networks = self._find_enabled_networks_by_ifname(wireless_data, record["id"])
+            networks_and_ssids = self._find_enabled_networks_by_ifname(wireless_data, record["id"])
             macaddr = record.pop("macaddr")
-            if networks is None:
-                networks = self._find_enabled_networks_by_macaddr(
+            if networks_and_ssids is None:
+                networks_and_ssids = self._find_enabled_networks_by_macaddr(
                     wireless_data, macaddr, record["id"]
                 )
-                print(networks)
 
-            if networks is None:
-                networks = []  # always set undefined
+            # always set undefined
+            networks_and_ssids = [] if networks_and_ssids is None else networks_and_ssids
 
-            for network in networks:
+            for network, ssid in networks_and_ssids:
+                record["ssid"] = ssid
                 if network == "lan":
                     lan_network.append(record)
                 elif network == "guest_turris":
@@ -201,7 +201,8 @@ class NetworksUci(object):
                 elif network == "wan":
                     wan_network.append(record)
 
-            if len(networks) == 0:
+            if len(networks_and_ssids) == 0:
+                record["ssid"] = ""
                 none_network.append(record)
 
         # parse firewall options
