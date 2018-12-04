@@ -68,7 +68,9 @@ class MockGuestHandler(Handler, BaseMockHandler):
             "netmask": MockGuestHandler.netmask,
             "dhcp": MockGuestHandler.dhcp,
             "qos": MockGuestHandler.qos,
-            "interface_count": len(MockNetworksHandler.networks["guest"])
+            "interface_count": len(MockNetworksHandler.networks["guest"]),
+            "interface_up_count": len(
+                [e for e in MockNetworksHandler.networks["guest"] if e["state"] == "up"])
         }
         return result
 

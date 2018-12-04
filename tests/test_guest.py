@@ -76,7 +76,9 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert set(res["data"].keys()) == {"enabled", "ip", "netmask", "dhcp", "interface_count", "qos"}
+    assert set(res["data"].keys()) == {
+        "enabled", "ip", "netmask", "dhcp", "interface_count", "interface_up_count", "qos"
+    }
     assert set(res["data"]["qos"].keys()) == {"enabled", "upload", "download"}
     assert set(res["data"]["dhcp"].keys()) == {"enabled", "start", "limit", "lease_time", "clients"}
 
@@ -699,7 +701,7 @@ def test_interface_count(
         1
     )
 
-    # two wifis no iterface
+    # two wifis no interface
     set_and_test(
         {
             "wan": [],

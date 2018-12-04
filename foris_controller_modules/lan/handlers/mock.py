@@ -87,7 +87,9 @@ class MockLanHandler(Handler, BaseMockHandler):
             "mode": MockLanHandler.mode,
             "mode_managed": MockLanHandler.mode_managed,
             "mode_unmanaged": mode_unmanaged,
-            "interface_count": len(MockNetworksHandler.networks["lan"])
+            "interface_count": len(MockNetworksHandler.networks["lan"]),
+            "interface_up_count": len([
+                e for e in MockNetworksHandler.networks["lan"] if e["state"] == "up"])
         }
         return result
 

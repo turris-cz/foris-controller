@@ -118,7 +118,9 @@ class WanUci(object):
             "wan_settings": wan_settings,
             "wan6_settings": wan6_settings,
             "mac_settings": mac_settings,
-            "interface_count": NetworksUci.get_interface_count(network_data, wireless_data, "wan")
+            "interface_count": NetworksUci.get_interface_count(network_data, wireless_data, "wan"),
+            "interface_up_count": NetworksUci.get_interface_count(
+                network_data, wireless_data, "wan", True)
         }
 
     def update_settings(self, wan_settings, wan6_settings, mac_settings):

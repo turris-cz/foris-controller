@@ -127,7 +127,7 @@ class NetworksUci(object):
         return sorted(res, key=lambda x: x["id"]), sorted(res_wireless, key=lambda x: x["id"]),
 
     @staticmethod
-    def get_interface_count(network_data, wireless_data, network_name):
+    def get_interface_count(network_data, wireless_data, network_name, up_only=False):
         """ returns a count of iterfaces corresponding to the network
         """
         # convert guest name
@@ -151,7 +151,10 @@ class NetworksUci(object):
             pass
 
         try:
-            hw_interfaces = [e for e in turrishw.get_ifaces().keys()]
+            if up_only:
+                hw_interfaces = [k for k, v in turrishw.get_ifaces().items() if v["state"] == "up"]
+            else:
+                hw_interfaces = [e for e in turrishw.get_ifaces().keys()]
         except Exception:
             hw_interfaces = []
         config_interfaces = get_option_named(network_data, "network", network_name, "ifname", [])

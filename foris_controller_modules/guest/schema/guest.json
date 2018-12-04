@@ -56,7 +56,8 @@
                 "netmask": { "format": "ipv4netmask", "type": "string" },
                 "dhcp": {"$ref": "#/definitions/dhcp_settings_get"},
                 "qos": {"$ref": "#/definitions/qos_get"},
-                "interface_count": {"type": "integer", "minimum": 0}
+                "interface_count": {"type": "integer", "minimum": 0},
+                "interface_up_count": {"type": "integer", "minimum": 0}
             },
             "required": ["enabled", "ip", "netmask", "dhcp", "interface_count"],
             "additionalProperties": false

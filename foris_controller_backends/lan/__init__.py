@@ -142,6 +142,9 @@ class LanUci(object):
             "interface_count": NetworksUci.get_interface_count(
                 network_data, wireless_data, "lan"
             ),
+            "interface_up_count": NetworksUci.get_interface_count(
+                network_data, wireless_data, "lan", True
+            ),
         }
 
     def update_settings(self, mode, mode_managed=None, mode_unmanaged=None):

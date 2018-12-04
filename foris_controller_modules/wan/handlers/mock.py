@@ -124,7 +124,9 @@ class MockWanHandler(Handler, BaseMockHandler):
             "wan_settings": {"wan_type": self.wan_type},
             "wan6_settings": {"wan6_type": self.wan6_type},
             "mac_settings": {"custom_mac_enabled": self.custom_mac_enabled},
-            "interface_count": len(MockNetworksHandler.networks["wan"])
+            "interface_count": len(MockNetworksHandler.networks["wan"]),
+            "interface_up_count": len(
+                [e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"])
         }
         if self.wan_type == "dhcp":
             if self.wan_dhcp["hostname"]:

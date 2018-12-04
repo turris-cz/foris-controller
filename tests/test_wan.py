@@ -40,7 +40,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
-        "wan_settings", "wan6_settings", "mac_settings", "interface_count"
+        "wan_settings", "wan6_settings", "mac_settings", "interface_count", "interface_up_count",
     }
 
 

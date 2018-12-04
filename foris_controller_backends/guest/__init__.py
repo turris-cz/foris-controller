@@ -94,6 +94,9 @@ class GuestUci(object):
         guest["interface_count"] = NetworksUci.get_interface_count(
             network_data, wireless_data, "guest"
         )
+        guest["interface_up_count"] = NetworksUci.get_interface_count(
+            network_data, wireless_data, "guest", True
+        )
 
         return guest
 
