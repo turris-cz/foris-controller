@@ -223,6 +223,26 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "notification the a network change its state",
+            "properties": {
+                "module": {"enum": ["networks"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["network_change"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "device": {"type": "string", "minLength": 0},
+                        "network": {"type": "string", "minLength": 1},
+                        "action": {"enum": ["ifup", "ifdown", "ifupdate"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["device", "network", "action"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

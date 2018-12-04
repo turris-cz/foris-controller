@@ -22,6 +22,7 @@ import pytest
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
     init_script_result, network_restart_command, device, turris_os_version,
+    notify_api,
 )
 
 from foris_controller_testtools.utils import (
@@ -785,3 +786,24 @@ config wifi-iface 'guest_iface_0'
 
     assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 1
     assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 0
+
+
+def test_network_change_notification(uci_configs_init, infrastructure, ubusd_test, notify_api):
+    filters = [("networks", "network_change")]
+
+    def check_notification(dev, network, action):
+        notifications = infrastructure.get_notifications(filters=filters)
+        notify_api(
+            "networks", "network_change",
+            {"device": dev, "network": network, "action": action},
+            True
+        )
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1] == {
+            "module": "networks", "action": "network_change", "kind": "notification",
+            "data": {"device": dev, "network": network, "action": action}
+        }
+
+    check_notification("eth0", "lan", "ifup")
+    check_notification("", "wan", "ifdown")
+    check_notification("guest_turris", "wan", "ifupdate")
