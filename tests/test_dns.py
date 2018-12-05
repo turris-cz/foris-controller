@@ -73,7 +73,10 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     ],
     indirect=True
 )
-def test_update_settings(uci_configs_init, infrastructure, ubusd_test, device, turris_os_version):
+def test_update_settings(
+    uci_configs_init, infrastructure, ubusd_test, device, turris_os_version,
+    init_script_result
+):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
@@ -141,7 +144,10 @@ def test_update_settings(uci_configs_init, infrastructure, ubusd_test, device, t
     ],
     indirect=True
 )
-def test_update_and_get_settings(uci_configs_init, infrastructure, ubusd_test, device, turris_os_version):
+def test_update_and_get_settings(
+    uci_configs_init, infrastructure, ubusd_test, device, turris_os_version,
+    init_script_result,
+):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
