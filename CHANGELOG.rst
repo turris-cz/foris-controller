@@ -1,3 +1,11 @@
+0.10.14 (2018-12-05)
+--------------------
+
+* lan,wan,guest: interface_up_count attribute added
+* networks: network_change notification added
+* networks: display SSIDs
+
+
 0.10.13 (2018-11-30)
 --------------------
 
