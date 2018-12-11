@@ -9,7 +9,7 @@ stages:
   script:
     - source /tmp/test/bin/activate
 
-    - pip install .[testsuite]
+    - pip install .
 
     - python setup.py test
     - python setup.py test --addopts="--backend openwrt"
