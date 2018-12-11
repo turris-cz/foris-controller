@@ -58,7 +58,7 @@ class WanUci(object):
                 "gateway": get_option_named(network_data, "network", "wan", "gateway"),
             }
             dns = get_option_named(network_data, "network", "wan", "dns", [])
-            dns = dns if isinstance(dns, (list, tuple)) else [dns]
+            dns = dns if isinstance(dns, (list, tuple)) else [e for e in dns.split(" ") if e]
             dns = reversed(dns)  # dns with higher priority should be added last
             wan_settings["wan_static"].update(zip(("dns1", "dns2"), dns))
         elif wan_settings["wan_type"] == "pppoe":
@@ -78,7 +78,7 @@ class WanUci(object):
                 "gateway": get_option_named(network_data, "network", "wan6", "ip6gw"),
             }
             dns = get_option_named(network_data, "network", "wan6", "dns", [])
-            dns = dns if isinstance(dns, (list, tuple)) else [dns]
+            dns = dns if isinstance(dns, (list, tuple)) else [e for e in dns.split(" ") if e]
             dns = reversed(dns)  # dns with higher priority should be last
             wan6_settings["wan6_static"].update(zip(("dns1", "dns2"), dns))
         elif wan6_settings["wan6_type"] == "dhcpv6":

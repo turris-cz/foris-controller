@@ -1057,14 +1057,15 @@ def test_get_settings_dns_option(
 
     with uci.UciBackend() as backend:
         backend.del_option("network", "lan", "dns")
-        backend.set_option("network", "lan", "dns", "1.1.1.1")
+        backend.set_option("network", "lan", "dns", "1.1.1.1 8.8.8.8")
 
     res = infrastructure.process_message({
         "module": "lan",
         "action": "get_settings",
         "kind": "request",
     })
-    assert res["data"]["mode_unmanaged"]["lan_static"]["dns1"] == "1.1.1.1"
+    assert res["data"]["mode_unmanaged"]["lan_static"]["dns1"] == "8.8.8.8"
+    assert res["data"]["mode_unmanaged"]["lan_static"]["dns2"] == "1.1.1.1"
 
 
 @pytest.mark.only_backends(['openwrt'])

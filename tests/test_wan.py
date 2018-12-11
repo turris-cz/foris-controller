@@ -1157,9 +1157,9 @@ def test_get_settings_dns_option(
 
     with uci.UciBackend() as backend:
         backend.del_option("network", "wan", "dns")
-        backend.set_option("network", "wan", "dns", "1.1.1.1")
+        backend.set_option("network", "wan", "dns", "1.1.1.1 8.8.8.8")
         backend.del_option("network", "wan6", "dns")
-        backend.set_option("network", "wan6", "dns", "2001:4860:4860::9999")
+        backend.set_option("network", "wan6", "dns", "2001:4860:4860::8888 2001:4860:4860::9999")
 
     res = infrastructure.process_message({
         "module": "wan",
@@ -1167,8 +1167,10 @@ def test_get_settings_dns_option(
         "kind": "request",
     })
 
-    assert res["data"]["wan_settings"]["wan_static"]["dns1"] == "1.1.1.1"
+    assert res["data"]["wan_settings"]["wan_static"]["dns1"] == "8.8.8.8"
+    assert res["data"]["wan_settings"]["wan_static"]["dns2"] == "1.1.1.1"
     assert res["data"]["wan6_settings"]["wan6_static"]["dns1"] == "2001:4860:4860::9999"
+    assert res["data"]["wan6_settings"]["wan6_static"]["dns2"] == "2001:4860:4860::8888"
 
 
 @pytest.mark.only_backends(['openwrt'])
