@@ -113,6 +113,7 @@ setup(
         "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater.git#egg=svupdater&subdirectory=src/supervisor",
         "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
         "ubus @ git+https://gitlab.labs.nic.cz/turris/python-ubus.git",
+        "paho-mqtt",
     ],
     setup_requires=[
         'pytest-runner',

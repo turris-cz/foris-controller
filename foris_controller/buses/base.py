@@ -18,9 +18,12 @@
 #
 
 import logging
+import inspect
 
 
 logger = logging.getLogger(__name__)
+
+from foris_controller.utils import get_modules, get_module_class
 
 
 class BaseNotificationSender(object):
@@ -57,3 +60,35 @@ class BaseNotificationSender(object):
 
     def reset(self):
         raise NotImplementedError()
+
+
+class BaseSocketListener(object):
+
+    def serve_forever(self):
+        raise NotImplementedError()
+
+
+def get_method_names_from_module(module):
+    """ Reads python module, checks for a valid foris-controller module class
+        and reads all names of class functions which starts with action_*
+
+    :param module: module to be examine
+    :type module: module
+    :returns: list of action names
+    :rtype: list of str
+    """
+
+    module_class = get_module_class(module)
+
+    if not module_class:
+        return None
+
+    # read all names fucntions which starts with action_
+    res = [
+        e[0] for e in inspect.getmembers(
+            module_class, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x)
+        ) if e[0].startswith("action_")
+    ]
+
+    # remove action_ prefix
+    return [e[len("action_"):] for e in res]

@@ -20,7 +20,7 @@
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, ubusd_test, init_script_result,
+    infrastructure, uci_configs_init, ubusd_test, init_script_result, mosquitto_test,
     only_backends, device, turris_os_version, FILE_ROOT_PATH, lock_backend
 )
 from foris_controller_testtools.utils import check_service_result, FileFaker, get_uci_module
@@ -52,7 +52,7 @@ ipv6="2001:1488:800:400::130"
         yield res1, res2
 
 
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mosquitto_test):
     res = infrastructure.process_message({
         "module": "dns",
         "action": "get_settings",

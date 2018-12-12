@@ -57,6 +57,10 @@ def main():
     unix_parser.add_argument(
         "--notifications-path", default='/tmp/foris-controller-notifications.soc')
 
+    mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt recieve commands")
+    mqtt_parser.add_argument("--host", default='127.0.0.1')
+    mqtt_parser.add_argument("--port", type=int, default=1883)
+
     parser.add_argument(
         "-b", "--backend", type=str, choices=["mock", "openwrt"],
         help="Configuration backend to be used", required=True
@@ -115,6 +119,14 @@ def main():
         logger.info("Using unix-socket to recieve commands.")
         server = UnixSocketListener(options.path)
         prepare_notification_sender(UnixSocketNotificationSender, options.notifications_path)
+    elif options.bus == "mqtt":
+        from foris_controller.buses.mqtt import (
+            MqttListener, MqttNotificationSender
+        )
+        logger.info("Using mqtt to recieve commands.")
+        server = MqttListener(options.host, options.port)
+        prepare_notification_sender(
+            MqttNotificationSender, options.host, options.port)
 
     if options.backend == "openwrt":
         from foris_controller.handler_base import BaseOpenwrtHandler
@@ -145,6 +157,13 @@ def main():
             from foris_controller.buses.unix_socket import UnixSocketNotificationSender
             notification_sender_class = UnixSocketNotificationSender
             notification_sender_args = (options.notifications_path, )
+        elif options.bus == "mqtt":
+            from foris_client.buses.mqtt import MqttSender
+            sender_class = MqttSender
+            sender_args = (options.host, options.port)
+            from foris_controller.buses.mqtt import MqttNotificationSender
+            notification_sender_class = MqttNotificationSender
+            notification_sender_args = (options.host, options.port)
 
         # start in subprocess
         from foris_controller.client_socket import worker

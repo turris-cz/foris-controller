@@ -27,7 +27,7 @@ import sys
 from foris_controller.message_router import Router
 from foris_controller.utils import LOGGER_MAX_LEN
 
-from .base import BaseNotificationSender
+from .base import BaseNotificationSender, BaseSocketListener
 
 if sys.version_info >= (3, 0):
     from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
@@ -99,7 +99,7 @@ class UnixSocketHandler(BaseRequestHandler):
         logger.debug("Client diconnected.")
 
 
-class UnixSocketListener(ThreadingMixIn, UnixStreamServer):
+class UnixSocketListener(ThreadingMixIn, UnixStreamServer, BaseSocketListener):
 
     def __init__(self, socket_path):
         """ Init listener project

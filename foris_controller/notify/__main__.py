@@ -46,6 +46,11 @@ def main():
     ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to send notification")
     unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
+
+    mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt to send notification")
+    mqtt_parser.add_argument("--host", default='localhost')
+    mqtt_parser.add_argument("--port", type=int, default=1883)
+
     parser.add_argument("-d", "--debug", action="store_true", default=False)
     parser.add_argument(
         "-n", "--no-validation", action="store_true", default=False,
@@ -78,6 +83,11 @@ def main():
         from foris_controller.buses.unix_socket import UnixSocketNotificationSender
         logger.info("Using unix-socket to send notifications.")
         sender = UnixSocketNotificationSender(options.path)
+
+    elif options.bus == "mqtt":
+        from foris_controller.buses.mqtt import MqttNotificationSender
+        logger.info("Using mqtt to send notifications.")
+        sender = MqttNotificationSender(options.host, options.port)
 
     # load validator
     if not options.no_validation:

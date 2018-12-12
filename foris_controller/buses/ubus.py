@@ -22,16 +22,15 @@ from __future__ import absolute_import
 import json
 import logging
 import ubus
-import inspect
 import prctl
 import signal
 import multiprocessing
 
 from foris_controller.message_router import Router
 from foris_controller.app import app_info
-from foris_controller.utils import get_modules, get_module_class, LOGGER_MAX_LEN
+from foris_controller.utils import get_modules, LOGGER_MAX_LEN
 
-from .base import BaseNotificationSender
+from .base import BaseNotificationSender, BaseSocketListener, get_method_names_from_module
 
 logger = logging.getLogger(__name__)
 
@@ -53,32 +52,6 @@ class RequestStorage(object):
         return RequestStorage.data.pop(request_id)
 
 
-def _get_method_names_from_module(module):
-    """ Reads python module, checks for a valid foris-controller module class
-        and reads all names of class functions which starts with action_*
-
-    :param module: module to be examine
-    :type module: module
-    :returns: list of action names
-    :rtype: list of str
-    """
-
-    module_class = get_module_class(module)
-
-    if not module_class:
-        return None
-
-    # read all names fucntions which starts with action_
-    res = [
-        e[0] for e in inspect.getmembers(
-            module_class, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x)
-        ) if e[0].startswith("action_")
-    ]
-
-    # remove action_ prefix
-    return [e[len("action_"):] for e in res]
-
-
 def _register_object(module_name, module):
     """ Transfers a module to an object which is registered on ubus
 
@@ -87,7 +60,7 @@ def _register_object(module_name, module):
     :param module: the module to be registered
     :type module: module
     """
-    methods = _get_method_names_from_module(module)
+    methods = get_method_names_from_module(module)
     if not methods:
         logger.warning("No suitable method found in '%s' module. Skipping" % module_name)
 
@@ -205,7 +178,7 @@ def ubus_all_in_one_worker(socket_path, modules_list):
         ubus.disconnect()
 
 
-class UbusListener(object):
+class UbusListener(BaseSocketListener):
 
     def __init__(self, socket_path):
         """ Inits object which handle listening on ubus
@@ -253,7 +226,7 @@ class UbusListener(object):
         logger.warning("All workers finished.")
 
 
-class UbusNotificationSender(BaseNotificationSender):
+class UbusNotificationSender(BaseSocketListener, BaseNotificationSender):
 
     def __init__(self, socket_path):
         """ Inits object which handles sending notification via ubus
