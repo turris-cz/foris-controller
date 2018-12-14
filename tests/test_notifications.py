@@ -21,7 +21,8 @@ import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    uci_configs_init, infrastructure, ubusd_test, notify_api, notify_cmd,
+    uci_configs_init, infrastructure, notify_api, notify_cmd,
+    start_buses, ubusd_test, mosquitto_test,
 )
 
 
@@ -34,7 +35,7 @@ def extra_module_paths():
     ]
 
 
-def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, ubusd_test):
+def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, start_buses):
     filters = [("web", "set_language")]
     notifications = infrastructure.get_notifications(filters=filters)
     retval, stdout, stderr = notify_cmd("web", "set_language", {"language": "en"}, True)
@@ -67,7 +68,7 @@ def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, ubusd_test):
     }
 
 
-def test_notify_api(uci_configs_init, infrastructure, ubusd_test, notify_api):
+def test_notify_api(uci_configs_init, infrastructure, start_buses, notify_api):
     filters = [("web", "set_language"), ("echo", "echo")]
     notify = notify_api
     notifications = infrastructure.get_notifications(filters=filters)

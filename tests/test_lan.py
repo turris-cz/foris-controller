@@ -21,8 +21,9 @@ import pytest
 import os
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
-    network_restart_command, device, turris_os_version, FILE_ROOT_PATH, file_root_init
+    only_backends, uci_configs_init, infrastructure, lock_backend, init_script_result,
+    network_restart_command, device, turris_os_version, FILE_ROOT_PATH, file_root_init,
+    start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import (
     match_subdict, get_uci_module, FileFaker, prepare_turrishw
@@ -65,7 +66,7 @@ def lan_dnsmasq_files():
         yield lease_file, conntrack_file
 
 
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "lan",
         "action": "get_settings",
@@ -96,7 +97,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     indirect=True
 )
 def test_update_settings(
-    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, network_restart_command,
     device, turris_os_version,
 ):
     filters = [("lan", "update_settings")]
@@ -240,7 +241,7 @@ def test_update_settings(
     indirect=True
 )
 def test_wrong_update(
-    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, network_restart_command,
     device, turris_os_version,
 ):
 
@@ -397,7 +398,7 @@ def test_wrong_update(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_dhcp_lease(
-    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, lock_backend, network_restart_command,
     orig_backend_val, api_val, new_backend_val, device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
@@ -447,7 +448,7 @@ def test_dhcp_lease(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
-    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, lock_backend, network_restart_command,
     device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
@@ -617,7 +618,7 @@ def test_update_settings_openwrt(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_dhcp_clients(
-    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, lock_backend, network_restart_command,
     device, turris_os_version, lan_dnsmasq_files
 ):
     def update(data, clients):
@@ -751,7 +752,7 @@ def test_dhcp_clients(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_interface_count(
-    file_root_init, uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    file_root_init, uci_configs_init, infrastructure, start_buses, network_restart_command,
     device, turris_os_version,
 ):
     prepare_turrishw("mox")  # plain mox without any boards
@@ -978,7 +979,7 @@ def test_interface_count(
     indirect=True
 )
 def test_update_settings_dhcp_range(
-    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, network_restart_command,
     device, turris_os_version,
 ):
 
@@ -1030,7 +1031,7 @@ def test_update_settings_dhcp_range(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_get_settings_dns_option(
-    uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, network_restart_command,
     device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
@@ -1069,7 +1070,7 @@ def test_get_settings_dns_option(
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_get_settings_missing_wireless(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure, start_buses):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message({
         "module": "lan",

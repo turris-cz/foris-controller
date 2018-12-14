@@ -21,8 +21,9 @@ import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
-    network_restart_command, device, turris_os_version
+    only_backends, uci_configs_init, infrastructure, lock_backend,
+    network_restart_command, device, turris_os_version,
+    start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import (
     network_restart_was_called, get_uci_module, match_subdict
@@ -32,7 +33,7 @@ from foris_controller_testtools.utils import (
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
 
 
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "wan",
         "action": "get_settings",
@@ -45,7 +46,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get_wan_status(uci_configs_init, infrastructure, ubusd_test):
+def test_get_wan_status(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "wan",
         "action": "get_wan_status",
@@ -65,7 +66,7 @@ def test_get_wan_status(uci_configs_init, infrastructure, ubusd_test):
     indirect=True
 )
 def test_update_settings(
-    uci_configs_init, infrastructure, ubusd_test,
+    uci_configs_init, infrastructure, start_buses,
     network_restart_command, device, turris_os_version,
 ):
     filters = [("wan", "update_settings")]
@@ -468,7 +469,7 @@ def test_update_settings(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_wan_openwrt_backend(
-    uci_configs_init, lock_backend, infrastructure, ubusd_test,
+    uci_configs_init, lock_backend, infrastructure, start_buses,
     network_restart_command, device, turris_os_version,
 ):
 
@@ -821,7 +822,7 @@ def test_wan_openwrt_backend(
     indirect=True
 )
 def test_wrong_update(
-    uci_configs_init, infrastructure, ubusd_test,
+    uci_configs_init, infrastructure, start_buses,
     network_restart_command, device, turris_os_version,
 ):
 
@@ -1024,7 +1025,7 @@ def test_wrong_update(
     )
 
 
-def test_connection_test(uci_configs_init, infrastructure, ubusd_test):
+def test_connection_test(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "wan",
         "action": "connection_test_status",
@@ -1068,7 +1069,7 @@ def test_connection_test(uci_configs_init, infrastructure, ubusd_test):
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_missing_wan6_openwrt(
-    uci_configs_init, lock_backend, infrastructure, ubusd_test,
+    uci_configs_init, lock_backend, infrastructure, start_buses,
     network_restart_command, device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
@@ -1120,7 +1121,7 @@ def test_missing_wan6_openwrt(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_get_settings_dns_option(
-    uci_configs_init, lock_backend, infrastructure, ubusd_test,
+    uci_configs_init, lock_backend, infrastructure, start_buses,
     network_restart_command, device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
@@ -1174,7 +1175,7 @@ def test_get_settings_dns_option(
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_get_settings_missing_wireless(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure, start_buses):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message({
         "module": "wan",

@@ -25,7 +25,8 @@ import random
 import string
 
 from foris_controller_testtools.fixtures import (
-    uci_configs_init, infrastructure, ubusd_test, only_backends, device, turris_os_version
+    uci_configs_init, infrastructure, only_backends, device, turris_os_version,
+    start_buses, ubusd_test, mosquitto_test,
 )
 
 PASS_PATH = "/tmp/passwd_input"
@@ -53,7 +54,7 @@ def pass_file():
     indirect=True
 )
 def test_set_and_check_system(
-    uci_configs_init, pass_file, infrastructure, ubusd_test, device, turris_os_version,
+    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version,
 ):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
@@ -95,7 +96,7 @@ def test_set_and_check_system(
     indirect=True
 )
 def test_set_and_check_foris(
-    uci_configs_init, pass_file, infrastructure, ubusd_test, device, turris_os_version,
+    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version,
 ):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
@@ -136,7 +137,7 @@ def test_set_and_check_foris(
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, ubusd_test):
+def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, start_buses):
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     res = infrastructure.process_message({
         "module": "password",

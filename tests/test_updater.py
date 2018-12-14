@@ -27,8 +27,9 @@ from datetime import datetime
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend,
-    clean_reboot_indicator, updater_languages, updater_userlists, device, turris_os_version
+    only_backends, uci_configs_init, infrastructure, lock_backend,
+    clean_reboot_indicator, updater_languages, updater_userlists, device, turris_os_version,
+    start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import set_approval, get_uci_module
 
@@ -59,7 +60,7 @@ def wait_for_updater_run_finished(notifications, infrastructure):
 
 
 def test_get_settings(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
+    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
     def get(lang):
         res = infrastructure.process_message({
@@ -96,7 +97,7 @@ def test_get_settings(
 )
 def test_update_settings(
     updater_languages, updater_userlists,
-    uci_configs_init, infrastructure, ubusd_test,
+    uci_configs_init, infrastructure, start_buses,
     device, turris_os_version,
 ):
 
@@ -179,7 +180,7 @@ def test_update_settings(
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
     updater_languages, updater_userlists, uci_configs_init, infrastructure,
-    ubusd_test, device, turris_os_version
+    start_buses, device, turris_os_version
 ):
     filters = [("updater", "run")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -209,7 +210,7 @@ def test_update_settings_openwrt(
 @pytest.mark.only_backends(['openwrt'])
 def test_uci(
     updater_languages, updater_userlists, uci_configs_init, lock_backend, infrastructure,
-    ubusd_test, device, turris_os_version,
+    start_buses, device, turris_os_version,
 ):
 
     uci = get_uci_module(lock_backend)
@@ -297,7 +298,7 @@ def test_uci(
 @pytest.mark.only_backends(['openwrt'])
 @pytest.mark.parametrize("language", ["cs", "nb_NO"])
 def test_approval(
-    language, updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
+    language, updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
     def approval(data):
         set_approval(data)
@@ -354,7 +355,7 @@ def test_approval(
 
 
 def test_approval_resolve(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
+    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
     res = infrastructure.process_message({
         "module": "updater",
@@ -383,7 +384,7 @@ def test_approval_resolve(
 
 @pytest.mark.only_backends(['openwrt'])
 def test_approval_resolve_openwrt(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, ubusd_test
+    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
     filters = [("updater", "run")]
 
@@ -502,7 +503,7 @@ def test_approval_resolve_openwrt(
     )
 
 
-def test_run(uci_configs_init, infrastructure, ubusd_test):
+def test_run(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "updater",
         "action": "run",
@@ -530,7 +531,7 @@ def test_run(uci_configs_init, infrastructure, ubusd_test):
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
+def test_run_notifications(uci_configs_init, infrastructure, start_buses):
     filters = [("updater", "run")]
     try:
         os.unlink(clean_reboot_indicator)
@@ -567,7 +568,7 @@ def test_run_notifications(uci_configs_init, infrastructure, ubusd_test):
 )
 def test_get_enabled(
     updater_languages, updater_userlists,
-    uci_configs_init, infrastructure, ubusd_test,
+    uci_configs_init, infrastructure, start_buses,
     device, turris_os_version,
 ):
 

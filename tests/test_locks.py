@@ -55,7 +55,6 @@ def locker_instance(request):
     yield locker
 
 
-
 def test_locks_single(locker_instance):
     with locker_instance.lock.readlock:
         locker_instance.store_log(locker_instance.KIND_READ, locker_instance.PLACE_BEGIN)

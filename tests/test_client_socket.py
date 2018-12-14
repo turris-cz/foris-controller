@@ -21,7 +21,9 @@ import os
 import pytest
 
 
-from foris_controller_testtools.fixtures import infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import (
+    infrastructure, start_buses, ubusd_test, mosquitto_test,
+)
 
 
 @pytest.fixture(scope="module")
@@ -33,7 +35,7 @@ def extra_module_paths():
     ]
 
 
-def test_request(infrastructure, ubusd_test):
+def test_request(infrastructure, start_buses):
     def request(req, reply):
         res = infrastructure.client_socket.request(req)
         assert res == reply
@@ -63,7 +65,7 @@ def test_request(infrastructure, ubusd_test):
     })
 
 
-def test_request_error(infrastructure, ubusd_test):
+def test_request_error(infrastructure, start_buses):
     def request_error(req):
         with pytest.raises(Exception):
             # raises exception due to the connection is closed (socket.read(4) returns "")
@@ -104,7 +106,7 @@ def test_request_error(infrastructure, ubusd_test):
     })
 
 
-def test_notification(infrastructure, ubusd_test):
+def test_notification(infrastructure, start_buses):
     def notify(msg):
         filters = [("echo", "echo"), ("echo", "echo2")]
         notifications = infrastructure.get_notifications(filters=filters)
@@ -126,7 +128,7 @@ def test_notification(infrastructure, ubusd_test):
     })
 
 
-def test_notification_error(infrastructure, ubusd_test):
+def test_notification_error(infrastructure, start_buses):
     def notify_error(msg):
         # send msg and one correct notification and make sure that only the correct
         # notification is recievd

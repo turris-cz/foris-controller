@@ -23,7 +23,9 @@ import random
 import string
 import uuid
 
-from foris_controller_testtools.fixtures import only_message_buses, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import (
+    only_message_buses, infrastructure, start_buses, ubusd_test, mosquitto_test,
+)
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +38,7 @@ def extra_module_paths():
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))
-def test_long_messsages(infrastructure, ubusd_test, chars_len):
+def test_long_messsages(infrastructure, start_buses, chars_len):
     data = {
         "random_characters": "".join(random.choice(string.ascii_letters) for _ in range(chars_len))
     }
@@ -50,7 +52,7 @@ def test_long_messsages(infrastructure, ubusd_test, chars_len):
 
 
 @pytest.mark.only_message_buses(['ubus'])
-def test_ubus_malformed_multipart_resend(infrastructure, ubusd_test):
+def test_ubus_malformed_multipart_resend(infrastructure, start_buses):
     # First lets test whether the multipart is working
     request_id = str(uuid.uuid4())
     res = infrastructure.process_message_ubus_raw(
@@ -92,7 +94,7 @@ def test_ubus_malformed_multipart_resend(infrastructure, ubusd_test):
 
 
 @pytest.mark.only_message_buses(['ubus'])
-def test_ubus_malformed_multipart_one(infrastructure, ubusd_test):
+def test_ubus_malformed_multipart_one(infrastructure, start_buses):
     # resend wrong json in one multipart
     request_id = str(uuid.uuid4())
     res = infrastructure.process_message_ubus_raw(
@@ -111,7 +113,7 @@ def test_ubus_malformed_multipart_one(infrastructure, ubusd_test):
 
 
 @pytest.mark.only_message_buses(['ubus'])
-def test_ubus_malformed_multipart_two(infrastructure, ubusd_test):
+def test_ubus_malformed_multipart_two(infrastructure, start_buses):
     # resend wrong json in two multiparts
     request_id = str(uuid.uuid4())
     res = infrastructure.process_message_ubus_raw(

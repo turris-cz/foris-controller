@@ -23,8 +23,9 @@ import os
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, ubusd_test, lock_backend, init_script_result,
+    only_backends, uci_configs_init, infrastructure, lock_backend, init_script_result,
     network_restart_command, FILE_ROOT_PATH, file_root_init, device, turris_os_version,
+    start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import (
     match_subdict, network_restart_was_called, get_uci_module, check_service_result, FileFaker,
@@ -69,7 +70,7 @@ def guest_dnsmasq_files():
         yield lease_file, conntrack_file
 
 
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "guest",
         "action": "get_settings",
@@ -84,7 +85,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
 
 
 def test_update_settings(
-    uci_configs_init, infrastructure, ubusd_test, network_restart_command
+    uci_configs_init, infrastructure, start_buses, network_restart_command
 ):
     filters = [("guest", "update_settings")]
 
@@ -162,7 +163,7 @@ def test_update_settings(
 
 @pytest.mark.only_backends(['openwrt'])
 def test_update_settings_openwrt(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test,
+    uci_configs_init, lock_backend, init_script_result, infrastructure, start_buses,
     network_restart_command,
 ):
     filters = [("guest", "update_settings")]
@@ -313,7 +314,7 @@ def test_update_settings_openwrt(
         assert uci.get_option_named(data, "sqm", "guest_limit_turris", "enabled")
 
 
-def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_restart_command):
+def test_wrong_update(uci_configs_init, infrastructure, start_buses, network_restart_command):
 
     def update(data):
         res = infrastructure.process_message({
@@ -390,7 +391,7 @@ def test_wrong_update(uci_configs_init, infrastructure, ubusd_test, network_rest
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_dhcp_lease(
-    uci_configs_init, infrastructure, ubusd_test, lock_backend, network_restart_command,
+    uci_configs_init, infrastructure, start_buses, lock_backend, network_restart_command,
     orig_backend_val, api_val, new_backend_val,
 ):
     uci = get_uci_module(lock_backend)
@@ -433,7 +434,7 @@ def test_dhcp_lease(
 
 @pytest.mark.only_backends(['openwrt'])
 def test_dhcp_clients(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, ubusd_test,
+    uci_configs_init, lock_backend, init_script_result, infrastructure, start_buses,
     network_restart_command, guest_dnsmasq_files,
 ):
     def update(data, clients):
@@ -554,7 +555,7 @@ def test_dhcp_clients(
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_interface_count(
-    file_root_init, uci_configs_init, infrastructure, ubusd_test, network_restart_command,
+    file_root_init, uci_configs_init, infrastructure, start_buses, network_restart_command,
     device, turris_os_version,
 ):
     prepare_turrishw("mox")  # plain mox without any boards
@@ -789,7 +790,7 @@ def test_interface_count(
 
 
 def test_update_settings_dhcp_range(
-    uci_configs_init, infrastructure, ubusd_test, network_restart_command
+    uci_configs_init, infrastructure, start_buses, network_restart_command
 ):
     def update(ip, netmask, start, limit, result):
         res = infrastructure.process_message({
@@ -829,7 +830,7 @@ def test_update_settings_dhcp_range(
 
 
 @pytest.mark.only_backends(['openwrt'])
-def test_get_settings_missing_wireless(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure, start_buses):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message({
         "module": "guest",

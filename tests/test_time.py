@@ -22,8 +22,9 @@ import pytest
 import os
 
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, ubusd_test, only_backends, lock_backend,
+    infrastructure, uci_configs_init, start_buses, only_backends, lock_backend,
     init_script_result, device, turris_os_version,
+    start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import check_service_result, get_uci_module
 
@@ -92,7 +93,7 @@ def pass_ntpdate():
     yield NTPDATE_INDICATOR_PATH
 
 
-def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
+def test_get_settings(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "time",
         "action": "get_settings",
@@ -116,7 +117,7 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test):
     indirect=True
 )
 def test_update_settings(
-    uci_configs_init, init_script_result, infrastructure, ubusd_test, device, turris_os_version,
+    uci_configs_init, init_script_result, infrastructure, start_buses, device, turris_os_version,
 ):
     filters = [("time", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -203,7 +204,7 @@ def test_update_settings(
     assert res["data"]["time_settings"]["how_to_set_time"] == u"manual"
 
 
-def test_get_router_time(uci_configs_init, infrastructure, ubusd_test):
+def test_get_router_time(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "time",
         "action": "get_router_time",
@@ -223,7 +224,7 @@ def test_get_router_time(uci_configs_init, infrastructure, ubusd_test):
 @pytest.mark.only_backends(['openwrt'])
 def test_openwrt_complex(
     uci_configs_init, init_script_result, date_mock, hwclock_mock,
-    cmdline_script_root, infrastructure, ubusd_test, lock_backend,
+    cmdline_script_root, infrastructure, start_buses, lock_backend,
     device, turris_os_version,
 ):
     res = infrastructure.process_message({
@@ -284,7 +285,7 @@ def test_openwrt_complex(
 
 
 @pytest.mark.only_backends(['mock'])
-def test_ntpdate_trigger_mock(uci_configs_init, infrastructure, ubusd_test):
+def test_ntpdate_trigger_mock(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "time",
         "action": "ntpdate_trigger",
@@ -297,7 +298,7 @@ def test_ntpdate_trigger_mock(uci_configs_init, infrastructure, ubusd_test):
 @pytest.mark.only_backends(['openwrt'])
 def test_ntpdate_trigger_pass_openwrt(
     uci_configs_init, init_script_result, date_mock, hwclock_mock,
-    cmdline_script_root, infrastructure, ubusd_test, lock_backend,
+    cmdline_script_root, infrastructure, start_buses, lock_backend,
     pass_ntpdate
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]
@@ -333,7 +334,7 @@ def test_ntpdate_trigger_pass_openwrt(
 @pytest.mark.only_backends(['openwrt'])
 def test_ntpdate_trigger_fail_openwrt(
     uci_configs_init, init_script_result, date_mock, hwclock_mock,
-    cmdline_script_root, infrastructure, ubusd_test, lock_backend,
+    cmdline_script_root, infrastructure, start_buses, lock_backend,
     fail_ntpdate
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]

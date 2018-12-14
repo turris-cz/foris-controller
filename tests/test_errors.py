@@ -19,10 +19,12 @@
 
 import pytest
 
-from foris_controller_testtools.fixtures import only_message_buses, infrastructure, ubusd_test
+from foris_controller_testtools.fixtures import (
+    only_message_buses, infrastructure, start_buses, ubusd_test, mosquitto_test
+)
 
 
-def test_wrong_input_data(infrastructure, ubusd_test):
+def test_wrong_input_data(infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "about",
         "action": "get",
@@ -36,8 +38,8 @@ def test_wrong_input_data(infrastructure, ubusd_test):
     assert "Incorrect input." in res["errors"][0]["description"]
 
 
-@pytest.mark.only_message_buses(['unix-socket'])
-def test_wrong_input_kind(infrastructure, ubusd_test):
+@pytest.mark.only_message_buses(['unix-socket', 'mqtt'])
+def test_wrong_input_kind(infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "about",
         "action": "get",
@@ -50,17 +52,16 @@ def test_wrong_input_kind(infrastructure, ubusd_test):
             "serial": "0000000B00009CD6",
         },
     })
-    assert res == {
-            u'action': u'get',
-            u'errors': [{
-                u'description': u'Wrong message kind (only request are allowed).'
-            }],
-            u'kind': u'reply',
-            u'module': u'about'
-    }
+    assert 'errors' in res
+    assert res['action'] == 'get'
+    assert res['kind'] == 'reply'
+    assert res['module'] == 'about'
+    assert res['errors'][0]['description'] == u'Wrong message kind (only request are allowed).' \
+        or res['errors'][0]['description'].startswith("Incorrect input")
 
-@pytest.mark.only_message_buses(['unix-socket'])
-def test_wrong_input_action(infrastructure, ubusd_test):
+
+@pytest.mark.only_message_buses(['unix-socket', 'mqtt'])
+def test_wrong_input_action(infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "about",
         "action": "non-exiting",
@@ -73,8 +74,8 @@ def test_wrong_input_action(infrastructure, ubusd_test):
     assert "Incorrect input." in res["errors"][0]["description"]
 
 
-@pytest.mark.only_message_buses(['unix-socket'])
-def test_wrong_input_module(infrastructure, ubusd_test):
+@pytest.mark.only_message_buses(['unix-socket', 'mqtt'])
+def test_wrong_input_module(infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "non-exiting",
         "action": "get",
