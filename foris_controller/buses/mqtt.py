@@ -228,7 +228,4 @@ class MqttNotificationSender(BaseNotificationSender):
             self.client.disconnect()
 
     def reset(self):
-        logger.debug("Resetting connection.")
-        if self._connected:
-            self.client.disconnect()
-        self._connect()
+        logger.debug("Resetting connection (skipped no need to reset this bus).")
