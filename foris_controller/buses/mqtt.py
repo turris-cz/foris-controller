@@ -110,19 +110,16 @@ class MqttListener(BaseSocketListener):
         logger.debug("Subscribing to '%s'." % list_modules_topic)
 
         # subscription for obtaining the entire schema
-        schema_topic = "foris-controller/%s/schema" % ID
+        schema_topic = "foris-controller/%s/jsonschemas" % ID
         rc, mid = client.subscribe(schema_topic)
         check_subscription(rc, mid, schema_topic)
         logger.debug("Subscribing to '%s'." % schema_topic)
 
-        for module_name, module in get_modules(
-            app_info["filter_modules"], app_info["extra_module_paths"]
-        ):
-            # subscription for listing module actions
-            action_topic = "foris-controller/%s/request/%s/list" % (ID, module_name)
-            rc, mid = client.subscribe(action_topic)
-            check_subscription(rc, mid, action_topic)
-            logger.debug("Subscribing to '%s'." % action_topic)
+        # subscription for listing module actions
+        action_topic = "foris-controller/%s/request/+/list" % ID
+        rc, mid = client.subscribe(action_topic)
+        check_subscription(rc, mid, action_topic)
+        logger.debug("Subscribing to '%s'." % action_topic)
 
         # listen to all requests for my node
         request_topics = "foris-controller/%s/request/+/action/+" % ID
@@ -138,19 +135,20 @@ class MqttListener(BaseSocketListener):
         ):
             res.append({
                 "name": module_name,
-                "methods": get_method_names_from_module(module) or [],
+                "actions": get_method_names_from_module(module) or [],
             })
         return res
 
     @staticmethod
     def get_schema():
-        return app_info["validator"].schema
+        return [app_info["validator"].base_validator.schema, app_info["validator"].error_schema] \
+            + [e.schema for e in app_info["validator"].validators.values()]
 
     @staticmethod
     def list_actions(module_name):
         modules_dict = dict(
             get_modules(app_info["filter_modules"], app_info["extra_module_paths"]))
-        return modules_dict.get(module_name, [])
+        return get_method_names_from_module(modules_dict.get(module_name)) or []
 
     @staticmethod
     def handle_on_message(client, userdata, msg):
@@ -177,7 +175,7 @@ class MqttListener(BaseSocketListener):
         if match:
             response = MqttListener.list_modules()
 
-        match = re.match(r"^foris-controller/[^/]+/schema$", msg.topic)
+        match = re.match(r"^foris-controller/[^/]+/jsonschemas$", msg.topic)
         if match:
             response = MqttListener.get_schema()
 
