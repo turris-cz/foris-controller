@@ -22,6 +22,8 @@ import json
 import uuid
 import re
 import sys
+import threading
+import time
 
 from paho.mqtt import client as mqtt
 
@@ -35,6 +37,48 @@ logger = logging.getLogger(__name__)
 
 
 ID = "%012x" % uuid.getnode()  # returns nodeid based on mac addr
+
+
+bus_info = {"state": "starting", "bus_thread": None}
+
+ANNOUNCER_PERIOD = 1.0  # in seconds
+ANNOUNCER_TOPIC = "foris-controller/advertize"
+
+
+def announcer_worker(host, port):
+
+    def on_connect(client, userdata, flags, rc):
+        logger.debug("On connect.")
+        if rc == 0:
+            bus_info["state"] = "running"  # this thread should be started after initialization
+            logger.debug("Announcer thread connected.")
+            msg = {"state": "started", "id": ID}
+            client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
+            logger.debug("Announcer thread publishes: %s", msg)
+        else:
+            logger.error("Failed to connect announcer thread! No announcements will be send.")
+
+    def on_publish(client, userdata, mid):
+        if bus_info["state"] == "running":
+            time.sleep(ANNOUNCER_PERIOD)
+            if bus_info["bus_thread"].is_alive():
+                msg = {"state": "running", "id": ID}
+                client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
+            else:
+                msg = {"state": "exitted", "id": ID}
+                client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
+                bus_info["state"] = "exitted"
+
+            logger.debug("Announcer thread publishes: %s", msg)
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_publish = on_publish
+    logger.debug("Announcer thread started. Trying to connect to '%s':'%d'", host, port)
+    client.connect(host, port, keepalive=30)
+
+    while bus_info["state"] != "exitted":
+        client.loop(ANNOUNCER_PERIOD)
 
 
 class MqttListener(BaseSocketListener):
@@ -109,14 +153,6 @@ class MqttListener(BaseSocketListener):
         return modules_dict.get(module_name, [])
 
     @staticmethod
-    def handle_on_subscribe(client, userdata, mid, granted_qos):
-        MqttListener.subscriptions[mid] = True
-        logger.debug("Subscribed to %d", mid)
-        if not [e for e in MqttListener.subscriptions.values() if not e]:
-            logger.debug("All subscriptions passed.")
-            client.publish("foris-controller/started", json.dumps({"id": ID}))
-
-    @staticmethod
     def handle_on_message(client, userdata, msg):
         logger.debug(
             "Msg recieved. (client='%s', userdata='%s', topic='%s', payload='%s')",
@@ -169,10 +205,25 @@ class MqttListener(BaseSocketListener):
             logger.error("Don't know how to respond.")
 
     def __init__(self, host, port):
+        def on_subscribe(client, userdata, mid, granted_qos):
+            MqttListener.subscriptions[mid] = True
+            logger.debug("Subscribed to %d", mid)
+            if not [e for e in MqttListener.subscriptions.values() if not e]:
+                logger.debug("All subscriptions passed.")
+                logger.debug("Starting announcer thread.")
+                bus_info["bus_thread"] = threading.current_thread()
+                announcer_thread = threading.Thread(
+                    name="announcer_thread", target=announcer_worker, kwargs={
+                        "host": host, "port": port,
+                    },
+                )
+                announcer_thread.daemon = True
+                announcer_thread.start()
+
         self.client = mqtt.Client()
         self.client.on_connect = MqttListener.handle_on_connect
         self.client.on_message = MqttListener.handle_on_message
-        self.client.on_subscribe = MqttListener.handle_on_subscribe
+        self.client.on_subscribe = on_subscribe
         self.client.connect(host, port, keepalive=30)
 
     def serve_forever(self):
