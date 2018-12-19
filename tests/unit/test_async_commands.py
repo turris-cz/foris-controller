@@ -21,7 +21,7 @@ import os
 import pytest
 import time
 
-from foris_controller_testtools.fixtures import lock_backend
+from foris_controller_testtools.fixtures import lock_backend, file_root_init
 
 NOTIFICATION_PATH = "/tmp/async-notification.txt"
 RESET_PATH = "/tmp/async-reset.txt"
@@ -41,9 +41,13 @@ def get_data(old_data=None):
 
 
 @pytest.fixture(scope="function")
-def async_infrastructure(lock_backend):
+def async_infrastructure(lock_backend, file_root, file_root_init, cmdline_script_root):
     from foris_controller.app import app_info
     app_info["lock_backend"] = lock_backend
+
+    os.environ["FORIS_FILE_ROOT"] = file_root
+    os.environ["FORIS_CMDLINE_ROOT"] = cmdline_script_root
+
     from foris_controller_backends.cmdline import AsyncCommand
 
     for path in [NOTIFICATION_PATH, RESET_PATH]:

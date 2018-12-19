@@ -32,7 +32,7 @@ from foris_controller_testtools.fixtures import lock_backend, uci_configs_init
 from foris_controller_testtools.utils import get_uci_module
 
 CONFIG_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "uci_configs", "uci_tests"
+    os.path.dirname(os.path.realpath(__file__)), "uci_configs",
 )
 
 
