@@ -19,6 +19,7 @@
 
 import logging
 import json
+import os
 import uuid
 import re
 import sys
@@ -41,7 +42,7 @@ ID = "%012x" % uuid.getnode()  # returns nodeid based on mac addr
 
 bus_info = {"state": "starting", "bus_thread": None}
 
-ANNOUNCER_PERIOD = 1.0  # in seconds
+ANNOUNCER_PERIOD = float(os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", 1.0)) # in seconds
 ANNOUNCER_TOPIC = "foris-controller/advertize"
 
 
@@ -60,10 +61,11 @@ def announcer_worker(host, port):
 
     def on_publish(client, userdata, mid):
         if bus_info["state"] == "running":
-            time.sleep(ANNOUNCER_PERIOD)
+            time.sleep(ANNOUNCER_PERIOD or 1.0)
             if bus_info["bus_thread"].is_alive():
-                msg = {"state": "running", "id": ID}
-                client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
+                if ANNOUNCER_PERIOD:  # don't announce when period is set to zero
+                    msg = {"state": "running", "id": ID}
+                    client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
             else:
                 msg = {"state": "exitted", "id": ID}
                 client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
