@@ -1,9 +1,11 @@
 import pytest
 
-from foris_controller_testtools.fixtures import backend, infrastructure, ubusd_test, notify_api
+from foris_controller_testtools.fixtures import (
+    backend, infrastructure, start_buses, mosquitto_test, ubusd_test, notify_api
+)
 
 
-def test_get_slices(infrastructure, ubusd_test):
+def test_get_slices(infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "sample",
         "action": "get_slices",
@@ -15,7 +17,7 @@ def test_get_slices(infrastructure, ubusd_test):
 
 
 @pytest.mark.parametrize("slices", [10, 15])
-def test_set_slices(infrastructure, ubusd_test, slices):
+def test_set_slices(infrastructure, start_buses, slices):
     notifications = infrastructure.get_notifications()
     res = infrastructure.process_message({
         "module": "sample",
@@ -39,7 +41,7 @@ def test_set_slices(infrastructure, ubusd_test, slices):
 
 
 @pytest.mark.parametrize("slices", [10, 15])
-def test_reload_chart_notification(notify_api, infrastructure, ubusd_test, slices):
+def test_reload_chart_notification(notify_api, infrastructure, start_buses, slices):
     filters = [("sample", "reload_chart")]
     notify = notify_api
     notifications = infrastructure.get_notifications(filters=filters)
@@ -53,7 +55,7 @@ def test_reload_chart_notification(notify_api, infrastructure, ubusd_test, slice
     }
 
 
-def test_list(infrastructure, ubusd_test):
+def test_list(infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "sample",
         "action": "list",

@@ -29,7 +29,7 @@ from foris_controller.exceptions import UciRecordNotFound
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, lock_backend,
     clean_reboot_indicator, updater_languages, updater_userlists, device, turris_os_version,
-    start_buses, ubusd_test, mosquitto_test,
+    start_buses, ubusd_test, mosquitto_test, UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import set_approval, get_uci_module
 
@@ -231,7 +231,7 @@ def test_uci(
         "user_lists": [],
         "languages": [],
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read("updater")
     assert not uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
     with pytest.raises(UciRecordNotFound):
@@ -247,7 +247,7 @@ def test_uci(
         "user_lists": ['list1'],
         "languages": ['cs'],
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read("updater")
     assert not uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
     assert uci.get_option_named(data, "updater", "override", "branch") == "nightly"
@@ -262,7 +262,7 @@ def test_uci(
         "user_lists": ['list2'],
         "languages": ['cs', 'de', "nb_NO"],
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read("updater")
     assert not uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
     with pytest.raises(UciRecordNotFound):
@@ -278,7 +278,7 @@ def test_uci(
         "user_lists": [],
         "languages": [],
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read("updater")
     assert not uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
     with pytest.raises(UciRecordNotFound):
@@ -290,7 +290,7 @@ def test_uci(
     update_settings({
         "enabled": False,
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read("updater")
     assert uci.parse_bool(uci.get_option_named(data, "updater", "override", "disable"))
 

@@ -124,7 +124,7 @@ setup(
         'foris-client',
     ],
     extras_require={
-        'client-socket': ["foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git"],
+        'client-socket': ["foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git@mqtt-bus"],
     },
     entry_points={
         "console_scripts": [
@@ -133,8 +133,8 @@ setup(
         ]
     },
     dependency_links=[
-        "git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git#egg=foris-controller-testtools",
-        "git+https://gitlab.labs.nic.cz/turris/foris-client.git#egg=foris-client",
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git@mqtt-bus#egg=foris-controller-testtools",
+        "git+https://gitlab.labs.nic.cz/turris/foris-client.git@mqtt-bus#egg=foris-client",
     ],
     include_package_data=True,
     zip_safe=False,

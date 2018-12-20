@@ -27,11 +27,14 @@ from foris_controller_testtools.fixtures import (
 )
 
 
+DEFAULT_UCI_CONFIG_DIR = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
+)
+
+
 @pytest.fixture(scope="session")
 def uci_config_default_path():
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
-    )
+    return DEFAULT_UCI_CONFIG_DIR
 
 
 @pytest.fixture(scope="session")

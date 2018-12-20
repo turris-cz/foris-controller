@@ -23,7 +23,7 @@ import os
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, lock_backend, init_script_result,
     network_restart_command, device, turris_os_version, FILE_ROOT_PATH, file_root_init,
-    start_buses, ubusd_test, mosquitto_test,
+    start_buses, ubusd_test, mosquitto_test, UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import (
     match_subdict, get_uci_module, FileFaker, prepare_turrishw
@@ -403,7 +403,7 @@ def test_dhcp_lease(
 ):
     uci = get_uci_module(lock_backend)
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("dhcp", "lan", "leasetime", orig_backend_val)
 
     res = infrastructure.process_message({
@@ -433,7 +433,7 @@ def test_dhcp_lease(
     })
     assert res["data"]["result"]
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.get_option_named(data, "dhcp", "lan", "leasetime") == new_backend_val
@@ -462,7 +462,7 @@ def test_update_settings_openwrt(
         })
         assert res["data"]["result"]
 
-        with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
             return backend.read()
 
     data = update({
@@ -1056,7 +1056,7 @@ def test_get_settings_dns_option(
     })
     assert res["data"]["result"]
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "lan", "dns")
         backend.set_option("network", "lan", "dns", "1.1.1.1 8.8.8.8")
 

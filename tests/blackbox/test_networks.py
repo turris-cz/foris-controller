@@ -18,11 +18,12 @@
 #
 
 import pytest
+import os
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, lock_backend,
     init_script_result, network_restart_command, device, turris_os_version,
-    notify_api,
+    notify_api, UCI_CONFIG_DIR_PATH,
     start_buses, ubusd_test, mosquitto_test,
 )
 
@@ -591,7 +592,7 @@ def test_update_settings_openwrt(
 
     assert network_restart_was_called([])
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert wan_port == uci.get_option_named(data, "network", "wan", "ifname")
@@ -711,13 +712,14 @@ def test_wifi_devices(
 ):
     prepare_turrishw("mox+ALL")
     uci = get_uci_module(lock_backend)
+    os.environ["TURRISHW_ROOT"] = TURRISHW_ROOT
     import turrishw
     interfaces = turrishw.get_ifaces()
     macaddr = [e['macaddr'] for e in interfaces.values() if e['type'] == 'wifi']
     assert len(macaddr) == 1
     macaddr = macaddr[0]
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         # override wireless
         backend.import_data(
             """\
@@ -764,7 +766,7 @@ config wifi-iface 'guest_iface_0'
     assert [e["ssid"] for e in res['data']['networks']['none'] if e['type'] == 'wifi'] == [""]
     assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 0
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("wireless", "radio0", "disabled", uci.store_bool(False))
 
     res = infrastructure.process_message({
@@ -776,7 +778,7 @@ config wifi-iface 'guest_iface_0'
     assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 1
     assert [e["ssid"] for e in res['data']['networks']['lan'] if e['type'] == 'wifi'] == ["Turris"]
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("wireless", "default_radio0", "disabled", uci.store_bool(True))
 
     res = infrastructure.process_message({

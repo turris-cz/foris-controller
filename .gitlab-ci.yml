@@ -11,13 +11,26 @@ stages:
 
     - pip install .
 
-    - python setup.py test
-    - python setup.py test --addopts="--backend openwrt"
+    # unit tests
+    - python setup.py test --addopts="--backend openwrt --message-bus ubus tests/unit/"
+
+    # blackbox production config
+    - python setup.py test --addopts="--backend openwrt --message-bus ubus tests/blackbox/"
+
+    # production bus + mock backend
+    - python setup.py test --addopts="--backend mock --message-bus ubus tests/blackbox/"
+
+    # production backend + mqtt bus
+    - python setup.py test --addopts="--backend openwrt --message-bus mqtt tests/blackbox/"
+
+    # production backend + unix-socket bus
+    - python setup.py test --addopts="--backend openwrt --message-bus unix-socket tests/blackbox/"
 
     - cd doc/examples/sample_module/
     - pip install .
-    - python setup.py test
-    - python setup.py test --addopts="--backend openwrt"
+
+    # test both backends here
+    - python setup.py test --addopts="--backend openwrt --backend mock"
 
 test_python2:
   image: registry.labs.nic.cz/turris/foris-ci/python2

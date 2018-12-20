@@ -27,6 +27,13 @@ from foris_controller.exceptions import ServiceCmdFailed
 
 
 @pytest.fixture(scope="function")
+def cmdline_script_root():
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "test_root"
+    )
+
+
+@pytest.fixture(scope="function")
 def custom_cmdline_root(cmdline_script_root):
     os.environ["FORIS_CMDLINE_ROOT"] = cmdline_script_root
     yield cmdline_script_root

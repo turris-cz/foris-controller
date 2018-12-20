@@ -22,7 +22,7 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, lock_backend,
-    network_restart_command, device, turris_os_version,
+    network_restart_command, device, turris_os_version, UCI_CONFIG_DIR_PATH,
     start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import (
@@ -489,7 +489,7 @@ def test_wan_openwrt_backend(
             u'module': u'wan'
         }
         assert network_restart_was_called([])
-        with uci.UciBackend() as backend:
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
             data = backend.read()
         return data
 
@@ -677,7 +677,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == "11:22:33:44:55:66"
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "lan", "ip6assign")
     data = update({
         'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
@@ -696,7 +696,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "lan", "ip6assign")
     data = update({
         'wan_settings': {'wan_type': 'dhcp', 'wan_dhcp': {}},
@@ -1073,7 +1073,7 @@ def test_missing_wan6_openwrt(
     network_restart_command, device, turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_section("network", "wan6")
 
     res = infrastructure.process_message({
@@ -1105,7 +1105,7 @@ def test_missing_wan6_openwrt(
     assert "wan6_settings" in res["data"].keys()
     assert res["data"]["wan6_settings"]["wan6_type"] == "dhcpv6"
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.get_option_named(data, "network", "wan6", "proto") == "dhcpv6"
@@ -1156,7 +1156,7 @@ def test_get_settings_dns_option(
     })
     assert res["data"]["result"]
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "wan", "dns")
         backend.set_option("network", "wan", "dns", "1.1.1.1 8.8.8.8")
         backend.del_option("network", "wan6", "dns")

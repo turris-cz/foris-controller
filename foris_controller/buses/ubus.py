@@ -252,8 +252,9 @@ class UbusNotificationSender(BaseSocketListener, BaseNotificationSender):
     def disconnect(self):
         """ Disconnects from ubus
         """
-        logger.debug("Disconnecting from ubus")
-        ubus.disconnect()
+        if ubus.get_connected():
+            logger.debug("Disconnecting from ubus")
+            ubus.disconnect()
 
     def reset(self):
         """ Resets the connection

@@ -21,7 +21,8 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, ubusd_test, init_script_result, mosquitto_test,
-    only_backends, device, turris_os_version, FILE_ROOT_PATH, lock_backend
+    only_backends, device, turris_os_version, FILE_ROOT_PATH, lock_backend,
+    UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import check_service_result, FileFaker, get_uci_module
 
@@ -307,7 +308,7 @@ def test_update_settings_forwarder(
     })
     assert res["data"]["result"] is True
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert uci.get_option_named(data, "resolver", "common", "forward_custom", "") is ""
 
@@ -325,6 +326,6 @@ def test_update_settings_forwarder(
     })
     assert res["data"]["result"] is True
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert uci.get_option_named(data, "resolver", "common", "forward_custom") == "odvr-nic-dns"

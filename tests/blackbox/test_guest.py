@@ -25,7 +25,7 @@ from foris_controller.exceptions import UciRecordNotFound
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, lock_backend, init_script_result,
     network_restart_command, FILE_ROOT_PATH, file_root_init, device, turris_os_version,
-    start_buses, ubusd_test, mosquitto_test,
+    start_buses, ubusd_test, mosquitto_test, UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import (
     match_subdict, network_restart_was_called, get_uci_module, check_service_result, FileFaker,
@@ -198,7 +198,7 @@ def test_update_settings_openwrt(
         u"dhcp": {u"enabled": False},
         u"qos": {u"enabled": False},
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled"))
@@ -262,7 +262,7 @@ def test_update_settings_openwrt(
             u"upload": 1000,
         },
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert uci.parse_bool(uci.get_option_named(data, "sqm", "guest_limit_turris", "enabled"))
     assert uci.get_option_named(data, "sqm", "guest_limit_turris", "interface") \
@@ -283,7 +283,7 @@ def test_update_settings_openwrt(
         u"dhcp": {u"enabled": True, "start": 25, "limit": 100, "lease_time": 201},
         u"qos": {u"enabled": False},
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert not uci.parse_bool(uci.get_option_named(data, "dhcp", "guest_turris", "ignore"))
@@ -297,7 +297,7 @@ def test_update_settings_openwrt(
     update({
         u"enabled": False,
     })
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert not uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled"))
     assert not uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris", "enabled"))
@@ -396,7 +396,7 @@ def test_dhcp_lease(
 ):
     uci = get_uci_module(lock_backend)
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.add_section("dhcp", "dhcp", "guest_turris")
         backend.set_option("dhcp", "guest_turris", "leasetime", orig_backend_val)
 
@@ -426,7 +426,7 @@ def test_dhcp_lease(
     })
     assert res["data"]["result"]
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.get_option_named(data, "dhcp", "guest_turris", "leasetime") == new_backend_val

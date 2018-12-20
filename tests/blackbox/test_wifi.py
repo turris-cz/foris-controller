@@ -22,7 +22,7 @@ import pytest
 
 from foris_controller_testtools.fixtures import (
     only_backends, uci_configs_init, infrastructure, lock_backend,
-    file_root_init, init_script_result, network_restart_command,
+    file_root_init, init_script_result, network_restart_command, UCI_CONFIG_DIR_PATH,
     start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import (
@@ -391,7 +391,7 @@ def test_update_settings_uci(
             u'module': u'wifi'
         }
         network_restart_was_called([])
-        with uci.UciBackend() as backend:
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
             data = backend.read()
         return data
 
@@ -905,12 +905,12 @@ def test_modify_encryption_only_if_none(
         u'kind': u'reply',
         u'module': u'wifi'
     }
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") == "psk2+ccmp"
     assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "psk2+ccmp"
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("wireless", "@wifi-iface[0]", "encryption", "psk2+tkip+ccmp")
         backend.set_option("wireless", "guest_iface_0", "encryption", "psk2+tkip+ccmp")
 
@@ -943,7 +943,7 @@ def test_modify_encryption_only_if_none(
         u'module': u'wifi'
     }
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") \
         == "psk2+tkip+ccmp"

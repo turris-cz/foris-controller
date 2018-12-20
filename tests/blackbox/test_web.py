@@ -24,7 +24,7 @@ import sys
 from foris_controller_testtools.fixtures import (
     uci_configs_init, infrastructure, file_root_init, only_backends,
     init_script_result, FILE_ROOT_PATH, network_restart_command, lock_backend,
-    device, turris_os_version,
+    device, turris_os_version, UCI_CONFIG_DIR_PATH,
     start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import (
@@ -324,7 +324,7 @@ def test_update_guide_openwrt(
 
     uci = get_uci_module(lock_backend)
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     try:
@@ -340,7 +340,7 @@ def test_update_guide_openwrt(
     })
     assert res["data"]["result"] is (workflow in EXPECTED_WORKFLOWS[device, turris_os_version])
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     if res["data"]["result"]:
@@ -447,7 +447,7 @@ def test_reset_guide_openwrt(
     })
     assert res["data"] == {"result": True}
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.get_option_named(data, "foris", "wizard", "workflow") in [
@@ -495,7 +495,7 @@ def test_reset_guide_openwrt(
     })
     assert res["data"] == {"result": True}
 
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.get_option_named(data, "foris", "wizard", "workflow") in [

@@ -23,7 +23,7 @@ import os
 
 from foris_controller_testtools.fixtures import (
     infrastructure, uci_configs_init, start_buses, only_backends, lock_backend,
-    init_script_result, device, turris_os_version,
+    init_script_result, device, turris_os_version, UCI_CONFIG_DIR_PATH,
     start_buses, ubusd_test, mosquitto_test,
 )
 from foris_controller_testtools.utils import check_service_result, get_uci_module
@@ -244,7 +244,7 @@ def test_openwrt_complex(
     check_service_result("sysntpd", "restart", True)
 
     uci = get_uci_module(lock_backend)
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.get_option_anonymous(data, "system", "system", 0, "timezone") == "MSK-3"
@@ -272,7 +272,7 @@ def test_openwrt_complex(
     check_service_result("sysntpd", "stop", True)
 
     uci = get_uci_module(lock_backend)
-    with uci.UciBackend() as backend:
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
     assert uci.get_option_anonymous(data, "system", "system", 0, "timezone") == \
