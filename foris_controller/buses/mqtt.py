@@ -89,7 +89,6 @@ class MqttListener(BaseSocketListener):
 
     @staticmethod
     def handle_on_connect(client, userdata, flags, rc):
-        client.enable_logger(logger)
         if rc != 0:
             logger.error("Failed to connect to the message bus (rc=%d).", rc)
             sys.exit(1)  # can't connect to bus -> exitting
@@ -235,7 +234,6 @@ class MqttNotificationSender(BaseNotificationSender):
     def _connect(self):
         def on_connect(client, userdata, flags, rc):
             self._connected = True
-            client.enable_logger(logger)
             if rc != 0:
                 logger.error("Failed to connect to the message bus (rc=%d).", rc)
                 sys.exit(1)  # can't connect to bus -> exitting
