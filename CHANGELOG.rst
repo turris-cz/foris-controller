@@ -1,3 +1,9 @@
+0.11 (2018-12-21)
+-----------------
+
+* test structure reworked
+* support for mqtt bus implemented
+
 0.10.15 (2018-12-12)
 --------------------
 
