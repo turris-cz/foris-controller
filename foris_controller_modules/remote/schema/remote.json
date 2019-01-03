@@ -1,0 +1,407 @@
+{
+    "definitions": {
+        "cert_id": {"type": "string", "pattern": "^([0-9a-fA-F][0-9a-fA-F])+$"},
+        "cert_name": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$"}
+    },
+    "oneOf": [
+        {
+            "description": "Request to generate CA (asynchronously)",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["generate_ca"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to generate CA (asynchronously)",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["generate_ca"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "task_id": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["task_id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification during CA generation",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["generate_ca"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "task_id": {"type": "string"},
+                        "status": {"enum": ["succeeded", "failed", "ca_generating", "ca_done", "server_generating", "server_done"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["task_id", "status"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to obtain info about remote CA",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_status"]}
+            },
+            "additionalProperties": false
+        },
+        {
+
+            "description": "Reply to obtain info about remote CA",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_status"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "status": {"enum": ["ready", "missing", "generating"]},
+                        "tokens": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {"$ref": "#/definitions/cert_id"},
+                                    "name": {"$ref": "#/definitions/cert_name"},
+                                    "status": {"enum": ["valid", "revoked", "expired", "generating"]}
+                                },
+                                "required": ["id", "name", "status"],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["status", "tokens"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to generate token (asynchronously)",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["generate_token"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/cert_name"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["name"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to generate token (asynchronously)",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["generate_token"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "task_id": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["task_id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification during token generation",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["generate_token"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "task_id": {"type": "string"},
+                        "name": {"$ref": "#/definitions/cert_name"},
+                        "status": {"enum": ["succeeded", "failed", "token_generating", "token_done"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["task_id", "status"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to revoke token",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["revoke"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/cert_id"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to revoke token cert",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["revoke"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that token certificate was revoked",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["revoke"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/cert_id"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to delete CA",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["delete_ca"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to delete CA",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["delete_ca"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that CA was deleted",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["delete_ca"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Request to get settings",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_settings"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to get remote settings",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"type": "boolean"},
+                        "wan_access": {"type": "boolean"},
+                        "port": {"type": "integer", "minimum": 0, "maximum": 65535}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "enabled", "wan_access", "port"
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to update settings",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {"enum": [true]},
+                                "wan_access": {"type": "boolean"},
+                                "port": {"type": "integer", "minimum": 0, "maximum": 65535}
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "enabled", "wan_access", "port"
+                            ]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {"enum": [false]}
+                            },
+                            "additionalProperties": false,
+                            "required": ["enabled"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to update settings",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that settings were updated",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["update_settings"]},
+                "data": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {"enum": [true]},
+                                "wan_access": {"type": "boolean"},
+                                "port": {"type": "integer", "minimum": 0, "maximum": 65535}
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "enabled", "port", "wan_access"
+                            ]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {"enum": [false]}
+                            },
+                            "additionalProperties": false,
+                            "required": ["enabled"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request get token",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_token"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/cert_id"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to get token",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_token"]},
+                "data": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "status": {"enum": ["revoked", "not_found"]}
+                            },
+                            "additionalProperties": false,
+                            "required": ["status"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "status": {"enum": ["valid"]},
+                                "token": {"type": "string"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["status", "token"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}

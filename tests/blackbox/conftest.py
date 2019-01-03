@@ -56,5 +56,5 @@ def file_root():
 def controller_modules():
     return [
         "about", "web", "dns", "maintain", "password", "updater", "lan", "time",
-        "wan", "router_notifications", "wifi", "networks", "guest",
+        "wan", "router_notifications", "wifi", "networks", "guest", "remote",
     ]

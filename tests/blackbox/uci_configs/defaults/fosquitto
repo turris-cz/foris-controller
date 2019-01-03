@@ -1,0 +1,9 @@
+config local local
+	option port 11883
+
+config remote remote
+	option enabled '0'
+
+config subordinate
+
+config superior
