@@ -392,9 +392,10 @@ def test_wrong_update(
         ["infinite", 0, "infinite"],
         ["120", 120, "120"],
         ["3m", 180, "180"],
-        ["1h", 3600, "3600"],
+        ["2h", 7200, "7200"],
+        ["1d", 86400, "86400"],
     ],
-    ids=["none", "infinite", "120", "3m", "1h"],
+    ids=["none", "infinite", "120", "3m", "2h", "1d"],
 )
 @pytest.mark.only_backends(['openwrt'])
 def test_dhcp_lease(

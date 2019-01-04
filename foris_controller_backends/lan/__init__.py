@@ -78,6 +78,8 @@ class LanUci(object):
             return int(leasetime[:-1]) * 60
         elif leasetime.endswith("h"):
             return int(leasetime[:-1]) * 60 * 60
+        elif leasetime.endswith("d"):
+            return int(leasetime[:-1]) * 60 * 60 * 24
         else:
             return int(leasetime)
 
