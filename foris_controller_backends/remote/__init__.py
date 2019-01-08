@@ -138,6 +138,8 @@ class CaGenCmds(BaseCmdLine):
         return retval == 0
 
     def delete_ca(self):
+        if RemoteUci().get_settings()["enabled"]:
+            return False
         retval, _, _ = self._run_command("/usr/bin/turris-cagen", "drop_ca", "remote")
         return retval == 0
 
@@ -181,13 +183,11 @@ class RemoteUci(object):
 
         # can't set when CA is missing
         if CaGenCmds().get_status()["status"] != "ready" and enabled:
-            print(CaGenCmds().get_status()["status"])
             enabled = False
             result = False
 
         with UciBackend() as backend:
             if enabled:
-                # TODO check whether CA is generated
 
                 backend.add_section("firewall", "rule", "wan_fosquitto_turris_rule")
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "name", "fosquitto_wan")
@@ -213,7 +213,7 @@ class RemoteUci(object):
         with OpenwrtServices() as services:
             services.reload("firewall")
             if app_info["bus"] == "mqtt":
-                services.enable("fosquitto")
+                services.enable("fosquitto", fail_on_error=False)  # might be already enabled
                 services.reload("fosquitto")
             else:
                 # Stop fosquitto when running incomaptible bus (best effort)

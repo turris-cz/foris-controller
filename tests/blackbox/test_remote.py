@@ -840,3 +840,64 @@ def test_get_token_openwrt(
 
         assert "name_on_wan" == conf["dhcp_names"]["wan"]
         assert "" == conf["dhcp_names"]["lan"]
+
+
+@pytest.mark.only_message_buses(['mqtt'])
+@pytest.mark.only_backends(['openwrt'])
+def test_delete_ca_when_enabled(
+    uci_configs_init, init_script_result, infrastructure, start_buses, network_restart_command, file_root_init,
+    ready_certs,
+):
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "enabled": True,
+            "wan_access": False,
+            "port": 11886,
+        }
+    })
+    assert res["data"]["result"]
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "delete_ca",
+        "kind": "request",
+    })
+    assert res["data"]["result"] is False
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_enable_generating(
+    uci_configs_init, init_script_result, infrastructure, start_buses, network_restart_command, file_root_init,
+    generating_certs,
+):
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "enabled": True,
+            "wan_access": False,
+            "port": 11886,
+        }
+    })
+    assert not res["data"]["result"]
+
+
+@pytest.mark.only_backends(['openwrt'])
+def test_enable_empty(
+    uci_configs_init, init_script_result, infrastructure, start_buses, network_restart_command, file_root_init,
+    empty_certs,
+):
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "enabled": True,
+            "wan_access": False,
+            "port": 11886,
+        }
+    })
+    assert not res["data"]["result"]
