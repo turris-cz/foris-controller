@@ -776,6 +776,7 @@ def test_get_token_openwrt(
         backend.set_option("network", "lan", "ipaddr", "192.168.31.1")
         backend.set_option("network", "lan", "proto", "static")
         backend.set_option("network", "lan", "hostname", "name_on_lan")
+        backend.set_option("fosquitto", "remote", "port", "12345")
 
     query_data["id"] = "FF"
     res = infrastructure.process_message({
@@ -828,10 +829,11 @@ def test_get_token_openwrt(
         with tar.extractfile("client2/conf.json") as f:
             conf = json.load(f)
 
-        assert set(conf.keys()) == {"hostname", "name", "ipv4_ips", "dhcp_names"}
+        assert set(conf.keys()) == {"hostname", "name", "ipv4_ips", "dhcp_names", "port"}
 
         assert conf["hostname"] == "testhostname"
         assert conf["name"] == "client2"
+        assert conf["port"] == 12345
 
         assert "172.20.6.87" in conf["ipv4_ips"]["lan"]
         assert "192.168.31.1" in conf["ipv4_ips"]["lan"]

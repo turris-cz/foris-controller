@@ -267,6 +267,7 @@ class RemoteFiles(BaseFile):
         with UciBackend() as backend:
             network_data = backend.read("network")
             system_data = backend.read("system")
+            fosquitto_data = backend.read("fosquitto")
 
         ips["wan"].extend(get_ips_from_network(network_data, "wan"))
         ips["lan"].extend(get_ips_from_network(network_data, "lan"))
@@ -283,8 +284,9 @@ class RemoteFiles(BaseFile):
         }
 
         hostname = get_option_anonymous(system_data, "system", "system", 0, "hostname", "")
+        port = int(get_option_named(fosquitto_data, "fosquitto", "remote", "port", "11884"))
 
-        return hostname, ips, dhcp_names
+        return hostname, port, ips, dhcp_names
 
     def get_token(self, id, name):
         cert_content = self._file_content(os.path.join(RemoteFiles.BASE_CERT_PATH, "%s.crt" % id))
@@ -306,12 +308,13 @@ class RemoteFiles(BaseFile):
             add_to_tar(tar, "%s/token.crt" % name, cert_content)
             add_to_tar(tar, "%s/token.key" % name, key_content)
             add_to_tar(tar, "%s/ca.crt" % name, ca_content)
-            hostname, ips, dhcp_names = self.detect_location()
+            hostname, port, ips, dhcp_names = self.detect_location()
             add_to_tar(tar, "%s/conf.json" % name, json.dumps({
                 "name": name,
                 "hostname": hostname,
                 "ipv4_ips": ips,
                 "dhcp_names": dhcp_names,
+                "port": port,
             }))
 
         fake_file.seek(0)
