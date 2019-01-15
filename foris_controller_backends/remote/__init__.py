@@ -214,7 +214,7 @@ class RemoteUci(object):
             services.reload("firewall")
             if app_info["bus"] == "mqtt":
                 services.enable("fosquitto", fail_on_error=False)  # might be already enabled
-                services.reload("fosquitto")
+                services.restart("fosquitto")
             else:
                 # Stop fosquitto when running incomaptible bus (best effort)
                 services.disable("fosquitto", fail_on_error=False)

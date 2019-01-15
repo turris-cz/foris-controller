@@ -605,6 +605,7 @@ def test_update_settings_ubus_unix(
         assert res["data"]["enabled"] is False
 
         if infrastructure.backend_name == "openwrt":
+            check_service_result("firewall", "reload", passed=True)
             check_service_result("fosquitto", "disable", passed=True, clean=False)
             check_service_result("fosquitto", "stop", passed=True)
 
@@ -642,8 +643,9 @@ def test_update_settings_openwrt_mqtt(
             u'kind': u'reply',
             u'module': u'remote'
         }
+        check_service_result("firewall", "reload", passed=True)
         check_service_result("fosquitto", "enable", passed=True, clean=False)
-        check_service_result("fosquitto", "reload", passed=True)
+        check_service_result("fosquitto", "restart", passed=True)
 
     update({
         "enabled": False,
