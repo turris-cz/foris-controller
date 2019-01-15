@@ -40,38 +40,27 @@ logger = logging.getLogger(__name__)
 ID = "%012x" % uuid.getnode()  # returns nodeid based on mac addr
 
 
-bus_info = {"state": "starting", "bus_thread": None}
+bus_info = {"bus_thread": None}
 
-ANNOUNCER_PERIOD = float(os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", 1.0)) # in seconds
+ANNOUNCER_PERIOD_DEFAULT = 1.0
+ANNOUNCER_PERIOD = float(
+    os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", ANNOUNCER_PERIOD_DEFAULT))  # in seconds
 ANNOUNCER_TOPIC = "foris-controller/advertize"
 
 
 def announcer_worker(host, port):
 
     def on_connect(client, userdata, flags, rc):
-        logger.debug("On connect.")
+        logger.debug("Announcer handles connect.")
         if rc == 0:
-            bus_info["state"] = "running"  # this thread should be started after initialization
             logger.debug("Announcer thread connected.")
             msg = {"state": "started", "id": ID}
             client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
-            logger.debug("Announcer thread publishes: %s", msg)
         else:
-            logger.error("Failed to connect announcer thread! No announcements will be send.")
+            logger.error("Failed to connect announcer thread!")
 
     def on_publish(client, userdata, mid):
-        if bus_info["state"] == "running":
-            time.sleep(ANNOUNCER_PERIOD or 1.0)
-            if bus_info["bus_thread"].is_alive():
-                if ANNOUNCER_PERIOD:  # don't announce when period is set to zero
-                    msg = {"state": "running", "id": ID}
-                    client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
-            else:
-                msg = {"state": "exitted", "id": ID}
-                client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
-                bus_info["state"] = "exitted"
-
-            logger.debug("Announcer thread publishes: %s", msg)
+        logger.debug("Announcer thread published.")
 
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -79,8 +68,15 @@ def announcer_worker(host, port):
     logger.debug("Announcer thread started. Trying to connect to '%s':'%d'", host, port)
     client.connect(host, port, keepalive=30)
 
-    while bus_info["state"] != "exitted":
-        client.loop(ANNOUNCER_PERIOD)
+    client.loop_start()
+
+    while bus_info["bus_thread"].is_alive():
+        time.sleep(ANNOUNCER_PERIOD or ANNOUNCER_PERIOD_DEFAULT)
+        if ANNOUNCER_PERIOD:
+            client.publish(ANNOUNCER_TOPIC, json.dumps({"state": "running", "id": ID}))
+
+    client.publish(ANNOUNCER_TOPIC, json.dumps({"state": "exitted", "id": ID}))
+    client.loop_stop()
 
 
 class MqttListener(BaseSocketListener):
@@ -204,20 +200,24 @@ class MqttListener(BaseSocketListener):
             logger.error("Don't know how to respond.")
 
     def __init__(self, host, port):
+        self.announcer_thread_running = False
+
         def on_subscribe(client, userdata, mid, granted_qos):
             MqttListener.subscriptions[mid] = True
             logger.debug("Subscribed to %d", mid)
             if not [e for e in MqttListener.subscriptions.values() if not e]:
                 logger.debug("All subscriptions passed.")
-                logger.debug("Starting announcer thread.")
-                bus_info["bus_thread"] = threading.current_thread()
-                announcer_thread = threading.Thread(
-                    name="announcer_thread", target=announcer_worker, kwargs={
-                        "host": host, "port": port,
-                    },
-                )
-                announcer_thread.daemon = True
-                announcer_thread.start()
+                if not self.announcer_thread_running:
+                    logger.debug("Starting announcer thread.")
+                    bus_info["bus_thread"] = threading.current_thread()
+                    announcer_thread = threading.Thread(
+                        name="announcer_thread", target=announcer_worker, kwargs={
+                            "host": host, "port": port,
+                        },
+                    )
+                    announcer_thread.daemon = False
+                    announcer_thread.start()
+                    self.announcer_thread_running = True
 
         self.client = mqtt.Client()
         self.client.on_connect = MqttListener.handle_on_connect
