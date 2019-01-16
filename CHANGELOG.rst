@@ -1,3 +1,10 @@
+0.11.1 (2019-01-16)
+-------------------
+
+* mqtt: more resilent announcer
+* remote: module added
+* guest+lan: handle '1d' as leasetime in uci
+
 0.11 (2018-12-21)
 -----------------
 
