@@ -23,6 +23,7 @@ import pytest
 import shutil
 import tarfile
 import json
+import uuid
 
 from io import BytesIO
 
@@ -831,11 +832,12 @@ def test_get_token_openwrt(
         with tar.extractfile("client2/conf.json") as f:
             conf = json.load(f)
 
-        assert set(conf.keys()) == {"hostname", "name", "ipv4_ips", "dhcp_names", "port"}
+        assert set(conf.keys()) == {"hostname", "name", "ipv4_ips", "dhcp_names", "port", "device_id"}
 
         assert conf["hostname"] == "testhostname"
         assert conf["name"] == "client2"
         assert conf["port"] == 12345
+        assert conf["device_id"] == "%012x" % uuid.getnode()
 
         assert "172.20.6.87" in conf["ipv4_ips"]["lan"]
         assert "192.168.31.1" in conf["ipv4_ips"]["lan"]

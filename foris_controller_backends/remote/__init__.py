@@ -23,6 +23,7 @@ import logging
 import tarfile
 import base64
 import json
+import uuid
 
 from io import BytesIO
 from collections import OrderedDict
@@ -315,6 +316,7 @@ class RemoteFiles(BaseFile):
                 "ipv4_ips": ips,
                 "dhcp_names": dhcp_names,
                 "port": port,
+                "device_id": "%012x" % uuid.getnode(),
             }))
 
         fake_file.seek(0)
