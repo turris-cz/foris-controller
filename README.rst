@@ -5,12 +5,13 @@ An program which is placed in top of a message bus and translates requests to co
 Requirements
 ============
 
+* python3
 * foris-schema
 
 Installation
 ============
 
-	``python setup.py install``
+	``python3 setup.py install``
 
 Usage
 =====
