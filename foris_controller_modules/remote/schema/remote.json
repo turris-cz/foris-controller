@@ -1,7 +1,8 @@
 {
     "definitions": {
         "cert_id": {"type": "string", "pattern": "^([0-9a-fA-F][0-9a-fA-F])+$"},
-        "cert_name": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$"}
+        "cert_name": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$"},
+        "controller_id": {"type": "string", "pattern": "^[a-z0-9]{12}$"}
     },
     "oneOf": [
         {
@@ -398,6 +399,25 @@
                             "required": ["status", "token"]
                         }
                     ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification serving as advertize on message bus",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["advertize"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/controller_id"},
+                        "state": {"enum": ["running", "started", "exitted"]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["id", "state"]
                 }
             },
             "additionalProperties": false,

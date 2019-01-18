@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import threading
 import time
 
 from paho.mqtt import client as mqtt
+from jsonschema import ValidationError
 
 from foris_controller.app import app_info
 from foris_controller.message_router import Router
@@ -45,7 +46,26 @@ bus_info = {"bus_thread": None}
 ANNOUNCER_PERIOD_DEFAULT = 1.0
 ANNOUNCER_PERIOD = float(
     os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", ANNOUNCER_PERIOD_DEFAULT))  # in seconds
-ANNOUNCER_TOPIC = "foris-controller/advertize"
+ANNOUNCER_TOPIC = f"foris-controller/{ID}/notification/remote/action/advertize"
+
+
+def _publish_advertize(client, msg):
+
+        logger.debug("Starting to validate advertize notification.")
+        to_validate_msg = {
+            "module": "remote",
+            "action": "advertize",
+            "kind": "notification",
+            "data": msg,
+        }
+        try:
+            # Hope that calling validator is treadsafe otherwise
+            # some locking mechanizm should be implemented
+            app_info["validator"].validate(to_validate_msg)
+            client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
+        except ValidationError as exc:
+            logger.error("Failed to validate advertize notification.")
+            logger.debug("Error: \n%s" % str(exc))
 
 
 def announcer_worker(host, port):
@@ -55,7 +75,7 @@ def announcer_worker(host, port):
         if rc == 0:
             logger.debug("Announcer thread connected.")
             msg = {"state": "started", "id": ID}
-            client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
+            _publish_advertize(client, msg)
         else:
             logger.error("Failed to connect announcer thread!")
 
@@ -73,9 +93,9 @@ def announcer_worker(host, port):
     while bus_info["bus_thread"].is_alive():
         time.sleep(ANNOUNCER_PERIOD or ANNOUNCER_PERIOD_DEFAULT)
         if ANNOUNCER_PERIOD:
-            client.publish(ANNOUNCER_TOPIC, json.dumps({"state": "running", "id": ID}))
+            _publish_advertize(client, {"state": "running", "id": ID})
 
-    client.publish(ANNOUNCER_TOPIC, json.dumps({"state": "exitted", "id": ID}))
+    _publish_advertize(client, {"state": "exitted", "id": ID})
     client.loop_stop()
 
 
