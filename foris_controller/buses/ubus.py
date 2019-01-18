@@ -226,7 +226,7 @@ class UbusListener(BaseSocketListener):
         logger.warning("All workers finished.")
 
 
-class UbusNotificationSender(BaseSocketListener, BaseNotificationSender):
+class UbusNotificationSender(BaseNotificationSender):
 
     def __init__(self, socket_path):
         """ Inits object which handles sending notification via ubus
