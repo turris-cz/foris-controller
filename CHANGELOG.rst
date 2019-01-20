@@ -1,3 +1,10 @@
+0.11.2 (2019-01-20)
+-------------------
+
+* converting advertizements to regular notifications (remote.advertize)
+* small code cleanups
+* python2 is no longer supported
+
 0.11.1 (2019-01-16)
 -------------------
 
