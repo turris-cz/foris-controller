@@ -43,7 +43,7 @@ def query_bus(topic):
             client.subscribe(reply_topic)
 
         def on_subscribe(client, userdata, mid, granted_qos):
-            client.publish(topic, json.dumps({"reply_topic": reply_topic}))
+            client.publish(topic, json.dumps({"reply_msg_id": str(msg_id)}))
 
         def on_message(client, userdata, msg):
             try:

@@ -180,10 +180,10 @@ class MqttListener(BaseSocketListener):
             logger.warning("Payload is not a JSON (msg.payload='%s')", msg.payload)
             return  # message in wrong format
 
-        if 'reply_topic' not in parsed:
-            logger.warning("Missing mandatory reply_topic (data='%s')", parsed)
-            return  # missing reply topic
-        reply_topic = parsed['reply_topic']
+        if 'reply_msg_id' not in parsed:
+            logger.warning("Missing mandatory reply_msg_id (data='%s')", parsed)
+            return  # missing reply msg_id
+        reply_topic = f"foris-controller/{ID}/reply/{parsed['reply_msg_id']}"
 
         response = None
 
