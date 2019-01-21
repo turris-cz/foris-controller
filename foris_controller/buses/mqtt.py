@@ -62,7 +62,7 @@ def _publish_advertize(client, msg):
             # Hope that calling validator is treadsafe otherwise
             # some locking mechanizm should be implemented
             app_info["validator"].validate(to_validate_msg)
-            client.publish(ANNOUNCER_TOPIC, json.dumps(msg))
+            client.publish(ANNOUNCER_TOPIC, json.dumps(msg), qos=0)
         except ValidationError as exc:
             logger.error("Failed to validate advertize notification.")
             logger.debug("Error: \n%s" % str(exc))
@@ -82,7 +82,7 @@ def announcer_worker(host, port):
     def on_publish(client, userdata, mid):
         logger.debug("Announcer thread published.")
 
-    client = mqtt.Client()
+    client = mqtt.Client(client_id=str(uuid.uuid4()), clean_session=False)
     client.on_connect = on_connect
     client.on_publish = on_publish
     logger.debug("Announcer thread started. Trying to connect to '%s':'%d'", host, port)
@@ -122,25 +122,25 @@ class MqttListener(BaseSocketListener):
 
         # subscription for listing modules
         list_modules_topic = "foris-controller/%s/list" % ID
-        rc, mid = client.subscribe(list_modules_topic)
+        rc, mid = client.subscribe(list_modules_topic, qos=0)
         check_subscription(rc, mid, list_modules_topic)
         logger.debug("Subscribing to '%s'." % list_modules_topic)
 
         # subscription for obtaining the entire schema
         schema_topic = "foris-controller/%s/jsonschemas" % ID
-        rc, mid = client.subscribe(schema_topic)
+        rc, mid = client.subscribe(schema_topic, qos=0)
         check_subscription(rc, mid, schema_topic)
         logger.debug("Subscribing to '%s'." % schema_topic)
 
         # subscription for listing module actions
         action_topic = "foris-controller/%s/request/+/list" % ID
-        rc, mid = client.subscribe(action_topic)
+        rc, mid = client.subscribe(action_topic, qos=0)
         check_subscription(rc, mid, action_topic)
         logger.debug("Subscribing to '%s'." % action_topic)
 
         # listen to all requests for my node
         request_topics = "foris-controller/%s/request/+/action/+" % ID
-        rc, mid = client.subscribe(request_topics)
+        rc, mid = client.subscribe(request_topics, qos=0)
         check_subscription(rc, mid, request_topics)
         logger.debug("Subscribing to '%s'." % request_topics)
 
@@ -167,60 +167,14 @@ class MqttListener(BaseSocketListener):
             get_modules(app_info["filter_modules"], app_info["extra_module_paths"]))
         return get_method_names_from_module(modules_dict.get(module_name)) or []
 
-    @staticmethod
-    def handle_on_message(client, userdata, msg):
-        logger.debug(
-            "Msg recieved. (client='%s', userdata='%s', topic='%s', payload='%s')",
-            client, userdata, msg.topic, msg.payload,
-        )
-
-        try:
-            parsed = json.loads(msg.payload)
-        except ValueError:
-            logger.warning("Payload is not a JSON (msg.payload='%s')", msg.payload)
-            return  # message in wrong format
-
-        if 'reply_msg_id' not in parsed:
-            logger.warning("Missing mandatory reply_msg_id (data='%s')", parsed)
-            return  # missing reply msg_id
-        reply_topic = f"foris-controller/{ID}/reply/{parsed['reply_msg_id']}"
-
-        response = None
-
-        # parse topic
-        match = re.match(r"^foris-controller/[^/]+/list$", msg.topic)
-        if match:
-            response = MqttListener.list_modules()
-
-        match = re.match(r"^foris-controller/[^/]+/jsonschemas$", msg.topic)
-        if match:
-            response = MqttListener.get_schema()
-
-        match = re.match(r"^foris-controller/[^/]+/request/([^/]+)/list$", msg.topic)
-        if match:
-            module_name = match.group(1)
-            response = MqttListener.list_actions(module_name)
-
-        match = re.match(r"^foris-controller/[^/]+/request/([^/]+)/action/([^/]+)$", msg.topic)
-        if match:
-            module_name, action_name = match.group(1, 2)
-            msg = {
-                'module': module_name,
-                'kind': 'request',
-                'action': action_name,
-            }
-            if 'data' in parsed:
-                msg['data'] = parsed['data']
-            response = MqttListener.router.process_message(msg)
-
-        if response is not None:
-            client.publish(reply_topic, json.dumps(response))
-        else:
-            # This should not happen
-            logger.error("Don't know how to respond.")
-
     def __init__(self, host, port):
         self.announcer_thread_running = False
+        self.unpublished_mids = {}
+
+        def on_publish(client, userdata, mid):
+            logger.debug("Mid %s is published", mid)
+            if mid in self.unpublished_mids:
+                del self.unpublished_mids[mid]
 
         def on_subscribe(client, userdata, mid, granted_qos):
             MqttListener.subscriptions[mid] = True
@@ -239,10 +193,75 @@ class MqttListener(BaseSocketListener):
                     announcer_thread.start()
                     self.announcer_thread_running = True
 
-        self.client = mqtt.Client()
+                # try to republish unfinished messages
+                for topic, message in self.unpublished_mids.values():
+                    client.publish(topic, message, qos=0)
+
+                self.unpublished_mids = {}
+
+        def on_message(client, userdata, msg):
+            logger.debug(
+                "Msg recieved. (client='%s', userdata='%s', topic='%s', payload='%s')",
+                client, userdata, msg.topic, msg.payload,
+            )
+
+            try:
+                parsed = json.loads(msg.payload)
+            except ValueError:
+                logger.warning("Payload is not a JSON (msg.payload='%s')", msg.payload)
+                return  # message in wrong format
+
+            if 'reply_msg_id' not in parsed:
+                logger.warning("Missing mandatory reply_msg_id (data='%s')", parsed)
+                return  # missing reply msg_id
+            reply_topic = f"foris-controller/{ID}/reply/{parsed['reply_msg_id']}"
+
+            response = None
+
+            # parse topic
+            match = re.match(r"^foris-controller/[^/]+/list$", msg.topic)
+            if match:
+                response = MqttListener.list_modules()
+
+            match = re.match(r"^foris-controller/[^/]+/jsonschemas$", msg.topic)
+            if match:
+                response = MqttListener.get_schema()
+
+            match = re.match(r"^foris-controller/[^/]+/request/([^/]+)/list$", msg.topic)
+            if match:
+                module_name = match.group(1)
+                response = MqttListener.list_actions(module_name)
+
+            match = re.match(r"^foris-controller/[^/]+/request/([^/]+)/action/([^/]+)$", msg.topic)
+            if match:
+                module_name, action_name = match.group(1, 2)
+                msg = {
+                    'module': module_name,
+                    'kind': 'request',
+                    'action': action_name,
+                }
+                if 'data' in parsed:
+                    msg['data'] = parsed['data']
+                response = MqttListener.router.process_message(msg)
+
+            if response is not None:
+                raw_response = json.dumps(response)
+                mqtt_message = client.publish(reply_topic, raw_response, qos=0)
+                self.unpublished_mids[mqtt_message.mid] = (reply_topic, raw_response)
+                logger.debug(
+                    "Publishing message (mid=%s) for %s: %s",
+                    mqtt_message.mid, reply_topic, response
+                )
+
+            else:
+                # This should not happen
+                logger.error("Don't know how to respond.")
+
+        self.client = mqtt.Client(client_id=str(uuid.uuid4()), clean_session=False)
         self.client.on_connect = MqttListener.handle_on_connect
-        self.client.on_message = MqttListener.handle_on_message
+        self.client.on_message = on_message
         self.client.on_subscribe = on_subscribe
+        self.client.on_publish = on_publish
         self.client.connect(host, port, keepalive=30)
 
     def serve_forever(self):
@@ -267,7 +286,7 @@ class MqttNotificationSender(BaseNotificationSender):
         def on_disconnect(client, userdata, rc):
             self._connected = False
 
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(client_id=str(uuid.uuid4()), clean_session=False)
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
         self.client.connect(self.host, self.port, keepalive=30)
@@ -286,9 +305,8 @@ class MqttNotificationSender(BaseNotificationSender):
         if not self._connected:
             self._connect()
 
-        publish_topic = "^foris-controller/[^/]+/request/([^/]+)/action/([^/]+)$"
         publish_topic = "foris-controller/%s/notification/%s/action/%s" % (ID, module, action)
-        self.client.publish(publish_topic, json.dumps(msg))
+        self.client.publish(publish_topic, json.dumps(msg), qos=0)
         logger.debug("Notification published. (topic=%s, msg=%s)", publish_topic, msg)
 
     def disconnect(self):
