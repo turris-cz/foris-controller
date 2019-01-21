@@ -1,3 +1,9 @@
+0.11.3 (2019-01-21)
+-------------------
+
+* mqtt: request - reply protocol change
+* mqtt: more resilent message handling
+
 0.11.2 (2019-01-20)
 -------------------
 
