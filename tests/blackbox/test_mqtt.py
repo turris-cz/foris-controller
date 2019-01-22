@@ -68,28 +68,22 @@ def query_bus(topic):
 @pytest.mark.only_message_buses(['mqtt'])
 def test_announcements(ubusd_test, infrastructure, file_root_init, mosquitto_test):
 
-    data = dict(required_count=3)
+    filters = [("remote", "advertize")]
+    notifications = infrastructure.get_notifications(filters=filters)
 
-    def on_connect(client, userdata, flags, rc):
-        client.subscribe(f"foris-controller/{MQTT_ID}/notification/remote/action/advertize")
+    # wait for at least 3 new notifications
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
 
-    def on_message(client, userdata, msg):
-        try:
-            parsed = json.loads(msg.payload)
-            assert parsed["id"] == MQTT_ID
-            if parsed["state"] in ["started", "running"]:
-                data["required_count"] -= 1
-                if data["required_count"] < 0:
-                    client.loop_stop(True)
-        except Exception:
-            pass
-
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect(MQTT_HOST, MQTT_PORT, 30)
-    client.loop_start()
-    client._thread.join(10)
+    # test format
+    for notification in notifications:
+        assert notification.keys() == {"module", "action", "kind", "data"}
+        assert notification["module"] == "remote"
+        assert notification["action"] == "advertize"
+        assert notification["kind"] == "notification"
+        assert notification["data"]["state"] in ["running", "started", "exitted"]
+        assert notification["data"]["id"] == MQTT_ID
 
 
 @pytest.mark.only_message_buses(['mqtt'])

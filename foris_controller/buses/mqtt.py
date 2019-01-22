@@ -49,19 +49,20 @@ ANNOUNCER_PERIOD = float(
 ANNOUNCER_TOPIC = f"foris-controller/{ID}/notification/remote/action/advertize"
 
 
-def _publish_advertize(client, msg):
+def _publish_advertize(client, data):
 
         logger.debug("Starting to validate advertize notification.")
-        to_validate_msg = {
+        msg = {
             "module": "remote",
             "action": "advertize",
             "kind": "notification",
-            "data": msg,
+            "data": data,
         }
         try:
             # Hope that calling validator is treadsafe otherwise
             # some locking mechanizm should be implemented
-            app_info["validator"].validate(to_validate_msg)
+            app_info["validator"].validate(msg)
+            logger.debug("Publishing advertize notification. (%s)", msg)
             client.publish(ANNOUNCER_TOPIC, json.dumps(msg), qos=0)
         except ValidationError as exc:
             logger.error("Failed to validate advertize notification.")
@@ -74,8 +75,7 @@ def announcer_worker(host, port):
         logger.debug("Announcer handles connect.")
         if rc == 0:
             logger.debug("Announcer thread connected.")
-            msg = {"state": "started", "id": ID}
-            _publish_advertize(client, msg)
+            _publish_advertize(client, {"state": "started", "id": ID})
         else:
             logger.error("Failed to connect announcer thread!")
 
