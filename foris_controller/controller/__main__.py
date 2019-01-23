@@ -22,6 +22,7 @@
 import argparse
 import logging
 import multiprocessing
+import typing
 
 from logging.handlers import SysLogHandler
 
@@ -32,10 +33,27 @@ from foris_controller.app import (
 from foris_controller.utils import LOGGER_MAX_LEN
 
 try:
-    from foris_client import buses as client_buses
+    __import__("foris_client.buses")
     client_modules_loaded = True
 except ImportError:
     client_modules_loaded = False
+
+
+available_buses: typing.List[str] = ['unix-socket']
+
+
+try:
+    __import__("ubus")
+    available_buses.append("ubus")
+except ModuleNotFoundError:
+    pass
+
+
+try:
+    __import__("paho.mqtt.client")
+    available_buses.append("mqtt")
+except ModuleNotFoundError:
+    pass
 
 
 logger = logging.getLogger("foris_controller")
@@ -45,21 +63,27 @@ def main():
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-controller")
     parser.add_argument('--version', action='version', version=__version__)
+
     subparsers = parser.add_subparsers(help="buses", dest="bus")
-    ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
-    ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
-    ubus_parser.add_argument(
-        "--single", default=False, action="store_true",
-        help="run only through a single worker process"
-    )
+    subparsers.required = True
+
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
     unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
     unix_parser.add_argument(
         "--notifications-path", default='/tmp/foris-controller-notifications.soc')
 
-    mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt recieve commands")
-    mqtt_parser.add_argument("--host", default='127.0.0.1')
-    mqtt_parser.add_argument("--port", type=int, default=1883)
+    if "ubus" in available_buses:
+        ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
+        ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
+        ubus_parser.add_argument(
+            "--single", default=False, action="store_true",
+            help="run only through a single worker process"
+        )
+
+    if "mqtt" in available_buses:
+        mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt recieve commands")
+        mqtt_parser.add_argument("--host", default='127.0.0.1')
+        mqtt_parser.add_argument("--port", type=int, default=1883)
 
     parser.add_argument(
         "-b", "--backend", type=str, choices=["mock", "openwrt"],

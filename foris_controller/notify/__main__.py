@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,9 +22,28 @@
 import argparse
 import logging
 import json
+import typing
 
 from foris_controller import __version__
 from foris_controller.utils import get_validator_dirs
+
+
+available_buses: typing.List[str] = ['unix-socket']
+
+
+try:
+    __import__("ubus")
+    available_buses.append("ubus")
+except ModuleNotFoundError:
+    pass
+
+
+try:
+    __import__("paho.mqtt.client")
+    available_buses.append("mqtt")
+except ModuleNotFoundError:
+    pass
+
 
 logger = logging.getLogger("foris_notify")
 
@@ -41,15 +60,20 @@ def main():
         "-a", "--action", dest="action", help="action which will be performed",
         required=True, type=str
     )
+
     subparsers = parser.add_subparsers(help="buses", dest="bus")
-    ubus_parser = subparsers.add_parser("ubus", help="use ubus to send notifications")
-    ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
+    subparsers.required = True
+
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to send notification")
     unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
+    if "ubus" in available_buses:
+        ubus_parser = subparsers.add_parser("ubus", help="use ubus to send notifications")
+        ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
 
-    mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt to send notification")
-    mqtt_parser.add_argument("--host", default='localhost')
-    mqtt_parser.add_argument("--port", type=int, default=1883)
+    if "mqtt" in available_buses:
+        mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt to send notification")
+        mqtt_parser.add_argument("--host", default='localhost')
+        mqtt_parser.add_argument("--port", type=int, default=1883)
 
     parser.add_argument("-d", "--debug", action="store_true", default=False)
     parser.add_argument(

@@ -116,8 +116,6 @@ setup(
         "pbkdf2",
         "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater.git#egg=svupdater&subdirectory=src/supervisor",
         "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
-        "ubus @ git+https://gitlab.labs.nic.cz/turris/python-ubus.git",
-        "paho-mqtt",
     ],
     setup_requires=[
         'pytest-runner',
@@ -126,8 +124,12 @@ setup(
         'pytest',
         'foris-controller-testtools',
         'foris-client',
+        'ubus',
+        'paho-mqtt',
     ],
     extras_require={
+        'ubus': ["ubus"],
+        'mqtt': ["paho-mqtt"],
         'client-socket': ["foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git"],
     },
     entry_points={
