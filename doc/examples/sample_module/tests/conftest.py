@@ -25,7 +25,7 @@ def cmdline_script_root():
 
 @pytest.fixture(scope="module")
 def controller_modules():
-    return ["sample"]
+    return ["remote", "sample"]
 
 
 def pytest_addoption(parser):
