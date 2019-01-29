@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,12 +23,9 @@ from datetime import datetime
 
 from foris_controller.updater import (
     svupdater, svupdater_approvals, svupdater_exceptions,
-    svupdater_hook, svupdater_l10n, svupdater_lists
+    svupdater_hook, svupdater_l10n, svupdater_lists, svupdater_autorun
 )
-from foris_controller_backends.uci import (
-    UciBackend, get_option_named, parse_bool, store_bool
-)
-from foris_controller.exceptions import UciRecordNotFound, UciException
+from foris_controller.exceptions import UciException
 
 logger = logging.getLogger(__name__)
 
@@ -37,83 +34,44 @@ class UpdaterUci(object):
 
     def get_settings(self):
 
-        with UciBackend() as backend:
-            updater_data = backend.read("updater")
-
         res = {
-            "enabled": not parse_bool(
-                get_option_named(updater_data, "updater", "override", "disable", "0")
-            ),
-            "branch": get_option_named(updater_data, "updater", "override", "branch", ""),
-            "user_lists": get_option_named(updater_data, "updater", "pkglists", "lists", []),
-            "languages": get_option_named(updater_data, "updater", "l10n", "langs", []),
+            "enabled": svupdater_autorun.enabled(),
+            "user_lists": [k for k, v in svupdater_lists.pkglists("en").items() if v["enabled"]],
+            "languages": svupdater_l10n.languages(),
             "approval_settings": {
-                "status": "on" if parse_bool(
-                    get_option_named(updater_data, "updater", "approvals", "need", "0"),
-                ) else "off"
+                "status": "on" if svupdater_autorun.approvals() else "off",
             }
         }
 
-        try:
-            delay_seconds = int(get_option_named(
-                updater_data, "updater", "approvals", "auto_grant_seconds"))
-            delay_hours = delay_seconds // (60 * 60)
-            res["approval_settings"]["delay"] = delay_hours
+        delay_time = svupdater_autorun.auto_approve_time()
+        if delay_time:
+            res["approval_settings"]["delay"] = delay_time
             if res["approval_settings"]["status"] == "on":
                 res["approval_settings"]["status"] = "delayed"
-        except UciRecordNotFound:
-            pass
 
         return res
 
     def get_enabled(self):
-        with UciBackend() as backend:
-            updater_data = backend.read("updater")
-        return not parse_bool(
-            get_option_named(updater_data, "updater", "override", "disable", "0")
-        )
+        return svupdater_autorun.enabled()
 
     def update_settings(
-        self, user_lists, languages, approvals_status, approvals_delay, enabled, branch
+        self, user_lists, languages, approvals_status, approvals_delay, enabled
     ):
-        with UciBackend() as backend:
-            if approvals_status is not None:
-                backend.add_section("updater", "approvals", "approvals")
-                if approvals_status == "off":
-                    try:
-                        backend.del_option("updater", "approvals", "auto_grant_seconds")
-                    except UciException:
-                        pass
-                    backend.set_option("updater", "approvals", "need", store_bool(False))
-                elif approvals_status == "on":
-                    try:
-                        backend.del_option("updater", "approvals", "auto_grant_seconds")
-                    except UciException:
-                        pass
-                    backend.set_option("updater", "approvals", "need", store_bool(True))
-                elif approvals_status == "delayed":
-                    backend.set_option(
-                        "updater", "approvals", "auto_grant_seconds",
-                        str(approvals_delay * 60 * 60)
-                    )
-                    backend.set_option("updater", "approvals", "need", store_bool(True))
-                else:
-                    raise NotImplementedError()
+        svupdater_autorun.set_enabled(enabled)
 
-            backend.add_section("updater", "override", "override")
-            if branch is not None:
-                if branch:
-                    backend.set_option("updater", "override", "branch", branch)
-                else:
-                    try:
-                        backend.del_option("updater", "override", "branch")
-                    except UciException:
-                        pass
-
-            backend.set_option("updater", "override", "disable", store_bool(not enabled))
+        if approvals_status is not None:
+            if approvals_status == "off":
+                svupdater_autorun.set_approvals(False)
+            elif approvals_status == "on":
+                svupdater_autorun.set_approvals(True)
+            elif approvals_status == "delayed":
+                svupdater_autorun.set_approvals(True)
+                svupdater_autorun.set_auto_approve_time(approvals_delay)
+            else:
+                raise NotImplementedError()
 
         if user_lists is not None:
-            svupdater_lists.update_userlists(user_lists)
+            svupdater_lists.update_pkglists(user_lists)
 
         if languages is not None:
             svupdater_l10n.update_languages(languages)
@@ -170,7 +128,7 @@ class Updater(object):
 
     def get_user_lists(self, lang):
         logger.debug("Getting user lists for '%s'", lang)
-        user_lists = svupdater_lists.userlists(lang)
+        user_lists = svupdater_lists.pkglists(lang)
         logger.debug("Userlists obtained: %s", user_lists)
         return [
             {

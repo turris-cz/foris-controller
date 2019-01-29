@@ -203,13 +203,11 @@
                         "languages": {"$ref": "#/definitions/updater_languages_get"},
                         "approval_settings": {"$ref": "#/definitions/updater_approvals_settings_get"},
                         "enabled": {"type": "boolean"},
-                        "branch": {"type": "string"},
                         "approval": {"$ref": "#/definitions/updater_approval"}
                     },
                     "additionalProperties": false,
                     "required": [
-                        "user_lists", "languages", "approval_settings", "enabled", "branch",
-                        "approval"
+                        "user_lists", "languages", "approval_settings", "enabled", "approval"
                     ]
                 }
             },
@@ -257,12 +255,11 @@
                                 "user_lists": {"$ref": "#/definitions/updater_user_lists_set"},
                                 "languages": {"$ref": "#/definitions/updater_languages_set"},
                                 "approval_settings": {"$ref": "#/definitions/updater_approvals_settings_set"},
-                                "enabled": {"enum": [true]},
-                                "branch": {"type": "string"}
+                                "enabled": {"enum": [true]}
                             },
                             "additionalProperties": false,
                             "required": [
-                                "user_lists", "languages", "approval_settings", "enabled", "branch"
+                                "user_lists", "languages", "approval_settings", "enabled"
                             ]
                         },
                         {

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,3 +36,5 @@ svupdater_l10n = import_module(
     "%s.l10n" % updater_module, "svupdater.l10n")
 svupdater_lists = import_module(
     "%s.lists" % updater_module, "svupdater.lists")
+svupdater_autorun = import_module(
+    "%s.autorun" % updater_module, "svupdater.autorun")

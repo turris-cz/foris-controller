@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -157,7 +157,6 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         {"code": "it", "enabled": False},
         {"code": "nb_NO", "enabled": True},
     ]
-    branch = ""
     approvals_delay = None
     enabled = True
     approvals_status = "off"
@@ -173,14 +172,13 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         result = {
             "approval_settings": {"status": self.approvals_status},
             "enabled": self.enabled,
-            "branch": self.branch,
         }
         if self.approvals_delay:
             result["approval_settings"]["delay"] = self.approvals_delay
         return result
 
     @logger_wrapper(logger)
-    def update_settings(self, user_lists, languages, approvals_settings, enabled, branch):
+    def update_settings(self, user_lists, languages, approvals_settings, enabled):
         """ Mocks update updater settings
 
         :param user_lists: new user-list set
@@ -191,8 +189,6 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :type approvals_settings: dict
         :param enable: is updater enabled indicator
         :type enable: bool
-        :param branch: which branch is updater using default("" == "stable")
-        :type enable: string
         :returns: True on success False otherwise
         :rtype: bool
         """
@@ -206,8 +202,6 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             MockUpdaterHandler.approvals_delay = approvals_settings.get("delay", None)
             MockUpdaterHandler.approvals_status = approvals_settings["status"]
         MockUpdaterHandler.enabled = enabled
-        if branch is not None:
-            MockUpdaterHandler.branch = branch
         MockUpdaterHandler.guide_set.set(True)
 
         return True

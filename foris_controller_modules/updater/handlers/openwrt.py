@@ -42,7 +42,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         return OpenwrtUpdaterHandler.uci.get_settings()
 
     @logger_wrapper(logger)
-    def update_settings(self, user_lists, languages, approvals_settings, enabled, branch):
+    def update_settings(self, user_lists, languages, approvals_settings, enabled):
         """ update updater settings
 
         :param user_lists: new user-list set
@@ -53,15 +53,13 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :type approvals_settings: dict
         :param enable: is updater enabled indicator
         :type enable: bool
-        :param branch: which branch is updater using default("" == "stable")
-        :type enable: string
         :returns: True on success False otherwise
         :rtype: bool
         """
         approvals_status = approvals_settings['status'] if approvals_settings else None
         approvals_delay = approvals_settings.get('delay', None) if approvals_settings else None
         return OpenwrtUpdaterHandler.uci.update_settings(
-            user_lists, languages, approvals_status, approvals_delay, enabled, branch
+            user_lists, languages, approvals_status, approvals_delay, enabled
         )
 
     @logger_wrapper(logger)
