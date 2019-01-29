@@ -1,3 +1,9 @@
+0.11.4 (2019-01-29)
+-------------------
+
+* updater: api chnaged (no need to use uci)
+* make ubus and mqtt buses optional
+
 0.11.3.1 (2019-01-22)
 ---------------------
 
