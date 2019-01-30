@@ -316,7 +316,7 @@ class RemoteFiles(BaseFile):
                 "ipv4_ips": ips,
                 "dhcp_names": dhcp_names,
                 "port": port,
-                "device_id": "%012x" % uuid.getnode(),
+                "device_id": app_info["controller_id"],
             }))
 
         fake_file.seek(0)

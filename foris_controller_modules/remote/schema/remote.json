@@ -2,7 +2,7 @@
     "definitions": {
         "cert_id": {"type": "string", "pattern": "^([0-9a-fA-F][0-9a-fA-F])+$"},
         "cert_name": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$"},
-        "controller_id": {"type": "string", "pattern": "^[a-z0-9]{12}$"}
+        "controller_id": {"type": "string", "pattern": "^[a-zA-Z0-9]{16}$"}
     },
     "oneOf": [
         {

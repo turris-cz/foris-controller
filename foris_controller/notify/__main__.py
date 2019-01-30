@@ -22,6 +22,7 @@
 import argparse
 import logging
 import json
+import re
 import typing
 
 from foris_controller import __version__
@@ -74,6 +75,10 @@ def main():
         mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt to send notification")
         mqtt_parser.add_argument("--host", default='localhost')
         mqtt_parser.add_argument("--port", type=int, default=1883)
+        mqtt_parser.add_argument(
+            "--controller-id", type=lambda x: re.match(r"[a-zA-Z]{16}", x).group().upper(),
+            required=False
+        )
 
     parser.add_argument("-d", "--debug", action="store_true", default=False)
     parser.add_argument(
@@ -126,7 +131,8 @@ def main():
 
     for notification in notifications:
         sender.notify(
-            options.module, options.action, notification if notification else None, validator
+            options.module, options.action, notification if notification else None,
+            validator, getattr(options, 'controller_id', None)
         )
 
 

@@ -38,35 +38,32 @@ from .base import BaseNotificationSender, BaseSocketListener, get_method_names_f
 logger = logging.getLogger(__name__)
 
 
-ID = "%012x" % uuid.getnode()  # returns nodeid based on mac addr
-
-
 bus_info = {"bus_thread": None}
 
 ANNOUNCER_PERIOD_DEFAULT = 1.0
 ANNOUNCER_PERIOD = float(
     os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", ANNOUNCER_PERIOD_DEFAULT))  # in seconds
-ANNOUNCER_TOPIC = f"foris-controller/{ID}/notification/remote/action/advertize"
 
 
 def _publish_advertize(client, data):
-
-        logger.debug("Starting to validate advertize notification.")
-        msg = {
-            "module": "remote",
-            "action": "advertize",
-            "kind": "notification",
-            "data": data,
-        }
-        try:
-            # Hope that calling validator is treadsafe otherwise
-            # some locking mechanizm should be implemented
-            app_info["validator"].validate(msg)
-            logger.debug("Publishing advertize notification. (%s)", msg)
-            client.publish(ANNOUNCER_TOPIC, json.dumps(msg), qos=0)
-        except ValidationError as exc:
-            logger.error("Failed to validate advertize notification.")
-            logger.debug("Error: \n%s" % str(exc))
+    ANNOUNCER_TOPIC = \
+        f"foris-controller/{app_info['controller_id']}/notification/remote/action/advertize"
+    logger.debug("Starting to validate advertize notification.")
+    msg = {
+        "module": "remote",
+        "action": "advertize",
+        "kind": "notification",
+        "data": data,
+    }
+    try:
+        # Hope that calling validator is treadsafe otherwise
+        # some locking mechanizm should be implemented
+        app_info["validator"].validate(msg)
+        logger.debug("Publishing advertize notification. (%s)", msg)
+        client.publish(ANNOUNCER_TOPIC, json.dumps(msg), qos=0)
+    except ValidationError as exc:
+        logger.error("Failed to validate advertize notification.")
+        logger.debug("Error: \n%s" % str(exc))
 
 
 def announcer_worker(host, port):
@@ -75,7 +72,7 @@ def announcer_worker(host, port):
         logger.debug("Announcer handles connect.")
         if rc == 0:
             logger.debug("Announcer thread connected.")
-            _publish_advertize(client, {"state": "started", "id": ID})
+            _publish_advertize(client, {"state": "started", "id": app_info['controller_id']})
         else:
             logger.error("Failed to connect announcer thread!")
 
@@ -93,9 +90,9 @@ def announcer_worker(host, port):
     while bus_info["bus_thread"].is_alive():
         time.sleep(ANNOUNCER_PERIOD or ANNOUNCER_PERIOD_DEFAULT)
         if ANNOUNCER_PERIOD:
-            _publish_advertize(client, {"state": "running", "id": ID})
+            _publish_advertize(client, {"state": "running", "id": app_info['controller_id']})
 
-    _publish_advertize(client, {"state": "exitted", "id": ID})
+    _publish_advertize(client, {"state": "exitted", "id": app_info['controller_id']})
     client.loop_stop()
 
 
@@ -121,25 +118,25 @@ class MqttListener(BaseSocketListener):
             MqttListener.subscriptions[mid] = False
 
         # subscription for listing modules
-        list_modules_topic = "foris-controller/%s/list" % ID
+        list_modules_topic = "foris-controller/%s/list" % app_info['controller_id']
         rc, mid = client.subscribe(list_modules_topic, qos=0)
         check_subscription(rc, mid, list_modules_topic)
         logger.debug("Subscribing to '%s'." % list_modules_topic)
 
         # subscription for obtaining the entire schema
-        schema_topic = "foris-controller/%s/jsonschemas" % ID
+        schema_topic = "foris-controller/%s/jsonschemas" % app_info['controller_id']
         rc, mid = client.subscribe(schema_topic, qos=0)
         check_subscription(rc, mid, schema_topic)
         logger.debug("Subscribing to '%s'." % schema_topic)
 
         # subscription for listing module actions
-        action_topic = "foris-controller/%s/request/+/list" % ID
+        action_topic = "foris-controller/%s/request/+/list" % app_info['controller_id']
         rc, mid = client.subscribe(action_topic, qos=0)
         check_subscription(rc, mid, action_topic)
         logger.debug("Subscribing to '%s'." % action_topic)
 
         # listen to all requests for my node
-        request_topics = "foris-controller/%s/request/+/action/+" % ID
+        request_topics = "foris-controller/%s/request/+/action/+" % app_info['controller_id']
         rc, mid = client.subscribe(request_topics, qos=0)
         check_subscription(rc, mid, request_topics)
         logger.debug("Subscribing to '%s'." % request_topics)
@@ -214,7 +211,8 @@ class MqttListener(BaseSocketListener):
             if 'reply_msg_id' not in parsed:
                 logger.warning("Missing mandatory reply_msg_id (data='%s')", parsed)
                 return  # missing reply msg_id
-            reply_topic = f"foris-controller/{ID}/reply/{parsed['reply_msg_id']}"
+            reply_topic = \
+                f"foris-controller/{app_info['controller_id']}/reply/{parsed['reply_msg_id']}"
 
             response = None
 
@@ -299,13 +297,17 @@ class MqttNotificationSender(BaseNotificationSender):
         self._connect()
         self._connected = True
 
-    def _send_message(self, msg, module, action, data=None):
+    def _send_message(self, msg, controller_id, module, action, data=None):
         logger.debug(
-            "Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data))
+            "Sending notificaton (controller_id='%s', module='%s', action='%s', data='%s')"
+            % (controller_id, module, action, data)
+        )
         if not self._connected:
             self._connect()
 
-        publish_topic = "foris-controller/%s/notification/%s/action/%s" % (ID, module, action)
+        publish_topic = "foris-controller/%s/notification/%s/action/%s" % (
+            controller_id, module, action
+        )
         self.client.publish(publish_topic, json.dumps(msg), qos=0)
         logger.debug("Notification published. (topic=%s, msg=%s)", publish_topic, msg)
 

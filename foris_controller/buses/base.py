@@ -19,6 +19,7 @@
 
 import logging
 import inspect
+import uuid
 
 
 logger = logging.getLogger(__name__)
@@ -43,14 +44,18 @@ class BaseNotificationSender(object):
             msg["data"] = data
         return msg
 
-    def notify(self, module, action, data=None, validator=None):
+    def notify(self, module, action, data=None, validator=None, controller_id=None):
         """ Send a notification on a message bus
         """
+
+        if controller_id is None:
+            controller_id = f"{uuid.getnode():016X}"  # returns nodeid based on mac addr
+
         msg = self._prepare_msg(module, action, data)
         if validator:
             self._validate(msg, validator)
 
-        return self._send_message(msg, module, action, data)
+        return self._send_message(msg, controller_id, module, action, data)
 
     def _send_message(self, msg, module, action, data=None):
         raise NotImplementedError()

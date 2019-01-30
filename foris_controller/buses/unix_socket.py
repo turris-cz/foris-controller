@@ -128,7 +128,7 @@ class UnixSocketNotificationSender(BaseNotificationSender):
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.connect(socket_path)
 
-    def _send_message(self, msg, module, action, data=None):
+    def _send_message(self, msg, controller_id, module, action, data=None):
         notification = json.dumps(msg).encode("utf8")
         notification_length = struct.pack("I", len(notification))
         logger.debug("Sending notification (len=%d) %s" % (

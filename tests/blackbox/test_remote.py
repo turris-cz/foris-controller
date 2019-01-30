@@ -837,7 +837,7 @@ def test_get_token_openwrt(
         assert conf["hostname"] == "testhostname"
         assert conf["name"] == "client2"
         assert conf["port"] == 12345
-        assert conf["device_id"] == "%012x" % uuid.getnode()
+        assert conf["device_id"] == "%016X" % uuid.getnode()
 
         assert "172.20.6.87" in conf["ipv4_ips"]["lan"]
         assert "192.168.31.1" in conf["ipv4_ips"]["lan"]

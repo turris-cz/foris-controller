@@ -20,6 +20,7 @@
 import os
 import logging
 import importlib
+import uuid
 
 
 from foris_controller import __version__
@@ -51,6 +52,9 @@ def set_app_info(program_options):
     app_info["lock_backend"] = multiprocessing if app_info["bus"] in ["ubus"] else threading
     if app_info["bus"] == "ubus":
         app_info["ubus_single_process"] = program_options.single
+
+    controller_id = getattr(program_options, 'controller_id', None)
+    app_info["controller_id"] = controller_id or f"{uuid.getnode():016X}"
 
 
 def _gen_notify(module_name):

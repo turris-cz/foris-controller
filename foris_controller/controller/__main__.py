@@ -19,6 +19,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import re
 import argparse
 import logging
 import multiprocessing
@@ -84,6 +85,10 @@ def main():
         mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt recieve commands")
         mqtt_parser.add_argument("--host", default='127.0.0.1')
         mqtt_parser.add_argument("--port", type=int, default=1883)
+        mqtt_parser.add_argument(
+            "--controller-id", type=lambda x: re.match(r"[a-zA-Z]{16}", x).group().upper(),
+            required=False
+        )
 
     parser.add_argument(
         "-b", "--backend", type=str, choices=["mock", "openwrt"],

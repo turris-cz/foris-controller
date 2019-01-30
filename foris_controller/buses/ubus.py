@@ -236,7 +236,7 @@ class UbusNotificationSender(BaseNotificationSender):
         """
         self.socket_path = socket_path
 
-    def _send_message(self, msg, module, action, data=None):
+    def _send_message(self, msg, controller_id, module, action, data=None):
         if not ubus.get_connected():
             logger.debug("Connecting to ubus.")
             ubus.connect(self.socket_path)
