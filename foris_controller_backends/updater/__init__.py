@@ -64,6 +64,7 @@ class UpdaterUci(object):
                 svupdater_autorun.set_approvals(False)
             elif approvals_status == "on":
                 svupdater_autorun.set_approvals(True)
+                svupdater_autorun.set_auto_approve_time(0)
             elif approvals_status == "delayed":
                 svupdater_autorun.set_approvals(True)
                 svupdater_autorun.set_auto_approve_time(approvals_delay)
