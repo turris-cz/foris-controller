@@ -56,6 +56,8 @@ def set_app_info(program_options):
     controller_id = getattr(program_options, 'controller_id', None)
     app_info["controller_id"] = controller_id or f"{uuid.getnode():016X}"
 
+    app_info["mqtt_credentials"] = getattr(program_options, "passwd_file", None)
+
 
 def _gen_notify(module_name):
     """ Generator for notify function which wrapps module name inside the notify call

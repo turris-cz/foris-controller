@@ -83,6 +83,8 @@ def announcer_worker(host, port):
     client.on_connect = on_connect
     client.on_publish = on_publish
     logger.debug("Announcer thread started. Trying to connect to '%s':'%d'", host, port)
+    if app_info["mqtt_credentials"]:
+        client.username_pw_set(*app_info["mqtt_credentials"])
     client.connect(host, port, keepalive=30)
 
     client.loop_start()
@@ -260,6 +262,8 @@ class MqttListener(BaseSocketListener):
         self.client.on_message = on_message
         self.client.on_subscribe = on_subscribe
         self.client.on_publish = on_publish
+        if app_info["mqtt_credentials"]:
+            self.client.username_pw_set(*app_info["mqtt_credentials"])
         self.client.connect(host, port, keepalive=30)
 
     def serve_forever(self):
@@ -287,13 +291,17 @@ class MqttNotificationSender(BaseNotificationSender):
         self.client = mqtt.Client(client_id=str(uuid.uuid4()), clean_session=False)
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
+        if self.credentials:
+            self.client.username_pw_set(*self.credentials)
         self.client.connect(self.host, self.port, keepalive=30)
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, credentials):
         logger.debug("Connecting to mqtt server.")
 
         self.host = host
         self.port = port
+        self.credentials = credentials
+
         self._connect()
         self._connected = True
 

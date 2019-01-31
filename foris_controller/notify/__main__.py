@@ -26,7 +26,7 @@ import re
 import typing
 
 from foris_controller import __version__
-from foris_controller.utils import get_validator_dirs
+from foris_controller.utils import get_validator_dirs, read_passwd_file
 
 
 available_buses: typing.List[str] = ['unix-socket']
@@ -79,6 +79,11 @@ def main():
             "--controller-id", type=lambda x: re.match(r"[a-zA-Z]{16}", x).group().upper(),
             required=False
         )
+        mqtt_parser.add_argument(
+            "--passwd-file", type=lambda x: read_passwd_file(x),
+            help="path to passwd file (first record will be used to authenticate)",
+            default=None, required=False,
+        )
 
     parser.add_argument("-d", "--debug", action="store_true", default=False)
     parser.add_argument(
@@ -116,7 +121,7 @@ def main():
     elif options.bus == "mqtt":
         from foris_controller.buses.mqtt import MqttNotificationSender
         logger.info("Using mqtt to send notifications.")
-        sender = MqttNotificationSender(options.host, options.port)
+        sender = MqttNotificationSender(options.host, options.port, options.passwd_file)
 
     # load validator
     if not options.no_validation:

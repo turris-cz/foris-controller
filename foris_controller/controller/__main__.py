@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ from foris_controller import __version__
 from foris_controller.app import (
     app_info, set_app_info, prepare_app_modules, prepare_notification_sender
 )
-from foris_controller.utils import LOGGER_MAX_LEN
+from foris_controller.utils import LOGGER_MAX_LEN, read_passwd_file
 
 try:
     __import__("foris_client.buses")
@@ -88,6 +88,11 @@ def main():
         mqtt_parser.add_argument(
             "--controller-id", type=lambda x: re.match(r"[a-zA-Z]{16}", x).group().upper(),
             required=False
+        )
+        mqtt_parser.add_argument(
+            "--passwd-file", type=lambda x: read_passwd_file(x),
+            help="path to passwd file (first record will be used to authenticate)",
+            default=None,
         )
 
     parser.add_argument(
@@ -155,7 +160,7 @@ def main():
         logger.info("Using mqtt to recieve commands.")
         server = MqttListener(options.host, options.port)
         prepare_notification_sender(
-            MqttNotificationSender, options.host, options.port)
+            MqttNotificationSender, options.host, options.port, options.passwd_file)
 
     if options.backend == "openwrt":
         from foris_controller.handler_base import BaseOpenwrtHandler
@@ -192,7 +197,7 @@ def main():
             sender_args = (options.host, options.port)
             from foris_controller.buses.mqtt import MqttNotificationSender
             notification_sender_class = MqttNotificationSender
-            notification_sender_args = (options.host, options.port)
+            notification_sender_args = (options.host, options.port, options.passwd_file)
 
         # start in subprocess
         from foris_controller.client_socket import worker

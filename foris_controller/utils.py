@@ -27,6 +27,7 @@ import signal
 import socket
 import struct
 import re
+import typing
 
 from functools import wraps
 from multiprocessing.managers import SyncManager
@@ -313,3 +314,10 @@ def make_multiprocessing_manager():
     manager = SyncManager()
     manager.start(initializer=lambda: prctl.set_pdeathsig(signal.SIGKILL))
     return manager
+
+
+def read_passwd_file(path: str) -> typing.Tuple[str]:
+    """ Returns username and password from passwd file
+    """
+    with open(path, "r") as f:
+        return re.match(r"^([^:]+):(.*)$", f.readlines()[0][:-1]).groups()
