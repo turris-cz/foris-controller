@@ -1,3 +1,9 @@
+0.11.5 (2019-01-31)
+-------------------
+
+* mqtt: can set path to credentials file
+* make controller_id configurable + update its format
+
 0.11.4.1 (2019-01-30)
 ---------------------
 
