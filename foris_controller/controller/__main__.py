@@ -194,7 +194,7 @@ def main():
         elif options.bus == "mqtt":
             from foris_client.buses.mqtt import MqttSender
             sender_class = MqttSender
-            sender_args = (options.host, options.port)
+            sender_args = (options.host, options.port, None, [], options.passwd_file)
             from foris_controller.buses.mqtt import MqttNotificationSender
             notification_sender_class = MqttNotificationSender
             notification_sender_args = (options.host, options.port, options.passwd_file)
