@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import base64
 import logging
 
 from foris_controller.handler_base import BaseMockHandler
@@ -31,6 +32,15 @@ class MockPasswordHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
     system_password = None
     foris_password = None
+
+    filter_passwords = {
+        b"password_from_haas": {
+            "count": 101, "list": "haas"
+        },
+        b"password_from_other": {
+            "count": 666, "list": "other"
+        },
+    }
 
     @logger_wrapper(logger)
     def check_foris_password(self, password):
@@ -51,12 +61,17 @@ class MockPasswordHandler(Handler, BaseMockHandler):
 
         :param password: plain text password
         :type password: str
-        :returns: True on success False otherwise
-        :rtype: bool
+        :returns: {result: True} or {result: False, list: ..., count: ...}
+        :rtype: dict
         """
+        if password in MockPasswordHandler.filter_passwords:
+            res = {"result": False}
+            res.update(**MockPasswordHandler.filter_passwords[password])
+            return res
+
         MockPasswordHandler.foris_password = password
         MockPasswordHandler.guide_set.set(True)
-        return True
+        return {"result": True}
 
     @logger_wrapper(logger)
     def set_system_password(self, password):
@@ -64,8 +79,12 @@ class MockPasswordHandler(Handler, BaseMockHandler):
 
         :param password: plain text password
         :type password: str
-        :returns: True on success False otherwise
-        :rtype: bool
+        :returns: {result: True} or {result: False, list: ..., count: ...}
+        :rtype: dict
         """
         MockPasswordHandler.system_password = password
-        return True
+        if password in MockPasswordHandler.filter_passwords:
+            res = {"result": False}
+            res.update(**MockPasswordHandler.filter_passwords[password])
+            return res
+        return {"result": True}

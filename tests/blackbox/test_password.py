@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,10 +26,14 @@ import string
 
 from foris_controller_testtools.fixtures import (
     uci_configs_init, infrastructure, only_backends, device, turris_os_version,
+    file_root_init,
     start_buses, ubusd_test, mosquitto_test,
 )
 
 PASS_PATH = "/tmp/passwd_input"
+
+FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_password_files")
+
 
 @pytest.fixture
 def pass_file():
@@ -153,3 +157,55 @@ def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, start_bus
     }
     with open(pass_file) as f:
         assert f.read() == ("%(password)s\n%(password)s\n" % dict(password=new_pass))
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_password_filter(uci_configs_init, pass_file, infrastructure, start_buses):
+    res = infrastructure.process_message({
+        "module": "password",
+        "action": "set",
+        "kind": "request",
+        "data": {"password": base64.b64encode("password_from_haas".encode()).decode("utf-8"), "type": "system"},
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': False, "list": "haas", "count": 101},
+        u'kind': u'reply',
+        u'module': u'password'
+    }
+    res = infrastructure.process_message({
+        "module": "password",
+        "action": "set",
+        "kind": "request",
+        "data": {"password": base64.b64encode("password_from_other".encode()).decode("utf-8"), "type": "foris"},
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': False, "list": "other", "count": 666},
+        u'kind': u'reply',
+        u'module': u'password'
+    }
+    res = infrastructure.process_message({
+        "module": "password",
+        "action": "set",
+        "kind": "request",
+        "data": {"password": base64.b64encode("valid".encode()).decode("utf-8"), "type": "system"},
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'password'
+    }
+    res = infrastructure.process_message({
+        "module": "password",
+        "action": "set",
+        "kind": "request",
+        "data": {"password": base64.b64encode("valid".encode()).decode("utf-8"), "type": "foris"},
+    })
+    assert res == {
+        u'action': u'set',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'password'
+    }

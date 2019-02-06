@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ class PasswordModule(BaseModule):
 
         :param data: {"password": "<base64 string>", "type": "foris" / "system"}
         :type data: dict
-        :returns: {result: True/False}
+        :returns: {result: True} or {result: False, list: "...", "count": ... }
         :rtype: dict
         """
         decoded = base64.b64decode(data["password"])
@@ -53,9 +53,9 @@ class PasswordModule(BaseModule):
         else:
             raise NotImplementedError()
 
-        if res:
+        if res["result"]:
             self.notify("set", {"type": data["type"]})
-        return {"result": res}
+        return res
 
 
 @wrap_required_functions([
