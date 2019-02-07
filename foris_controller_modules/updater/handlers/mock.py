@@ -131,14 +131,14 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         {
             "name": "i_agree_datacollect",
             "msg": {
-                "cs": None,
-                "de": None,
-                "en": None,
+                "cs": "",
+                "de": "",
+                "en": "",
             },
             "title": {
-                "cs": None,
-                "de": None,
-                "en": None,
+                "cs": "",
+                "de": "",
+                "en": "",
             },
             "enabled": False,
             "hidden": True,
