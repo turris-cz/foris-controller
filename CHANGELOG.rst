@@ -1,3 +1,10 @@
+0.11.6 (2019-02-08)
+-------------------
+
+* updater: list api changes
+* password: refuse to set compromised passwords
+* socket_client: mqtt fix
+
 0.11.5 (2019-01-31)
 -------------------
 
