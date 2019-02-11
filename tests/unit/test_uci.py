@@ -421,8 +421,7 @@ def test_parse_read_data(uci_configs_init, lock_backend):
     with pytest.raises(UciRecordNotFound):
         uci.get_option_named(res2, 'test2', 'named2', 'non_existing')
     assert "def1" == uci.get_option_named(res2, 'test2', 'named2', 'non_existing', default="def1")
-    with pytest.raises(UciRecordNotFound):
-        uci.get_sections_by_type(res2, 'test2', 'non_existing')
+    assert uci.get_sections_by_type(res2, 'test2', 'non_existing') == []
     with pytest.raises(UciRecordNotFound):
         uci.get_section_idx(res2, 'test2', 'anonymous', 99)
     with pytest.raises(UciRecordNotFound):

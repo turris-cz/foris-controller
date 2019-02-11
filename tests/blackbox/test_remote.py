@@ -24,19 +24,53 @@ import shutil
 import tarfile
 import json
 import uuid
+import pathlib
 
 from io import BytesIO
 
 from foris_controller_testtools.fixtures import (
     backend, infrastructure, ubusd_test, only_backends, only_message_buses, uci_configs_init,
     init_script_result, lock_backend, file_root_init, network_restart_command,
-    UCI_CONFIG_DIR_PATH, mosquitto_test, start_buses,
+    UCI_CONFIG_DIR_PATH, mosquitto_test, start_buses, FILE_ROOT_PATH
 )
 from foris_controller_testtools.utils import (
     match_subdict, get_uci_module, check_service_result
 )
 
 CERT_PATH = "/tmp/test-cagen/"
+
+
+def prepare_subordinate_token(controller_id):
+    def add_to_tar(tar, name, content):
+        data = content.encode()
+        fake_file = BytesIO(data)
+        info = tarfile.TarInfo(name=name)
+        info.size = len(data)
+        info.mode = 0o0600
+        fake_file.seek(0)
+        tar.addfile(info, fake_file)
+        fake_file.close()
+
+    new_file = BytesIO()
+    with tarfile.open(fileobj=new_file, mode="w:gz") as tar:
+        add_to_tar(tar, f"some_name/token.crt", "token cert content")
+        add_to_tar(tar, f"some_name/token.key", "token key content")
+        add_to_tar(tar, f"some_name/ca.crt", "ca cert content")
+        add_to_tar(tar, f"some_name/conf.json", json.dumps({
+            "name": "some_name",
+            "hostname": "localhost",
+            "ipv4_ips": ["123.123.123.123"],
+            "dhcp_names": [],
+            "port": 11884,
+            "device_id": controller_id,
+        }))
+
+    new_file.seek(0)
+    final_content = new_file.read()
+    new_file.close()
+
+    return base64.b64encode(final_content).decode()
+
 
 @pytest.fixture(scope="function")
 def empty_certs():
@@ -907,3 +941,350 @@ def test_enable_empty(
         }
     })
     assert not res["data"]["result"]
+
+
+@pytest.mark.only_message_buses(['unix-socket', 'ubus'])
+def test_complex_subordinates_unsupported(uci_configs_init, infrastructure, start_buses, file_root_init):
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "list_subordinates",
+        "kind": "request",
+    })
+    assert res == {
+        "module": "remote",
+        "action": "list_subordinates",
+        "kind": "reply",
+        "data": {"subordinates": []}
+    }
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "request",
+        "data": {
+            "token": prepare_subordinate_token("1122334455667788"),
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "reply",
+        "data": {"result": False}
+    }
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788",
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "reply",
+        "data": {"result": False}
+    }
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788", "custom_name": "set_xx", "enabled": False,
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "reply",
+        "data": {"result": False}
+    }
+
+
+@pytest.mark.only_message_buses(['mqtt'])
+def test_complex_subordinates(
+    uci_configs_init, infrastructure, start_buses, file_root_init, init_script_result
+):
+    def in_list(controller_id):
+        res = infrastructure.process_message({
+            "module": "remote",
+            "action": "list_subordinates",
+            "kind": "request",
+        })
+        assert "subordinates" in res["data"]
+        output = None
+        for record in res["data"]["subordinates"]:
+            assert set(record.keys()) == {"custom_name", "controller_id", "enabled"}
+            if record["controller_id"] == controller_id:
+                output = record
+        return output
+
+    assert None is in_list("1122334455667788")
+    token = prepare_subordinate_token("1122334455667788")
+
+    filters = [("remote", "add_subordinate")]
+    notifications = infrastructure.get_notifications(filters=filters)
+
+    # add
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "request",
+        "data": {
+            "token": token,
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "reply",
+        "data": {"result": True, "controller_id": "1122334455667788"}
+    }
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    if infrastructure.backend_name == "openwrt":
+        check_service_result("fosquitto", "reload", passed=True)
+    assert notifications[-1] == {
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "notification",
+        "data": {"controller_id": "1122334455667788"}
+    }
+    assert in_list("1122334455667788") == {
+        "controller_id": "1122334455667788", "enabled": True, "custom_name": ""
+    }
+
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "request",
+        "data": {
+            "token": token,
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "reply",
+        "data": {"result": False}
+    }
+    if infrastructure.backend_name == "openwrt":
+        check_service_result("fosquitto", "reload", passed=True, expected_found=False)
+
+    assert in_list("1122334455667788") == {
+        "controller_id": "1122334455667788", "enabled": True, "custom_name": ""
+    }
+
+    # add2
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "request",
+        "data": {
+            "token": prepare_subordinate_token("8877665544332211"),
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "reply",
+        "data": {"result": True, "controller_id": "8877665544332211"}
+    }
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    if infrastructure.backend_name == "openwrt":
+        check_service_result("fosquitto", "reload", passed=True)
+    assert notifications[-1] == {
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "notification",
+        "data": {"controller_id": "8877665544332211"}
+    }
+    assert in_list("8877665544332211") == {
+        "controller_id": "8877665544332211", "enabled": True, "custom_name": ""
+    }
+
+    # set
+    filters = [("remote", "set_subordinate")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788", "custom_name": "test_set1", "enabled": False,
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "reply",
+        "data": {"result": True}
+    }
+    if infrastructure.backend_name == "openwrt":
+        check_service_result("fosquitto", "reload", passed=True)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "notification",
+        "data": {"controller_id": "1122334455667788", "custom_name": "test_set1", "enabled": False}
+    }
+    assert in_list("1122334455667788") == {
+        "controller_id": "1122334455667788", "custom_name": "test_set1", "enabled": False
+    }
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "2222334455667788", "custom_name": "test_set2", "enabled": True,
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "reply",
+        "data": {"result": False}
+    }
+    if infrastructure.backend_name == "openwrt":
+        check_service_result("fosquitto", "reload", passed=True, expected_found=False)
+
+    # del
+    filters = [("remote", "del_subordinate")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788",
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "reply",
+        "data": {"result": True}
+    }
+    if infrastructure.backend_name == "openwrt":
+        check_service_result("fosquitto", "reload", passed=True)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "notification",
+        "data": {"controller_id": "1122334455667788"}
+    }
+    assert None is in_list("1122334455667788")
+
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788",
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "reply",
+        "data": {"result": False}
+    }
+    if infrastructure.backend_name == "openwrt":
+        check_service_result("fosquitto", "reload", passed=True, expected_found=False)
+    assert None is in_list("1122334455667788")
+
+
+@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_message_buses(['mqtt'])
+def test_complex_subordinates_openwrt(
+    uci_configs_init, infrastructure, start_buses, file_root_init, init_script_result, lock_backend
+):
+    uci = get_uci_module(lock_backend)
+    token = prepare_subordinate_token("1122334455667788")
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "request",
+        "data": {
+            "token": token,
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "add_subordinate",
+        "kind": "reply",
+        "data": {"result": True, "controller_id": "1122334455667788"}
+    }
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+    sections = [
+        e for e in uci.get_sections_by_type(data, "fosquitto", "subordinate")
+        if e["data"].get("id") == "1122334455667788"
+    ]
+    assert len(sections) == 1
+    assert sections[0]["data"]["address"] == "123.123.123.123"
+    assert sections[0]["data"]["port"] == "11884"
+    assert uci.parse_bool(sections[0]["data"]["enabled"])
+
+    subordinate_root = \
+        pathlib.Path(FILE_ROOT_PATH) / "etc" / "fosquitto" / "bridges" / "1122334455667788"
+    assert subordinate_root.exists()
+    assert (subordinate_root / "conf.json").exists()
+    assert (subordinate_root / "token.crt").exists()
+    assert (subordinate_root / "token.key").exists()
+    assert (subordinate_root / "ca.crt").exists()
+
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788",
+            "enabled": False,
+            "custom_name": "openwrt1",
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "set_subordinate",
+        "kind": "reply",
+        "data": {"result": True}
+    }
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+
+    sections = [
+        e for e in uci.get_sections_by_type(data, "fosquitto", "subordinate")
+        if e["data"].get("id") == "1122334455667788"
+    ]
+    assert len(sections) == 1
+    assert not uci.parse_bool(sections[0]["data"]["enabled"])
+    assert uci.get_option_named(data, "fosquitto", "1122334455667788", "custom_name") == "openwrt1"
+
+    res = infrastructure.process_message({
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788",
+        }
+    })
+    assert res == {
+        "module": "remote",
+        "action": "del_subordinate",
+        "kind": "reply",
+        "data": {"result": True}
+    }
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+
+    sections = [
+        e for e in uci.get_sections_by_type(data, "fosquitto", "subordinate")
+        if e["data"].get("id") == "1122334455667788"
+    ]
+    assert len(sections) == 0
+    assert uci.get_option_named(data, "fosquitto", "1122334455667788", "custom_name", "") == ""
+    assert not subordinate_root.exists()

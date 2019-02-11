@@ -56,6 +56,14 @@ def path_exists(path):
     return os.path.exists(inject_file_root(path))
 
 
+def makedirs(path: str, mask: int):
+    """ Creates directories on the given path
+    :param path: path to be created
+    :param mask: last dir mask
+    """
+    os.makedirs(inject_file_root(path), mask)
+
+
 class BaseFile(object):
     def _file_content(self, path):
         """ Returns a content of a file

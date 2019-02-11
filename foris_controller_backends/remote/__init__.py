@@ -23,7 +23,9 @@ import logging
 import tarfile
 import base64
 import json
-import uuid
+import typing
+import pathlib
+import shutil
 
 from io import BytesIO
 from collections import OrderedDict
@@ -31,14 +33,18 @@ from collections import OrderedDict
 from foris_controller.app import app_info
 
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
-from foris_controller_backends.files import BaseFile
+from foris_controller_backends.files import BaseFile, makedirs, inject_file_root
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, UciException, store_bool,
-    get_option_anonymous,
+    get_option_anonymous, get_sections_by_type
 )
+from foris_controller.utils import RWLock
 from foris_controller_backends.services import OpenwrtServices
 
 logger = logging.getLogger(__name__)
+
+
+subordinate_dir_lock = RWLock(app_info["lock_backend"])
 
 
 class CaGenAsync(AsyncCommand):
@@ -223,6 +229,77 @@ class RemoteUci(object):
 
         return result
 
+    def list_subordinates(self):
+        with UciBackend() as backend:
+            fosquitto_data = backend.read("fosquitto")
+
+        res = []
+        # custom names map
+        name_map = {
+            e["name"]: e["data"].get("custom_name", "")
+            for e in get_sections_by_type(fosquitto_data, "fosquitto", "alias")
+        }
+
+        for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
+            if "id" not in item["data"]:
+                continue
+            controller_id = item["data"]["id"]
+            enabled = parse_bool(item["data"].get("enabled", "0"))
+            custom_name = name_map.get(controller_id, "")
+            res.append(
+                {"controller_id": controller_id, "enabled": enabled, "custom_name": custom_name}
+            )
+
+        return res
+
+    @staticmethod
+    def add_subordinate(controller_id: str, address: str, port: int):
+        with UciBackend() as backend:
+            new_section = backend.add_section("fosquitto", "subordinate")
+            backend.set_option("fosquitto", new_section, "id", controller_id)
+            backend.set_option("fosquitto", new_section, "enabled", store_bool(True))
+            backend.set_option("fosquitto", new_section, "address", address)
+            backend.set_option("fosquitto", new_section, "port", port)
+
+    def set_subordinate(self, controller_id: str, enabled: bool, custom_name: str) -> bool:
+        with UciBackend() as backend:
+            fosquitto_data = backend.read("fosquitto")
+            section = None
+            for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
+                if item["data"].get("id", None) == controller_id:
+                    section = item["name"]
+            if not section:
+                return False
+            backend.set_option("fosquitto", section, "enabled", store_bool(enabled))
+            backend.add_section("fosquitto", "alias", controller_id)
+            backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
+
+        with OpenwrtServices() as services:
+            services.reload("fosquitto")
+
+        return True
+
+    @staticmethod
+    def del_subordinate(controller_id: str) -> bool:
+        with UciBackend() as backend:
+            fosquitto_data = backend.read("fosquitto")
+            section = None
+            for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
+                if item["data"].get("id", None) == controller_id:
+                    section = item["name"]
+            if not section:
+                return False
+            backend.del_section("fosquitto", section)
+            try:
+                backend.del_section("fosquitto", controller_id)
+            except UciException:
+                pass
+
+        with OpenwrtServices() as services:
+            services.reload("fosquitto")
+
+        return True
+
 
 class RemoteFiles(BaseFile):
     BASE_CERT_PATH = "/etc/ssl/ca/remote"
@@ -324,3 +401,68 @@ class RemoteFiles(BaseFile):
         fake_file.close()
 
         return base64.b64encode(final_content).decode()
+
+    @staticmethod
+    def extract_token_subordinate(token: str) -> typing.Tuple[dict, dict]:
+        token_data = BytesIO(base64.b64decode(token))
+        with tarfile.open(fileobj=token_data, mode="r:gz") as tar:
+            config_file = [e.name for e in tar.getmembers() if e.name.endswith(".json")][0]
+            with tar.extractfile(config_file) as f:
+                conf = json.load(f)
+            file_data = {}
+            for member in tar.getmembers():
+                with tar.extractfile(member.name) as f:
+                    file_data[os.path.basename(member.name)] = f.read()
+        return conf, file_data
+
+    @staticmethod
+    def store_subordinate_files(controller_id: str, file_data: dict):
+        path_root = pathlib.Path("/etc/fosquitto/bridges") / controller_id
+        makedirs(str(path_root), 0o0777)
+        for name, content in file_data.items():
+            new_file = pathlib.Path(inject_file_root(str(path_root / name)))
+            new_file.touch(0o0600)
+            with new_file.open("wb") as f:
+                f.write(content)
+                f.flush()
+
+    @staticmethod
+    def remove_subordinate(controller_id: str):
+        path = pathlib.Path("/etc/fosquitto/bridges") / controller_id
+        shutil.rmtree(inject_file_root(str(path)), True)
+
+
+class RemoteComplex:
+    def add_subordinate(self, token):
+        if not app_info["bus"] == "mqtt":
+            return {"result": False}
+
+        conf, file_data = RemoteFiles.extract_token_subordinate(token)
+
+        with subordinate_dir_lock.writelock:
+            forbidden_controller_ids = [app_info["controller_id"]] + [
+                e["controller_id"] for e in RemoteUci().list_subordinates()
+            ]  # my controller_id + already stored controller ids
+
+            if conf["device_id"] in forbidden_controller_ids:
+                return {"result": False}
+
+            RemoteFiles.store_subordinate_files(conf["device_id"], file_data)
+            RemoteUci.add_subordinate(conf["device_id"], conf["ipv4_ips"][0], conf["port"])
+
+        with OpenwrtServices() as services:
+            services.reload("fosquitto")
+
+        return {"result": True, "controller_id": conf["device_id"]}
+
+    def del_subordinate(self, controller_id):
+
+        with subordinate_dir_lock.writelock:
+            if not RemoteUci.del_subordinate(controller_id):
+                return False
+            RemoteFiles.remove_subordinate(controller_id)
+
+        with OpenwrtServices() as services:
+            services.reload("fosquitto")
+
+        return True

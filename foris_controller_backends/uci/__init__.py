@@ -89,8 +89,6 @@ def get_sections_by_type(data, config, section_type):
         e for e in data[config]
         if e["type"] == section_type
     ]
-    if not res:
-        raise UciRecordNotFound(config, section_type=section_type)
     return res
 
 

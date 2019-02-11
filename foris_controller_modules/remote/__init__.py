@@ -77,6 +77,30 @@ class RemoteModule(BaseModule):
     def action_get_token(self, data):
         return self.handler.get_token(**data)
 
+    def action_list_subordinates(self, data):
+        return {"subordinates": self.handler.list_subordinates()}
+
+    def action_add_subordinate(self, data):
+        res = self.handler.add_subordinate(**data)
+        if res["result"]:
+            self.notify(
+                "add_subordinate",
+                {"controller_id": res["controller_id"]}
+            )
+        return res
+
+    def action_del_subordinate(self, data):
+        res = self.handler.del_subordinate(**data)
+        if res:
+            self.notify("del_subordinate", data)
+        return {"result": res}
+
+    def action_set_subordinate(self, data):
+        res = self.handler.set_subordinate(**data)
+        if res:
+            self.notify("set_subordinate", data)
+        return {"result": res}
+
 
 @wrap_required_functions([
     'generate_ca',
@@ -87,6 +111,10 @@ class RemoteModule(BaseModule):
     'get_settings',
     'update_settings',
     'get_token',
+    'list_subordinates',
+    'add_subordinate',
+    'del_subordinate',
+    'set_subordinate',
 ])
 class Handler(object):
     pass

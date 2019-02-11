@@ -2,7 +2,17 @@
     "definitions": {
         "cert_id": {"type": "string", "pattern": "^([0-9a-fA-F][0-9a-fA-F])+$"},
         "cert_name": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$"},
-        "controller_id": {"type": "string", "pattern": "^[a-zA-Z0-9]{16}$"}
+        "controller_id": {"type": "string", "pattern": "^[a-zA-Z0-9]{16}$"},
+        "subordinate": {
+            "type": "object",
+            "properties": {
+                "controller_id": {"$ref": "#/definitions/controller_id"},
+                "enabled": {"type": "boolean"},
+                "custom_name": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["controller_id", "enabled", "custom_name"]
+        }
     },
     "oneOf": [
         {
@@ -418,6 +428,214 @@
                     },
                     "additionalProperties": false,
                     "required": ["id", "state"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to obtain a list of subordinates",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["list_subordinates"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to obtain a list subordinates",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["list_subordinates"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "subordinates": {
+                            "items": {"$ref": "#/definitions/subordinate"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["subordinates"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to add a subordinate",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["add_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "token": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["token"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to add a subordinate",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["add_subordinate"]},
+                "data": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "result": {"enum": [true]},
+                                "controller_id": {"$ref": "#/definitions/controller_id"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["result", "controller_id"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "result": {"enum": [false]}
+                            },
+                            "additionalProperties": false,
+                            "required": ["result"]
+                        }
+                    ]
+                }
+
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification for adding a subordinate",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["add_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "controller_id": {"$ref": "#/definitions/controller_id"}
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to remove a subordinate",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["del_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "controller_id": {"$ref": "#/definitions/controller_id"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["controller_id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that a subordinate was removed",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["del_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "controller_id": {"$ref": "#/definitions/controller_id"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["controller_id"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to remove a subordinate",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["del_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Request to update subordinate",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["set_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "controller_id": {"$ref": "#/definitions/controller_id"},
+                        "enabled": {"type": "boolean"},
+                        "custom_name": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["controller_id", "enabled", "custom_name"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to update subordinate",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["set_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that a subordinate was updated",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["set_subordinate"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "controller_id": {"$ref": "#/definitions/controller_id"},
+                        "enabled": {"type": "boolean"},
+                        "custom_name": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["controller_id", "enabled", "custom_name"]
                 }
             },
             "additionalProperties": false,
