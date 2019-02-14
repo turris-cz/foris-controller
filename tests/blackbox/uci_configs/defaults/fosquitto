@@ -3,7 +3,3 @@ config local local
 
 config remote remote
 	option enabled '0'
-
-config subordinate
-
-config superior

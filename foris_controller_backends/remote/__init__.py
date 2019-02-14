@@ -36,7 +36,7 @@ from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
 from foris_controller_backends.files import BaseFile, makedirs, inject_file_root
 from foris_controller_backends.uci import (
     UciBackend, get_option_named, parse_bool, UciException, store_bool,
-    get_option_anonymous, get_sections_by_type
+    get_option_anonymous, get_sections_by_type, get_section, UciRecordNotFound
 )
 from foris_controller.utils import RWLock
 from foris_controller_backends.services import OpenwrtServices
@@ -234,20 +234,15 @@ class RemoteUci(object):
             fosquitto_data = backend.read("fosquitto")
 
         res = []
-        # custom names map
-        name_map = {
-            e["name"]: e["data"].get("custom_name", "")
-            for e in get_sections_by_type(fosquitto_data, "fosquitto", "alias")
-        }
 
         for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
-            if "id" not in item["data"]:
-                continue
-            controller_id = item["data"]["id"]
+            controller_id = item["name"]
             enabled = parse_bool(item["data"].get("enabled", "0"))
-            custom_name = name_map.get(controller_id, "")
             res.append(
-                {"controller_id": controller_id, "enabled": enabled, "custom_name": custom_name}
+                {
+                    "controller_id": controller_id, "enabled": enabled,
+                    "custom_name": item["data"].get("custom_name", ""),
+                }
             )
 
         return res
@@ -255,23 +250,20 @@ class RemoteUci(object):
     @staticmethod
     def add_subordinate(controller_id: str, address: str, port: int):
         with UciBackend() as backend:
-            new_section = backend.add_section("fosquitto", "subordinate")
-            backend.set_option("fosquitto", new_section, "id", controller_id)
-            backend.set_option("fosquitto", new_section, "enabled", store_bool(True))
-            backend.set_option("fosquitto", new_section, "address", address)
-            backend.set_option("fosquitto", new_section, "port", port)
+            backend.add_section("fosquitto", "subordinate", controller_id)
+            backend.set_option("fosquitto", controller_id, "enabled", store_bool(True))
+            backend.set_option("fosquitto", controller_id, "address", address)
+            backend.set_option("fosquitto", controller_id, "port", port)
 
     def set_subordinate(self, controller_id: str, enabled: bool, custom_name: str) -> bool:
         with UciBackend() as backend:
             fosquitto_data = backend.read("fosquitto")
-            section = None
-            for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
-                if item["data"].get("id", None) == controller_id:
-                    section = item["name"]
-            if not section:
+            try:
+                get_section(fosquitto_data, "fosquitto", controller_id)
+            except UciRecordNotFound:
                 return False
-            backend.set_option("fosquitto", section, "enabled", store_bool(enabled))
-            backend.add_section("fosquitto", "alias", controller_id)
+
+            backend.set_option("fosquitto", controller_id, "enabled", store_bool(enabled))
             backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
 
         with OpenwrtServices() as services:
@@ -282,18 +274,10 @@ class RemoteUci(object):
     @staticmethod
     def del_subordinate(controller_id: str) -> bool:
         with UciBackend() as backend:
-            fosquitto_data = backend.read("fosquitto")
-            section = None
-            for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
-                if item["data"].get("id", None) == controller_id:
-                    section = item["name"]
-            if not section:
-                return False
-            backend.del_section("fosquitto", section)
             try:
                 backend.del_section("fosquitto", controller_id)
             except UciException:
-                pass
+                return False
 
         with OpenwrtServices() as services:
             services.reload("fosquitto")

@@ -1218,14 +1218,13 @@ def test_complex_subordinates_openwrt(
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
-    sections = [
-        e for e in uci.get_sections_by_type(data, "fosquitto", "subordinate")
-        if e["data"].get("id") == "1122334455667788"
-    ]
-    assert len(sections) == 1
-    assert sections[0]["data"]["address"] == "123.123.123.123"
-    assert sections[0]["data"]["port"] == "11884"
-    assert uci.parse_bool(sections[0]["data"]["enabled"])
+
+    assert uci.get_option_named(
+        data, "fosquitto", "1122334455667788", "address", "") == "123.123.123.123"
+    assert uci.get_option_named(
+        data, "fosquitto", "1122334455667788", "port", "") == "11884"
+    assert uci.parse_bool(uci.get_option_named(
+        data, "fosquitto", "1122334455667788", "enabled", ""))
 
     subordinate_root = \
         pathlib.Path(FILE_ROOT_PATH) / "etc" / "fosquitto" / "bridges" / "1122334455667788"
@@ -1255,12 +1254,8 @@ def test_complex_subordinates_openwrt(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
-    sections = [
-        e for e in uci.get_sections_by_type(data, "fosquitto", "subordinate")
-        if e["data"].get("id") == "1122334455667788"
-    ]
-    assert len(sections) == 1
-    assert not uci.parse_bool(sections[0]["data"]["enabled"])
+    assert not uci.parse_bool(uci.get_option_named(
+        data, "fosquitto", "1122334455667788", "enabled", ""))
     assert uci.get_option_named(data, "fosquitto", "1122334455667788", "custom_name") == "openwrt1"
 
     res = infrastructure.process_message({
@@ -1281,10 +1276,8 @@ def test_complex_subordinates_openwrt(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
-    sections = [
-        e for e in uci.get_sections_by_type(data, "fosquitto", "subordinate")
-        if e["data"].get("id") == "1122334455667788"
-    ]
-    assert len(sections) == 0
     assert uci.get_option_named(data, "fosquitto", "1122334455667788", "custom_name", "") == ""
+
+    with pytest.raises(uci.UciRecordNotFound):
+        uci.get_section(data, "fosquitto", "112233445566")
     assert not subordinate_root.exists()
