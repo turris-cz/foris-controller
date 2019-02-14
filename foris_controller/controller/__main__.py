@@ -86,7 +86,7 @@ def main():
         mqtt_parser.add_argument("--host", default='127.0.0.1')
         mqtt_parser.add_argument("--port", type=int, default=1883)
         mqtt_parser.add_argument(
-            "--controller-id", type=lambda x: re.match(r"[a-zA-Z]{16}", x).group().upper(),
+            "--controller-id", type=lambda x: re.match(r"[0-9a-zA-Z]{16}", x).group().upper(),
             required=False
         )
         mqtt_parser.add_argument(
