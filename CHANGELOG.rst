@@ -1,3 +1,9 @@
+0.11.7 (2019-02-14)
+-------------------
+
+* controller-id program arg fix
+* remote: adding subordinates
+
 0.11.6 (2019-02-08)
 -------------------
 
