@@ -95,3 +95,15 @@ class OpenwrtRemoteHandler(Handler, BaseOpenwrtHandler):
     @logger_wrapper(logger)
     def set_subordinate(self, controller_id, enabled, custom_name):
         return OpenwrtRemoteHandler.uci.set_subordinate(controller_id, enabled, custom_name)
+
+    @logger_wrapper(logger)
+    def add_subsubordinate(self, controller_id: str, via: str) -> bool:
+        return OpenwrtRemoteHandler.uci.add_subsubordinate(controller_id, via)
+
+    @logger_wrapper(logger)
+    def set_subsubordinate(self, controller_id, enabled, custom_name) -> bool:
+        return OpenwrtRemoteHandler.uci.set_subsubordinate(controller_id, enabled, custom_name)
+
+    @logger_wrapper(logger)
+    def del_subsubordinate(self, controller_id) -> bool:
+        return OpenwrtRemoteHandler.uci.del_subsubordinate(controller_id)

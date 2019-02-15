@@ -101,6 +101,24 @@ class RemoteModule(BaseModule):
             self.notify("set_subordinate", data)
         return {"result": res}
 
+    def action_add_subsubordinate(self, data):
+        res = self.handler.add_subsubordinate(**data)
+        if res:
+            self.notify("add_subsubordinate", data)
+        return {"result": res}
+
+    def action_set_subsubordinate(self, data):
+        res = self.handler.set_subsubordinate(**data)
+        if res:
+            self.notify("set_subsubordinate", data)
+        return {"result": res}
+
+    def action_del_subsubordinate(self, data):
+        res = self.handler.del_subsubordinate(**data)
+        if res:
+            self.notify("del_subsubordinate", data)
+        return {"result": res}
+
 
 @wrap_required_functions([
     'generate_ca',
@@ -115,6 +133,9 @@ class RemoteModule(BaseModule):
     'add_subordinate',
     'del_subordinate',
     'set_subordinate',
+    'add_subsubordinate',
+    'del_subsubordinate',
+    'set_subsubordinate',
 ])
 class Handler(object):
     pass

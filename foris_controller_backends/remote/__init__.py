@@ -234,6 +234,17 @@ class RemoteUci(object):
             fosquitto_data = backend.read("fosquitto")
 
         res = []
+        subordinates_map = {}
+
+        for item in get_sections_by_type(fosquitto_data, "fosquitto", "subsubordinate"):
+            if "via" in item["data"]:
+                subsubs = subordinates_map.get(item["data"]["via"], [])
+                subsubs.append({
+                    "controller_id": item["name"],
+                    "custom_name": item["data"].get("custom_name", ""),
+                    "enabled": parse_bool(item["data"].get("enabled", "1")),
+                })
+                subordinates_map[item["data"]["via"]] = subsubs
 
         for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
             controller_id = item["name"]
@@ -242,10 +253,81 @@ class RemoteUci(object):
                 {
                     "controller_id": controller_id, "enabled": enabled,
                     "custom_name": item["data"].get("custom_name", ""),
+                    "subsubordinates": subordinates_map.get(controller_id, []),
                 }
             )
 
         return res
+
+    def add_subsubordinate(self, controller_id, via):
+        if not app_info["bus"] == "mqtt":
+            return False
+
+        with subordinate_dir_lock.writelock:
+            if controller_id in self.existing_controller_ids():
+                return False
+            if via not in [e["controller_id"] for e in self.list_subordinates()]:
+                return False
+
+            with UciBackend() as backend:
+                backend.add_section("fosquitto", "subsubordinate", controller_id)
+                backend.set_option("fosquitto", controller_id, "via", via)
+                backend.set_option("fosquitto", controller_id, "enabled", store_bool(True))
+
+        with OpenwrtServices() as services:
+            services.reload("fosquitto")
+
+        return True
+
+    def set_subsubordinate(self, controller_id, enabled, custom_name):
+        if not app_info["bus"] == "mqtt":
+            return False
+
+        with subordinate_dir_lock.writelock:
+            sub_list = self.list_subordinates()
+            records = [
+                e
+                for record in sub_list
+                for e in record["subsubordinates"]
+                if e["controller_id"] == controller_id
+            ]
+
+            if not records:
+                return False  # missing
+
+            with UciBackend() as backend:
+                backend.add_section("fosquitto", "subsubordinate", controller_id)
+                backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
+                backend.set_option("fosquitto", controller_id, "enabled", store_bool(enabled))
+
+        with OpenwrtServices() as services:
+            services.reload("fosquitto")
+
+        return True
+
+    def del_subsubordinate(self, controller_id):
+        if not app_info["bus"] == "mqtt":
+            return False
+
+        with subordinate_dir_lock.writelock:
+            sub_list = self.list_subordinates()
+            records = [
+                e
+                for record in sub_list
+                for e in record["subsubordinates"]
+                if e["controller_id"] == controller_id
+            ]
+
+            if not records:
+                return False  # missing
+
+            with UciBackend() as backend:
+                backend.del_section("fosquitto", controller_id)
+
+        with OpenwrtServices() as services:
+            services.reload("fosquitto")
+
+        return True
 
     @staticmethod
     def add_subordinate(controller_id: str, address: str, port: int):
@@ -274,8 +356,16 @@ class RemoteUci(object):
     @staticmethod
     def del_subordinate(controller_id: str) -> bool:
         with UciBackend() as backend:
+            fosquitto_data = backend.read("fosquitto")
+            to_delete = [
+                e["name"] for e in
+                get_sections_by_type(fosquitto_data, "fosquitto", "subsubordinate")
+                if e["data"].get("via") == controller_id
+            ]
             try:
                 backend.del_section("fosquitto", controller_id)
+                for id_to_delete in to_delete:
+                    backend.del_section("fosquitto", id_to_delete)
             except UciException:
                 return False
 
@@ -283,6 +373,16 @@ class RemoteUci(object):
             services.reload("fosquitto")
 
         return True
+
+    def existing_controller_ids(self):
+        sub_list = self.list_subordinates()
+        return [app_info["controller_id"]] + [
+            e["controller_id"] for e in sub_list
+        ] + [
+            e["controller_id"]
+            for record in sub_list
+            for e in record["subsubordinates"]
+        ]
 
 
 class RemoteFiles(BaseFile):
@@ -415,7 +515,6 @@ class RemoteFiles(BaseFile):
         path = pathlib.Path("/etc/fosquitto/bridges") / controller_id
         shutil.rmtree(inject_file_root(str(path)), True)
 
-
 class RemoteComplex:
     def add_subordinate(self, token):
         if not app_info["bus"] == "mqtt":
@@ -424,11 +523,8 @@ class RemoteComplex:
         conf, file_data = RemoteFiles.extract_token_subordinate(token)
 
         with subordinate_dir_lock.writelock:
-            forbidden_controller_ids = [app_info["controller_id"]] + [
-                e["controller_id"] for e in RemoteUci().list_subordinates()
-            ]  # my controller_id + already stored controller ids
 
-            if conf["device_id"] in forbidden_controller_ids:
+            if conf["device_id"] in RemoteUci().existing_controller_ids():
                 return {"result": False}
 
             RemoteFiles.store_subordinate_files(conf["device_id"], file_data)
