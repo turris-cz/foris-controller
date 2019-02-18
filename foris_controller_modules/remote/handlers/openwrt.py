@@ -23,7 +23,7 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.remote import (
-    CaGenAsync, CaGenCmds, RemoteUci, RemoteFiles, RemoteComplex
+    CaGenAsync, CaGenCmds, RemoteUci, RemoteFiles
 )
 
 from .. import Handler
@@ -37,7 +37,6 @@ class OpenwrtRemoteHandler(Handler, BaseOpenwrtHandler):
     cmds = CaGenCmds()
     uci = RemoteUci()
     files = RemoteFiles()
-    complex = RemoteComplex()
 
     @logger_wrapper(logger)
     def generate_ca(self, notify, exit_notify, reset_notify):
@@ -79,31 +78,3 @@ class OpenwrtRemoteHandler(Handler, BaseOpenwrtHandler):
             "status": "valid",
             "token": self.files.get_token(id=id, name=filtered[0]["name"])
         }
-
-    @logger_wrapper(logger)
-    def list_subordinates(self):
-        return OpenwrtRemoteHandler.uci.list_subordinates()
-
-    @logger_wrapper(logger)
-    def add_subordinate(self, token):
-        return OpenwrtRemoteHandler.complex.add_subordinate(token)
-
-    @logger_wrapper(logger)
-    def del_subordinate(self, controller_id):
-        return OpenwrtRemoteHandler.complex.del_subordinate(controller_id)
-
-    @logger_wrapper(logger)
-    def set_subordinate(self, controller_id, enabled, custom_name):
-        return OpenwrtRemoteHandler.uci.set_subordinate(controller_id, enabled, custom_name)
-
-    @logger_wrapper(logger)
-    def add_subsubordinate(self, controller_id: str, via: str) -> bool:
-        return OpenwrtRemoteHandler.uci.add_subsubordinate(controller_id, via)
-
-    @logger_wrapper(logger)
-    def set_subsubordinate(self, controller_id, enabled, custom_name) -> bool:
-        return OpenwrtRemoteHandler.uci.set_subsubordinate(controller_id, enabled, custom_name)
-
-    @logger_wrapper(logger)
-    def del_subsubordinate(self, controller_id) -> bool:
-        return OpenwrtRemoteHandler.uci.del_subsubordinate(controller_id)

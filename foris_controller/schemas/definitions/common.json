@@ -187,6 +187,7 @@
                     "required": ["custom_mac_enabled"]
                 }
             ]
-        }
+        },
+        "controller_id": {"type": "string", "pattern": "^[a-zA-Z0-9]{16}$"}
     }
 }

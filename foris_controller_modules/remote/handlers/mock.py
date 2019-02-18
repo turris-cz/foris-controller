@@ -17,14 +17,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import json
 import logging
 import random
 import base64
-import tarfile
 import typing
 
-from io import BytesIO
 
 from foris_controller.app import app_info
 from foris_controller.handler_base import BaseMockHandler
@@ -44,7 +41,6 @@ class MockRemoteHandler(Handler, BaseMockHandler):
         "wan_access": False,
         "port": 11884,
     }
-    subordinates: typing.List[dict] = []
 
     @logger_wrapper(logger)
     def generate_ca(self, notify, exit_notify, reset_notify):
@@ -111,128 +107,3 @@ class MockRemoteHandler(Handler, BaseMockHandler):
         if filtered[0]["status"] == "revoked":
             return {"status": "revoked"}
         return {"status": "valid", "token": base64.b64encode(b'some data').decode()}
-
-    @logger_wrapper(logger)
-    def list_subordinates(self):
-        if app_info["bus"] != "mqtt":
-            return []
-        return MockRemoteHandler.subordinates
-
-    @logger_wrapper(logger)
-    def add_subordinate(self, token) -> dict:
-        if app_info["bus"] != "mqtt":
-            return {"result": False}
-
-        token_data = BytesIO(base64.b64decode(token))
-        with tarfile.open(fileobj=token_data, mode="r:gz") as tar:
-            config_name = [e for e in tar.getmembers() if e.name.endswith("conf.json")][0]
-            with tar.extractfile(config_name) as f:
-                controller_id = json.load(f)["device_id"]
-
-        for record in MockRemoteHandler.subordinates:
-            if record["controller_id"] == controller_id:
-                return {"result": False}  # already present
-
-        existing_subsubordinates = [
-            e["controller_id"]
-            for record in MockRemoteHandler.subordinates
-            for e in record["subsubordinates"]
-        ]
-        if controller_id in existing_subsubordinates:
-            return {"result": False}
-
-        MockRemoteHandler.subordinates.append({
-            "controller_id": controller_id,
-            "enabled": True,
-            "custom_name": "",
-            "subsubordinates": [],
-        })
-
-        return {"result": True, "controller_id": controller_id}
-
-    @logger_wrapper(logger)
-    def del_subordinate(self, controller_id) -> bool:
-        if app_info["bus"] != "mqtt":
-            return False
-
-        mapped = {e["controller_id"]: e for e in MockRemoteHandler.subordinates}
-        if controller_id not in mapped:
-            return False
-        del mapped[controller_id]
-        MockRemoteHandler.subordinates = list(mapped.values())
-        return True
-
-    @logger_wrapper(logger)
-    def set_subordinate(self, controller_id, enabled, custom_name) -> bool:
-        if app_info["bus"] != "mqtt":
-            return False
-
-        mapped = {e["controller_id"]: e for e in MockRemoteHandler.subordinates}
-        if controller_id not in mapped:
-            return False
-        mapped[controller_id]["enabled"] = enabled
-        mapped[controller_id]["custom_name"] = custom_name
-        return True
-
-    @logger_wrapper(logger)
-    def add_subsubordinate(self, controller_id, via) -> bool:
-        if app_info["bus"] != "mqtt":
-            return False
-
-        # via missing
-        mapped = {e["controller_id"]: e for e in MockRemoteHandler.subordinates}
-        if via not in mapped:
-            return False
-
-        # controller_id is a sub
-        if controller_id in mapped:
-            return False
-
-        existing_subsubordinates = [
-            e["controller_id"]
-            for record in MockRemoteHandler.subordinates
-            for e in record["subsubordinates"]
-        ]
-        # controller_id is a subsub
-        if controller_id in existing_subsubordinates:
-            return False
-
-        mapped[via]["subsubordinates"].append({
-            "controller_id": controller_id,
-            "custom_name": "",
-            "enabled": True,
-        })
-
-        return True
-
-    @logger_wrapper(logger)
-    def set_subsubordinate(self, controller_id, enabled, custom_name) -> bool:
-        if app_info["bus"] != "mqtt":
-            return False
-
-        for record in MockRemoteHandler.subordinates:
-            for subsub in record["subsubordinates"]:
-                if controller_id == subsub["controller_id"]:
-                    subsub["enabled"] = enabled
-                    subsub["custom_name"] = custom_name
-                    return True
-
-        # not found
-        return False
-
-    @logger_wrapper(logger)
-    def del_subsubordinate(self, controller_id) -> bool:
-        for record in MockRemoteHandler.subordinates:
-            found = None
-            for subsub in record["subsubordinates"]:
-                if controller_id == subsub["controller_id"]:
-                    found = record
-                    break
-            if found:
-                record["subsubordinates"] == [
-                    e for e in record["subsubordinates"] if e["controller_id"] != controller_id
-                ]
-                return True
-
-        # not found
-        return False
