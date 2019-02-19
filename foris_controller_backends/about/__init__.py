@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ from foris_controller_backends.files import server_uplink_lock, BaseFile
 logger = logging.getLogger(__name__)
 
 
-class AtshaCmds(BaseCmdLine):
+class CryptoWrapperCmds(BaseCmdLine):
     @writelock(i2c_lock, logger)
     def get_serial(self):
         """ Obrains serial number
@@ -36,7 +36,7 @@ class AtshaCmds(BaseCmdLine):
         :rtype: str
         """
         return self._trigger_and_parse(
-            ("/usr/bin/atsha204cmd", "serial-number"), r'^([0-9a-fA-F]{16})$', (1, ))
+            ("/usr/bin/crypto-wrapper", "serial-number"), r'^([0-9a-fA-F]{16})$', (1, ))
 
 
 class SystemInfoCmds(BaseCmdLine):

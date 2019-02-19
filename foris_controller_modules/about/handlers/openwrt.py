@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.about import (
-    AtshaCmds, SystemInfoCmds, SystemInfoFiles, ServerUplinkFiles
+    SystemInfoCmds, SystemInfoFiles, ServerUplinkFiles, CryptoWrapperCmds,
 )
 
 from .. import Handler
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
-    atsha_cmds = AtshaCmds()
+    crypto_cmds = CryptoWrapperCmds()
     system_info_cmds = SystemInfoCmds()
     system_info_files = SystemInfoFiles()
     server_uplink_files = ServerUplinkFiles()
@@ -59,7 +59,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
         :returns: result
         :rtype: dict
         """
-        return {"serial": self.atsha_cmds.get_serial()}
+        return {"serial": self.crypto_cmds.get_serial()}
 
     @logger_wrapper(logger)
     def get_registration_number(self):
