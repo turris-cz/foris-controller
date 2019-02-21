@@ -1,4 +1,11 @@
 #!/bin/sh
+
+if [ "$1" = "lan" ] ; then
+	IPv4="10.20.30.40"
+else
+	IPv4="172.20.6.87"
+fi
+
 cat << EOF
 {
 	"up": true,
@@ -20,7 +27,7 @@ cat << EOF
 	"delegation": true,
 	"ipv4-address": [
 		{
-			"address": "172.20.6.87",
+			"address": "${IPv4}",
 			"mask": 24
 		}
 	],

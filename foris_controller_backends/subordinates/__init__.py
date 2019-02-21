@@ -246,7 +246,15 @@ class SubordinatesComplex:
                 return {"result": False}
 
             SubordinatesFiles.store_subordinate_files(conf["device_id"], file_data)
-            SubordinatesUci.add_subordinate(conf["device_id"], conf["ipv4_ips"][0], conf["port"])
+
+            guessed_ip = ""
+            # it would be more common to use wan ip first
+            if conf["ipv4_ips"].get("wan", None):
+                guessed_ip = conf["ipv4_ips"]["wan"][0]
+            elif conf["ipv4_ips"].get("lan", None):
+                guessed_ip = conf["ipv4_ips"]["lan"][0]
+
+            SubordinatesUci.add_subordinate(conf["device_id"], guessed_ip, conf["port"])
 
         with OpenwrtServices() as services:
             services.reload("fosquitto")

@@ -840,7 +840,7 @@ def test_get_token_openwrt(
         assert conf["port"] == 12345
         assert conf["device_id"] == "%016X" % uuid.getnode()
 
-        assert "172.20.6.87" in conf["ipv4_ips"]["lan"]
+        assert "10.20.30.40" in conf["ipv4_ips"]["lan"]
         assert "192.168.31.1" in conf["ipv4_ips"]["lan"]
         assert "172.20.6.87" in conf["ipv4_ips"]["wan"]
         assert "10.1.1.111" not in conf["ipv4_ips"]["wan"]  # wan is set via dhcp

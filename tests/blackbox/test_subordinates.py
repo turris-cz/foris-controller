@@ -55,7 +55,7 @@ def prepare_subordinate_token(controller_id):
         add_to_tar(tar, f"some_name/conf.json", json.dumps({
             "name": "some_name",
             "hostname": "localhost",
-            "ipv4_ips": ["123.123.123.123"],
+            "ipv4_ips": {"lan": ["123.123.123.123"], "wan": []},
             "dhcp_names": [],
             "port": 11884,
             "device_id": controller_id,
