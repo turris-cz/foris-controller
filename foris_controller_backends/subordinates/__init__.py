@@ -220,12 +220,18 @@ class SubordinatesFiles(BaseFile):
     def store_subordinate_files(controller_id: str, file_data: dict):
         path_root = pathlib.Path("/etc/fosquitto/bridges") / controller_id
         makedirs(str(path_root), 0o0777)
+
         for name, content in file_data.items():
             new_file = pathlib.Path(inject_file_root(str(path_root / name)))
             new_file.touch(0o0600)
             with new_file.open("wb") as f:
                 f.write(content)
                 f.flush()
+
+            try:  # try chown (best effort)
+                shutil.chown(new_file, "mosquitto", "mosquitto")
+            except (LookupError, PermissionError):
+                pass
 
     @staticmethod
     def remove_subordinate(controller_id: str):
