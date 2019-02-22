@@ -65,7 +65,10 @@ def _gen_notify(module_name):
     def notify(self, action, data=None):
         self.logger.debug(
             "New notification (module=%s, action=%s, data=%s)" % (module_name, action, data))
-        app_info["notification_sender"].notify(module_name, action, data, app_info["validator"])
+        app_info["notification_sender"].notify(
+            module_name, action, data, app_info["validator"],
+            controller_id=app_info["controller_id"],
+        )
     return notify
 
 
