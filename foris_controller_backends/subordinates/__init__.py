@@ -92,7 +92,7 @@ class SubordinatesUci(object):
                 backend.set_option("fosquitto", controller_id, "enabled", store_bool(True))
 
         with OpenwrtServices() as services:
-            services.reload("fosquitto")
+            services.restart("fosquitto")
 
         return True
 
@@ -118,7 +118,7 @@ class SubordinatesUci(object):
                 backend.set_option("fosquitto", controller_id, "enabled", store_bool(enabled))
 
         with OpenwrtServices() as services:
-            services.reload("fosquitto")
+            services.restart("fosquitto")
 
         return True
 
@@ -142,7 +142,7 @@ class SubordinatesUci(object):
                 backend.del_section("fosquitto", controller_id)
 
         with OpenwrtServices() as services:
-            services.reload("fosquitto")
+            services.restart("fosquitto")
 
         return True
 
@@ -166,7 +166,7 @@ class SubordinatesUci(object):
             backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
 
         with OpenwrtServices() as services:
-            services.reload("fosquitto")
+            services.restart("fosquitto")
 
         return True
 
@@ -187,7 +187,7 @@ class SubordinatesUci(object):
                 return False
 
         with OpenwrtServices() as services:
-            services.reload("fosquitto")
+            services.restart("fosquitto")
 
         return True
 
@@ -263,7 +263,7 @@ class SubordinatesComplex:
             SubordinatesUci.add_subordinate(conf["device_id"], guessed_ip, conf["port"])
 
         with OpenwrtServices() as services:
-            services.reload("fosquitto")
+            services.restart("fosquitto")
 
         return {"result": True, "controller_id": conf["device_id"]}
 
@@ -275,6 +275,6 @@ class SubordinatesComplex:
             SubordinatesFiles.remove_subordinate(controller_id)
 
         with OpenwrtServices() as services:
-            services.reload("fosquitto")
+            services.restart("fosquitto")
 
         return True

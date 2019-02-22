@@ -166,7 +166,7 @@ def test_complex_subordinates(
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     if infrastructure.backend_name == "openwrt":
-        check_service_result("fosquitto", "reload", passed=True)
+        check_service_result("fosquitto", "restart", passed=True)
     assert notifications[-1] == {
         "module": "subordinates",
         "action": "add",
@@ -193,7 +193,7 @@ def test_complex_subordinates(
         "data": {"result": False}
     }
     if infrastructure.backend_name == "openwrt":
-        check_service_result("fosquitto", "reload", passed=True, expected_found=False)
+        check_service_result("fosquitto", "restart", passed=True, expected_found=False)
 
     assert in_list("1122334455667788") == {
         "controller_id": "1122334455667788", "enabled": True, "custom_name": "",
@@ -217,7 +217,7 @@ def test_complex_subordinates(
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     if infrastructure.backend_name == "openwrt":
-        check_service_result("fosquitto", "reload", passed=True)
+        check_service_result("fosquitto", "restart", passed=True)
     assert notifications[-1] == {
         "module": "subordinates",
         "action": "add",
@@ -247,7 +247,7 @@ def test_complex_subordinates(
         "data": {"result": True}
     }
     if infrastructure.backend_name == "openwrt":
-        check_service_result("fosquitto", "reload", passed=True)
+        check_service_result("fosquitto", "restart", passed=True)
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         "module": "subordinates",
@@ -274,7 +274,7 @@ def test_complex_subordinates(
         "data": {"result": False}
     }
     if infrastructure.backend_name == "openwrt":
-        check_service_result("fosquitto", "reload", passed=True, expected_found=False)
+        check_service_result("fosquitto", "restart", passed=True, expected_found=False)
 
     # del
     filters = [("subordinates", "del")]
@@ -294,7 +294,7 @@ def test_complex_subordinates(
         "data": {"result": True}
     }
     if infrastructure.backend_name == "openwrt":
-        check_service_result("fosquitto", "reload", passed=True)
+        check_service_result("fosquitto", "restart", passed=True)
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         "module": "subordinates",
@@ -319,7 +319,7 @@ def test_complex_subordinates(
         "data": {"result": False}
     }
     if infrastructure.backend_name == "openwrt":
-        check_service_result("fosquitto", "reload", passed=True, expected_found=False)
+        check_service_result("fosquitto", "restart", passed=True, expected_found=False)
     assert None is in_list("1122334455667788")
 
 
@@ -729,7 +729,7 @@ def test_complex_subsubordinates_openwrt(
             "kind": "reply",
             "data": {"result": True, "controller_id": controller_id}
         }
-        check_service_result("fosquitto", "reload", passed=True)
+        check_service_result("fosquitto", "restart", passed=True)
 
     add_subordinate("4444444444444444")
     add_subordinate("5555555555555555")
@@ -750,7 +750,7 @@ def test_complex_subsubordinates_openwrt(
         "kind": "reply",
         "data": {"result": True}
     }
-    check_service_result("fosquitto", "reload", passed=True)
+    check_service_result("fosquitto", "restart", passed=True)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
@@ -774,7 +774,7 @@ def test_complex_subsubordinates_openwrt(
         "kind": "reply",
         "data": {"result": True}
     }
-    check_service_result("fosquitto", "reload", passed=True)
+    check_service_result("fosquitto", "restart", passed=True)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
@@ -800,7 +800,7 @@ def test_complex_subsubordinates_openwrt(
         "kind": "reply",
         "data": {"result": True}
     }
-    check_service_result("fosquitto", "reload", passed=True)
+    check_service_result("fosquitto", "restart", passed=True)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
