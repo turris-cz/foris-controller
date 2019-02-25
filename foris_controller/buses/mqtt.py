@@ -79,7 +79,7 @@ def announcer_worker(host, port):
     def on_publish(client, userdata, mid):
         logger.debug("Announcer thread published.")
 
-    client = mqtt.Client(client_id=str(uuid.uuid4()), clean_session=False)
+    client = mqtt.Client(client_id=f'{uuid.uuid4()}-controller-announcer', clean_session=False)
     client.on_connect = on_connect
     client.on_publish = on_publish
     logger.debug("Announcer thread started. Trying to connect to '%s':'%d'", host, port)
@@ -169,6 +169,7 @@ class MqttListener(BaseSocketListener):
     def __init__(self, host, port):
         self.announcer_thread_running = False
         self.unpublished_mids = {}
+        self.mqtt_client_id = f'{uuid.uuid4()}-controller-request'
 
         def on_publish(client, userdata, mid):
             logger.debug("Mid %s is published", mid)
@@ -257,7 +258,7 @@ class MqttListener(BaseSocketListener):
                 # This should not happen
                 logger.error("Don't know how to respond.")
 
-        self.client = mqtt.Client(client_id=str(uuid.uuid4()), clean_session=False)
+        self.client = mqtt.Client(client_id=self.mqtt_client_id, clean_session=False)
         self.client.on_connect = MqttListener.handle_on_connect
         self.client.on_message = on_message
         self.client.on_subscribe = on_subscribe
@@ -273,6 +274,8 @@ class MqttListener(BaseSocketListener):
 class MqttNotificationSender(BaseNotificationSender):
 
     def _connect(self):
+        self._force_stop = False
+
         def on_connect(client, userdata, flags, rc):
             self._connected = True
             if rc != 0:
@@ -286,11 +289,18 @@ class MqttNotificationSender(BaseNotificationSender):
             )
 
         def on_disconnect(client, userdata, rc):
+            logger.debug("Notification sender disconnected (rc=%d).", rc)
             self._connected = False
+            if not self._force_stop:
+                client.reconnect()
 
-        self.client = mqtt.Client(client_id=str(uuid.uuid4()), clean_session=False)
+        def on_publish(client, userdata, mid):
+            logger.debug("Notification inserted into publish queue (mid=%s)", mid)
+
+        self.client = mqtt.Client(client_id=self.mqtt_client_id, clean_session=False)
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
+        self.client.on_publish = on_publish
         if self.credentials:
             self.client.username_pw_set(*self.credentials)
         self.client.connect(self.host, self.port, keepalive=30)
@@ -301,6 +311,7 @@ class MqttNotificationSender(BaseNotificationSender):
         self.host = host
         self.port = port
         self.credentials = credentials
+        self.mqtt_client_id = f'{uuid.uuid4()}-controller-notification'
 
         self._connect()
         self._connected = True
@@ -316,13 +327,23 @@ class MqttNotificationSender(BaseNotificationSender):
         publish_topic = "foris-controller/%s/notification/%s/action/%s" % (
             controller_id, module, action
         )
-        self.client.publish(publish_topic, json.dumps(msg), qos=0)
-        logger.debug("Notification published. (topic=%s, msg=%s)", publish_topic, msg)
+        res = self.client.publish(publish_topic, json.dumps(msg), qos=0)
+
+        for _ in range(3):  # retry to resend
+            if res.rc == mqtt.MQTT_ERR_SUCCESS:
+                break
+            res = self.client.publish(publish_topic, json.dumps(msg), qos=0)
+
+        logger.debug(
+            "Notification published. (topic=%s, mid=%d, msg=%s)",
+            publish_topic, res.mid, msg
+        )
 
     def disconnect(self):
         if self._connected:
             logger.debug("Disconnecting mqtt")
             self.client.disconnect()
+            self._force_stop = True
 
     def reset(self):
         logger.debug("Resetting connection (skipped no need to reset this bus).")
