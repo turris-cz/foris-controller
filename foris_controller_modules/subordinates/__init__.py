@@ -36,36 +36,42 @@ class SubordinatesModule(BaseModule):
                 "add",
                 {"controller_id": res["controller_id"]}
             )
+            self.handler.restart_mqtt()
         return res
 
     def action_del(self, data):
         res = self.handler.del_subordinate(**data)
         if res:
             self.notify("del", data)
+            self.handler.restart_mqtt()
         return {"result": res}
 
     def action_set(self, data):
         res = self.handler.set_subordinate(**data)
         if res:
             self.notify("set", data)
+            self.handler.restart_mqtt()
         return {"result": res}
 
     def action_add_subsubordinate(self, data):
         res = self.handler.add_subsubordinate(**data)
         if res:
             self.notify("add_subsubordinate", data)
+            self.handler.restart_mqtt()
         return {"result": res}
 
     def action_set_subsubordinate(self, data):
         res = self.handler.set_subsubordinate(**data)
         if res:
             self.notify("set_subsubordinate", data)
+            self.handler.restart_mqtt()
         return {"result": res}
 
     def action_del_subsubordinate(self, data):
         res = self.handler.del_subsubordinate(**data)
         if res:
             self.notify("del_subsubordinate", data)
+            self.handler.restart_mqtt()
         return {"result": res}
 
 
@@ -77,6 +83,7 @@ class SubordinatesModule(BaseModule):
     'add_subsubordinate',
     'del_subsubordinate',
     'set_subsubordinate',
+    'restart_mqtt',
 ])
 class Handler(object):
     pass

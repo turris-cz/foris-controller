@@ -91,8 +91,6 @@ class SubordinatesUci(object):
                 backend.set_option("fosquitto", controller_id, "via", via)
                 backend.set_option("fosquitto", controller_id, "enabled", store_bool(True))
 
-        with OpenwrtServices() as services:
-            services.restart("fosquitto")
 
         return True
 
@@ -117,9 +115,6 @@ class SubordinatesUci(object):
                 backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
                 backend.set_option("fosquitto", controller_id, "enabled", store_bool(enabled))
 
-        with OpenwrtServices() as services:
-            services.restart("fosquitto")
-
         return True
 
     def del_subsubordinate(self, controller_id):
@@ -140,9 +135,6 @@ class SubordinatesUci(object):
 
             with UciBackend() as backend:
                 backend.del_section("fosquitto", controller_id)
-
-        with OpenwrtServices() as services:
-            services.restart("fosquitto")
 
         return True
 
@@ -165,9 +157,6 @@ class SubordinatesUci(object):
             backend.set_option("fosquitto", controller_id, "enabled", store_bool(enabled))
             backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
 
-        with OpenwrtServices() as services:
-            services.restart("fosquitto")
-
         return True
 
     @staticmethod
@@ -185,9 +174,6 @@ class SubordinatesUci(object):
                     backend.del_section("fosquitto", id_to_delete)
             except UciException:
                 return False
-
-        with OpenwrtServices() as services:
-            services.restart("fosquitto")
 
         return True
 
@@ -262,9 +248,6 @@ class SubordinatesComplex:
 
             SubordinatesUci.add_subordinate(conf["device_id"], guessed_ip, conf["port"])
 
-        with OpenwrtServices() as services:
-            services.restart("fosquitto")
-
         return {"result": True, "controller_id": conf["device_id"]}
 
     def del_subordinate(self, controller_id):
@@ -274,7 +257,11 @@ class SubordinatesComplex:
                 return False
             SubordinatesFiles.remove_subordinate(controller_id)
 
+        return True
+
+
+class SubordinatesService:
+
+    def restart(self):
         with OpenwrtServices() as services:
             services.restart("fosquitto")
-
-        return True

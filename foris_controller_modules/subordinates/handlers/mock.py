@@ -161,3 +161,7 @@ class MockSubordinatesHandler(Handler, BaseMockHandler):
 
         # not found
         return False
+
+    @logger_wrapper(logger)
+    def restart_mqtt(self):
+        pass  # mock service restart

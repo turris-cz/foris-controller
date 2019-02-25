@@ -23,7 +23,7 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.subordinates import (
-    SubordinatesUci, SubordinatesComplex
+    SubordinatesUci, SubordinatesComplex, SubordinatesService
 )
 
 from .. import Handler
@@ -35,6 +35,7 @@ class OpenwrtSubordinatesHandler(Handler, BaseOpenwrtHandler):
 
     uci = SubordinatesUci()
     complex = SubordinatesComplex()
+    service = SubordinatesService()
 
     @logger_wrapper(logger)
     def list_subordinates(self):
@@ -65,3 +66,7 @@ class OpenwrtSubordinatesHandler(Handler, BaseOpenwrtHandler):
     @logger_wrapper(logger)
     def del_subsubordinate(self, controller_id) -> bool:
         return OpenwrtSubordinatesHandler.uci.del_subsubordinate(controller_id)
+
+    @logger_wrapper(logger)
+    def restart_mqtt(self):
+        OpenwrtSubordinatesHandler.service.restart()
