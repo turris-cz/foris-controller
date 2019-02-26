@@ -60,6 +60,18 @@ class SubordinatesModule(BaseModule):
             self.handler.restart_mqtt()
         return {"result": res}
 
+    def action_update_sub(self, data):
+        res = self.handler.update_sub(data["controller_id"], **data["options"])
+        if res:
+            self.notify("update_sub", data)
+        return {"result": res}
+
+    def action_update_subsub(self, data):
+        res = self.handler.update_subsub(data["controller_id"], **data["options"])
+        if res:
+            self.notify("update_subsub", data)
+        return {"result": res}
+
 
 @wrap_required_functions([
     'list_subordinates',
@@ -68,6 +80,8 @@ class SubordinatesModule(BaseModule):
     'delete',
     'set_enabled',
     'restart_mqtt',
+    'update_sub',
+    'update_subsub',
 ])
 class Handler(object):
     pass

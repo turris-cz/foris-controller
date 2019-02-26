@@ -164,3 +164,28 @@ class MockSubordinatesHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def restart_mqtt(self):
         pass  # mock service restart
+
+    @logger_wrapper(logger)
+    def update_sub(self, controller_id: str, custom_name: str):
+        if app_info["bus"] != "mqtt":
+            return False
+
+        for record in MockSubordinatesHandler.subordinates:
+            if record["controller_id"] == controller_id:
+                record["options"]["custom_name"] = custom_name
+                return True
+
+        return False
+
+    @logger_wrapper(logger)
+    def update_subsub(self, controller_id: str, custom_name: str):
+        if app_info["bus"] != "mqtt":
+            return False
+
+        for sub in MockSubordinatesHandler.subordinates:
+            for subsub in sub["subsubordinates"]:
+                if subsub["controller_id"] == controller_id:
+                    subsub["options"]["custom_name"] = custom_name
+                    return True
+
+        return False

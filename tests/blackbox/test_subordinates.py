@@ -123,6 +123,20 @@ def test_complex_subordinates_unsupported(uci_configs_init, infrastructure, star
         "kind": "reply",
         "data": {"result": False}
     }
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "request",
+        "data": {
+            "controller_id": "1122334455667788", "options": {"custom_name": "nice name"}
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "reply",
+        "data": {"result": False}
+    }
 
 
 @pytest.mark.only_message_buses(['mqtt'])
@@ -786,3 +800,213 @@ def test_complex_subsubordinates_openwrt(
 
     with pytest.raises(uci.UciRecordNotFound):
         uci.get_section(data, "fosquitto", "1111111111111111")
+
+
+@pytest.mark.only_message_buses(['mqtt'])
+def test_complex_subordinates_options(
+    uci_configs_init, infrastructure, start_buses, file_root_init, init_script_result
+):
+    def get_options(controller_id):
+        res = infrastructure.process_message({
+            "module": "subordinates",
+            "action": "list",
+            "kind": "request",
+        })
+        assert "subordinates" in res["data"]
+        for record in res["data"]["subordinates"]:
+            if record["controller_id"] == controller_id:
+                return record["options"]
+
+        for sub in res["data"]["subordinates"]:
+            for subsub in sub["subsubordinates"]:
+                if subsub["controller_id"] == controller_id:
+                    return subsub["options"]
+        return None
+
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "add_sub",
+        "kind": "request",
+        "data": {
+            "token": prepare_subordinate_token("1234567887654321"),
+        }
+    })
+    assert res["data"]["result"]
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "add_subsub",
+        "kind": "request",
+        "data": {
+            "controller_id": "8765432112345678",
+            "via": "1234567887654321",
+        }
+    })
+    assert res["data"]["result"]
+
+    assert get_options("1234567887654321") == {"custom_name": ""}
+    assert get_options("8765432112345678") == {"custom_name": ""}
+
+    # sub
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "request",
+        "data": {
+            "controller_id": "1234567887654321",
+            "options": {"custom_name": "sub1"}
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "reply",
+        "data": {
+            "result": True,
+        }
+    }
+    assert get_options("1234567887654321") == {"custom_name": "sub1"}
+
+    # subsub
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "update_subsub",
+        "kind": "request",
+        "data": {
+            "controller_id": "8765432112345678",
+            "options": {"custom_name": "subsub1"},
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "update_subsub",
+        "kind": "reply",
+        "data": {
+            "result": True,
+        }
+    }
+    assert get_options("8765432112345678") == {"custom_name": "subsub1"}
+
+    # non-exsiting
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "request",
+        "data": {
+            "controller_id": "7755331188664422",
+            "options": {"custom_name": "sub2"},
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "reply",
+        "data": {
+            "result": False,
+        }
+    }
+    assert get_options("7755331188664422") is None
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "update_subsub",
+        "kind": "request",
+        "data": {
+            "controller_id": "2244668811335577",
+            "options": {"custom_name": "subsub2"},
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "update_subsub",
+        "kind": "reply",
+        "data": {
+            "result": False,
+        }
+    }
+    assert get_options("2244668811335577") is None
+
+
+@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_message_buses(['mqtt'])
+def test_complex_subordinates_options_openwrt(
+    uci_configs_init, infrastructure, start_buses, file_root_init, init_script_result, lock_backend
+):
+    uci = get_uci_module(lock_backend)
+
+    token = prepare_subordinate_token("3344112266779988")
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "add_sub",
+        "kind": "request",
+        "data": {
+            "token": token,
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "add_sub",
+        "kind": "reply",
+        "data": {"result": True, "controller_id": "3344112266779988"}
+    }
+
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "request",
+        "data": {
+            "controller_id": "3344112266779988",
+            "options": {"custom_name": "sub3"},
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "update_sub",
+        "kind": "reply",
+        "data": {
+            "result": True,
+        }
+    }
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+    assert uci.get_option_named(
+        data, "foris-controller-subordinates", "3344112266779988", "custom_name", "") == "sub3"
+
+    # add subsub
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "add_subsub",
+        "kind": "request",
+        "data": {
+            "controller_id": "8899776622114433",
+            "via": "3344112266779988",
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "add_subsub",
+        "kind": "reply",
+        "data": {"result": True}
+    }
+
+    res = infrastructure.process_message({
+        "module": "subordinates",
+        "action": "update_subsub",
+        "kind": "request",
+        "data": {
+            "controller_id": "8899776622114433",
+            "options": {"custom_name": "subsub3"},
+        }
+    })
+    assert res == {
+        "module": "subordinates",
+        "action": "update_subsub",
+        "kind": "reply",
+        "data": {
+            "result": True,
+        }
+    }
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+    assert uci.get_option_named(
+        data, "foris-controller-subordinates", "8899776622114433", "custom_name", "") == "subsub3"

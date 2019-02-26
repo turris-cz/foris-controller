@@ -55,6 +55,14 @@ class SubordinatesUci(object):
                 return section
         return None
 
+    def _get_fosquitto_section(
+        self, data: dict, controller_id: str, section_type: str
+    ) -> typing.Optional[dict]:
+        for section in get_sections_by_type(data, "fosquitto", section_type):
+            if section["name"] == controller_id:
+                return section
+        return None
+
     def list_subordinates(self):
         with UciBackend() as backend:
             fosquitto_data = backend.read("fosquitto")
@@ -166,6 +174,32 @@ class SubordinatesUci(object):
             for record in sub_list
             for e in record["subsubordinates"]
         ]
+
+    def update_sub(self, controller_id: str, custom_name: str):
+        with UciBackend() as backend:
+            fosquitto_data = backend.read("fosquitto")
+            if not self._get_fosquitto_section(
+                fosquitto_data, controller_id, "subordinate"
+            ):
+                return False
+
+            backend.add_section("foris-controller-subordinates", "subordinate", controller_id)
+            backend.set_option(
+                "foris-controller-subordinates", controller_id, "custom_name", custom_name)
+        return True
+
+    def update_subsub(self, controller_id: str, custom_name: str):
+        with UciBackend() as backend:
+            fosquitto_data = backend.read("fosquitto")
+            if not self._get_fosquitto_section(
+                fosquitto_data, controller_id, "subsubordinate"
+            ):
+                return False
+            backend.add_section(
+                "foris-controller-subordinates", "subsubordinate", controller_id)
+            backend.set_option(
+                "foris-controller-subordinates", controller_id, "custom_name", custom_name)
+        return True
 
 
 class SubordinatesFiles(BaseFile):

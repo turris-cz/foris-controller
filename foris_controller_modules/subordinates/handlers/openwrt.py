@@ -60,3 +60,11 @@ class OpenwrtSubordinatesHandler(Handler, BaseOpenwrtHandler):
     @logger_wrapper(logger)
     def restart_mqtt(self):
         OpenwrtSubordinatesHandler.service.restart()
+
+    @logger_wrapper(logger)
+    def update_sub(self, controller_id: str, **kwargs):
+        return OpenwrtSubordinatesHandler.uci.update_sub(controller_id, **kwargs)
+
+    @logger_wrapper(logger)
+    def update_subsub(self, controller_id: str, **kwargs):
+        return OpenwrtSubordinatesHandler.uci.update_subsub(controller_id, **kwargs)
