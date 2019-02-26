@@ -42,30 +42,20 @@ class OpenwrtSubordinatesHandler(Handler, BaseOpenwrtHandler):
         return OpenwrtSubordinatesHandler.uci.list_subordinates()
 
     @logger_wrapper(logger)
-    def add_subordinate(self, token):
+    def add_sub(self, token):
         return OpenwrtSubordinatesHandler.complex.add_subordinate(token)
 
     @logger_wrapper(logger)
-    def del_subordinate(self, controller_id):
-        return OpenwrtSubordinatesHandler.complex.del_subordinate(controller_id)
-
-    @logger_wrapper(logger)
-    def set_subordinate(self, controller_id, enabled, custom_name):
-        return OpenwrtSubordinatesHandler.uci.set_subordinate(controller_id, enabled, custom_name)
-
-    @logger_wrapper(logger)
-    def add_subsubordinate(self, controller_id: str, via: str) -> bool:
+    def add_subsub(self, controller_id: str, via: str) -> bool:
         return OpenwrtSubordinatesHandler.uci.add_subsubordinate(controller_id, via)
 
     @logger_wrapper(logger)
-    def set_subsubordinate(self, controller_id, enabled, custom_name) -> bool:
-        return OpenwrtSubordinatesHandler.uci.set_subsubordinate(
-            controller_id, enabled, custom_name
-        )
+    def delete(self, controller_id):
+        return OpenwrtSubordinatesHandler.complex.delete(controller_id)
 
     @logger_wrapper(logger)
-    def del_subsubordinate(self, controller_id) -> bool:
-        return OpenwrtSubordinatesHandler.uci.del_subsubordinate(controller_id)
+    def set_enabled(self, controller_id, enabled):
+        return OpenwrtSubordinatesHandler.uci.set_enabled(controller_id, enabled)
 
     @logger_wrapper(logger)
     def restart_mqtt(self):

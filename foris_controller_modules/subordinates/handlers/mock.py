@@ -44,7 +44,7 @@ class MockSubordinatesHandler(Handler, BaseMockHandler):
         return MockSubordinatesHandler.subordinates
 
     @logger_wrapper(logger)
-    def add_subordinate(self, token) -> dict:
+    def add_sub(self, token) -> dict:
         if app_info["bus"] != "mqtt":
             return {"result": False}
 
@@ -69,17 +69,19 @@ class MockSubordinatesHandler(Handler, BaseMockHandler):
         MockSubordinatesHandler.subordinates.append({
             "controller_id": controller_id,
             "enabled": True,
-            "custom_name": "",
+            "options": {"custom_name": ""},
             "subsubordinates": [],
         })
 
         return {"result": True, "controller_id": controller_id}
 
     @logger_wrapper(logger)
-    def del_subordinate(self, controller_id) -> bool:
+    def delete(self, controller_id) -> bool:
         if app_info["bus"] != "mqtt":
             return False
+        return self.del_subordinate(controller_id) or self.del_subsubordinate(controller_id)
 
+    def del_subordinate(self, controller_id) -> bool:
         mapped = {e["controller_id"]: e for e in MockSubordinatesHandler.subordinates}
         if controller_id not in mapped:
             return False
@@ -87,20 +89,49 @@ class MockSubordinatesHandler(Handler, BaseMockHandler):
         MockSubordinatesHandler.subordinates = list(mapped.values())
         return True
 
+    def del_subsubordinate(self, controller_id) -> bool:
+        for record in MockSubordinatesHandler.subordinates:
+            found = None
+            for subsub in record["subsubordinates"]:
+                if controller_id == subsub["controller_id"]:
+                    found = record
+                    break
+            if found:
+                record["subsubordinates"] == [
+                    e for e in record["subsubordinates"] if e["controller_id"] != controller_id
+                ]
+                return True
+
+        # not found
+        return False
+
     @logger_wrapper(logger)
-    def set_subordinate(self, controller_id, enabled, custom_name) -> bool:
+    def set_enabled(self, controller_id, enabled) -> bool:
         if app_info["bus"] != "mqtt":
             return False
+        return self.set_sub_enabled(controller_id, enabled) or \
+            self.set_subsub_enabled(controller_id, enabled)
 
+    @logger_wrapper(logger)
+    def set_subsub_enabled(self, controller_id, enabled) -> bool:
+        for record in MockSubordinatesHandler.subordinates:
+            for subsub in record["subsubordinates"]:
+                if controller_id == subsub["controller_id"]:
+                    subsub["enabled"] = enabled
+                    return True
+
+        # not found
+        return False
+
+    def set_sub_enabled(self, controller_id, enabled) -> bool:
         mapped = {e["controller_id"]: e for e in MockSubordinatesHandler.subordinates}
         if controller_id not in mapped:
             return False
         mapped[controller_id]["enabled"] = enabled
-        mapped[controller_id]["custom_name"] = custom_name
         return True
 
     @logger_wrapper(logger)
-    def add_subsubordinate(self, controller_id, via) -> bool:
+    def add_subsub(self, controller_id, via) -> bool:
         if app_info["bus"] != "mqtt":
             return False
 
@@ -124,43 +155,11 @@ class MockSubordinatesHandler(Handler, BaseMockHandler):
 
         mapped[via]["subsubordinates"].append({
             "controller_id": controller_id,
-            "custom_name": "",
             "enabled": True,
+            "options": {"custom_name": ""},
         })
 
         return True
-
-    @logger_wrapper(logger)
-    def set_subsubordinate(self, controller_id, enabled, custom_name) -> bool:
-        if app_info["bus"] != "mqtt":
-            return False
-
-        for record in MockSubordinatesHandler.subordinates:
-            for subsub in record["subsubordinates"]:
-                if controller_id == subsub["controller_id"]:
-                    subsub["enabled"] = enabled
-                    subsub["custom_name"] = custom_name
-                    return True
-
-        # not found
-        return False
-
-    @logger_wrapper(logger)
-    def del_subsubordinate(self, controller_id) -> bool:
-        for record in MockSubordinatesHandler.subordinates:
-            found = None
-            for subsub in record["subsubordinates"]:
-                if controller_id == subsub["controller_id"]:
-                    found = record
-                    break
-            if found:
-                record["subsubordinates"] == [
-                    e for e in record["subsubordinates"] if e["controller_id"] != controller_id
-                ]
-                return True
-
-        # not found
-        return False
 
     @logger_wrapper(logger)
     def restart_mqtt(self):

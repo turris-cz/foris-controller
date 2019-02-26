@@ -29,60 +29,44 @@ class SubordinatesModule(BaseModule):
     def action_list(self, data):
         return {"subordinates": self.handler.list_subordinates()}
 
-    def action_add(self, data):
-        res = self.handler.add_subordinate(**data)
+    def action_add_sub(self, data):
+        res = self.handler.add_sub(**data)
         if res["result"]:
             self.notify(
-                "add",
+                "add_sub",
                 {"controller_id": res["controller_id"]}
             )
             self.handler.restart_mqtt()
         return res
 
+    def action_add_subsub(self, data):
+        res = self.handler.add_subsub(**data)
+        if res:
+            self.notify("add_subsub", data)
+            self.handler.restart_mqtt()
+        return {"result": res}
+
     def action_del(self, data):
-        res = self.handler.del_subordinate(**data)
+        res = self.handler.delete(**data)
         if res:
             self.notify("del", data)
             self.handler.restart_mqtt()
         return {"result": res}
 
-    def action_set(self, data):
-        res = self.handler.set_subordinate(**data)
+    def action_set_enabled(self, data):
+        res = self.handler.set_enabled(**data)
         if res:
-            self.notify("set", data)
-            self.handler.restart_mqtt()
-        return {"result": res}
-
-    def action_add_subsubordinate(self, data):
-        res = self.handler.add_subsubordinate(**data)
-        if res:
-            self.notify("add_subsubordinate", data)
-            self.handler.restart_mqtt()
-        return {"result": res}
-
-    def action_set_subsubordinate(self, data):
-        res = self.handler.set_subsubordinate(**data)
-        if res:
-            self.notify("set_subsubordinate", data)
-            self.handler.restart_mqtt()
-        return {"result": res}
-
-    def action_del_subsubordinate(self, data):
-        res = self.handler.del_subsubordinate(**data)
-        if res:
-            self.notify("del_subsubordinate", data)
+            self.notify("set_enabled", data)
             self.handler.restart_mqtt()
         return {"result": res}
 
 
 @wrap_required_functions([
     'list_subordinates',
-    'add_subordinate',
-    'del_subordinate',
-    'set_subordinate',
-    'add_subsubordinate',
-    'del_subsubordinate',
-    'set_subsubordinate',
+    'add_sub',
+    'add_subsub',
+    'delete',
+    'set_enabled',
     'restart_mqtt',
 ])
 class Handler(object):

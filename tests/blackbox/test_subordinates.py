@@ -83,7 +83,7 @@ def test_complex_subordinates_unsupported(uci_configs_init, infrastructure, star
     }
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "request",
         "data": {
             "token": prepare_subordinate_token("1122334455667788"),
@@ -91,7 +91,7 @@ def test_complex_subordinates_unsupported(uci_configs_init, infrastructure, star
     })
     assert res == {
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -111,15 +111,15 @@ def test_complex_subordinates_unsupported(uci_configs_init, infrastructure, star
     }
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "request",
         "data": {
-            "controller_id": "1122334455667788", "custom_name": "set_xx", "enabled": False,
+            "controller_id": "1122334455667788", "enabled": False,
         }
     })
     assert res == {
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -138,7 +138,7 @@ def test_complex_subordinates(
         assert "subordinates" in res["data"]
         output = None
         for record in res["data"]["subordinates"]:
-            assert set(record.keys()) == {"custom_name", "controller_id", "enabled", "subsubordinates"}
+            assert set(record.keys()) == {"options", "controller_id", "enabled", "subsubordinates"}
             if record["controller_id"] == controller_id:
                 output = record
         return output
@@ -146,13 +146,13 @@ def test_complex_subordinates(
     assert None is in_list("1122334455667788")
     token = prepare_subordinate_token("1122334455667788")
 
-    filters = [("subordinates", "add")]
+    filters = [("subordinates", "add_sub")]
     notifications = infrastructure.get_notifications(filters=filters)
 
     # add
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "request",
         "data": {
             "token": token,
@@ -160,7 +160,7 @@ def test_complex_subordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "reply",
         "data": {"result": True, "controller_id": "1122334455667788"}
     }
@@ -169,18 +169,18 @@ def test_complex_subordinates(
         check_service_result("fosquitto", "restart", passed=True)
     assert notifications[-1] == {
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "notification",
         "data": {"controller_id": "1122334455667788"}
     }
     assert in_list("1122334455667788") == {
-        "controller_id": "1122334455667788", "enabled": True, "custom_name": "",
+        "controller_id": "1122334455667788", "enabled": True, "options": {"custom_name": ""},
         "subsubordinates": [],
     }
 
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "request",
         "data": {
             "token": token,
@@ -188,7 +188,7 @@ def test_complex_subordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -196,14 +196,14 @@ def test_complex_subordinates(
         check_service_result("fosquitto", "restart", passed=True, expected_found=False)
 
     assert in_list("1122334455667788") == {
-        "controller_id": "1122334455667788", "enabled": True, "custom_name": "",
+        "controller_id": "1122334455667788", "enabled": True, "options": {"custom_name": ""},
         "subsubordinates": [],
     }
 
     # add2
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "request",
         "data": {
             "token": prepare_subordinate_token("8877665544332211"),
@@ -211,7 +211,7 @@ def test_complex_subordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "reply",
         "data": {"result": True, "controller_id": "8877665544332211"}
     }
@@ -220,29 +220,29 @@ def test_complex_subordinates(
         check_service_result("fosquitto", "restart", passed=True)
     assert notifications[-1] == {
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "notification",
         "data": {"controller_id": "8877665544332211"}
     }
     assert in_list("8877665544332211") == {
-        "controller_id": "8877665544332211", "enabled": True, "custom_name": "",
+        "controller_id": "8877665544332211", "enabled": True, "options": {"custom_name": ""},
         "subsubordinates": [],
     }
 
     # set
-    filters = [("subordinates", "set")]
+    filters = [("subordinates", "set_enabled")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "request",
         "data": {
-            "controller_id": "1122334455667788", "custom_name": "test_set1", "enabled": False,
+            "controller_id": "1122334455667788", "enabled": False,
         }
     })
     assert res == {
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "reply",
         "data": {"result": True}
     }
@@ -251,25 +251,25 @@ def test_complex_subordinates(
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "notification",
-        "data": {"controller_id": "1122334455667788", "custom_name": "test_set1", "enabled": False}
+        "data": {"controller_id": "1122334455667788", "enabled": False}
     }
     assert in_list("1122334455667788") == {
-        "controller_id": "1122334455667788", "custom_name": "test_set1", "enabled": False,
+        "controller_id": "1122334455667788", "enabled": False, "options": {"custom_name": ""},
         "subsubordinates": [],
     }
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "request",
         "data": {
-            "controller_id": "2222334455667788", "custom_name": "test_set2", "enabled": True,
+            "controller_id": "2222334455667788", "enabled": True,
         }
     })
     assert res == {
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -332,7 +332,7 @@ def test_complex_subordinates_openwrt(
     token = prepare_subordinate_token("1122334455667788")
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "request",
         "data": {
             "token": token,
@@ -340,7 +340,7 @@ def test_complex_subordinates_openwrt(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add",
+        "action": "add_sub",
         "kind": "reply",
         "data": {"result": True, "controller_id": "1122334455667788"}
     }
@@ -365,17 +365,16 @@ def test_complex_subordinates_openwrt(
 
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "request",
         "data": {
             "controller_id": "1122334455667788",
             "enabled": False,
-            "custom_name": "openwrt1",
         }
     })
     assert res == {
         "module": "subordinates",
-        "action": "set",
+        "action": "set_enabled",
         "kind": "reply",
         "data": {"result": True}
     }
@@ -385,7 +384,6 @@ def test_complex_subordinates_openwrt(
 
     assert not uci.parse_bool(uci.get_option_named(
         data, "fosquitto", "1122334455667788", "enabled", ""))
-    assert uci.get_option_named(data, "fosquitto", "1122334455667788", "custom_name") == "openwrt1"
 
     res = infrastructure.process_message({
         "module": "subordinates",
@@ -404,8 +402,6 @@ def test_complex_subordinates_openwrt(
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
-
-    assert uci.get_option_named(data, "fosquitto", "1122334455667788", "custom_name", "") == ""
 
     with pytest.raises(uci.UciRecordNotFound):
         uci.get_section(data, "fosquitto", "1122334455667788")
@@ -416,7 +412,7 @@ def test_complex_subordinates_openwrt(
 def test_complex_subsubordinates_unsupported(uci_configs_init, infrastructure, start_buses, file_root_init):
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "8877665544332211",
@@ -425,29 +421,28 @@ def test_complex_subsubordinates_unsupported(uci_configs_init, infrastructure, s
     })
     assert res == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "reply",
         "data": {"result": False}
     }
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "set_subsubordinate",
+        "action": "set_enabled",
         "kind": "request",
         "data": {
             "controller_id": "8877665544332211",
-            "custom_name": "sub1",
             "enabled": False
         }
     })
     assert res == {
         "module": "subordinates",
-        "action": "set_subsubordinate",
+        "action": "set_enabled",
         "kind": "reply",
         "data": {"result": False}
     }
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "del_subsubordinate",
+        "action": "del",
         "kind": "request",
         "data": {
             "controller_id": "8877665544332211",
@@ -455,7 +450,7 @@ def test_complex_subsubordinates_unsupported(uci_configs_init, infrastructure, s
     })
     assert res == {
         "module": "subordinates",
-        "action": "del_subsubordinate",
+        "action": "del",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -470,7 +465,7 @@ def test_complex_subsubordinates(
         token = prepare_subordinate_token(controller_id)
         res = infrastructure.process_message({
             "module": "subordinates",
-            "action": "add",
+            "action": "add_sub",
             "kind": "request",
             "data": {
                 "token": token,
@@ -479,14 +474,14 @@ def test_complex_subsubordinates(
         if result:
             assert res == {
                 "module": "subordinates",
-                "action": "add",
+                "action": "add_sub",
                 "kind": "reply",
                 "data": {"result": True, "controller_id": controller_id}
             }
         else:
             assert res == {
                     "module": "subordinates",
-                    "action": "add",
+                    "action": "add_sub",
                     "kind": "reply",
                     "data": {"result": False}
                 }
@@ -504,12 +499,12 @@ def test_complex_subsubordinates(
             for e in record["subsubordinates"] if e["controller_id"] == child
         ])
 
-    filters = [("subordinates", "add_subsubordinate")]
+    filters = [("subordinates", "add_subsub")]
     notifications = infrastructure.get_notifications(filters=filters)
     # add subsub success
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "6666666666666666",
@@ -518,14 +513,14 @@ def test_complex_subsubordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "reply",
         "data": {"result": True}
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "notification",
         "data": {"controller_id": "6666666666666666", "via": "8888888888888888"}
     }
@@ -534,7 +529,7 @@ def test_complex_subsubordinates(
     # already added
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "6666666666666666",
@@ -543,7 +538,7 @@ def test_complex_subsubordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -551,7 +546,7 @@ def test_complex_subsubordinates(
     # add subsub with same controller_id as sub
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "7777777777777777",
@@ -560,7 +555,7 @@ def test_complex_subsubordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -568,7 +563,7 @@ def test_complex_subsubordinates(
     # add subsub when via subsub
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "5555555555555555",
@@ -577,7 +572,7 @@ def test_complex_subsubordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -585,7 +580,7 @@ def test_complex_subsubordinates(
     # add subsub when via non existing
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "5555555555555555",
@@ -594,7 +589,7 @@ def test_complex_subsubordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "reply",
         "data": {"result": False}
     }
@@ -602,33 +597,31 @@ def test_complex_subsubordinates(
     # add sub but subsub already exists
     add_subordinate("6666666666666666", False)
 
-    filters = [("subordinates", "set_subsubordinate")]
+    filters = [("subordinates", "set_enabled")]
     notifications = infrastructure.get_notifications(filters=filters)
     # set subsub success
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "set_subsubordinate",
+        "action": "set_enabled",
         "kind": "request",
         "data": {
             "controller_id": "6666666666666666",
-            "custom_name": "setsubsub1",
             "enabled": False,
         }
     })
     assert res == {
         "module": "subordinates",
-        "action": "set_subsubordinate",
+        "action": "set_enabled",
         "kind": "reply",
         "data": {"result": True}
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         "module": "subordinates",
-        "action": "set_subsubordinate",
+        "action": "set_enabled",
         "kind": "notification",
         "data": {
             "controller_id": "6666666666666666",
-            "custom_name": "setsubsub1",
             "enabled": False,
         }
     }
@@ -643,33 +636,15 @@ def test_complex_subsubordinates(
             assert record["subsubordinates"][0] == {
                 "controller_id": "6666666666666666",
                 "enabled": False,
-                "custom_name": "setsubsub1"
+                "options": {"custom_name": ""}
             }
 
-    # set sub via subsub
-    res = infrastructure.process_message({
-        "module": "subordinates",
-        "action": "set_subsubordinate",
-        "kind": "request",
-        "data": {
-            "controller_id": "7777777777777777",
-            "custom_name": "setsubsub2",
-            "enabled": False,
-        }
-    })
-    assert res == {
-        "module": "subordinates",
-        "action": "set_subsubordinate",
-        "kind": "reply",
-        "data": {"result": False}
-    }
-
-    filters = [("subordinates", "del_subsubordinate")]
+    filters = [("subordinates", "del")]
     notifications = infrastructure.get_notifications(filters=filters)
     # del subsub success
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "del_subsubordinate",
+        "action": "del",
         "kind": "request",
         "data": {
             "controller_id": "6666666666666666",
@@ -677,34 +652,17 @@ def test_complex_subsubordinates(
     })
     assert res == {
         "module": "subordinates",
-        "action": "del_subsubordinate",
+        "action": "del",
         "kind": "reply",
         "data": {"result": True}
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         "module": "subordinates",
-        "action": "del_subsubordinate",
+        "action": "del",
         "kind": "notification",
         "data": {"controller_id": "6666666666666666"}
     }
-
-    # del subsub when id is for sub
-    res = infrastructure.process_message({
-        "module": "subordinates",
-        "action": "del_subsubordinate",
-        "kind": "request",
-        "data": {
-            "controller_id": "7777777777777777",
-        }
-    })
-    assert res == {
-        "module": "subordinates",
-        "action": "del_subsubordinate",
-        "kind": "reply",
-        "data": {"result": False}
-    }
-
 
 @pytest.mark.only_backends(['openwrt'])
 @pytest.mark.only_message_buses(['mqtt'])
@@ -717,7 +675,7 @@ def test_complex_subsubordinates_openwrt(
         token = prepare_subordinate_token(controller_id)
         res = infrastructure.process_message({
             "module": "subordinates",
-            "action": "add",
+            "action": "add_sub",
             "kind": "request",
             "data": {
                 "token": token,
@@ -725,7 +683,7 @@ def test_complex_subsubordinates_openwrt(
         })
         assert res == {
             "module": "subordinates",
-            "action": "add",
+            "action": "add_sub",
             "kind": "reply",
             "data": {"result": True, "controller_id": controller_id}
         }
@@ -737,7 +695,7 @@ def test_complex_subsubordinates_openwrt(
     # add subsub
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "2222222222222222",
@@ -746,7 +704,7 @@ def test_complex_subsubordinates_openwrt(
     })
     assert res == {
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "reply",
         "data": {"result": True}
     }
@@ -760,17 +718,16 @@ def test_complex_subsubordinates_openwrt(
     # set subsub
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "set_subsubordinate",
+        "action": "set_enabled",
         "kind": "request",
         "data": {
             "controller_id": "2222222222222222",
-            "custom_name": "subsubnamex",
             "enabled": False
         }
     })
     assert res == {
         "module": "subordinates",
-        "action": "set_subsubordinate",
+        "action": "set_enabled",
         "kind": "reply",
         "data": {"result": True}
     }
@@ -780,15 +737,13 @@ def test_complex_subsubordinates_openwrt(
         data = backend.read()
 
     assert uci.get_option_named(data, "fosquitto", "2222222222222222", "via") == "4444444444444444"
-    assert uci.get_option_named(data, "fosquitto", "2222222222222222", "custom_name") \
-        == "subsubnamex"
     assert not uci.parse_bool(
         uci.get_option_named(data, "fosquitto", "2222222222222222", "enabled"))
 
     # del subsub
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "del_subsubordinate",
+        "action": "del",
         "kind": "request",
         "data": {
             "controller_id": "2222222222222222",
@@ -796,7 +751,7 @@ def test_complex_subsubordinates_openwrt(
     })
     assert res == {
         "module": "subordinates",
-        "action": "del_subsubordinate",
+        "action": "del",
         "kind": "reply",
         "data": {"result": True}
     }
@@ -811,7 +766,7 @@ def test_complex_subsubordinates_openwrt(
     # del section and all its subsections
     res = infrastructure.process_message({
         "module": "subordinates",
-        "action": "add_subsubordinate",
+        "action": "add_subsub",
         "kind": "request",
         "data": {
             "controller_id": "1111111111111111",

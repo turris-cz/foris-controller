@@ -25,6 +25,7 @@ import json
 import typing
 import pathlib
 import shutil
+import typing
 
 from io import BytesIO
 
@@ -46,19 +47,37 @@ subordinate_dir_lock = RWLock(app_info["lock_backend"])
 
 class SubordinatesUci(object):
 
+    def _get_options_section(
+        self, data: dict, controller_id: str, section_type: str
+    ) -> typing.Optional[dict]:
+        for section in get_sections_by_type(data, "foris-controller-subordinates", section_type):
+            if section["name"] == controller_id:
+                return section
+        return None
+
     def list_subordinates(self):
         with UciBackend() as backend:
             fosquitto_data = backend.read("fosquitto")
+            sub_data = backend.read("foris-controller-subordinates")
 
         res = []
         subordinates_map = {}
 
         for item in get_sections_by_type(fosquitto_data, "fosquitto", "subsubordinate"):
             if "via" in item["data"]:
+                controller_id = item["name"]
+
+                # try to get options
+                options = {"custom_name": ""}
+                options_section = self._get_options_section(
+                    sub_data, controller_id, "subsubordinate")
+                if options_section:
+                    options["custom_name"] = options_section["data"].get("custom_name", "")
+
                 subsubs = subordinates_map.get(item["data"]["via"], [])
                 subsubs.append({
-                    "controller_id": item["name"],
-                    "custom_name": item["data"].get("custom_name", ""),
+                    "controller_id": controller_id,
+                    "options": options,
                     "enabled": parse_bool(item["data"].get("enabled", "1")),
                 })
                 subordinates_map[item["data"]["via"]] = subsubs
@@ -66,10 +85,18 @@ class SubordinatesUci(object):
         for item in get_sections_by_type(fosquitto_data, "fosquitto", "subordinate"):
             controller_id = item["name"]
             enabled = parse_bool(item["data"].get("enabled", "0"))
+
+            # try to get options
+            options = {"custom_name": ""}
+            options_section = self._get_options_section(
+                sub_data, controller_id, "subordinate")
+            if options_section:
+                options["custom_name"] = options_section["data"].get("custom_name", "")
+
             res.append(
                 {
                     "controller_id": controller_id, "enabled": enabled,
-                    "custom_name": item["data"].get("custom_name", ""),
+                    "options": options,
                     "subsubordinates": subordinates_map.get(controller_id, []),
                 }
             )
@@ -91,51 +118,6 @@ class SubordinatesUci(object):
                 backend.set_option("fosquitto", controller_id, "via", via)
                 backend.set_option("fosquitto", controller_id, "enabled", store_bool(True))
 
-
-        return True
-
-    def set_subsubordinate(self, controller_id, enabled, custom_name):
-        if not app_info["bus"] == "mqtt":
-            return False
-
-        with subordinate_dir_lock.writelock:
-            sub_list = self.list_subordinates()
-            records = [
-                e
-                for record in sub_list
-                for e in record["subsubordinates"]
-                if e["controller_id"] == controller_id
-            ]
-
-            if not records:
-                return False  # missing
-
-            with UciBackend() as backend:
-                backend.add_section("fosquitto", "subsubordinate", controller_id)
-                backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
-                backend.set_option("fosquitto", controller_id, "enabled", store_bool(enabled))
-
-        return True
-
-    def del_subsubordinate(self, controller_id):
-        if not app_info["bus"] == "mqtt":
-            return False
-
-        with subordinate_dir_lock.writelock:
-            sub_list = self.list_subordinates()
-            records = [
-                e
-                for record in sub_list
-                for e in record["subsubordinates"]
-                if e["controller_id"] == controller_id
-            ]
-
-            if not records:
-                return False  # missing
-
-            with UciBackend() as backend:
-                backend.del_section("fosquitto", controller_id)
-
         return True
 
     @staticmethod
@@ -146,8 +128,8 @@ class SubordinatesUci(object):
             backend.set_option("fosquitto", controller_id, "address", address)
             backend.set_option("fosquitto", controller_id, "port", port)
 
-    def set_subordinate(self, controller_id: str, enabled: bool, custom_name: str) -> bool:
-        with UciBackend() as backend:
+    def set_enabled(self, controller_id: str, enabled: bool) -> bool:
+        with subordinate_dir_lock.writelock, UciBackend() as backend:
             fosquitto_data = backend.read("fosquitto")
             try:
                 get_section(fosquitto_data, "fosquitto", controller_id)
@@ -155,12 +137,10 @@ class SubordinatesUci(object):
                 return False
 
             backend.set_option("fosquitto", controller_id, "enabled", store_bool(enabled))
-            backend.set_option("fosquitto", controller_id, "custom_name", custom_name)
-
         return True
 
     @staticmethod
-    def del_subordinate(controller_id: str) -> bool:
+    def delete(controller_id: str) -> bool:
         with UciBackend() as backend:
             fosquitto_data = backend.read("fosquitto")
             to_delete = [
@@ -222,7 +202,7 @@ class SubordinatesFiles(BaseFile):
     @staticmethod
     def remove_subordinate(controller_id: str):
         path = pathlib.Path("/etc/fosquitto/bridges") / controller_id
-        shutil.rmtree(inject_file_root(str(path)), True)
+        shutil.rmtree(inject_file_root(str(path)), ignore_errors=True)
 
 
 class SubordinatesComplex:
@@ -250,10 +230,9 @@ class SubordinatesComplex:
 
         return {"result": True, "controller_id": conf["device_id"]}
 
-    def del_subordinate(self, controller_id):
-
+    def delete(self, controller_id):
         with subordinate_dir_lock.writelock:
-            if not SubordinatesUci.del_subordinate(controller_id):
+            if not SubordinatesUci.delete(controller_id):
                 return False
             SubordinatesFiles.remove_subordinate(controller_id)
 
