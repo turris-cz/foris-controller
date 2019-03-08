@@ -1,3 +1,15 @@
+0.11.8 (2019-03-08)
+-------------------
+
+* suboridnates: api changes
+* subordinates: send notification before restarting mqtt server
+* mqtt: nicer client_id
+* set proper controller_id in notifications
+* subordinates: reload -> restart when managing (sub)subordinates
+* about: atsha204 -> cryptowrapper migration
+* remote module splitted into remote and subordinates
+* remote: handlig of subsubordinates implemented
+
 0.11.7 (2019-02-14)
 -------------------
 
