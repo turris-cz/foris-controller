@@ -291,8 +291,13 @@ class AsyncCommand(object):
             universal_newlines=True,
         )
 
-        def process_output_line():
-            line = process.stdout.readline()[:-1]  # remove \n
+        def process_output_line() -> bool:
+            line = process.stdout.readline()
+
+            if not line:  # readline() returns '' when it reaches end
+                return False
+
+            line = line[:-1]  # remove \n
             logger.debug("Processing output line of the monitored file: '%s'" % line)
             for regex, handler in handler_list:
                 match = regex.match(line)
@@ -300,9 +305,12 @@ class AsyncCommand(object):
                     # Run the handler
                     handler(match, process_data)
 
+            return True
         while process.poll() is None:
             process_output_line()
-        process_output_line()  # program ended, but there ca be some output left
+
+        while process_output_line():  # program ended, but there ca be some output left
+            pass
 
         process_data.set_retval(process.returncode)
         process_data.set_exitted()
