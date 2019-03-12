@@ -57,6 +57,8 @@ class WifiUci(object):
 
     @staticmethod
     def _get_band(lines):
+        VHTMODES = ["VHT20", "VHT40", "VHT80"]
+
         if not lines:
             return None
 
@@ -68,7 +70,7 @@ class WifiUci(object):
             if re.search(r"HT40", line) and "HT40" not in htmodes:
                 htmodes.append("HT40")
             if re.search(r"VHT Capabilities", line):
-                htmodes.extend(["VHT20", "VHT40", "VHT80"])
+                htmodes.extend(VHTMODES)
             freq_match = re.match(r'^\s+\* (\d+) MHz \[(\d+)\] .*$', line)
             if freq_match:
                 if "disabled" in line:
@@ -87,6 +89,10 @@ class WifiUci(object):
             hwmode = "11a"
         else:
             return None
+
+        # hack because iw list returns nonsense (claims that 11g has VHT capabilities)
+        if hwmode == "11g":
+            htmodes = [e for e in htmodes if e not in VHTMODES]
 
         return {
             "available_htmodes": htmodes,

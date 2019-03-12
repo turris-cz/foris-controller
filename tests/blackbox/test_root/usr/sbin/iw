@@ -28,6 +28,7 @@ Wiphy phy0
                         RX STBC 1-stream
                         Max AMSDU length: 7935 bytes
                         DSSS/CCK HT40
+                VHT Capabilities (0x338001b2):  ###### TODO remove once real iw starts to show valid values
                 Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
                 Minimum RX AMPDU time spacing: 8 usec (0x06)
                 HT TX/RX MCS rate indexes supported: 0-23
