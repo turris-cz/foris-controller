@@ -121,13 +121,13 @@ class RouterNotificationsUci(object):
                     "host": get_option_named(
                         data, "user_notify", "smtp", "server", "example.com"),
                     "port": int(get_option_named(
-                        data, "user_notify", "smtp", "port", "587")),
+                        data, "user_notify", "smtp", "port", "465")),
                     "username": get_option_named(
                         data, "user_notify", "smtp", "username", ""),
                     "password": get_option_named(
                         data, "user_notify", "smtp", "password", ""),
                     "security": get_option_named(
-                        data, "user_notify", "smtp", "security", "starttls"),
+                        data, "user_notify", "smtp", "security", "ssl"),
                 },
             },
             "reboots": {
