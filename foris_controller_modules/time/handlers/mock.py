@@ -19,6 +19,7 @@
 
 import logging
 import random
+import typing
 
 from datetime import datetime
 
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 class MockTimeHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
     region = "Europe"
+    country = "00"
     city = "Prague"
     timezone = "UTC"
     how_to_set_time = "ntp"
@@ -59,6 +61,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
         """
         result = {
             "region": self.region,
+            "country": self.country,
             "city": self.city,
             "time_settings": {
                 "how_to_set_time": self.how_to_set_time,
@@ -69,23 +72,22 @@ class MockTimeHandler(Handler, BaseMockHandler):
         return result
 
     @logger_wrapper(logger)
-    def update_settings(self, region, city, timezone, how_to_set_time, time=None):
+    def update_settings(
+        self, region: str, country: str, city: str, timezone: str, how_to_set_time: str,
+        time: typing.Optional[datetime] = None
+    ) -> bool:
         """ Mocks updates current time settings
 
         :param region: set the region (Europe, America, Asia, ...)
-        :type region: string
+        :param country: ISO/IEC 3166 alpha2 country code (US, CZ, DE, ...)
         :param city: set the city (Prague, London, ...)
-        :type city: string
         :param timezone: set timezone ("UTC", "CET-1CEST,M3.5.0,M10.5.0/3", ...)
-        :type timezone: string
         :param how_to_set_time: "ntp" or "manual"
-        :type how_to_set_time: string
         :param time: time to be set
-        :type time: datetime.datetime or None
         :returns: True if update passes
-        :rtype: bool
         """
         self.region = region
+        self.country = country
         self.city = city
         self.timezone = timezone
         self.how_to_set_time = how_to_set_time

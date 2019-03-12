@@ -18,6 +18,9 @@
 #
 
 import logging
+import typing
+
+from datetime import datetime
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
@@ -42,24 +45,21 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         return self.uci.get_settings()
 
     @logger_wrapper(logger)
-    def update_settings(self, region, city, timezone, how_to_set_time, time=None):
+    def update_settings(
+        self, region: str, country: str, city: str, timezone: str, how_to_set_time: str,
+        time: typing.Optional[datetime] = None
+    ) -> bool:
         """ Updates current time settings
 
         :param region: set the region (Europe, America, Asia, ...)
-        :type region: string
         :param city: set the city (Prague, London, ...)
-        :type city: string
         :param timezone: set timezone ("UTC", "CET-1CEST,M3.5.0,M10.5.0/3", ...)
-        :type timezone: string
         :param how_to_set_time: "ntp" or "manual"
-        :type how_to_set_time: string
         :param time: time to be set
-        :type time: datetime.datetime
         :returns: True if update passes
-        :rtype: bool
         """
 
-        return self.uci.update_settings(region, city, timezone, how_to_set_time, time)
+        return self.uci.update_settings(region, country, city, timezone, how_to_set_time, time)
 
     @logger_wrapper(logger)
     def ntpdate_trigger(self, exit_notify_function, reset_notify_function):

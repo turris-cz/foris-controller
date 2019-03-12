@@ -1,5 +1,6 @@
 {
     "definitions": {
+        "country_type": {"type": "string", "pattern": "^([A-Z][A-Z]|00)$"},
         "how_to_set_time": {"enum": ["manual", "ntp"]},
         "time_get": {
             "type": "object",
@@ -62,12 +63,13 @@
                     "type": "object",
                     "properties": {
                         "region": { "type": "string" },
+                        "country": {"$ref": "#/definitions/country_type"},
                         "city": { "type": "string" },
                         "timezone": { "type": "string" },
                         "time_settings": {"$ref": "#/definitions/time_get"}
                     },
                     "additionalProperties": false,
-                    "required": ["region", "city", "timezone", "time_settings"]
+                    "required": ["region", "city", "timezone", "time_settings", "country"]
                 }
             },
             "additionalProperties": false,
@@ -83,12 +85,13 @@
                     "type": "object",
                     "properties": {
                         "region": { "type": "string" },
+                        "country": {"$ref": "#/definitions/country_type"},
                         "city": { "type": "string" },
                         "timezone": { "type": "string" },
                         "time_settings": {"$ref": "#/definitions/time_set"}
                     },
                     "additionalProperties": false,
-                    "required": ["region", "city", "timezone", "time_settings"]
+                    "required": ["region", "city", "timezone", "time_settings", "country"]
                 }
             },
             "additionalProperties": false
@@ -121,12 +124,13 @@
                     "type": "object",
                     "properties": {
                         "region": { "type": "string" },
+                        "country": {"$ref": "#/definitions/country_type"},
                         "city": { "type": "string" },
                         "timezone": { "type": "string" },
                         "time_settings": {"$ref": "#/definitions/time_set"}
                     },
                     "additionalProperties": false,
-                    "required": ["region", "city", "timezone", "time_settings"]
+                    "required": ["region", "city", "timezone", "time_settings", "country"]
                 }
             },
             "additionalProperties": false

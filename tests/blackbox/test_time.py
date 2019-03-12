@@ -101,6 +101,7 @@ def test_get_settings(uci_configs_init, infrastructure, start_buses):
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "region" in res["data"].keys()
+    assert "country" in res["data"].keys()
     assert "city" in res["data"].keys()
     assert "timezone" in res["data"].keys()
     assert "time_settings" in res["data"].keys()
@@ -127,6 +128,7 @@ def test_update_settings(
         "kind": "request",
         "data": {
             "region": "Europe",
+            "country": "RU",
             "city": "Moscow",
             "timezone": "MSK-3",
             "time_settings": {
@@ -144,6 +146,7 @@ def test_update_settings(
         u"kind": u"notification",
         u"data": {
             u"region": u"Europe",
+            "country": "RU",
             u"city": u"Moscow",
             u"timezone": u"MSK-3",
             u"time_settings": {
@@ -157,6 +160,7 @@ def test_update_settings(
         "kind": "request",
     })
     assert res["data"]["region"] == u"Europe"
+    assert res["data"]["country"] == "RU"
     assert res["data"]["city"] == u"Moscow"
     assert res["data"]["timezone"] == u"MSK-3"
     assert res["data"]["time_settings"]["how_to_set_time"] == u"ntp"
@@ -167,6 +171,7 @@ def test_update_settings(
         "kind": "request",
         "data": {
             "region": "Europe",
+            "country": "CZ",
             "city": "Prague",
             "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
             "time_settings": {
@@ -185,6 +190,7 @@ def test_update_settings(
         u"kind": u"notification",
         u"data": {
             u"region": u"Europe",
+            "country": "CZ",
             u"city": u"Prague",
             u"timezone": u"CET-1CEST,M3.5.0,M10.5.0/3",
             u"time_settings": {
@@ -199,6 +205,7 @@ def test_update_settings(
         "kind": "request",
     })
     assert res["data"]["region"] == u"Europe"
+    assert res["data"]["country"] == "CZ"
     assert res["data"]["city"] == u"Prague"
     assert res["data"]["timezone"] == u"CET-1CEST,M3.5.0,M10.5.0/3"
     assert res["data"]["time_settings"]["how_to_set_time"] == u"manual"
@@ -233,6 +240,7 @@ def test_openwrt_complex(
         "kind": "request",
         "data": {
             "region": "Europe",
+            "country": "RU",
             "city": "Moscow",
             "timezone": "MSK-3",
             "time_settings": {
@@ -248,6 +256,7 @@ def test_openwrt_complex(
         data = backend.read()
 
     assert uci.get_option_anonymous(data, "system", "system", 0, "timezone") == "MSK-3"
+    assert uci.get_option_anonymous(data, "system", "system", 0, "_country") == "RU"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Moscow"
     assert uci.parse_bool(uci.get_option_named(data, "system", "ntp", "enabled"))
 
@@ -260,6 +269,7 @@ def test_openwrt_complex(
         "kind": "request",
         "data": {
             u"region": u"Europe",
+            "country": "CZ",
             u"city": u"Prague",
             u"timezone": u"CET-1CEST,M3.5.0,M10.5.0/3",
             u"time_settings": {
@@ -275,6 +285,7 @@ def test_openwrt_complex(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
+    assert uci.get_option_anonymous(data, "system", "system", 0, "_country") == "CZ"
     assert uci.get_option_anonymous(data, "system", "system", 0, "timezone") == \
         "CET-1CEST,M3.5.0,M10.5.0/3"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Prague"

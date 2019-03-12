@@ -651,6 +651,7 @@ def test_walk_through_guide(
             "kind": "request",
             "data": {
                 u"region": u"Europe",
+                "country": "CZ",
                 u"city": u"Prague",
                 u"timezone": u"CET-1CEST,M3.5.0,M10.5.0/3",
                 u"time_settings": {

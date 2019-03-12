@@ -66,6 +66,7 @@ class TimeUciCommands(object):
             system_data = backend.read("system")
 
         timezone = get_option_anonymous(system_data, "system", "system", 0, "timezone")
+        country = get_option_anonymous(system_data, "system", "system", 0, "_country", "00")
         zonename = get_option_anonymous(system_data, "system", "system", 0, "zonename", "UTC")
         try:
             region, city = zonename.split("/")
@@ -76,6 +77,7 @@ class TimeUciCommands(object):
 
         return {
             "region": region,
+            "country": country,
             "city": city,
             "timezone": timezone,
             "time_settings":  {
@@ -84,13 +86,14 @@ class TimeUciCommands(object):
             },
         }
 
-    def update_settings(self, region, city, timezone, how_to_set_time, time=None):
+    def update_settings(self, region, country, city, timezone, how_to_set_time, time=None):
         """
         :param time: Time to be set
         """
 
         with UciBackend() as backend:
             backend.set_option("system", "@system[0]", "timezone", timezone)
+            backend.set_option("system", "@system[0]", "_country", country)
             backend.set_option("system", "@system[0]", "zonename", "%s/%s" % (region, city))
             backend.set_option("system", "ntp", "enabled", store_bool(how_to_set_time == "ntp"))
 

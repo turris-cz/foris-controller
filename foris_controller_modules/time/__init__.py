@@ -51,7 +51,7 @@ class TimeModule(BaseModule):
         else:
             time = None
         res = self.handler.update_settings(
-            data["region"], data["city"], data["timezone"],
+            data["region"], data["country"], data["city"], data["timezone"],
             data["time_settings"]["how_to_set_time"], time
         )
         if res:
