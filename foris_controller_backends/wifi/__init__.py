@@ -24,7 +24,7 @@ import re
 
 from foris_controller.exceptions import UciException, UciRecordNotFound, BackendCommandFailed
 from foris_controller_backends.uci import (
-    UciBackend, get_sections_by_type, store_bool, parse_bool
+    UciBackend, get_sections_by_type, store_bool, parse_bool, get_option_anonymous
 )
 
 from foris_controller_backends.cmdline import BaseCmdLine
@@ -376,12 +376,19 @@ class WifiUci(object):
                         data, device_section)
 
                     if self._update_wifi(
-                        backend, device, device_section, interface, guest_interface
+                        backend, device, device_section, interface, guest_interface,
                     ):
                         enable_guest_network = True
 
                 if enable_guest_network:
                     GuestUci.enable_guest_network(backend)
+
+                # update regulatory according to _country
+                system_data = backend.read("system")  # _country stored by time.update_settings
+                country_code = get_option_anonymous(
+                    system_data, "system", "system", 0, "_country", "00")
+                for section in get_sections_by_type(data, "wireless", "wifi-iface"):
+                    backend.set_option("wireless", section["name"], "country", country_code)
 
         except (IndexError, ValueError):
             return False  # device not found changes were not commited - no partial changes passed

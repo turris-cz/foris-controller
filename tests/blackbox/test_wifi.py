@@ -1000,3 +1000,77 @@ def test_get_settings_missing_wireless(
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(['openwrt'])
+def test_update_settings_uci_country(
+    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, start_buses,
+    network_restart_command
+):
+
+    uci = get_uci_module(lock_backend)
+
+    def set_country(country):
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            backend.set_option("system", "@system[0]", "_country", country)
+
+    def update():
+        res = infrastructure.process_message({
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "devices": [
+                    {
+                        "id": 0,
+                        "enabled": True,
+                        "SSID": "Devxxx",
+                        "hidden": True,
+                        "channel": 0,
+                        "htmode": "NOHT",
+                        "hwmode": "11a",
+                        "password": "passpass",
+                        "guest_wifi": {
+                            "enabled": True,
+                            "password": "passpassg",
+                            "SSID": "Dev111G",
+                        },
+                    },
+                    {
+                        "id": 1,
+                        "enabled": False,
+                    }
+                ]
+            }
+        })
+        assert res == {
+            u'action': u'update_settings',
+            u'data': {u'result': True},
+            u'kind': u'reply',
+            u'module': u'wifi'
+        }
+        network_restart_was_called([])
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            data = backend.read()
+        return data
+
+    set_country("")  # unset _country
+    uci_data = update()
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "00"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "00"
+
+    set_country("CZ")
+    uci_data = update()
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "CZ"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "CZ"
+
+    set_country("UK")
+    uci_data = update()
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "UK"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "UK"
+
+    set_country("")
+    uci_data = update()
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "00"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "00"
