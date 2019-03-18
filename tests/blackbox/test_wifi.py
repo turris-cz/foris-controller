@@ -1057,20 +1057,20 @@ def test_update_settings_uci_country(
 
     set_country("")  # unset _country
     uci_data = update()
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "00"
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "00"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 0, "country") == "00"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 1, "country") == "00"
 
     set_country("CZ")
     uci_data = update()
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "CZ"
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "CZ"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 0, "country") == "CZ"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 1, "country") == "CZ"
 
     set_country("UK")
     uci_data = update()
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "UK"
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "UK"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 0, "country") == "UK"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 1, "country") == "UK"
 
     set_country("")
     uci_data = update()
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "country") == "00"
-    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "country") == "00"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 0, "country") == "00"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 1, "country") == "00"

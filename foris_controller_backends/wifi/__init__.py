@@ -387,7 +387,7 @@ class WifiUci(object):
                 system_data = backend.read("system")  # _country stored by time.update_settings
                 country_code = get_option_anonymous(
                     system_data, "system", "system", 0, "_country", "00")
-                for section in get_sections_by_type(data, "wireless", "wifi-iface"):
+                for section in get_sections_by_type(data, "wireless", "wifi-device"):
                     backend.set_option("wireless", section["name"], "country", country_code)
 
         except (IndexError, ValueError):
