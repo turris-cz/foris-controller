@@ -184,7 +184,7 @@
             "required": ["data"]
         },
         {
-            "description": "Reply to list all router notifications",
+            "description": "Reply to mark notifications as displayed",
             "properties": {
                 "module": {"enum": ["router_notifications"]},
                 "kind": {"enum": ["reply"]},
