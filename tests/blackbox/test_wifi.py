@@ -167,6 +167,7 @@ def test_update_settings(
     filters = [("wifi", "update_settings")]
 
     def update(result, *devices):
+        devices = list(devices)
         notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message({
             "module": "wifi",
@@ -185,9 +186,12 @@ def test_update_settings(
             return
 
         notifications = infrastructure.get_notifications(notifications, filters=filters)
-        assert notifications[-1]["module"] == "wifi"
-        assert notifications[-1]["action"] == "update_settings"
-        assert notifications[-1]["kind"] == "notification"
+        assert notifications[-1] == {
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "notification",
+            "data": {"devices": devices}
+        }
 
         res = infrastructure.process_message({
             "module": "wifi",

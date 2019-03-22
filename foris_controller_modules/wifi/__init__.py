@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ class WifiModule(BaseModule):
         """
         res = self.handler.update_settings(data)
         if res:
-            self.notify("update_settings")
+            self.notify("update_settings", data)
         return {"result": res}
 
     def action_reset(self, data):

@@ -274,7 +274,18 @@
             "properties": {
                 "module": {"enum": ["wifi"]},
                 "kind": {"enum": ["notification"]},
-                "action": {"enum": ["update_settings"]}
+                "action": {"enum": ["update_settings"]},
+                "data" : {
+                    "type": "object",
+                    "properties": {
+                        "devices": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/wifi_device_set"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["devices"]
+                }
             },
             "additionalProperties": false
         },
