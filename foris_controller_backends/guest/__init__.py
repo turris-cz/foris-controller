@@ -87,8 +87,9 @@ class GuestUci(object):
                 GuestUci.DEFAULT_GUEST_DHCP_LEASE_TIME
             )
         )
-        guest["dhcp"]["clients"] = LanFiles().get_dhcp_clients(guest["ip"], guest["netmask"]) \
-            if guest["dhcp"]["enabled"] else []
+        guest["dhcp"]["clients"] = LanFiles().get_dhcp_clients(
+            guest["ip"], guest["netmask"]
+        ) if guest["dhcp"]["enabled"] else []
 
         from foris_controller_backends.networks import NetworksUci
         guest["interface_count"] = NetworksUci.get_interface_count(

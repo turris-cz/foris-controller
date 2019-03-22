@@ -26,31 +26,38 @@ from foris_controller.handler_base import wrap_required_functions
 class LanModule(BaseModule):
     logger = logging.getLogger(__name__)
 
-    def action_get_settings(self, data):
+    def action_get_settings(self, data: dict) -> dict:
         """ Get current lan settings
         :param data: supposed to be {}
-        :type data: dict
         :returns: current lan settings
-        :rtype: dict
         """
         return self.handler.get_settings()
 
-    def action_update_settings(self, data):
+    def action_update_settings(self, data: dict) -> dict:
         """ Updates lan settings
         :param data: new lan settings
-        :type data: dict
         :returns: result of the update {'result': True/False}
-        :rtype: dict
         """
         res = self.handler.update_settings(data)
         if res:
             self.notify("update_settings", data)
         return {"result": res}
 
+    def action_set_dhcp_client(self, data: dict) -> dict:
+        """ Updates configuration of a single dhcp client
+        :param: data: client data to be set
+        :returns: result of the update {'result': True/False}
+        """
+        res = self.handler.set_dhcp_client(**data)
+        if res["result"]:
+            self.notify("set_dhcp_client", data)
+        return res
+
 
 @wrap_required_functions([
     'get_settings',
     'update_settings',
+    'set_dhcp_client',
 ])
 class Handler(object):
     pass

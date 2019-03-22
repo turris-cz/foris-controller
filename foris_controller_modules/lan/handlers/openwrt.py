@@ -51,3 +51,17 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
         :rtype: boolean
         """
         return self.uci.update_settings(**new_settings)
+
+    @logger_wrapper(logger)
+    def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> dict:
+        """ Sets configuration of a single dhcp client
+        :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
+        :param mac: mac address of the client
+        :param hostname: hostname of the client (can be empty)
+        :returns: {"result": True} if update passes {"result": False, "reason": "..."} otherwise
+        """
+        err = self.uci.set_dhcp_client(ip, mac, hostname)
+        if err:
+            return {"result": False, "reason": err}
+        else:
+            return {"result": True}

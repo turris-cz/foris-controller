@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 import copy
 import logging
+import typing
+import ipaddress
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper, IPv4
@@ -30,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 class MockLanHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
-    mode = "managed"
-    mode_managed = {
+    mode: str = "managed"
+    mode_managed: typing.Dict[str, typing.Any] = {
         "router_ip": "192.168.1.1",
         "netmask": "255.255.255.0",
         "dhcp": {
@@ -51,7 +53,7 @@ class MockLanHandler(Handler, BaseMockHandler):
             ]
         }
     }
-    mode_unmanaged = {
+    mode_unmanaged: typing.Dict[str, typing.Any] = {
         "lan_type": "none",
         "lan_dhcp": {
             "hostname": None,
@@ -89,12 +91,13 @@ class MockLanHandler(Handler, BaseMockHandler):
             "mode_unmanaged": mode_unmanaged,
             "interface_count": len(MockNetworksHandler.networks["lan"]),
             "interface_up_count": len([
-                e for e in MockNetworksHandler.networks["lan"] if e["state"] == "up"])
+                e for e in MockNetworksHandler.networks["lan"] if e["state"] == "up"
+            ])
         }
         return result
 
     @logger_wrapper(logger)
-    def update_settings(self, new_settings):
+    def update_settings(self, new_settings: dict):
         """ Mocks updates current lan settings
         :returns: True if update passes
         :rtype: bool
@@ -126,6 +129,21 @@ class MockLanHandler(Handler, BaseMockHandler):
                 "limit", self.mode_managed["dhcp"]["limit"])
             self.mode_managed["dhcp"]["lease_time"] = mode["dhcp"].get(
                 "lease_time", self.mode_managed["dhcp"]["lease_time"])
+
+            # remove clients by its ip
+            self.mode_managed["dhcp"]["clients"] = [
+                 e for e in self.mode_managed["dhcp"]["clients"]
+                 if e["ip"] == "ignore" or (
+                    not MockLanHandler.in_range(
+                        e["ip"], self.mode_managed["router_ip"],
+                        self.mode_managed["dhcp"]["start"],
+                        self.mode_managed["dhcp"]["limit"],
+                    ) and MockLanHandler.in_network(
+                        e["ip"], self.mode_managed["router_ip"],
+                        self.mode_managed["netmask"],
+                    ))
+            ]
+
         elif new_settings["mode"] == "unmanaged":
             self.mode_unmanaged["lan_type"] = new_settings["mode_unmanaged"]["lan_type"]
             if new_settings["mode_unmanaged"]["lan_type"] == "dhcp":
@@ -148,3 +166,63 @@ class MockLanHandler(Handler, BaseMockHandler):
 
         MockLanHandler.guide_set.set(True)
         return True
+
+    @staticmethod
+    def in_range(ip: str, router_ip: str, start: int, limit: int) -> bool:
+        dynamic_first = ipaddress.ip_address(router_ip) + start
+        dynamic_last = dynamic_first + limit
+        return dynamic_first <= ipaddress.ip_address(ip) <= dynamic_last
+
+    @staticmethod
+    def in_network(ip: str, ip_root: str, netmask: str) -> bool:
+        network = ipaddress.ip_network(f"{ip_root}/{netmask}", strict=False)
+        return ipaddress.ip_address(ip) in network
+
+    @logger_wrapper(logger)
+    def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> dict:
+        """ Mocks updating configuration of a single dhcp client
+        :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
+        :param mac: mac address of the client
+        :param hostname: hostname of the client (can be empty)
+        :returns: {"result": True} if update passes {"result": False, "reason": "..."} otherwise
+        """
+        if MockLanHandler.mode != "managed" or not MockLanHandler.mode_managed["dhcp"]["enabled"]:
+            return {"result": False, "reason": "disabled"}
+
+        # convert to upper case
+        mac = mac.upper()
+
+        if ip != "ignore":
+
+            # not match into network
+            if not MockLanHandler.in_network(
+                ip,
+                MockLanHandler.mode_managed['router_ip'],
+                MockLanHandler.mode_managed['netmask'],
+            ):
+                return {"result": False, "reason": "out-of-network"}
+
+            # in dynamic range
+            if MockLanHandler.in_range(
+                ip,
+                MockLanHandler.mode_managed['router_ip'],
+                MockLanHandler.mode_managed["dhcp"]['start'],
+                MockLanHandler.mode_managed["dhcp"]['limit'],
+            ):
+                return {"result": False, "reason": "in-dynamic"}
+
+        # modify or add ip
+        mac_to_client_map = {e["mac"]: e for e in MockLanHandler.mode_managed["dhcp"]["clients"]}
+        record = mac_to_client_map.get(mac, {
+            "ip": "", "mac": "",
+            "expires": 0, "active": False, "hostname": ""
+        })
+        record["ip"] = ip
+        record["mac"] = mac
+        record["hostname"] = hostname
+
+        # add new record if not present
+        if mac not in mac_to_client_map:
+            MockLanHandler.mode_managed["dhcp"]["clients"].append(record)
+
+        return {"result": True}

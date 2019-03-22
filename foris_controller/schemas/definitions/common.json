@@ -30,7 +30,12 @@
                         "type": "object",
                         "properties": {
                             "expires": {"type": "integer", "minimum": 0, "description": "timestamp format"},
-                            "ip": {"type": "string", "format": "ipv4"},
+                            "ip": {
+                                "oneOf": [
+                                    {"type": "string", "format": "ipv4"},
+                                    {"enum": ["ignore"]}
+                                ]
+                            },
                             "mac": {"type": "string", "format": "macaddress"},
                             "hostname": {"type": "string"},
                             "active": {"type": "boolean"}

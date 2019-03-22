@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,12 +17,14 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import typing
 import logging
+import ipaddress
 
 from foris_controller.exceptions import UciException
-from foris_controller.utils import IPv4
+from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.uci import (
-    UciBackend, get_option_named, parse_bool, store_bool
+    UciBackend, get_option_named, parse_bool, store_bool, get_sections_by_type
 )
 
 from foris_controller_backends.files import BaseFile, path_exists
@@ -50,7 +52,9 @@ class LanFiles(BaseFile):
                 continue
 
             # filter by network and netmask
-            if IPv4.normalize_subnet(ip, netmask) == IPv4.normalize_subnet(network, netmask):
+            if ipaddress.ip_address(ip) in ipaddress.ip_network(
+                f"{network}/{netmask}", strict=False
+            ):
                 res.append({
                     "expires": timestamp,
                     "mac": mac,
@@ -68,6 +72,35 @@ class LanUci(object):
     DEFAULT_LEASE_TIME = 12 * 60 * 60
     DEFAULT_ROUTER_IP = "192.168.1.1"
     DEFAULT_NETMASK = "255.255.255.0"
+
+    def get_client_list(self, uci_data, network, netmask):
+        file_records = LanFiles().get_dhcp_clients(network, netmask)
+        uci_data = get_sections_by_type(uci_data, "dhcp", "host")
+        uci_map = {
+            e["data"]["mac"]: e["data"] for e in uci_data
+            if len(e["data"]["mac"].split(" ")) == 1  # ignore multi mac records
+            and "ip" in e["data"]
+            and (
+                e["data"]["ip"] == "ignore"
+                or self.in_network(e["data"]["ip"], network, netmask)  # has to be in lan
+            )
+        }
+        for record in file_records:
+            if record["mac"] in uci_map:
+                # override actual ip by the one which is supposed to be set
+                record["ip"] = uci_map[record["mac"]]["ip"]
+                hostname = uci_map[record["mac"]].get("name", "")
+                record["hostname"] = hostname if hostname else record["hostname"]
+                del uci_map[record["mac"]]
+        for record in uci_map.values():
+            file_records.append({
+                "ip": record["ip"],
+                "hostname": record.get("name", ""),
+                "mac": record["mac"],
+                "active": False,
+                "expires": 0,
+            })
+        return file_records
 
     @staticmethod
     def _normalize_lease(value):
@@ -110,8 +143,8 @@ class LanUci(object):
             get_option_named(dhcp_data, "dhcp", "lan", "leasetime", self.DEFAULT_LEASE_TIME)
         )
         if mode_managed["dhcp"]["enabled"]:
-            mode_managed["dhcp"]["clients"] = LanFiles().get_dhcp_clients(
-                mode_managed["router_ip"], mode_managed["netmask"])
+            mode_managed["dhcp"]["clients"] = self.get_client_list(
+                dhcp_data, mode_managed["router_ip"], mode_managed["netmask"])
         else:
             mode_managed["dhcp"]["clients"] = []
 
@@ -149,6 +182,26 @@ class LanUci(object):
             ),
         }
 
+    def filter_dhcp_client_records(
+        self, backend: UciBackend, dhcp_data,
+        old_router_ip: typing.Optional[str], old_netmask: typing.Optional[str],
+        new_router_ip: str, new_netmask: str, new_start: int, new_limit: int,
+    ):
+        for record in get_sections_by_type(dhcp_data, "dhcp", "host"):
+            if "ip" in record["data"] and record["data"]["ip"] != "ignore":
+                # remove if in dynamic range
+                if self.in_range(record["data"]["ip"], new_router_ip, new_start, new_limit):
+                    backend.del_section("dhcp", record["name"])
+
+                # remove if it was in old network and is not in the new
+                if old_router_ip and old_netmask:
+                    if self.in_network(
+                        record["data"]["ip"], old_router_ip, old_netmask
+                    ) and not self.in_network(
+                        record["data"]["ip"], new_router_ip, new_netmask
+                    ):
+                        backend.del_section("dhcp", record["name"])
+
     def update_settings(self, mode, mode_managed=None, mode_unmanaged=None):
         """  Updates the lan settings in uci
 
@@ -164,21 +217,23 @@ class LanUci(object):
         if mode_managed and mode_managed["dhcp"]["enabled"]:
             netmask = mode_managed["netmask"]
             ip = mode_managed["router_ip"]
-            ip_norm = IPv4.normalize_subnet(ip, netmask)
-            start = mode_managed["dhcp"]["start"]
-            limit = mode_managed["dhcp"]["limit"]
-            last_ip_num = IPv4.str_to_num(ip_norm) + start + limit
-            if last_ip_num >= 2 ** 32:  # ip overflow
+            network = ipaddress.ip_network(f"{ip}/{netmask}", strict=False)
+            try:
+                start_ip = ipaddress.ip_address(ip) + mode_managed["dhcp"]["start"]
+                last_ip = start_ip + mode_managed["dhcp"]["limit"]
+            except ipaddress.AddressValueError:  # IP overflow
                 return False
-            last_ip_norm = IPv4.normalize_subnet(IPv4.num_to_str(last_ip_num), netmask)
-            if last_ip_norm != ip_norm:
+            if start_ip not in network or last_ip not in network:  # not in dynamic range
                 return False
 
         with UciBackend() as backend:
+
             backend.add_section("network", "interface", "lan")
             backend.set_option("network", "lan", "_turris_mode", mode)
 
             if mode == "managed":
+                network_data = backend.read("network")
+                dhcp_data = backend.read("dhcp")
                 backend.set_option("network", "lan", "proto", "static")
                 backend.set_option("network", "lan", "ipaddr", mode_managed["router_ip"])
                 backend.set_option("network", "lan", "netmask", mode_managed["netmask"])
@@ -201,6 +256,17 @@ class LanUci(object):
                     # TODO we might want to preserve some options
                     backend.replace_list(
                         "dhcp", "lan", "dhcp_option", ["6,%s" % mode_managed["router_ip"]])
+
+                    # update dhcp records when changing lan ip+network or start+limit
+                    # get old network
+                    old_router_ip = get_option_named(network_data, "network", "lan", "ipaddr", "")
+                    old_netmask = get_option_named(network_data, "network", "lan", "netmask", "")
+                    self.filter_dhcp_client_records(
+                        backend, dhcp_data,
+                        old_router_ip, old_netmask,
+                        mode_managed["router_ip"], mode_managed["netmask"],
+                        dhcp["start"], dhcp["limit"]
+                    )
 
             elif mode == "unmanaged":
                 backend.set_option("network", "lan", "proto", mode_unmanaged["lan_type"])
@@ -238,3 +304,95 @@ class LanUci(object):
         MaintainCommands().restart_network()
 
         return True
+
+    @staticmethod
+    def in_range(ip: str, start_ip: str, start: int, limit: int) -> bool:
+        """ Determine whether ip is in range defined by (start_ip + start .. start_ip + start, + limit)
+        :param ip: ip to be compared
+        :param start_ip: ip for where is range calculated
+        :param start: start offset
+        :param limit: count of ips
+        :return: True if ip is in range False otherwise
+        """
+        dynamic_first = ipaddress.ip_address(start_ip) + start
+        dynamic_last = dynamic_first + limit
+        return dynamic_first <= ipaddress.ip_address(ip) <= dynamic_last
+
+    @staticmethod
+    def in_network(ip: str, ip_root: str, netmask: str) -> bool:
+        """ Determine whether ip is in range defined by (start_ip + start .. start_ip + start, + limit)
+        :param ip: ip to be compared
+        :param start_ip: ip for where is range calculated
+        :param start: start offset
+        :param limit: count of ips
+        :return: True if ip is in range False otherwise
+        """
+        network = ipaddress.ip_network(f"{ip_root}/{netmask}", strict=False)
+        return ipaddress.ip_address(ip) in network
+
+    def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> typing.Optional[str]:
+        """ Creates / updates a configuration of a single dhcp client
+        :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
+        :param mac: mac address of the client
+        :param hostname: hostname of the client (can be empty)
+        :returns: None if update passes error string otherwise
+        """
+        mac = mac.upper()
+
+        with UciBackend() as backend:
+            dhcp_data = backend.read("dhcp")
+            network_data = backend.read("network")
+
+            router_ip = get_option_named(
+                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP)
+            netmask = get_option_named(
+                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK)
+            start = int(get_option_named(
+                dhcp_data, "dhcp", "lan", "start", LanUci.DEFAULT_DHCP_START))
+            limit = int(get_option_named(
+                dhcp_data, "dhcp", "lan", "limit", LanUci.DEFAULT_DHCP_LIMIT))
+
+            if ip != "ignore":  # ignore means that dhcp server won't provide ip for givem macaddr
+                if LanUci.in_range(ip, router_ip, start, limit):
+                    return "in-dynamic"
+
+                if not LanUci.in_network(ip, router_ip, netmask):
+                    return "out-of-network"
+
+                mode = get_option_named(network_data, "network", "lan", "_turris_mode", "managed")
+                if mode != "managed":
+                    return "disabled"
+
+                dhcp_enabled = not parse_bool(
+                    get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0"))
+                if not dhcp_enabled:
+                    return "disabled"
+
+            section_name = None
+            for section in get_sections_by_type(dhcp_data, "dhcp", "host"):
+                if "mac" not in section["data"]:
+                    continue
+                macs = [e.upper() for e in section["data"]["mac"].split(" ")]
+                if mac in macs:
+                    if len(macs) == 1:
+                        section_name = section["name"]
+                        break
+                    else:
+                        # Split record => remove mac
+                        backend.set_option(
+                            "dhcp", section["name"], "mac", " ".join([e for e in macs if e != mac])
+                        )
+                        break
+
+            if section_name is None:
+                # section was not found or the record was splitted
+                section_name = backend.add_section("dhcp", "host")
+
+            backend.set_option("dhcp", section_name, "mac", mac)
+            backend.set_option("dhcp", section_name, "ip", ip)
+            backend.set_option("dhcp", section_name, "name", hostname)
+
+        with OpenwrtServices() as services:
+            services.restart("dnsmasq")
+
+        return None  # everyting went ok

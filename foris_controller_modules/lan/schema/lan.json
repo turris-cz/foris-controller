@@ -104,6 +104,21 @@
                     "required": ["mode", "mode_unmanaged"]
                 }
             ]
+        },
+        "dhcp_client_set": {
+            "type": "object",
+            "properties": {
+                "mac": {"type": "string", "format": "macaddress"},
+                "ip": {
+                    "oneOf": [
+                        {"type": "string", "format": "ipv4"},
+                        {"enum": ["ignore"]}
+                    ]
+                },
+                "hostname": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["ip", "mac", "hostname"]
         }
     },
     "oneOf": [
@@ -162,6 +177,57 @@
                 "kind": {"enum": ["notification"]},
                 "action": {"enum": ["update_settings"]},
                 "data": {"$ref": "#/definitions/lan_settings_set"}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "request to set dhcp client",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["set_dhcp_client"]},
+                "data": {"$ref": "#/definitions/dhcp_client_set"}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to set dhcp client",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["set_dhcp_client"]},
+                "data": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "result": {"enum": [true]}
+                            },
+                            "additionalProperties": false,
+                            "required": ["result"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "result": {"enum": [false]},
+                                "reason": {"enum": ["out-of-network", "in-dynamic", "disabled"]}
+                            },
+                            "additionalProperties": false,
+                            "required": ["result", "reason"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that dhcp client was set",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["set_dhcp_client"]},
+                "data": {"$ref": "#/definitions/dhcp_client_set"}
             },
             "additionalProperties": false
         }

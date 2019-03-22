@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,8 @@ from foris_controller_testtools.fixtures import (
     start_buses, ubusd_test, mosquitto_test, UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import (
-    match_subdict, get_uci_module, FileFaker, prepare_turrishw
+    match_subdict, get_uci_module, FileFaker, prepare_turrishw,
+    check_service_result,
 )
 
 WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
@@ -618,7 +619,7 @@ def test_update_settings_openwrt(
     indirect=True
 )
 @pytest.mark.only_backends(['openwrt'])
-def test_dhcp_clients(
+def test_dhcp_clients_openwrt(
     uci_configs_init, infrastructure, start_buses, lock_backend, network_restart_command,
     device, turris_os_version, lan_dnsmasq_files
 ):
@@ -1013,12 +1014,11 @@ def test_update_settings_dhcp_range(
     # default
     update("192.168.1.1", "255.255.255.0", 150, 100, True)
     # last
-    update("192.168.1.1", "255.255.255.0", 150, 105, True)
+    update("192.168.1.1", "255.255.255.0", 150, 104, True)
     # first wrong
     update("192.168.1.1", "255.255.255.0", 150, 106, False)
     # other range
-    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
-    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
+    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 2, True)
     # too high number
     update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)
 
@@ -1079,3 +1079,482 @@ def test_get_settings_missing_wireless(uci_configs_init, infrastructure, start_b
         "kind": "request",
     })
     assert set(res.keys()) == {"action", "kind", "data", "module"}
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+def test_dhcp_client_settings(
+    uci_configs_init, init_script_result, infrastructure,
+    start_buses, lock_backend, network_restart_command, device,
+    turris_os_version,
+):
+    filters = [("lan", "set_dhcp_client")]
+
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "managed",
+            "mode_managed": {
+                u"router_ip": u"192.168.1.1",
+                u"netmask": u"255.255.255.0",
+                u"dhcp": {
+                    u"enabled": True,
+                    u"start": 10,
+                    u"limit": 50,
+                    u"lease_time": 24 * 60 * 60,
+                },
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+
+    def set_client(data, reason=None):
+        notifications = infrastructure.get_notifications(filters=filters)
+        res = infrastructure.process_message({
+            "module": "lan",
+            "action": "set_dhcp_client",
+            "kind": "request",
+            "data": data
+        })
+        assert res["data"]["result"] is True or res["data"]["reason"] == reason
+        if not reason:
+            notifications = infrastructure.get_notifications(
+                notifications, filters=filters
+            )
+            assert notifications[-1] == {
+                "module": "lan",
+                "action": "set_dhcp_client",
+                "kind": "notification",
+                "data": data,
+            }
+
+        return infrastructure.process_message({
+            "module": "lan",
+            "action": "get_settings",
+            "kind": "request",
+        })["data"]["mode_managed"]["dhcp"]["clients"]
+
+    # set all
+    client_list = set_client({
+        "mac": "81:22:33:44:55:66",
+        "hostname": "static-client1",
+        "ip": "192.168.1.5",
+    })
+    assert len([
+        e for e in client_list
+        if e["ip"] == "192.168.1.5"
+        and e["mac"] == "81:22:33:44:55:66"
+        and e["hostname"] == "static-client1"
+    ]) == 1
+
+    # unset hostname
+    client_list = set_client({
+        "mac": "81:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.1.5",
+    })
+    assert len([
+        e for e in client_list
+        if e["ip"] == "192.168.1.5"
+        and e["mac"] == "81:22:33:44:55:66"
+        and e["hostname"] == ""
+    ]) == 1
+
+    # ignore -> don't assign ip
+    client_list = set_client({
+        "mac": "84:22:33:44:55:66",
+        "hostname": "",
+        "ip": "ignore",
+    })
+    assert len([
+        e for e in client_list
+        if e["ip"] == "ignore"
+        and e["mac"] == "84:22:33:44:55:66"
+        and e["hostname"] == ""
+    ]) == 1
+
+    # test uppercase conversion
+    client_list = set_client({
+        "mac": "aa:bb:cc:dd:55:66",
+        "hostname": "",
+        "ip": "192.168.1.7",
+    })
+    assert len([
+        e for e in client_list
+        if e["ip"] == "192.168.1.7"
+        and e["mac"] == "AA:BB:CC:DD:55:66"
+        and e["hostname"] == ""
+    ]) == 1
+
+    # it is possible to set same ip for two macs
+    set_client({
+        "mac": "81:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.1.3",
+    })
+    set_client({
+        "mac": "82:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.1.3",
+    })
+
+    client_list = set_client({
+        "mac": "82:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.1.9",
+    })
+
+    orig_client_list = client_list
+
+    # out of lan
+    client_list = set_client({
+        "mac": "82:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.2.3",
+    }, "out-of-network")
+    assert orig_client_list == client_list
+
+    # set in dynamic range
+    client_list = set_client({
+        "mac": "82:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.1.11",
+    }, "in-dynamic")
+    assert orig_client_list == client_list
+
+    # clear if in dynamic
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "managed",
+            "mode_managed": {
+                u"router_ip": u"192.168.1.1",
+                u"netmask": u"255.255.255.0",
+                u"dhcp": {
+                    u"enabled": True,
+                    u"start": 5,
+                    u"limit": 50,
+                    u"lease_time": 24 * 60 * 60,
+                },
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+    client_list = infrastructure.process_message({
+        "module": "lan",
+        "action": "get_settings",
+        "kind": "request",
+    })["data"]["mode_managed"]["dhcp"]["clients"]
+    assert "192.168.1.9" not in [e["ip"] for e in client_list]
+
+    # clear when out of network range
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "managed",
+            "mode_managed": {
+                u"router_ip": u"192.168.5.1",
+                u"netmask": u"255.255.255.0",
+                u"dhcp": {
+                    u"enabled": True,
+                    u"start": 5,
+                    u"limit": 50,
+                    u"lease_time": 24 * 60 * 60,
+                },
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+    client_list = infrastructure.process_message({
+        "module": "lan",
+        "action": "get_settings",
+        "kind": "request",
+    })["data"]["mode_managed"]["dhcp"]["clients"]
+    assert "192.168.1.3" not in [e["ip"] for e in client_list]
+
+    orig_client_list = client_list
+
+    # dhcp disabled
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "managed",
+            "mode_managed": {
+                u"router_ip": u"192.168.5.1",
+                u"netmask": u"255.255.255.0",
+                u"dhcp": {
+                    u"enabled": False,
+                },
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+    set_client({
+        "mac": "82:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.5.3",
+    }, "disabled")
+
+    # unmanaged mode
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "unmanaged",
+            "mode_unmanaged": {
+                u"lan_type": u"dhcp",
+                u"lan_dhcp": {u"hostname": "gromoboj"},
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+    set_client({
+        "mac": "82:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.5.3",
+    }, "disabled")
+
+
+@pytest.mark.parametrize(
+    "device,turris_os_version",
+    [
+        ("mox", "4.0"),
+    ],
+    indirect=True
+)
+@pytest.mark.only_backends(['openwrt'])
+def test_dhcp_client_settings_openwrt(
+    uci_configs_init, init_script_result, infrastructure,
+    start_buses, lock_backend, network_restart_command,
+    device, turris_os_version,
+):
+
+    uci = get_uci_module(lock_backend)
+
+    def get_uci_data():
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            data = backend.read()
+
+        return [
+            dict(e["data"]) for e in uci.get_sections_by_type(
+                data, "dhcp", "host",
+            )
+        ]
+
+    def set_client(data):
+        res = infrastructure.process_message({
+            "module": "lan",
+            "action": "set_dhcp_client",
+            "kind": "request",
+            "data": data
+        })
+        assert res == {
+            u'action': u'set_dhcp_client',
+            u'kind': u'reply',
+            u'module': u'lan',
+            u'data': {u'result': True},
+        }
+
+        infrastructure.process_message({
+            "module": "lan",
+            "action": "get_settings",
+            "kind": "request",
+        })
+        check_service_result("dnsmasq", "restart", True)
+
+        return get_uci_data()
+
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "managed",
+            "mode_managed": {
+                u"router_ip": u"192.168.8.1",
+                u"netmask": u"255.255.255.0",
+                u"dhcp": {
+                    u"enabled": True,
+                    u"start": 10,
+                    u"limit": 50,
+                    u"lease_time": 24 * 60 * 60,
+                },
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+
+    # full
+    data = set_client({
+        "mac": "AA:22:33:44:55:66",
+        "hostname": "my-second-hostname",
+        "ip": "192.168.8.4",
+    })
+    assert {
+        "ip": "192.168.8.4", "name": "my-second-hostname",
+        "mac": "AA:22:33:44:55:66",
+    } in data
+
+    # without hostname
+    data = set_client({
+        "mac": "BB:22:33:44:55:66",
+        "hostname": "",
+        "ip": "192.168.8.8",
+    })
+    assert {
+        "ip": "192.168.8.8", "mac": "BB:22:33:44:55:66",
+    } in data
+
+    # ignored
+    data = set_client({
+        "mac": "CC:22:33:44:55:66",
+        "hostname": "",
+        "ip": "ignore",
+    })
+    assert {
+        "ip": "ignore", "mac": "CC:22:33:44:55:66",
+    } in data
+
+    # multiple macs
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "get_settings",
+        "kind": "request",
+    })["data"]["mode_managed"]["dhcp"]["clients"]
+
+    assert len(res) == 3  # full, without hostname, ignore
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option(
+            "dhcp", "@host[0]", "mac", "DD:22:33:44:55:66 EE:22:33:44:55:66"
+        )
+
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "get_settings",
+        "kind": "request",
+    })["data"]["mode_managed"]["dhcp"]["clients"]
+
+    assert len(res) == 2  # full, without hostname, ignore
+    assert "DD:22:33:44:55:66" not in [e["mac"] for e in res]
+    assert "EE:22:33:44:55:66" not in [e["mac"] for e in res]
+
+    # split records on save
+    uci_data = get_uci_data()
+    assert len(uci_data) == 3
+    assert "DD:22:33:44:55:66 EE:22:33:44:55:66" in [e["mac"] for e in uci_data]
+
+    uci_data = set_client({
+        "mac": "EE:22:33:44:55:66",
+        "hostname": "splitted",
+        "ip": "192.168.8.2",
+    })
+    assert len(uci_data) == 4
+    assert "DD:22:33:44:55:66" in [e["mac"] for e in uci_data]
+    assert "EE:22:33:44:55:66" in [e["mac"] for e in uci_data]
+
+    # delete record if dynamic overlaps
+    assert "192.168.8.8" in [e["ip"] for e in uci_data]
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "managed",
+            "mode_managed": {
+                u"router_ip": u"192.168.8.1",
+                u"netmask": u"255.255.255.0",
+                u"dhcp": {
+                    u"enabled": True,
+                    u"start": 5,
+                    u"limit": 50,
+                    u"lease_time": 24 * 60 * 60,
+                },
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+    uci_data = get_uci_data()
+    assert len(uci_data) == 3
+    assert "192.168.8.8" not in [e["ip"] for e in uci_data]
+
+    # delete record if it doesn't fit in network range
+    assert "192.168.8.2" in [e["ip"] for e in uci_data]
+    assert "192.168.8.4" in [e["ip"] for e in uci_data]
+    res = infrastructure.process_message({
+        "module": "lan",
+        "action": "update_settings",
+        "kind": "request",
+        "data": {
+            "mode": "managed",
+            "mode_managed": {
+                u"router_ip": u"192.168.9.1",
+                u"netmask": u"255.255.255.0",
+                u"dhcp": {
+                    u"enabled": True,
+                    u"start": 5,
+                    u"limit": 50,
+                    u"lease_time": 24 * 60 * 60,
+                },
+            }
+        }
+    })
+    assert res == {
+        u'action': u'update_settings',
+        u'data': {u'result': True},
+        u'kind': u'reply',
+        u'module': u'lan'
+    }
+    uci_data = get_uci_data()
+    assert len(uci_data) == 1
+    assert "192.168.8.2" not in [e["ip"] for e in uci_data]
+    assert "192.168.8.4" not in [e["ip"] for e in uci_data]
