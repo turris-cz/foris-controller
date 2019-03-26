@@ -187,7 +187,12 @@
                         "user_lists": {"$ref": "#/definitions/updater_user_lists_get"},
                         "languages": {"$ref": "#/definitions/updater_languages_get"},
                         "approval_settings": {"$ref": "#/definitions/updater_approvals_settings_get"},
-                        "enabled": {"type": "boolean"},
+                        "enabled": {
+                            "oneOf": [
+                                {"type": "boolean"},
+                                {"type": "null"}
+                            ]
+                        },
                         "approval": {"$ref": "#/definitions/updater_approval"}
                     },
                     "additionalProperties": false,

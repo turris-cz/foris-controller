@@ -18,6 +18,7 @@
 #
 
 import logging
+import typing
 
 from datetime import datetime
 
@@ -51,7 +52,7 @@ class UpdaterUci(object):
 
         return res
 
-    def get_enabled(self):
+    def get_enabled(self) -> typing.Optional[bool]:
         return svupdater_autorun.enabled()
 
     def update_settings(
