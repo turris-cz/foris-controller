@@ -114,7 +114,7 @@ setup(
         "foris-schema @ git+https://gitlab.labs.nic.cz/turris/foris-schema.git",
         "python-prctl",
         "pbkdf2",
-        "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater/updater.git#egg=svupdater&subdirectory=src/supervisor",
+        "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater/supervisor.git",
         "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
     ],
     setup_requires=[
