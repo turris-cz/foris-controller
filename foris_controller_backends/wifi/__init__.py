@@ -21,6 +21,7 @@ import glob
 import logging
 import os
 import re
+import typing
 
 from foris_controller.exceptions import UciException, UciRecordNotFound, BackendCommandFailed
 from foris_controller_backends.uci import (
@@ -331,6 +332,11 @@ class WifiUci(object):
 
         return True
 
+    @staticmethod
+    def update_regulator_domain(data, backend, country_code):
+        for section in get_sections_by_type(data, "wireless", "wifi-device"):
+            backend.set_option("wireless", section["name"], "country", country_code)
+
     def update_settings(self, new_settings):
         """ Updates current wifi settings
         :param new_settings: {"devices": [{...}]}
@@ -387,8 +393,7 @@ class WifiUci(object):
                 system_data = backend.read("system")  # _country stored by time.update_settings
                 country_code = get_option_anonymous(
                     system_data, "system", "system", 0, "_country", "00")
-                for section in get_sections_by_type(data, "wireless", "wifi-device"):
-                    backend.set_option("wireless", section["name"], "country", country_code)
+                WifiUci.update_regulator_domain(data, backend, country_code)
 
         except (IndexError, ValueError):
             return False  # device not found changes were not commited - no partial changes passed
@@ -399,6 +404,18 @@ class WifiUci(object):
 
 
 class WifiCmds(BaseCmdLine):
+    def set_regulatory_domain(self, country: typing.Optional[str]) -> bool:
+        """ Sets regulatry domain for wifi cards
+        :param country: country to be set or None, the None will cause that default 00 is set
+        """
+        country = country if country else "00"
+        try:
+            self._run_command_and_check_retval(["/usr/sbin/iw", "reg", "set", country], 0)
+        except BackendCommandFailed:
+            return False
+
+        return True
+
     def reset(self):
         # export wireless config in case of any error
         with UciBackend() as backend:

@@ -25,11 +25,12 @@ from foris_controller.app import app_info
 from foris_controller_backends.uci import (
     UciBackend, get_option_anonymous, get_option_named, parse_bool, store_bool
 )
-from foris_controller_backends.services import OpenwrtServices
-from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand, inject_cmdline_root
-from foris_controller_backends.files import path_exists
 from foris_controller.utils import writelock, RWLock
 from foris_controller.exceptions import UciException
+from foris_controller_backends.services import OpenwrtServices
+from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand
+from foris_controller_backends.files import path_exists
+from foris_controller_backends.wifi import WifiCmds, WifiUci
 
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,9 @@ class TimeUciCommands(object):
             backend.set_option("system", "@system[0]", "_country", country)
             backend.set_option("system", "@system[0]", "zonename", "%s/%s" % (region, city))
             backend.set_option("system", "ntp", "enabled", store_bool(how_to_set_time == "ntp"))
+            data = backend.read("wireless")
+            # set regulatory domain for all wifi devices
+            WifiUci.update_regulator_domain(data, backend, country)
 
         # update wizard passed in foris web (best effort)
         try:
@@ -119,6 +123,10 @@ class TimeUciCommands(object):
 
         if how_to_set_time == "manual":
             SetTimeCommand().set_time(time)  # time should be set (thanks to validation)
+
+        # set regulatrory domain directly to current wifi settings
+        WifiCmds().set_regulatory_domain(country)
+
 
         return True
 

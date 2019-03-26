@@ -30,6 +30,7 @@ from foris_controller_testtools.utils import check_service_result, get_uci_modul
 
 
 NTPDATE_INDICATOR_PATH = "/tmp/foris-controller-ntp-fail"
+REGULATORY_DOMAIN_INDICATOR = "/tmp/foris-controller-test-regulatory-domain"
 
 
 def cmd_mock_gen(path):
@@ -93,6 +94,20 @@ def pass_ntpdate():
     yield NTPDATE_INDICATOR_PATH
 
 
+@pytest.fixture
+def regulatory_domain():
+    with open(REGULATORY_DOMAIN_INDICATOR, "w") as f:
+        f.truncate(0)
+        f.flush()
+
+    yield
+
+    try:
+        os.unlink(REGULATORY_DOMAIN_INDICATOR)
+    except Exception:
+        pass
+
+
 def test_get_settings(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({
         "module": "time",
@@ -119,6 +134,7 @@ def test_get_settings(uci_configs_init, infrastructure, start_buses):
 )
 def test_update_settings(
     uci_configs_init, init_script_result, infrastructure, start_buses, device, turris_os_version,
+    regulatory_domain,
 ):
     filters = [("time", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -232,8 +248,12 @@ def test_get_router_time(uci_configs_init, infrastructure, start_buses):
 def test_openwrt_complex(
     uci_configs_init, init_script_result, date_mock, hwclock_mock,
     cmdline_script_root, infrastructure, start_buses, lock_backend,
-    device, turris_os_version,
+    device, turris_os_version, regulatory_domain
 ):
+    def check_regulatory_domain(cmd_args):
+        with open(REGULATORY_DOMAIN_INDICATOR) as f:
+            assert f.read().strip().endswith(cmd_args)
+
     res = infrastructure.process_message({
         "module": "time",
         "action": "update_settings",
@@ -259,6 +279,11 @@ def test_openwrt_complex(
     assert uci.get_option_anonymous(data, "system", "system", 0, "_country") == "RU"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Moscow"
     assert uci.parse_bool(uci.get_option_named(data, "system", "ntp", "enabled"))
+    assert all([
+        e["data"].get("country") == "RU"
+        for e in uci.get_sections_by_type(data, "wireless", "wifi-device")
+    ])
+    check_regulatory_domain("reg set RU")
 
     assert not date_mock()
     assert not hwclock_mock()
@@ -290,6 +315,12 @@ def test_openwrt_complex(
         "CET-1CEST,M3.5.0,M10.5.0/3"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Prague"
     assert not uci.parse_bool(uci.get_option_named(data, "system", "ntp", "enabled"))
+    assert all([
+        e["data"].get("country") == "CZ"
+        for e in uci.get_sections_by_type(data, "wireless", "wifi-device")
+    ])
+
+    check_regulatory_domain("reg set CZ")
 
     assert "2018-01-30" in date_mock()
     assert hwclock_mock()

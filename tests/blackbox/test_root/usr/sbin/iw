@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ "$1" = "reg" ]; then
+    # mock setting regulatry domain
+    echo $@ > /tmp/foris-controller-test-regulatory-domain
+    exit 0
+fi
+
 if [ "$2" = "phy0" ]; then
 cat << END
 Wiphy phy0
