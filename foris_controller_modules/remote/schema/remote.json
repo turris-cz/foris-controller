@@ -413,7 +413,8 @@
                     "type": "object",
                     "properties": {
                         "id": {"$ref": "#/definitions/controller_id"},
-                        "state": {"enum": ["running", "started", "exitted"]}
+                        "state": {"enum": ["running", "started", "exitted"]},
+                        "netboot": {"enum": ["no", "booted", "ready", "unknown"]}
                     },
                     "additionalProperties": false,
                     "required": ["id", "state"]
@@ -421,6 +422,42 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Request to mark netboot as configured",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["set_netboot_configured"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to mark netboot as configured",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["set_netboot_configured"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that netboot was marked as configured",
+            "properties": {
+                "module": {"enum": ["remote"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["set_netboot_configured"]}
+            },
+            "additionalProperties": false
         }
     ]
 }

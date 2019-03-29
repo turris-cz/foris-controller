@@ -52,9 +52,17 @@ def _publish_advertize(client, data):
     )
     logger.debug("Starting to validate advertize notification.")
     msg = {"module": "remote", "action": "advertize", "kind": "notification", "data": data}
+
+    # Try to obtain netboot status
+    try:
+        netboot = app_info["modules"]["remote"].handler.get_netboot_status()
+    except Exception:
+        netboot = "unknown"
+
+    msg["data"]["netboot"] = netboot
     try:
         # Hope that calling validator is treadsafe otherwise
-        # some locking mechanizm should be implemented
+        # some locking mechanism should be implemented
         app_info["validator"].validate(msg)
         logger.debug("Publishing advertize notification. (%s)", msg)
         client.publish(ANNOUNCER_TOPIC, json.dumps(msg), qos=0)

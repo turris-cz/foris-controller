@@ -37,9 +37,7 @@ from foris_controller_testtools.fixtures import (
 )
 
 from foris_controller_testtools.utils import (
-    sh_was_called,
     get_uci_module,
-    FileFaker,
     network_restart_was_called,
     TURRISHW_ROOT,
     prepare_turrishw_root,

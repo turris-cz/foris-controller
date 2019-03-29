@@ -22,7 +22,12 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
-from foris_controller_backends.remote import CaGenAsync, CaGenCmds, RemoteUci, RemoteFiles
+from foris_controller_backends.remote import (
+    RemoteAsync,
+    RemoteCmds,
+    RemoteUci,
+    RemoteFiles,
+)
 
 from .. import Handler
 
@@ -31,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtRemoteHandler(Handler, BaseOpenwrtHandler):
 
-    asynchronuous = CaGenAsync()
-    cmds = CaGenCmds()
+    asynchronuous = RemoteAsync()
+    cmds = RemoteCmds()
     uci = RemoteUci()
     files = RemoteFiles()
 
@@ -73,3 +78,11 @@ class OpenwrtRemoteHandler(Handler, BaseOpenwrtHandler):
             return {"status": "revoked"}
 
         return {"status": "valid", "token": self.files.get_token(id=id, name=filtered[0]["name"])}
+
+    @logger_wrapper(logger)
+    def get_netboot_status(self):
+        return self.cmds.get_netboot_status()
+
+    @logger_wrapper(logger)
+    def set_netboot_configured(self):
+        return self.files.set_netboot_configured()

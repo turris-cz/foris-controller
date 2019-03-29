@@ -56,12 +56,13 @@ def path_exists(path):
     return os.path.exists(inject_file_root(path))
 
 
-def makedirs(path: str, mask: int):
+def makedirs(path: str, mask: int = 0o0755, exist_ok: bool = True):
     """ Creates directories on the given path
     :param path: path to be created
     :param mask: last dir mask
+    :param exist_ok: don't raise exception when directory exists
     """
-    os.makedirs(inject_file_root(path), mask)
+    os.makedirs(inject_file_root(path), mask, exist_ok)
 
 
 class BaseFile(object):
@@ -101,6 +102,24 @@ class BaseFile(object):
             logger.error("Failed to parse content of the file.")
             raise FailedToParseFileContent(path, content)
         return match.group(*groups)
+
+    def _store_to_file(self, path, content):
+        """ Returns a content of a file
+
+        :param path: path to the file
+        :type path: str
+
+        :returns: file content
+        :rtype: str
+        """
+        path = inject_file_root(path)
+        logger.debug("Trying to write to file '%s'" % path)
+        with open(path, "w") as f:
+            f.write(content)
+            f.flush()
+        logger.debug("File '%s' was successfully updated." % path)
+        logger.debug("content: %s" % content)
+        return content
 
 
 class BaseMatch(object):

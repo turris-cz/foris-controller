@@ -43,6 +43,7 @@ from foris_controller_testtools.fixtures import (
     start_buses,
 )
 from foris_controller_testtools.utils import match_subdict, get_uci_module, check_service_result
+from .test_mqtt import mount_on_netboot, mount_on_normal, netboot_configured
 
 CERT_PATH = "/tmp/test-cagen/"
 
@@ -868,3 +869,38 @@ def test_enable_empty(
         }
     )
     assert not res["data"]["result"]
+
+
+@pytest.mark.only_message_buses(["mqtt"])
+def test_set_netboot_configured(
+    ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_netboot
+):
+    if infrastructure.name == "openwrt":
+        filters = [("remote", "advertize")]
+        notifications = infrastructure.get_notifications(filters=filters)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1]["data"]["netboot"] == "booted"
+
+    filters = [("remote", "set_netboot_configured")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    res = infrastructure.process_message(
+        {"module": "remote", "action": "set_netboot_configured", "kind": "request"}
+    )
+    assert res == {
+        "module": "remote",
+        "action": "set_netboot_configured",
+        "kind": "reply",
+        "data": {"result": True},
+    }
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "module": "remote",
+        "action": "set_netboot_configured",
+        "kind": "notification",
+    }
+
+    if infrastructure.name == "openwrt":
+        filters = [("remote", "advertize")]
+        notifications = infrastructure.get_notifications(filters=filters)
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1]["data"]["netboot"] == "ready"

@@ -75,6 +75,12 @@ class RemoteModule(BaseModule):
     def action_get_token(self, data):
         return self.handler.get_token(**data)
 
+    def action_set_netboot_configured(self, data):
+        res = self.handler.set_netboot_configured(**data)
+        if res:
+            self.notify("set_netboot_configured")
+        return {"result": res}
+
 
 @wrap_required_functions(
     [
@@ -86,6 +92,8 @@ class RemoteModule(BaseModule):
         "get_settings",
         "update_settings",
         "get_token",
+        "get_netboot_status",
+        "set_netboot_configured",
     ]
 )
 class Handler(object):

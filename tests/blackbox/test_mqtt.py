@@ -30,11 +30,54 @@ from foris_controller_testtools.infrastructure import MQTT_ID, MQTT_PORT, MQTT_H
 
 from foris_controller_testtools.fixtures import (
     only_message_buses,
+    only_backends,
     infrastructure,
     file_root_init,
     mosquitto_test,
     ubusd_test,
+    FILE_ROOT_PATH,
 )
+
+from foris_controller_testtools.utils import FileFaker
+
+
+@pytest.fixture(scope="function")
+def mount_on_netboot():
+    script = """\
+#!/bin/sh
+cat << EOF
+tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
+tmpfs on /dev type tmpfs (rw,nosuid,relatime,size=512k,mode=755)
+EOF
+"""
+    with FileFaker(FILE_ROOT_PATH, "/bin/mount", True, script) as mount_script:
+        yield mount_script
+
+
+@pytest.fixture(scope="function")
+def mount_on_normal():
+    script = """\
+#!/bin/sh
+cat << EOF
+/dev/mmcblk0p1 on / type btrfs (rw,noatime,ssd,noacl,space_cache,commit=5,subvolid=397,subvol=/@)
+devtmpfs on /dev type devtmpfs (rw,relatime,size=1033476k,nr_inodes=189058,mode=755)
+proc on /proc type proc (rw,nosuid,nodev,noexec,noatime)
+sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,noatime)
+cgroup on /sys/fs/cgroup type cgroup (rw,nosuid,nodev,noexec,relatime,cpuset,cpu,cpuacct,blkio,memory,devices,freezer,net_cls,pids,rdma,debug)
+tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
+tmpfs on /dev type tmpfs (rw,nosuid,relatime,size=512k,mode=755)
+devpts on /dev/pts type devpts (rw,nosuid,noexec,relatime,mode=600,ptmxmode=000)
+debugfs on /sys/kernel/debug type debugfs (rw,noatime)
+EOF
+"""
+    with FileFaker(FILE_ROOT_PATH, "/bin/mount", True, script) as mount_script:
+        yield mount_script
+
+
+@pytest.fixture(scope="function")
+def netboot_configured():
+    with FileFaker(FILE_ROOT_PATH, "/tmp/netboot-configured", False, "") as configured_indicator:
+        yield configured_indicator
 
 
 def query_bus(topic):
@@ -70,7 +113,7 @@ def query_bus(topic):
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_announcements(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+def test_advertize(ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_normal):
 
     filters = [("remote", "advertize")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -88,6 +131,31 @@ def test_announcements(ubusd_test, infrastructure, file_root_init, mosquitto_tes
         assert notification["kind"] == "notification"
         assert notification["data"]["state"] in ["running", "started", "exitted"]
         assert notification["data"]["id"] == MQTT_ID
+        assert notification["data"]["netboot"] == "no"
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.only_message_buses(["mqtt"])
+def test_advertize_netboot_booted(
+    ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_netboot
+):
+
+    filters = [("remote", "advertize")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1]["data"]["netboot"] == "booted"
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.only_message_buses(["mqtt"])
+def test_advertize_netboot_ready(
+    ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_netboot, netboot_configured
+):
+
+    filters = [("remote", "advertize")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1]["data"]["netboot"] == "ready"
 
 
 @pytest.mark.only_message_buses(["mqtt"])

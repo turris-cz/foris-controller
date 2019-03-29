@@ -30,7 +30,7 @@ from collections import OrderedDict
 from foris_controller.app import app_info
 
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
-from foris_controller_backends.files import BaseFile
+from foris_controller_backends.files import BaseFile, path_exists, makedirs
 from foris_controller_backends.uci import (
     UciBackend,
     get_option_named,
@@ -43,8 +43,10 @@ from foris_controller_backends.services import OpenwrtServices
 
 logger = logging.getLogger(__name__)
 
+NETBOOT_CONFIGURED_PATH = "/tmp/netboot-configured"
 
-class CaGenAsync(AsyncCommand):
+
+class RemoteAsync(AsyncCommand):
     def generate_ca(self, notify_function, exit_notify_function, reset_notify_function):
         def handler_exit(process_data):
             exit_notify_function(
@@ -103,7 +105,7 @@ class CaGenAsync(AsyncCommand):
         return task_id
 
 
-class CaGenCmds(BaseCmdLine):
+class RemoteCmds(BaseCmdLine):
     def get_status(self):
         output, _ = self._run_command_and_check_retval(
             ["/usr/bin/turris-cagen-status", "remote"], 0
@@ -143,6 +145,18 @@ class CaGenCmds(BaseCmdLine):
         retval, _, _ = self._run_command("/usr/bin/turris-cagen", "drop_ca", "remote")
         return retval == 0
 
+    def get_netboot_status(self):
+        output, _ = self._run_command_and_check_retval(["/bin/mount"], 0)
+        for line in output.decode().split("\n"):
+            match = re.match(r"^.* on / type (\w+) .*$", line)
+            if match:
+                if match.group(1) != "tmpfs":
+                    return "no"
+                break
+
+        # we are in netboot
+        return "ready" if path_exists(NETBOOT_CONFIGURED_PATH) else "booted"
+
 
 class RemoteUci(object):
     DEFAULTS = {"enabled": False, "wan_access": False, "port": 11883}
@@ -178,7 +192,7 @@ class RemoteUci(object):
             result = False  # fail to set enabled = True due to incompatible bus
 
         # can't set when CA is missing
-        if CaGenCmds().get_status()["status"] != "ready" and enabled:
+        if RemoteCmds().get_status()["status"] != "ready" and enabled:
             enabled = False
             result = False
 
@@ -223,6 +237,11 @@ class RemoteUci(object):
 
 class RemoteFiles(BaseFile):
     BASE_CERT_PATH = "/etc/ssl/ca/remote"
+
+    def set_netboot_configured(self):
+        makedirs(os.path.dirname(NETBOOT_CONFIGURED_PATH), exist_ok=True)
+        self._store_to_file(NETBOOT_CONFIGURED_PATH, "")
+        return True
 
     def detect_location(self):
         """

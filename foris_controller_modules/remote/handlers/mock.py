@@ -37,6 +37,7 @@ class MockRemoteHandler(Handler, BaseMockHandler):
     tokens: typing.List[dict] = []
     current_id = 2
     settings = {"enabled": False, "wan_access": False, "port": 11884}
+    netboot = "no"
 
     @logger_wrapper(logger)
     def generate_ca(self, notify, exit_notify, reset_notify):
@@ -99,3 +100,11 @@ class MockRemoteHandler(Handler, BaseMockHandler):
         if filtered[0]["status"] == "revoked":
             return {"status": "revoked"}
         return {"status": "valid", "token": base64.b64encode(b"some data").decode()}
+
+    @logger_wrapper(logger)
+    def get_netboot_status(self):
+        return MockRemoteHandler.netboot
+
+    @logger_wrapper(logger)
+    def set_netboot_configured(self):
+        return True
