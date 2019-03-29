@@ -377,3 +377,134 @@ def test_create_notification(notify_cmd, uci_configs_init, infrastructure, start
     create_notification({"severity": "news", "id": "1518776436-2596", "new_count": 2})
     create_notification({"severity": "update", "id": "1518776436-2597", "new_count": 3})
     create_notification({"severity": "error", "id": "1518776436-2598", "new_count": 4})
+
+
+def test_update_email_settings(uci_configs_init, infrastructure, start_buses):
+    filters = [("router_notifications", "update_email_settings")]
+
+    def update(data):
+        notifications = infrastructure.get_notifications(filters=filters)
+        res = infrastructure.process_message(
+            {
+                "module": "router_notifications",
+                "action": "update_email_settings",
+                "kind": "request",
+                "data": data,
+            }
+        )
+        assert res == {
+            u"action": u"update_email_settings",
+            u"data": {u"result": True},
+            u"kind": u"reply",
+            u"module": u"router_notifications",
+        }
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1]["module"] == "router_notifications"
+        assert notifications[-1]["action"] == "update_email_settings"
+        assert notifications[-1]["kind"] == "notification"
+        assert match_subdict(notifications[-1]["data"], data)
+
+        res = infrastructure.process_message(
+            {"module": "router_notifications", "action": "get_settings", "kind": "request"}
+        )
+        assert match_subdict(data, res["data"]["emails"])
+
+    update({"enabled": False})
+    update(
+        {
+            "enabled": True,
+            "common": {
+                "to": ["user1@example.com", "user2@example.com"],
+                "severity_filter": 1,
+                "send_news": False,
+            },
+            "smtp_type": "turris",
+            "smtp_turris": {"sender_name": "name1"},
+        }
+    )
+    update(
+        {
+            "enabled": True,
+            "common": {
+                "to": ["user1@example.com", "user2@example.com"],
+                "severity_filter": 1,
+                "send_news": False,
+            },
+            "smtp_type": "turris",
+            "smtp_turris": {"sender_name": "name2"},
+        }
+    )
+
+    update(
+        {
+            "enabled": True,
+            "common": {
+                "to": ["user3@example.com", "user2@example.com"],
+                "severity_filter": 2,
+                "send_news": True,
+            },
+            "smtp_type": "custom",
+            "smtp_custom": {
+                "from": "turris1@example.com",
+                "host": "example1.com",
+                "port": 25,
+                "security": "none",
+                "username": "user1",
+                "password": "pass1",
+            },
+        }
+    )
+    update(
+        {
+            "enabled": True,
+            "common": {
+                "to": ["user3@example.com", "user2@example.com"],
+                "severity_filter": 2,
+                "send_news": True,
+            },
+            "smtp_type": "custom",
+            "smtp_custom": {
+                "from": "turris2@example.com",
+                "host": "example2.com",
+                "port": 26,
+                "security": "ssl",
+                "username": "user2",
+                "password": "pass2",
+            },
+        }
+    )
+
+
+def test_update_reboot_settings(uci_configs_init, infrastructure, start_buses):
+    filters = [("router_notifications", "update_reboot_settings")]
+
+    def update(data):
+        notifications = infrastructure.get_notifications(filters=filters)
+        res = infrastructure.process_message(
+            {
+                "module": "router_notifications",
+                "action": "update_reboot_settings",
+                "kind": "request",
+                "data": data,
+            }
+        )
+        assert res == {
+            u"action": u"update_reboot_settings",
+            u"data": {u"result": True},
+            u"kind": u"reply",
+            u"module": u"router_notifications",
+        }
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1]["module"] == "router_notifications"
+        assert notifications[-1]["action"] == "update_reboot_settings"
+        assert notifications[-1]["kind"] == "notification"
+        assert match_subdict(notifications[-1]["data"], data)
+
+        res = infrastructure.process_message(
+            {"module": "router_notifications", "action": "get_settings", "kind": "request"}
+        )
+        assert match_subdict(data, res["data"]["reboots"])
+
+    update({"delay": 1, "time": "03:30"})
+    update({"delay": 0, "time": "04:20"})
+    update({"delay": 2, "time": "05:10"})

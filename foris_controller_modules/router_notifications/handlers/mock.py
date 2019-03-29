@@ -140,18 +140,21 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
         return {"emails": self.emails_settings, "reboots": self.reboots_settings}
 
     @logger_wrapper(logger)
-    def update_settings(self, emails_settings, reboots_settings):
+    def update_settings(self, emails_settings=None, reboots_settings=None):
 
-        # update values
-        def update_dict(d, u):
-            for k, v in u.items():
-                if isinstance(v, collections.Mapping):
-                    update_dict(d.get(k, {}), v)
-                else:
-                    d[k] = v
+        if emails_settings:
+            # update values
+            def update_dict(d, u):
+                for k, v in u.items():
+                    if isinstance(v, collections.Mapping):
+                        update_dict(d.get(k, {}), v)
+                    else:
+                        d[k] = v
 
-        update_dict(self.emails_settings, emails_settings)
-        self.reboots_settings = reboots_settings
+            update_dict(self.emails_settings, emails_settings)
+
+        if reboots_settings:
+            self.reboots_settings = reboots_settings
 
         return True
 
