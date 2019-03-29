@@ -60,8 +60,13 @@ class MockDnsHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def update_settings(
-            self, forwarding_enabled, dnssec_enabled, dns_from_dhcp_enabled, forwarder=None,
-            dns_from_dhcp_domain=None):
+        self,
+        forwarding_enabled,
+        dnssec_enabled,
+        dns_from_dhcp_enabled,
+        forwarder=None,
+        dns_from_dhcp_domain=None,
+    ):
         """ Mocks updates current dns settings
 
         :param forwarding_enabled: set whether the forwarding is enabled

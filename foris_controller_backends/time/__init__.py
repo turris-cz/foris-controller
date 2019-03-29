@@ -23,7 +23,11 @@ from functools import reduce
 
 from foris_controller.app import app_info
 from foris_controller_backends.uci import (
-    UciBackend, get_option_anonymous, get_option_named, parse_bool, store_bool
+    UciBackend,
+    get_option_anonymous,
+    get_option_named,
+    parse_bool,
+    store_bool,
 )
 from foris_controller.utils import writelock, RWLock
 from foris_controller.exceptions import UciException
@@ -60,7 +64,6 @@ class SetTimeCommand(BaseCmdLine):
 
 
 class TimeUciCommands(object):
-
     def get_settings(self):
 
         with UciBackend() as backend:
@@ -81,7 +84,7 @@ class TimeUciCommands(object):
             "country": country,
             "city": city,
             "timezone": timezone,
-            "time_settings":  {
+            "time_settings": {
                 "how_to_set_time": "ntp" if ntp else "manual",
                 "ntp_servers": ntp_servers,
             },
@@ -104,6 +107,7 @@ class TimeUciCommands(object):
         # update wizard passed in foris web (best effort)
         try:
             from foris_controller_backends.web import WebUciCommands
+
             WebUciCommands.update_passed("time")
         except UciException:
             pass
@@ -127,12 +131,10 @@ class TimeUciCommands(object):
         # set regulatrory domain directly to current wifi settings
         WifiCmds().set_regulatory_domain(country)
 
-
         return True
 
 
 class TimeAsyncCmds(AsyncCommand):
-
     def ntpd_trigger(self, exit_notify_function, reset_notify_function):
         """ Executes ntpd in async modude
 

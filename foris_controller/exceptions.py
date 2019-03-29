@@ -124,4 +124,5 @@ class ServiceCmdFailed(Exception):
         """
         explanation = " (%s)" % explanation if explanation else ""
         super(ServiceCmdFailed, self).__init__(
-            "Calling '%s' for service '%s' failed.%s" % (cmd, service, explanation))
+            "Calling '%s' for service '%s' failed.%s" % (cmd, service, explanation)
+        )

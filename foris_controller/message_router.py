@@ -41,7 +41,9 @@ def display_spend_time(message_in, message_out):
             if message_out:
                 logger.debug(message_out, time.time() - start)
             return res
+
         return wrapper
+
     return real_decorator
 
 
@@ -90,24 +92,25 @@ class Router(object):
         except ValidationError as exc:
             logger.warning("Failed to validate input message.")
             logger.debug("Error: \n%s" % str(exc))
-            return self._build_error_msg(message, [{
-                "description": "Incorrect input. %s" % str(message),
-                "stacktrace": format_exc(),
-            }])
+            return self._build_error_msg(
+                message,
+                [{"description": "Incorrect input. %s" % str(message), "stacktrace": format_exc()}],
+            )
         logger.debug("Input message validated.")
 
         if message["kind"] != "request":
             logger.warning("Wrong message kind (only requests allowed) (=%s)." % message["kind"])
             return self._build_error_msg(
-                message, [{"description": "Wrong message kind (only request are allowed)."}])
+                message, [{"description": "Wrong message kind (only request are allowed)."}]
+            )
 
         # check whether the module is loaded
         if message["module"] not in app_info["modules"]:
-            logger.error(
-                "Module not found '%s'" % message["module"])
-            return self._build_error_msg(message, [{
-                "description": "Internal error (module not found '%s')." % message["module"]
-            }])
+            logger.error("Module not found '%s'" % message["module"])
+            return self._build_error_msg(
+                message,
+                [{"description": "Internal error (module not found '%s')." % message["module"]}],
+            )
 
         module_instance = app_info["modules"][message["module"]]
         try:
@@ -115,10 +118,15 @@ class Router(object):
         except Exception as e:
             logger.error("Internal error occured %s('%s'):" % (type(e), str(e)))
             logger.debug(format_exc())
-            return self._build_error_msg(message, [{
-                "description": "Internal error %s('%s')" % (str(e), type(e)),
-                "stacktrace": format_exc(),
-            }])
+            return self._build_error_msg(
+                message,
+                [
+                    {
+                        "description": "Internal error %s('%s')" % (str(e), type(e)),
+                        "stacktrace": format_exc(),
+                    }
+                ],
+            )
 
         reply = {
             "kind": "reply",
@@ -133,10 +141,10 @@ class Router(object):
         except ValidationError as exc:
             logger.error("Failed to validate output message.")
             logger.debug("Error: \n%s" % str(exc))
-            return self._build_error_msg(message, [{
-                "description": "Incorrect output. %s" % str(reply),
-                "stacktrace": format_exc(),
-            }])
+            return self._build_error_msg(
+                message,
+                [{"description": "Incorrect output. %s" % str(reply), "stacktrace": format_exc()}],
+            )
 
         logger.debug("Output message validated.")
         return reply

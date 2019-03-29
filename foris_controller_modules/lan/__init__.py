@@ -54,10 +54,6 @@ class LanModule(BaseModule):
         return res
 
 
-@wrap_required_functions([
-    'get_settings',
-    'update_settings',
-    'set_dhcp_client',
-])
+@wrap_required_functions(["get_settings", "update_settings", "set_dhcp_client"])
 class Handler(object):
     pass

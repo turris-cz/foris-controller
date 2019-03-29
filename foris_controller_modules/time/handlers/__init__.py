@@ -20,7 +20,4 @@
 from .mock import MockTimeHandler
 from .openwrt import OpenwrtTimeHandler
 
-__all__ = [
-    'MockTimeHandler',
-    'OpenwrtTimeHandler',
-]
+__all__ = ["MockTimeHandler", "OpenwrtTimeHandler"]

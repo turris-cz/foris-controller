@@ -38,20 +38,22 @@ class MockGuestHandler(Handler, BaseMockHandler):
         "lease_time": 12 * 60 * 60,
         "clients": [
             {
-                "ip": "10.10.2.1", "mac": "16:25:34:43:52:61",
-                "expires": 1539350286, "active": True, "hostname": "first"
+                "ip": "10.10.2.1",
+                "mac": "16:25:34:43:52:61",
+                "expires": 1539350286,
+                "active": True,
+                "hostname": "first",
             },
             {
-                "ip": "10.10.1.1", "mac": "94:85:76:67:58:49",
-                "expires": 1539350388, "active": False, "hostname": ""
-            }
-        ]
+                "ip": "10.10.1.1",
+                "mac": "94:85:76:67:58:49",
+                "expires": 1539350388,
+                "active": False,
+                "hostname": "",
+            },
+        ],
     }
-    qos = {
-        "enabled": False,
-        "download": 1200,
-        "upload": 1200,
-    }
+    qos = {"enabled": False, "download": 1200, "upload": 1200}
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -70,7 +72,8 @@ class MockGuestHandler(Handler, BaseMockHandler):
             "qos": MockGuestHandler.qos,
             "interface_count": len(MockNetworksHandler.networks["guest"]),
             "interface_up_count": len(
-                [e for e in MockNetworksHandler.networks["guest"] if e["state"] == "up"])
+                [e for e in MockNetworksHandler.networks["guest"] if e["state"] == "up"]
+            ),
         }
         return result
 
@@ -88,7 +91,8 @@ class MockGuestHandler(Handler, BaseMockHandler):
             if last_ip_num >= 2 ** 32:  # ip overflow
                 return False
             last_ip_norm = IPv4.normalize_subnet(
-                IPv4.num_to_str(last_ip_num), new_settings["netmask"])
+                IPv4.num_to_str(last_ip_num), new_settings["netmask"]
+            )
             if last_ip_norm != ip_norm:
                 return False
 
@@ -98,11 +102,14 @@ class MockGuestHandler(Handler, BaseMockHandler):
             MockGuestHandler.netmask = new_settings["netmask"]
             MockGuestHandler.dhcp["enabled"] = new_settings["dhcp"]["enabled"]
             MockGuestHandler.dhcp["start"] = new_settings["dhcp"].get(
-                "start", MockGuestHandler.dhcp["start"])
+                "start", MockGuestHandler.dhcp["start"]
+            )
             MockGuestHandler.dhcp["limit"] = new_settings["dhcp"].get(
-                "limit", MockGuestHandler.dhcp["limit"])
+                "limit", MockGuestHandler.dhcp["limit"]
+            )
             MockGuestHandler.dhcp["lease_time"] = new_settings["dhcp"].get(
-                "lease_time", MockGuestHandler.dhcp["lease_time"])
+                "lease_time", MockGuestHandler.dhcp["lease_time"]
+            )
             MockGuestHandler.qos["enabled"] = new_settings["qos"]["enabled"]
             if MockGuestHandler.qos["enabled"]:
                 MockGuestHandler.qos["download"] = new_settings["qos"]["download"]

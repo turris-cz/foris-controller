@@ -34,8 +34,8 @@ class MockWebHandler(Handler, BaseMockHandler):
     guide_workflow = profiles.WORKFLOW_UNSET
     recommended_workflow = profiles.WORKFLOW_ROUTER
     guide_enabled = True
-    language_list = ['en', 'de', 'cs', 'nb_NO']
-    current_language = 'en'
+    language_list = ["en", "de", "cs", "nb_NO"]
+    current_language = "en"
     turris_os_version = "4.0"
     device = "mox"
 
@@ -73,11 +73,14 @@ class MockWebHandler(Handler, BaseMockHandler):
 
     def updater_running(self):
         from foris_controller_modules.updater.handlers.mock import MockUpdaterHandler
+
         return MockUpdaterHandler.updater_running
 
     def get_notification_count(self):
-        from foris_controller_modules.router_notifications.handlers.mock import \
-                MockRouterNotificationsHandler
+        from foris_controller_modules.router_notifications.handlers.mock import (
+            MockRouterNotificationsHandler,
+        )
+
         return len([e for e in MockRouterNotificationsHandler.notifications if not e["displayed"]])
 
     def update_guide(self, enabled, workflow=None):
@@ -100,8 +103,10 @@ class MockWebHandler(Handler, BaseMockHandler):
         from foris_controller_modules.updater.handlers import MockUpdaterHandler
         from foris_controller_modules.networks.handlers import MockNetworksHandler
         from foris_controller_modules.lan.handlers import MockLanHandler
+
         passed = [
-            e[0] for e in [
+            e[0]
+            for e in [
                 ("password", MockPasswordHandler),
                 ("profile", MockWebHandler),
                 ("networks", MockNetworksHandler),
@@ -110,7 +115,8 @@ class MockWebHandler(Handler, BaseMockHandler):
                 ("time", MockTimeHandler),
                 ("dns", MockDnsHandler),
                 ("updater", MockUpdaterHandler),
-            ] if e[1].guide_set.get()
+            ]
+            if e[1].guide_set.get()
         ] + (["finished"] if MockWebHandler.guide_finished_set.get() else [])
         res = {
             "enabled": MockWebHandler.guide_enabled,
@@ -125,6 +131,7 @@ class MockWebHandler(Handler, BaseMockHandler):
 
     def is_password_set(self):
         from foris_controller_modules.password.handlers import MockPasswordHandler
+
         return MockPasswordHandler.guide_set.get()
 
     @logger_wrapper(logger)
@@ -133,22 +140,22 @@ class MockWebHandler(Handler, BaseMockHandler):
         if set(guide["workflow_steps"]) == set(guide["passed"]):
             MockWebHandler.guide_enabled = False
         return {
-            'language': self.get_language(),
-            'reboot_required': self.reboot_required(),
-            'updater_running': self.updater_running(),
-            'notification_count': self.get_notification_count(),
-            'guide': guide,
-            'password_ready': self.is_password_set(),
-            'turris_os_version': self.turris_os_version,
-            'device': self.device,
+            "language": self.get_language(),
+            "reboot_required": self.reboot_required(),
+            "updater_running": self.updater_running(),
+            "notification_count": self.get_notification_count(),
+            "guide": guide,
+            "password_ready": self.is_password_set(),
+            "turris_os_version": self.turris_os_version,
+            "device": self.device,
         }
 
     @logger_wrapper(logger)
     def get_guide(self):
         return {
-            'available_workflows': [e for e in profiles.WORKFLOWS],
-            'current_workflow': MockWebHandler.guide_workflow,
-            'recommended_workflow': MockWebHandler.recommended_workflow,
+            "available_workflows": [e for e in profiles.WORKFLOWS],
+            "current_workflow": MockWebHandler.guide_workflow,
+            "recommended_workflow": MockWebHandler.recommended_workflow,
         }
 
     @logger_wrapper(logger)
@@ -160,6 +167,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         from foris_controller_modules.updater.handlers import MockUpdaterHandler
         from foris_controller_modules.networks.handlers import MockNetworksHandler
         from foris_controller_modules.lan.handlers import MockLanHandler
+
         MockPasswordHandler.guide_set.set(False)
         MockWebHandler.guide_set.set(False)
         MockNetworksHandler.guide_set.set(False)

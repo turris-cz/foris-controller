@@ -29,43 +29,47 @@ from paho.mqtt import client as mqtt
 from foris_controller_testtools.infrastructure import MQTT_ID, MQTT_PORT, MQTT_HOST
 
 from foris_controller_testtools.fixtures import (
-    only_message_buses, infrastructure, file_root_init, mosquitto_test, ubusd_test
+    only_message_buses,
+    infrastructure,
+    file_root_init,
+    mosquitto_test,
+    ubusd_test,
 )
 
 
 def query_bus(topic):
-        result = {"data": None}
+    result = {"data": None}
 
-        msg_id = uuid.uuid1()
-        reply_topic = "foris-controller/%s/reply/%s" % (MQTT_ID, msg_id)
+    msg_id = uuid.uuid1()
+    reply_topic = "foris-controller/%s/reply/%s" % (MQTT_ID, msg_id)
 
-        def on_connect(client, userdata, flags, rc):
-            client.subscribe(reply_topic)
+    def on_connect(client, userdata, flags, rc):
+        client.subscribe(reply_topic)
 
-        def on_subscribe(client, userdata, mid, granted_qos):
-            client.publish(topic, json.dumps({"reply_msg_id": str(msg_id)}))
+    def on_subscribe(client, userdata, mid, granted_qos):
+        client.publish(topic, json.dumps({"reply_msg_id": str(msg_id)}))
 
-        def on_message(client, userdata, msg):
-            try:
-                parsed = json.loads(msg.payload)
-            except Exception:
-                return
-            result["data"] = parsed
-            client.loop_stop(True)
-            client.disconnect()
+    def on_message(client, userdata, msg):
+        try:
+            parsed = json.loads(msg.payload)
+        except Exception:
+            return
+        result["data"] = parsed
+        client.loop_stop(True)
+        client.disconnect()
 
-        client = mqtt.Client()
-        client.on_subscribe = on_subscribe
-        client.on_message = on_message
-        client.on_connect = on_connect
-        client.connect(MQTT_HOST, MQTT_PORT, 30)
-        client.loop_start()
-        client._thread.join(3)
+    client = mqtt.Client()
+    client.on_subscribe = on_subscribe
+    client.on_message = on_message
+    client.on_connect = on_connect
+    client.connect(MQTT_HOST, MQTT_PORT, 30)
+    client.loop_start()
+    client._thread.join(3)
 
-        return result["data"]
+    return result["data"]
 
 
-@pytest.mark.only_message_buses(['mqtt'])
+@pytest.mark.only_message_buses(["mqtt"])
 def test_announcements(ubusd_test, infrastructure, file_root_init, mosquitto_test):
 
     filters = [("remote", "advertize")]
@@ -86,18 +90,18 @@ def test_announcements(ubusd_test, infrastructure, file_root_init, mosquitto_tes
         assert notification["data"]["id"] == MQTT_ID
 
 
-@pytest.mark.only_message_buses(['mqtt'])
+@pytest.mark.only_message_buses(["mqtt"])
 def test_modules_list(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     infrastructure.wait_mqtt_connected()
     topic = "foris-controller/%s/list" % MQTT_ID
     modules = query_bus(topic)
     assert len(modules) > 0
     assert all([set(e.keys()) == {"name", "actions"} for e in modules])
-    assert all([isinstance(e['name'], str) for e in modules])
-    assert all([isinstance(e['actions'], collections.Iterable) for e in modules])
+    assert all([isinstance(e["name"], str) for e in modules])
+    assert all([isinstance(e["actions"], collections.Iterable) for e in modules])
 
 
-@pytest.mark.only_message_buses(['mqtt'])
+@pytest.mark.only_message_buses(["mqtt"])
 def test_schema(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     infrastructure.wait_mqtt_connected()
     topic = "foris-controller/%s/jsonschemas" % MQTT_ID
@@ -105,7 +109,7 @@ def test_schema(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     assert len(schemas) > 1
 
 
-@pytest.mark.only_message_buses(['mqtt'])
+@pytest.mark.only_message_buses(["mqtt"])
 def test_action_list(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     infrastructure.wait_mqtt_connected()
     topic = "foris-controller/%s/list" % MQTT_ID
@@ -116,7 +120,7 @@ def test_action_list(ubusd_test, infrastructure, file_root_init, mosquitto_test)
         assert len(actions) > 0
 
 
-@pytest.mark.only_message_buses(['mqtt'])
+@pytest.mark.only_message_buses(["mqtt"])
 def test_wrong_id(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     infrastructure.wait_mqtt_connected()
 
@@ -129,7 +133,7 @@ def test_wrong_id(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     assert res is None
 
 
-@pytest.mark.only_message_buses(['mqtt'])
+@pytest.mark.only_message_buses(["mqtt"])
 def test_wrong_module_id(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     infrastructure.wait_mqtt_connected()
     # should fail instantly

@@ -28,9 +28,7 @@ from foris_controller.exceptions import ServiceCmdFailed
 
 @pytest.fixture(scope="function")
 def cmdline_script_root():
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "test_root"
-    )
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_root")
 
 
 @pytest.fixture(scope="function")
@@ -43,8 +41,10 @@ def custom_cmdline_root(cmdline_script_root):
 @pytest.fixture
 def service_class(lock_backend):
     from foris_controller.app import app_info
+
     app_info["lock_backend"] = lock_backend
     from foris_controller_backends import services
+
     return services.OpenwrtServices
 
 
@@ -71,7 +71,9 @@ def test_service(action, custom_cmdline_root, init_script_result, service_class)
 
 
 @pytest.mark.parametrize("action", ["start", "stop", "restart", "reload", "enable", "disable"])
-def test_service_delayed(action, custom_cmdline_root, init_script_result, service_class, sh_command):
+def test_service_delayed(
+    action, custom_cmdline_root, init_script_result, service_class, sh_command
+):
     # can't check the result for delayed services thus fail_on_error doesn't make sense neither
     with service_class() as services:
         getattr(services, action)("pass", delay=2)

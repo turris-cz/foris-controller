@@ -30,62 +30,116 @@ logger = logging.getLogger(__name__)
 
 class MockNetworksHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
-    device = {
-        "model": "omnia",
-        "version": "2G no GPIO",
-    }
-    firewall = {
-        "ssh_on_wan": False,
-        "http_on_wan": False,
-        "https_on_wan": False,
-    }
+    device = {"model": "omnia", "version": "2G no GPIO"}
+    firewall = {"ssh_on_wan": False, "http_on_wan": False, "https_on_wan": False}
     DEFAULT_NETWORKS = {
         "wan": [
             {
-                "id": "eth2", "type": "eth", "slot": "WAN", "state": "up", "link_speed": 1000,
-                "bus": "eth", "module_id": 0, "configurable": True,
-            },
+                "id": "eth2",
+                "type": "eth",
+                "slot": "WAN",
+                "state": "up",
+                "link_speed": 1000,
+                "bus": "eth",
+                "module_id": 0,
+                "configurable": True,
+            }
         ],
         "lan": [
             {
-                "id": "lan0", "type": "eth", "slot": "LAN0", "state": "down", "link_speed": 0,
-                "bus": "eth", "module_id": 0, "configurable": True,
+                "id": "lan0",
+                "type": "eth",
+                "slot": "LAN0",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "eth",
+                "module_id": 0,
+                "configurable": True,
             },
             {
-                "id": "lan1", "type": "eth", "slot": "LAN1", "state": "down", "link_speed": 0,
-                "bus": "eth", "module_id": 0, "configurable": True,
+                "id": "lan1",
+                "type": "eth",
+                "slot": "LAN1",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "eth",
+                "module_id": 0,
+                "configurable": True,
             },
             {
-                "id": "lan2", "type": "eth", "slot": "LAN2", "state": "up", "link_speed": 100,
-                "bus": "eth", "module_id": 0, "configurable": True,
+                "id": "lan2",
+                "type": "eth",
+                "slot": "LAN2",
+                "state": "up",
+                "link_speed": 100,
+                "bus": "eth",
+                "module_id": 0,
+                "configurable": True,
             },
             {
-                "id": "lan3", "type": "eth", "slot": "LAN3", "state": "down", "link_speed": 0,
-                "bus": "eth", "module_id": 0, "configurable": True,
+                "id": "lan3",
+                "type": "eth",
+                "slot": "LAN3",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "eth",
+                "module_id": 0,
+                "configurable": True,
             },
             {
-                "id": "lan4", "type": "eth", "slot": "LAN4", "state": "down", "link_speed": 0,
-                "bus": "eth", "module_id": 0, "configurable": True,
+                "id": "lan4",
+                "type": "eth",
+                "slot": "LAN4",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "eth",
+                "module_id": 0,
+                "configurable": True,
             },
         ],
         "guest": [
             {
-                "id": "eth3", "type": "eth", "slot": "0", "state": "down", "link_speed": 0,
-                "bus": "usb", "module_id": 0,  "configurable": True,
-            },
+                "id": "eth3",
+                "type": "eth",
+                "slot": "0",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "usb",
+                "module_id": 0,
+                "configurable": True,
+            }
         ],
         "none": [
             {
-                "id": "wwan0", "type": "wwan", "slot": "MPCI1", "state": "down", "link_speed": 0,
-                "bus": "pci", "module_id": 0, "configurable": True,
+                "id": "wwan0",
+                "type": "wwan",
+                "slot": "MPCI1",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "pci",
+                "module_id": 0,
+                "configurable": True,
             },
             {
-                "id": "wwan1", "type": "wwan", "slot": "MPCI2", "state": "down", "link_speed": 0,
-                "bus": "pci", "module_id": 0, "configurable": True,
+                "id": "wwan1",
+                "type": "wwan",
+                "slot": "MPCI2",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "pci",
+                "module_id": 0,
+                "configurable": True,
             },
             {
-                "id": "wlan0", "type": "wifi", "slot": "MPCI0", "state": "down", "link_speed": 0,
-                "bus": "pci", "module_id": 0, "configurable": False, "ssid": "testing-ssid",
+                "id": "wlan0",
+                "type": "wifi",
+                "slot": "MPCI0",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "pci",
+                "module_id": 0,
+                "configurable": False,
+                "ssid": "testing-ssid",
             },
         ],
     }
@@ -94,7 +148,8 @@ class MockNetworksHandler(Handler, BaseMockHandler):
 
     def _cleanup(self):
         MockNetworksHandler.networks = BaseMockHandler._manager.dict(
-            dict(copy.deepcopy(MockNetworksHandler)))
+            dict(copy.deepcopy(MockNetworksHandler))
+        )
 
     @logger_wrapper(logger)
     def get_settings(self):

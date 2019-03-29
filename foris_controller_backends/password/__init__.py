@@ -23,7 +23,10 @@ import pathlib
 
 from foris_controller_backends.cmdline import BaseCmdLine, BackendCommandFailed
 from foris_controller_backends.uci import (
-    UciBackend, get_option_named, UciException, UciRecordNotFound
+    UciBackend,
+    get_option_named,
+    UciException,
+    UciRecordNotFound,
 )
 from foris_controller_backends.files import BaseMatch
 
@@ -37,8 +40,9 @@ FILTER_PASSWORDS_FILES_MATCH = "/usr/share/common_passwords/*"
 def pawned_password(password):
     for path in BaseMatch.list_files([FILTER_PASSWORDS_FILES_MATCH]):
         file_name = pathlib.Path(path).name
-        list_name = file_name[:-len("_passwords")] if file_name.endswith("_passwords") \
-            else file_name
+        list_name = (
+            file_name[: -len("_passwords")] if file_name.endswith("_passwords") else file_name
+        )
         with open(path, "rb") as f:
             line = f.readline()
             while line:
@@ -73,6 +77,7 @@ class ForisPasswordUci(object):
         # update wizard passed in foris web (best effort)
         try:
             from foris_controller_backends.web import WebUciCommands
+
             WebUciCommands.update_passed("password")
         except UciException:
             pass
@@ -98,7 +103,6 @@ class ForisPasswordUci(object):
 
 
 class SystemPasswordCmd(BaseCmdLine):
-
     def set_password(self, password):
         pawned = pawned_password(password)
         if pawned:

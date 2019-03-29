@@ -25,7 +25,11 @@ import typing
 
 from foris_controller.exceptions import UciException, UciRecordNotFound, BackendCommandFailed
 from foris_controller_backends.uci import (
-    UciBackend, get_sections_by_type, store_bool, parse_bool, get_option_anonymous
+    UciBackend,
+    get_sections_by_type,
+    store_bool,
+    parse_bool,
+    get_option_anonymous,
 )
 
 from foris_controller_backends.cmdline import BaseCmdLine
@@ -72,16 +76,16 @@ class WifiUci(object):
                 htmodes.append("HT40")
             if re.search(r"VHT Capabilities", line):
                 htmodes.extend(VHTMODES)
-            freq_match = re.match(r'^\s+\* (\d+) MHz \[(\d+)\] .*$', line)
+            freq_match = re.match(r"^\s+\* (\d+) MHz \[(\d+)\] .*$", line)
             if freq_match:
                 if "disabled" in line:
                     continue
                 freq, channel = freq_match.groups()
                 freq = int(freq)
                 channel = int(channel)
-                channels.append({
-                    "number": channel, "frequency": freq, "radar": "radar detection" in line,
-                })
+                channels.append(
+                    {"number": channel, "frequency": freq, "radar": "radar detection" in line}
+                )
 
         # detect hwmode
         if len(channels) == len([e for e in channels if 2400 < e["frequency"] < 2500]):
@@ -95,11 +99,7 @@ class WifiUci(object):
         if hwmode == "11g":
             htmodes = [e for e in htmodes if e not in VHTMODES]
 
-        return {
-            "available_htmodes": htmodes,
-            "available_channels": channels,
-            "hwmode": hwmode,
-        }
+        return {"available_htmodes": htmodes, "available_channels": channels, "hwmode": hwmode}
 
     @staticmethod
     def _get_device_bands(uci_device_path=None, uci_macaddr=None):
@@ -108,10 +108,12 @@ class WifiUci(object):
         if uci_device_path:
             # try to get wifi device from path
             path1 = inject_file_root(
-                os.path.join("/", "sys", "devices", "platform", uci_device_path))
+                os.path.join("/", "sys", "devices", "platform", uci_device_path)
+            )
             path2 = inject_file_root(os.path.join("/", "sys", "devices", uci_device_path))
-            phy_path = glob.glob(os.path.join(path1, "ieee80211", "*")) \
-                + glob.glob(os.path.join(path2, "ieee80211", "*"))
+            phy_path = glob.glob(os.path.join(path1, "ieee80211", "*")) + glob.glob(
+                os.path.join(path2, "ieee80211", "*")
+            )
             if len(phy_path) == 1:
                 # now we have phy device for iw command
                 phy_name = os.path.basename(phy_path[0])
@@ -145,7 +147,7 @@ class WifiUci(object):
                 band_lines.append(line)
 
             # Handle stored band lines
-            if re.match(r'\s*Band \d+:$', line):
+            if re.match(r"\s*Band \d+:$", line):
                 reached = True
                 band = WifiUci._get_band(band_lines)
                 if band:
@@ -169,8 +171,8 @@ class WifiUci(object):
             return None
         device_id = int(device_name.group(1))
         enabled = not (
-            parse_bool(device["data"].get("disabled", "0")) or
-            parse_bool(interface["data"].get("disabled", "0"))
+            parse_bool(device["data"].get("disabled", "0"))
+            or parse_bool(interface["data"].get("disabled", "0"))
         )
         ssid = interface["data"].get("ssid", "Turris")
         hidden = parse_bool(interface["data"].get("hidden", "0"))
@@ -192,8 +194,7 @@ class WifiUci(object):
 
         # first we obtain the devices (e.g. phy1, phy2, ...)
         bands = WifiUci._get_device_bands(
-            device["data"].get("path", None),
-            device["data"].get("macaddr", None),
+            device["data"].get("path", None), device["data"].get("macaddr", None)
         )
         if not bands:
             # unable to determine wifi device name
@@ -218,21 +219,23 @@ class WifiUci(object):
 
     def _get_device_sections(self, data):
         return [
-            e for e in get_sections_by_type(data, "wireless", "wifi-device")
-            if not e["anonymous"]
+            e for e in get_sections_by_type(data, "wireless", "wifi-device") if not e["anonymous"]
         ]
 
     def _get_interface_sections_from_device_section(self, data, device_section):
         # first section is interface
         interface = [
-            e for e in get_sections_by_type(data, "wireless", "wifi-iface")
-            if e["data"].get("device") == device_section["name"] and
-            (e["anonymous"] or not e["name"].startswith("guest_iface_"))
+            e
+            for e in get_sections_by_type(data, "wireless", "wifi-iface")
+            if e["data"].get("device") == device_section["name"]
+            and (e["anonymous"] or not e["name"].startswith("guest_iface_"))
         ][0]
         # first non-anonymous section starting with 'guest_iface_' is guest wifi
         guest_interfaces = [
-            e for e in get_sections_by_type(data, "wireless", "wifi-iface")
-            if e["data"].get("device") == device_section["name"] and not e["anonymous"]
+            e
+            for e in get_sections_by_type(data, "wireless", "wifi-iface")
+            if e["data"].get("device") == device_section["name"]
+            and not e["anonymous"]
             and e["name"].startswith("guest_iface_")
         ]
         guest_interface = guest_interfaces[0] if guest_interfaces else None
@@ -251,7 +254,8 @@ class WifiUci(object):
             device_sections = self._get_device_sections(data)
             for device_section in device_sections:
                 interface, guest_interface = self._get_interface_sections_from_device_section(
-                    data, device_section)
+                    data, device_section
+                )
                 device = self._prepare_wifi_device(device_section, interface, guest_interface)
                 if device:
                     devices.append(device)
@@ -262,8 +266,7 @@ class WifiUci(object):
         return {"devices": devices}
 
     def _update_wifi(
-        self, backend, settings, device_section, interface_section,
-        guest_interface_section
+        self, backend, settings, device_section, interface_section, guest_interface_section
     ):
         """
         :returns: Name of the guest interface if guest interface is enabled otherwise None
@@ -296,7 +299,8 @@ class WifiUci(object):
         backend.set_option("wireless", interface_section["name"], "network", "lan")
         backend.set_option("wireless", interface_section["name"], "mode", "ap")
         backend.set_option(
-            "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"]))
+            "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"])
+        )
         if interface_section["data"].get("encryption", "none") == "none":
             backend.set_option("wireless", interface_section["name"], "encryption", "psk2+ccmp")
         backend.set_option("wireless", interface_section["name"], "wpa_group_rekey", "86400")
@@ -321,8 +325,10 @@ class WifiUci(object):
         backend.set_option("wireless", guest_name, "mode", "ap")
         backend.set_option("wireless", guest_name, "ssid", settings["guest_wifi"]["SSID"])
         backend.set_option("wireless", guest_name, "network", "guest_turris")
-        if not guest_interface_section or \
-                guest_interface_section["data"].get("encryption", "none") == "none":
+        if (
+            not guest_interface_section
+            or guest_interface_section["data"].get("encryption", "none") == "none"
+        ):
             backend.set_option("wireless", guest_name, "encryption", "psk2+ccmp")
         backend.set_option("wireless", guest_name, "wpa_group_rekey", "86400")
         backend.set_option("wireless", guest_name, "key", settings["guest_wifi"]["password"])
@@ -361,7 +367,8 @@ class WifiUci(object):
 
                         # find corresponding band
                         bands = [
-                            e for e in WifiUci._get_device_bands(
+                            e
+                            for e in WifiUci._get_device_bands(
                                 device_section["data"].get("path", None),
                                 device_section["data"].get("macaddr", None),
                             )
@@ -372,17 +379,19 @@ class WifiUci(object):
                         band = bands[0]
 
                         # test channels (0 means auto)
-                        if device["channel"] not in \
-                                [0] + [e["number"] for e in band["available_channels"]]:
+                        if device["channel"] not in [0] + [
+                            e["number"] for e in band["available_channels"]
+                        ]:
                             raise ValueError()
                         if device["htmode"] not in band["available_htmodes"]:
                             raise ValueError()
 
                     interface, guest_interface = self._get_interface_sections_from_device_section(
-                        data, device_section)
+                        data, device_section
+                    )
 
                     if self._update_wifi(
-                        backend, device, device_section, interface, guest_interface,
+                        backend, device, device_section, interface, guest_interface
                     ):
                         enable_guest_network = True
 
@@ -392,7 +401,8 @@ class WifiUci(object):
                 # update regulatory according to _country
                 system_data = backend.read("system")  # _country stored by time.update_settings
                 country_code = get_option_anonymous(
-                    system_data, "system", "system", 0, "_country", "00")
+                    system_data, "system", "system", 0, "_country", "00"
+                )
                 WifiUci.update_regulator_domain(data, backend, country_code)
 
         except (IndexError, ValueError):

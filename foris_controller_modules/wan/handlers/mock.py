@@ -33,38 +33,17 @@ logger = logging.getLogger(__name__)
 class MockWanHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
     wan_type = "none"
-    wan_dhcp = {
-        "hostname": None,
-    }
-    wan_static = {
-        "ip": None,
-        "netmask": None,
-        "gateway": None,
-        "dns1": None,
-        "dns2": None,
-    }
-    wan_pppoe = {
-        "username": None,
-        "password": None,
-    }
+    wan_dhcp = {"hostname": None}
+    wan_static = {"ip": None, "netmask": None, "gateway": None, "dns1": None, "dns2": None}
+    wan_pppoe = {"username": None, "password": None}
     wan6_type = "none"
-    wan6_static = {
-        "ip": None,
-        "network": None,
-        "gateway": None,
-        "dns1": None,
-        "dns2": None,
-    }
-    wan6_6to4 = {
-        "ipv4_address": "",
-    }
+    wan6_static = {"ip": None, "network": None, "gateway": None, "dns1": None, "dns2": None}
+    wan6_6to4 = {"ipv4_address": ""}
     wan6_6in4 = {
         "mtu": 1480,
         "server_ipv4": "",
         "ipv6_prefix": "",
-        "dynamic_ipv4": {
-            "enabled": False
-        }
+        "dynamic_ipv4": {"enabled": False},
     }
     custom_mac_enabled = False
     custom_mac = None
@@ -72,20 +51,9 @@ class MockWanHandler(Handler, BaseMockHandler):
 
     def _cleanup(self):
         self.wan_type = "dhcp"
-        self.wan_dhcp = {
-            "hostname": None,
-        }
-        self.wan_static = {
-            "ip": None,
-            "netmask": None,
-            "gateway": None,
-            "dns1": None,
-            "dns2": None,
-        }
-        self.wan_pppoe = {
-            "username": None,
-            "password": None,
-        }
+        self.wan_dhcp = {"hostname": None}
+        self.wan_static = {"ip": None, "netmask": None, "gateway": None, "dns1": None, "dns2": None}
+        self.wan_pppoe = {"username": None, "password": None}
         self.wan6_type = "none"
         self.wan6_static = {
             "ip": None,
@@ -94,19 +62,13 @@ class MockWanHandler(Handler, BaseMockHandler):
             "dns1": None,
             "dns2": None,
         }
-        self.wan6_dhcpv6 = {
-            "duid": "",
-        }
-        self.wan6_6to4 = {
-            "ipv4_address": "",
-        }
+        self.wan6_dhcpv6 = {"duid": ""}
+        self.wan6_6to4 = {"ipv4_address": ""}
         self.wan6_6in4 = {
             "mtu": 1480,
             "server_ipv4": "",
             "ipv6_prefix": "",
-            "dynamic_ipv4": {
-                "enabled": False
-            }
+            "dynamic_ipv4": {"enabled": False},
         }
         self.custom_mac_enabled = False
         self.custom_mac = None
@@ -126,7 +88,8 @@ class MockWanHandler(Handler, BaseMockHandler):
             "mac_settings": {"custom_mac_enabled": self.custom_mac_enabled},
             "interface_count": len(MockNetworksHandler.networks["wan"]),
             "interface_up_count": len(
-                [e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"])
+                [e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"]
+            ),
         }
         if self.wan_type == "dhcp":
             if self.wan_dhcp["hostname"]:
@@ -160,13 +123,9 @@ class MockWanHandler(Handler, BaseMockHandler):
             if self.wan6_static["dns2"] is not None:
                 res["wan6_settings"]["wan6_static"]["dns2"] = self.wan6_static["dns2"]
         elif self.wan6_type == "dhcpv6":
-            res["wan6_settings"]["wan6_dhcpv6"] = {
-                "duid": self.wan6_dhcpv6["duid"]
-            }
+            res["wan6_settings"]["wan6_dhcpv6"] = {"duid": self.wan6_dhcpv6["duid"]}
         elif self.wan6_type == "6to4":
-            res["wan6_settings"]["wan6_6to4"] = {
-                "ipv4_address": self.wan6_6to4["ipv4_address"]
-            }
+            res["wan6_settings"]["wan6_6to4"] = {"ipv4_address": self.wan6_6to4["ipv4_address"]}
         elif self.wan6_type == "6in4":
             res["wan6_settings"]["wan6_6in4"] = copy.deepcopy(self.wan6_6in4)
 
@@ -185,7 +144,8 @@ class MockWanHandler(Handler, BaseMockHandler):
         self.wan_type = new_settings["wan_settings"]["wan_type"]
         if self.wan_type == "dhcp":
             self.wan_dhcp["hostname"] = new_settings["wan_settings"]["wan_dhcp"].get(
-                "hostname", None)
+                "hostname", None
+            )
         if self.wan_type == "static":
             self.wan_static["ip"] = new_settings["wan_settings"]["wan_static"]["ip"]
             self.wan_static["netmask"] = new_settings["wan_settings"]["wan_static"]["netmask"]
@@ -202,14 +162,17 @@ class MockWanHandler(Handler, BaseMockHandler):
             self.wan6_static["network"] = new_settings["wan6_settings"]["wan6_static"]["network"]
             self.wan6_static["gateway"] = new_settings["wan6_settings"]["wan6_static"]["gateway"]
             self.wan6_static["dns1"] = new_settings["wan6_settings"]["wan6_static"].get(
-                "dns1", None)
+                "dns1", None
+            )
             self.wan6_static["dns2"] = new_settings["wan6_settings"]["wan6_static"].get(
-                "dns2", None)
+                "dns2", None
+            )
         elif self.wan6_type == "dhcpv6":
             self.wan6_dhcpv6["duid"] = new_settings["wan6_settings"]["wan6_dhcpv6"]["duid"]
         elif self.wan6_type == "6to4":
-            self.wan6_6to4["ipv4_address"] = \
-                new_settings["wan6_settings"]["wan6_6to4"]["ipv4_address"]
+            self.wan6_6to4["ipv4_address"] = new_settings["wan6_settings"]["wan6_6to4"][
+                "ipv4_address"
+            ]
         elif self.wan6_type == "6in4":
             self.wan6_6in4 = copy.deepcopy(new_settings["wan6_settings"]["wan6_6in4"])
 
@@ -221,7 +184,8 @@ class MockWanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def connection_test_trigger(
-            self, test_kinds, notify_function, exit_notify_function, reset_notify_function):
+        self, test_kinds, notify_function, exit_notify_function, reset_notify_function
+    ):
         """ Mocks triggering of the connection test
         :param test_kinds: which kinds of tests should be run (ipv4, ipv6, dns)
         :type test_kinds: array of str
@@ -234,7 +198,7 @@ class MockWanHandler(Handler, BaseMockHandler):
         :returns: generated_test_id
         :rtype: str
         """
-        new_test_id = "%032X" % random.randrange(2**32)
+        new_test_id = "%032X" % random.randrange(2 ** 32)
         MockWanHandler.test_id_set.add(new_test_id)
         return new_test_id
 
@@ -247,9 +211,9 @@ class MockWanHandler(Handler, BaseMockHandler):
         :rtype: dict
         """
         if test_id in MockWanHandler.test_id_set:
-            return {'status': 'running', 'data': {'ipv4': True, 'ipv6': False}}
+            return {"status": "running", "data": {"ipv4": True, "ipv6": False}}
         else:
-            return {'status': 'not_found'}
+            return {"status": "not_found"}
 
     @logger_wrapper(logger)
     def get_wan_status(self):
@@ -258,7 +222,7 @@ class MockWanHandler(Handler, BaseMockHandler):
         :rtype: dict
         """
         return {
-            'up': random.choice([True, False]),
-            'last_seen_duid': random.choice(["", "00030001d858d7004555"]),
-            'proto': random.choice(["pppoe", "dhcp", "static", "none"]),
+            "up": random.choice([True, False]),
+            "last_seen_duid": random.choice(["", "00030001d858d7004555"]),
+            "proto": random.choice(["pppoe", "dhcp", "static", "none"]),
         }

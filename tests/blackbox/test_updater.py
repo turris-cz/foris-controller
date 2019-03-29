@@ -27,9 +27,19 @@ from datetime import datetime
 from foris_controller.exceptions import UciRecordNotFound
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, lock_backend,
-    clean_reboot_indicator, updater_languages, updater_userlists, device, turris_os_version,
-    start_buses, ubusd_test, mosquitto_test, UCI_CONFIG_DIR_PATH,
+    only_backends,
+    uci_configs_init,
+    infrastructure,
+    lock_backend,
+    clean_reboot_indicator,
+    updater_languages,
+    updater_userlists,
+    device,
+    turris_os_version,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
+    UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import set_approval, get_uci_module, match_subdict
 
@@ -37,15 +47,17 @@ from foris_controller_testtools.utils import set_approval, get_uci_module, match
 def wait_for_updater_run_finished(notifications, infrastructure):
     filters = [("updater", "run")]
     # filter notifications
-    notifications = [
-        e for e in notifications if e["module"] == "updater" and e["action"] == "run"
-    ]
+    notifications = [e for e in notifications if e["module"] == "updater" and e["action"] == "run"]
 
     def notification_status_count(notifications, name):
-        return len([
-            e for e in notifications
-            if e["module"] == "updater" and e["action"] == "run" and e["data"]["status"] == name
-        ])
+        return len(
+            [
+                e
+                for e in notifications
+                if e["module"] == "updater" and e["action"] == "run" and e["data"]["status"] == name
+            ]
+        )
+
     # the count of updater run has to be increased
     before_count = notification_status_count(notifications, "initialize")
 
@@ -63,19 +75,22 @@ def test_get_settings(
     updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
     def get(lang):
-        res = infrastructure.process_message({
-            "module": "updater",
-            "action": "get_settings",
-            "kind": "request",
-            "data": {"lang": lang},
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "updater",
+                "action": "get_settings",
+                "kind": "request",
+                "data": {"lang": lang},
+            }
+        )
         assert set(res.keys()) == {"action", "kind", "data", "module"}
         assert "enabled" in res["data"].keys()
         assert "languages" in res["data"].keys()
         assert {"enabled", "code"} == set(res["data"]["languages"][0].keys())
         assert "user_lists" in res["data"].keys()
-        assert {"enabled", "name", "title", "msg", "hidden"} == \
-            set(res["data"]["user_lists"][0].keys())
+        assert {"enabled", "name", "title", "msg", "hidden"} == set(
+            res["data"]["user_lists"][0].keys()
+        )
         assert "approval_settings" in res["data"].keys()
         assert "status" in res["data"]["approval_settings"].keys()
         assert "approval" in res["data"].keys()
@@ -87,33 +102,34 @@ def test_get_settings(
     get("xx")
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    updater_languages, updater_userlists,
-    uci_configs_init, infrastructure, start_buses,
-    device, turris_os_version,
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    device,
+    turris_os_version,
 ):
-
     def update_settings(new_settings, expected=None):
-        res = infrastructure.process_message({
-            "module": "updater",
-            "action": "update_settings",
-            "kind": "request",
-            "data": new_settings,
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "updater",
+                "action": "update_settings",
+                "kind": "request",
+                "data": new_settings,
+            }
+        )
         assert "result" in res["data"] and res["data"]["result"] is True
-        res = infrastructure.process_message({
-            "module": "updater",
-            "action": "get_settings",
-            "kind": "request",
-            "data": {"lang": "en"}
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "updater",
+                "action": "get_settings",
+                "kind": "request",
+                "data": {"lang": "en"},
+            }
+        )
 
         new_settings = expected if expected else new_settings
         del res["data"]["approval"]
@@ -126,86 +142,88 @@ def test_update_settings(
         del new_settings["languages"]
         assert match_subdict(new_settings, res["data"])
 
-    update_settings({
-        "enabled": True,
-        "approval_settings": {"status": "off"},
-        "user_lists": [],
-        "languages": [],
-    })
+    update_settings(
+        {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []}
+    )
 
-    update_settings({
-        "enabled": True,
-        "approval_settings": {"status": "on"},
-        "user_lists": ['api-token'],
-        "languages": ['cs'],
-    })
-
-    update_settings({
-        "enabled": True,
-        "approval_settings": {"status": "delayed", "delay": 24},
-        "user_lists": ['dvb'],
-        "languages": ['cs', 'de', "nb_NO"],
-    })
-
-    update_settings({
-        "enabled": True,
-        "approval_settings": {"status": "off"},
-        "user_lists": [],
-        "languages": [],
-    })
-
-    update_settings({
-        "enabled": False,
-    }, {
-        "enabled": False,
-        "approval_settings": {"status": "off"},
-        "user_lists": [],
-        "languages": [],
-    })
-
-
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
-@pytest.mark.only_backends(['openwrt'])
-def test_update_settings_openwrt(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure,
-    start_buses, device, turris_os_version
-):
-    filters = [("updater", "run")]
-    notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
+    update_settings(
+        {
             "enabled": True,
+            "approval_settings": {"status": "on"},
+            "user_lists": ["api-token"],
+            "languages": ["cs"],
+        }
+    )
+
+    update_settings(
+        {
+            "enabled": True,
+            "approval_settings": {"status": "delayed", "delay": 24},
+            "user_lists": ["dvb"],
+            "languages": ["cs", "de", "nb_NO"],
+        }
+    )
+
+    update_settings(
+        {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []}
+    )
+
+    update_settings(
+        {"enabled": False},
+        {
+            "enabled": False,
             "approval_settings": {"status": "off"},
             "user_lists": [],
             "languages": [],
         },
-    })
+    )
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_update_settings_openwrt(
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    device,
+    turris_os_version,
+):
+    filters = [("updater", "run")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "enabled": True,
+                "approval_settings": {"status": "off"},
+                "user_lists": [],
+                "languages": [],
+            },
+        }
+    )
     assert res["data"]["result"]
     wait_for_updater_run_finished(notifications, infrastructure)
 
 
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 @pytest.mark.parametrize("language", ["cs", "nb_NO"])
 def test_approval(
     language, updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
     def approval(data):
         set_approval(data)
-        res = infrastructure.process_message({
-            "module": "updater",
-            "action": "get_settings",
-            "kind": "request",
-            "data": {"lang": language},
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "updater",
+                "action": "get_settings",
+                "kind": "request",
+                "data": {"lang": language},
+            }
+        )
         approval = res["data"]["approval"]
         if data:
             data["present"] = True
@@ -220,67 +238,71 @@ def test_approval(
             assert approval == {"present": False}
 
     approval(None)
-    approval({
-        "hash": str(uuid.uuid4()),
-        "status": "asked",
-        "time": int(time.time()),
-        "plan": [],
-        "reboot": False,
-    })
-    approval({
-        "hash": str(uuid.uuid4()),
-        "status": "granted",
-        "time": int(time.time()),
-        "plan": [
-            {"name": "package1", "op": "install", "cur_ver": None, "new_ver": "1.0"},
-            {"name": "package2", "op": "remove", "cur_ver": "2.0", "new_ver": None},
-        ],
-        "reboot": True,
-    })
-    approval({
-        "hash": str(uuid.uuid4()),
-        "status": "denied",
-        "time": int(time.time()),
-        "plan": [
-            {"name": "package3", "op": "upgrade", "cur_ver": "1.0", "new_ver": "1.1"},
-            {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "new_ver": "2.0"},
-            {"name": "package5", "op": "remove", "cur_ver": None, "new_ver": None},
-            {"name": "package6", "op": "upgrade", "cur_ver": None, "new_ver": "1.1"},
-            {"name": "package7", "op": "downgrade", "cur_ver": None, "new_ver": "2.0"},
-        ],
-        "reboot": True,
-    })
+    approval(
+        {
+            "hash": str(uuid.uuid4()),
+            "status": "asked",
+            "time": int(time.time()),
+            "plan": [],
+            "reboot": False,
+        }
+    )
+    approval(
+        {
+            "hash": str(uuid.uuid4()),
+            "status": "granted",
+            "time": int(time.time()),
+            "plan": [
+                {"name": "package1", "op": "install", "cur_ver": None, "new_ver": "1.0"},
+                {"name": "package2", "op": "remove", "cur_ver": "2.0", "new_ver": None},
+            ],
+            "reboot": True,
+        }
+    )
+    approval(
+        {
+            "hash": str(uuid.uuid4()),
+            "status": "denied",
+            "time": int(time.time()),
+            "plan": [
+                {"name": "package3", "op": "upgrade", "cur_ver": "1.0", "new_ver": "1.1"},
+                {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "new_ver": "2.0"},
+                {"name": "package5", "op": "remove", "cur_ver": None, "new_ver": None},
+                {"name": "package6", "op": "upgrade", "cur_ver": None, "new_ver": "1.1"},
+                {"name": "package7", "op": "downgrade", "cur_ver": None, "new_ver": "2.0"},
+            ],
+            "reboot": True,
+        }
+    )
 
 
 def test_approval_resolve(
     updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "resolve_approval",
-        "kind": "request",
-        "data": {
-            "hash": str(uuid.uuid4()),
-            "solution": "grant",
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "resolve_approval",
+            "kind": "request",
+            "data": {"hash": str(uuid.uuid4()), "solution": "grant"},
         }
-    })
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "result" in res["data"].keys()
 
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "resolve_approval",
-        "kind": "request",
-        "data": {
-            "hash": str(uuid.uuid4()),
-            "solution": "deny",
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "resolve_approval",
+            "kind": "request",
+            "data": {"hash": str(uuid.uuid4()), "solution": "deny"},
         }
-    })
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "result" in res["data"].keys()
 
 
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_approval_resolve_openwrt(
     updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
 ):
@@ -289,20 +311,24 @@ def test_approval_resolve_openwrt(
     def resolve(approval_data, query_data, result):
         set_approval(approval_data)
         notifications = infrastructure.get_notifications(filters=filters)
-        res = infrastructure.process_message({
-            "module": "updater",
-            "action": "resolve_approval",
-            "kind": "request",
-            "data": query_data,
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "updater",
+                "action": "resolve_approval",
+                "kind": "request",
+                "data": query_data,
+            }
+        )
         assert res["data"]["result"] == result
         if res["data"]["result"]:
-            res = infrastructure.process_message({
-                "module": "updater",
-                "action": "get_settings",
-                "kind": "request",
-                "data": {"lang": "en"},
-            })
+            res = infrastructure.process_message(
+                {
+                    "module": "updater",
+                    "action": "get_settings",
+                    "kind": "request",
+                    "data": {"lang": "en"},
+                }
+            )
             approval = res["data"]["approval"]
             if query_data["solution"] == "deny":
                 assert approval["status"] == "denied"
@@ -325,7 +351,7 @@ def test_approval_resolve_openwrt(
             "reboot": False,
         },
         {"hash": str(uuid.uuid4()), "solution": "grant"},
-        False
+        False,
     )
     resolve(
         {
@@ -336,7 +362,7 @@ def test_approval_resolve_openwrt(
             "reboot": False,
         },
         {"hash": str(uuid.uuid4()), "solution": "deny"},
-        False
+        False,
     )
 
     # Incorrect status
@@ -350,7 +376,7 @@ def test_approval_resolve_openwrt(
             "reboot": False,
         },
         {"hash": approval_id, "solution": "grant"},
-        False
+        False,
     )
     resolve(
         {
@@ -361,7 +387,7 @@ def test_approval_resolve_openwrt(
             "reboot": False,
         },
         {"hash": approval_id, "solution": "deny"},
-        False
+        False,
     )
 
     # Passed
@@ -375,7 +401,7 @@ def test_approval_resolve_openwrt(
             "reboot": False,
         },
         {"hash": approval_id, "solution": "grant"},
-        True
+        True,
     )
     resolve(
         {
@@ -386,7 +412,7 @@ def test_approval_resolve_openwrt(
             "reboot": False,
         },
         {"hash": approval_id, "solution": "deny"},
-        True
+        True,
     )
     resolve(
         {
@@ -397,38 +423,32 @@ def test_approval_resolve_openwrt(
             "reboot": False,
         },
         {"hash": approval_id, "solution": "grant"},
-        True
+        True,
     )
 
 
 def test_run(uci_configs_init, infrastructure, start_buses):
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "run",
-        "kind": "request",
-        "data": {"set_reboot_indicator": True},
-    })
-    assert res == {
-        "module": "updater",
-        "action": "run",
-        "kind": "reply",
-        "data": {"result": True},
-    }
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "run",
-        "kind": "request",
-        "data": {"set_reboot_indicator": False},
-    })
-    assert res == {
-        "module": "updater",
-        "action": "run",
-        "kind": "reply",
-        "data": {"result": True},
-    }
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "run",
+            "kind": "request",
+            "data": {"set_reboot_indicator": True},
+        }
+    )
+    assert res == {"module": "updater", "action": "run", "kind": "reply", "data": {"result": True}}
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "run",
+            "kind": "request",
+            "data": {"set_reboot_indicator": False},
+        }
+    )
+    assert res == {"module": "updater", "action": "run", "kind": "reply", "data": {"result": True}}
 
 
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_run_notifications(uci_configs_init, infrastructure, start_buses):
     filters = [("updater", "run")]
     try:
@@ -437,72 +457,72 @@ def test_run_notifications(uci_configs_init, infrastructure, start_buses):
         pass
 
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "run",
-        "kind": "request",
-        "data": {"set_reboot_indicator": False},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "run",
+            "kind": "request",
+            "data": {"set_reboot_indicator": False},
+        }
+    )
     assert res["data"]["result"]
     wait_for_updater_run_finished(notifications, infrastructure)
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "run",
-        "kind": "request",
-        "data": {"set_reboot_indicator": True},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "run",
+            "kind": "request",
+            "data": {"set_reboot_indicator": True},
+        }
+    )
     assert res["data"]["result"]
     wait_for_updater_run_finished(notifications, infrastructure)
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_get_enabled(
-    updater_languages, updater_userlists,
-    uci_configs_init, infrastructure, start_buses,
-    device, turris_os_version,
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    device,
+    turris_os_version,
 ):
 
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "enabled": True,
-            "approval_settings": {"status": "off"},
-            "user_lists": [],
-            "languages": [],
-        },
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "enabled": True,
+                "approval_settings": {"status": "off"},
+                "user_lists": [],
+                "languages": [],
+            },
+        }
+    )
     assert res["data"]["result"]
 
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "get_enabled",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "updater", "action": "get_enabled", "kind": "request"}
+    )
     assert res["data"]["enabled"] is True
 
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "enabled": False,
-        },
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {"enabled": False},
+        }
+    )
     assert res["data"]["result"]
 
-    res = infrastructure.process_message({
-        "module": "updater",
-        "action": "get_enabled",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "updater", "action": "get_enabled", "kind": "request"}
+    )
     assert res["data"]["enabled"] is False

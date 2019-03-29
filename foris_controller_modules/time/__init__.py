@@ -51,8 +51,12 @@ class TimeModule(BaseModule):
         else:
             time = None
         res = self.handler.update_settings(
-            data["region"], data["country"], data["city"], data["timezone"],
-            data["time_settings"]["how_to_set_time"], time
+            data["region"],
+            data["country"],
+            data["city"],
+            data["timezone"],
+            data["time_settings"]["how_to_set_time"],
+            time,
         )
         if res:
             self.notify("update_settings", data)
@@ -84,10 +88,6 @@ class TimeModule(BaseModule):
         return {"id": async_id}
 
 
-@wrap_required_functions([
-    'get_settings',
-    'update_settings',
-    'ntpdate_trigger',
-])
+@wrap_required_functions(["get_settings", "update_settings", "ntpdate_trigger"])
 class Handler(object):
     pass

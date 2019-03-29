@@ -21,36 +21,43 @@ import pytest
 import os
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, lock_backend,
-    init_script_result, network_restart_command, device, turris_os_version,
-    notify_api, UCI_CONFIG_DIR_PATH,
-    start_buses, ubusd_test, mosquitto_test,
+    only_backends,
+    uci_configs_init,
+    infrastructure,
+    lock_backend,
+    init_script_result,
+    network_restart_command,
+    device,
+    turris_os_version,
+    notify_api,
+    UCI_CONFIG_DIR_PATH,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
 )
 
 from foris_controller_testtools.utils import (
-    sh_was_called, get_uci_module, FileFaker, network_restart_was_called, TURRISHW_ROOT,
-    prepare_turrishw_root, prepare_turrishw
+    sh_was_called,
+    get_uci_module,
+    FileFaker,
+    network_restart_was_called,
+    TURRISHW_ROOT,
+    prepare_turrishw_root,
+    prepare_turrishw,
 )
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("omnia", "4.0"),
-        ("mox", "4.0"),
-    ],
-    indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
 def test_get_settings(uci_configs_init, infrastructure, start_buses, device, turris_os_version):
 
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "device" in res["data"].keys()
     assert "networks" in res["data"].keys()
@@ -59,28 +66,30 @@ def test_get_settings(uci_configs_init, infrastructure, start_buses, device, tur
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("omnia", "4.0"),
-        ("mox", "4.0"),
-    ],
-    indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
 def test_update_settings(
-    uci_configs_init, infrastructure, start_buses, network_restart_command, device, turris_os_version
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
     filters = [("networks", "update_settings")]
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
 
     # filter non-configurable ports
     non_configurable = [e["id"] for e in ports if not e["configurable"]]
@@ -98,24 +107,22 @@ def test_update_settings(
             none_ports.append(port["id"])
 
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": {
-                "ssh_on_wan": True,
-                "http_on_wan": False,
-                "https_on_wan": True,
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": {"ssh_on_wan": True, "http_on_wan": False, "https_on_wan": True},
+                "networks": {
+                    "wan": [wan_port],
+                    "lan": lan_ports,
+                    "guest": guest_ports,
+                    "none": none_ports,
+                },
             },
-            "networks": {
-                "wan": [wan_port],
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
         }
-    })
+    )
     assert res["data"] == {"result": True}
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
@@ -123,57 +130,55 @@ def test_update_settings(
         "action": "update_settings",
         "kind": "notification",
         "data": {
-            "firewall": {
-                "ssh_on_wan": True,
-                "http_on_wan": False,
-                "https_on_wan": True,
-            },
+            "firewall": {"ssh_on_wan": True, "http_on_wan": False, "https_on_wan": True},
             "networks": {
                 "wan": [wan_port],
                 "lan": lan_ports,
                 "guest": guest_ports,
                 "none": none_ports,
-            }
-        }
+            },
+        },
     }
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     assert res["data"]["networks"]["wan"][0]["id"] == wan_port
     assert {e["id"] for e in res["data"]["networks"]["lan"]} == set(lan_ports)
     assert {e["id"] for e in res["data"]["networks"]["guest"]} == set(guest_ports)
     assert {e["id"] for e in res["data"]["networks"]["none"]} == set(none_ports + non_configurable)
     assert res["data"]["firewall"] == {
-        "ssh_on_wan": True, "http_on_wan": False, "https_on_wan": True
+        "ssh_on_wan": True,
+        "http_on_wan": False,
+        "https_on_wan": True,
     }
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("omnia", "4.0"),
-        ("mox", "4.0"),
-    ],
-    indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
 def test_update_settings_empty_wan(
-    uci_configs_init, infrastructure, start_buses, network_restart_command, device, turris_os_version
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
     filters = [("networks", "update_settings")]
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
 
     # filter non-configurable ports
     non_configurable = [e["id"] for e in ports if not e["configurable"]]
@@ -190,24 +195,17 @@ def test_update_settings_empty_wan(
             none_ports.append(port["id"])
 
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": {
-                "ssh_on_wan": False,
-                "http_on_wan": True,
-                "https_on_wan": False,
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": {"ssh_on_wan": False, "http_on_wan": True, "https_on_wan": False},
+                "networks": {"wan": [], "lan": lan_ports, "guest": guest_ports, "none": none_ports},
             },
-            "networks": {
-                "wan": [],
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
         }
-    })
+    )
     assert res["data"] == {"result": True}
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
@@ -215,25 +213,14 @@ def test_update_settings_empty_wan(
         "action": "update_settings",
         "kind": "notification",
         "data": {
-            "firewall": {
-                "ssh_on_wan": False,
-                "http_on_wan": True,
-                "https_on_wan": False,
-            },
-            "networks": {
-                "wan": [],
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
-        }
+            "firewall": {"ssh_on_wan": False, "http_on_wan": True, "https_on_wan": False},
+            "networks": {"wan": [], "lan": lan_ports, "guest": guest_ports, "none": none_ports},
+        },
     }
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     assert res["data"]["networks"]["wan"] == []
     assert {e["id"] for e in res["data"]["networks"]["lan"]} == set(lan_ports)
     assert {e["id"] for e in res["data"]["networks"]["guest"]} == set(guest_ports)
@@ -245,32 +232,33 @@ def test_update_settings_empty_wan(
     }
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("omnia", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0")], indirect=True)
 def test_update_settings_more_wans(
-    uci_configs_init, infrastructure, start_buses, network_restart_command, device, turris_os_version
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     orig_wan = res["data"]["networks"]["wan"]
     orig_lan = res["data"]["networks"]["lan"]
     orig_guest = res["data"]["networks"]["guest"]
     orig_none = res["data"]["networks"]["none"]
     orig_firewall = res["data"]["firewall"]
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
 
     # filter non-configurable ports
     ports = [e for e in ports if e["configurable"]]
@@ -288,27 +276,27 @@ def test_update_settings_more_wans(
         elif i % 3 == 2:
             none_ports.append(port["id"])
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": orig_firewall,
-            "networks": {
-                "wan": wan_ports,
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": orig_firewall,
+                "networks": {
+                    "wan": wan_ports,
+                    "lan": lan_ports,
+                    "guest": guest_ports,
+                    "none": none_ports,
+                },
+            },
         }
-    })
+    )
     assert "errors" in res
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     assert res["data"]["networks"]["wan"] == orig_wan
     assert res["data"]["networks"]["lan"] == orig_lan
     assert res["data"]["networks"]["guest"] == orig_guest
@@ -316,32 +304,33 @@ def test_update_settings_more_wans(
     assert res["data"]["firewall"] == orig_firewall
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_missing_assign(
-    uci_configs_init, infrastructure, start_buses, network_restart_command, device, turris_os_version
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     orig_wan = res["data"]["networks"]["wan"]
     orig_lan = res["data"]["networks"]["lan"]
     orig_guest = res["data"]["networks"]["guest"]
     orig_none = res["data"]["networks"]["none"]
     orig_firewall = res["data"]["firewall"]
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
 
     # filter non-configurable ports
     ports = [e for e in ports if e["configurable"]]
@@ -360,27 +349,27 @@ def test_update_settings_missing_assign(
         elif i % 3 == 2:
             none_ports.append(port["id"])
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": orig_firewall,
-            "networks": {
-                "wan": wan_ports,
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": orig_firewall,
+                "networks": {
+                    "wan": wan_ports,
+                    "lan": lan_ports,
+                    "guest": guest_ports,
+                    "none": none_ports,
+                },
+            },
         }
-    })
+    )
     assert res["data"] == {"result": False}
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     assert res["data"]["networks"]["wan"] == orig_wan
     assert res["data"]["networks"]["lan"] == orig_lan
     assert res["data"]["networks"]["guest"] == orig_guest
@@ -388,32 +377,33 @@ def test_update_settings_missing_assign(
     assert res["data"]["firewall"] == orig_firewall
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_unknown_assign(
-    uci_configs_init, infrastructure, start_buses, network_restart_command, device, turris_os_version
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     orig_wan = res["data"]["networks"]["wan"]
     orig_lan = res["data"]["networks"]["lan"]
     orig_guest = res["data"]["networks"]["guest"]
     orig_none = res["data"]["networks"]["none"]
     orig_firewall = res["data"]["firewall"]
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
 
     # filter non-configurable ports
     ports = [e for e in ports if e["configurable"]]
@@ -433,27 +423,27 @@ def test_update_settings_unknown_assign(
 
     lan_ports.append("eth-0-9")
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": orig_firewall,
-            "networks": {
-                "wan": wan_ports,
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": orig_firewall,
+                "networks": {
+                    "wan": wan_ports,
+                    "lan": lan_ports,
+                    "guest": guest_ports,
+                    "none": none_ports,
+                },
+            },
         }
-    })
+    )
     assert res["data"] == {"result": False}
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     assert res["data"]["networks"]["wan"] == orig_wan
     assert res["data"]["networks"]["lan"] == orig_lan
     assert res["data"]["networks"]["guest"] == orig_guest
@@ -461,32 +451,33 @@ def test_update_settings_unknown_assign(
     assert res["data"]["firewall"] == orig_firewall
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("omnia", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0")], indirect=True)
 def test_update_settings_set_non_configurable(
-    uci_configs_init, infrastructure, start_buses, network_restart_command, device, turris_os_version
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     orig_wan = res["data"]["networks"]["wan"]
     orig_lan = res["data"]["networks"]["lan"]
     orig_guest = res["data"]["networks"]["guest"]
     orig_none = res["data"]["networks"]["none"]
     orig_firewall = res["data"]["firewall"]
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
 
     assert len(list(ports)) > 0
 
@@ -501,27 +492,27 @@ def test_update_settings_set_non_configurable(
         elif i % 3 == 2:
             none_ports.append(port["id"])
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": orig_firewall,
-            "networks": {
-                "wan": wan_ports,
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": orig_firewall,
+                "networks": {
+                    "wan": wan_ports,
+                    "lan": lan_ports,
+                    "guest": guest_ports,
+                    "none": none_ports,
+                },
+            },
         }
-    })
+    )
     assert res["data"] == {"result": False}
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     assert res["data"]["networks"]["wan"] == orig_wan
     assert res["data"]["networks"]["lan"] == orig_lan
     assert res["data"]["networks"]["guest"] == orig_guest
@@ -530,31 +521,34 @@ def test_update_settings_set_non_configurable(
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("omnia", "4.0"),
-        ("mox", "4.0"),
-    ],
-    indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, start_buses,
-    network_restart_command, device, turris_os_version
+    uci_configs_init,
+    lock_backend,
+    init_script_result,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
     uci = get_uci_module(lock_backend)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
 
     # filter non-configurable ports
     ports = [e for e in ports if e["configurable"]]
@@ -570,24 +564,22 @@ def test_update_settings_openwrt(
         elif i % 3 == 2:
             none_ports.append(port["id"])
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": {
-                "ssh_on_wan": True,
-                "http_on_wan": True,
-                "https_on_wan": False,
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": {"ssh_on_wan": True, "http_on_wan": True, "https_on_wan": False},
+                "networks": {
+                    "wan": [wan_port],
+                    "lan": lan_ports,
+                    "guest": guest_ports,
+                    "none": none_ports,
+                },
             },
-            "networks": {
-                "wan": [wan_port],
-                "lan": lan_ports,
-                "guest": guest_ports,
-                "none": none_ports,
-            }
         }
-    })
+    )
     assert res["data"] == {"result": True}
 
     assert network_restart_was_called([])
@@ -606,28 +598,40 @@ def test_update_settings_openwrt(
     assert guest_ports == uci.get_option_named(data, "network", "guest_turris", "ifname", [])
 
     # test firewall rules
-    assert uci.parse_bool(
-        uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "enabled")) is True
-    assert uci.get_option_named(
-        data, "firewall", "wan_ssh_turris_rule", "name") == "wan_ssh_turris_rule"
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "enabled"))
+        is True
+    )
+    assert (
+        uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "name")
+        == "wan_ssh_turris_rule"
+    )
     assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "target") == "ACCEPT"
     assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "proto") == "tcp"
     assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "src") == "wan"
     assert uci.get_option_named(data, "firewall", "wan_ssh_turris_rule", "dest_port") == "22"
 
-    assert uci.parse_bool(
-        uci.get_option_named(data, "firewall", "wan_http_turris_rule", "enabled")) is True
-    assert uci.get_option_named(
-        data, "firewall", "wan_http_turris_rule", "name") == "wan_http_turris_rule"
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "firewall", "wan_http_turris_rule", "enabled"))
+        is True
+    )
+    assert (
+        uci.get_option_named(data, "firewall", "wan_http_turris_rule", "name")
+        == "wan_http_turris_rule"
+    )
     assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "target") == "ACCEPT"
     assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "proto") == "tcp"
     assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "src") == "wan"
     assert uci.get_option_named(data, "firewall", "wan_http_turris_rule", "dest_port") == "80"
 
-    assert uci.parse_bool(
-        uci.get_option_named(data, "firewall", "wan_https_turris_rule", "enabled")) is False
-    assert uci.get_option_named(
-        data, "firewall", "wan_https_turris_rule", "name") == "wan_https_turris_rule"
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "firewall", "wan_https_turris_rule", "enabled"))
+        is False
+    )
+    assert (
+        uci.get_option_named(data, "firewall", "wan_https_turris_rule", "name")
+        == "wan_https_turris_rule"
+    )
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "target") == "ACCEPT"
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "proto") == "tcp"
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "src") == "wan"
@@ -636,86 +640,74 @@ def test_update_settings_openwrt(
 
 @pytest.mark.parametrize(
     "device,turris_os_version",
-    [
-        ("omnia", "3.10.7"),
-        ("turris", "3.10.7"),
-        ("turris", "4.0"),
-    ],
-    indirect=True
+    [("omnia", "3.10.7"), ("turris", "3.10.7"), ("turris", "4.0")],
+    indirect=True,
 )
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_get_settings_openwrt_unsupported(
     uci_configs_init, lock_backend, infrastructure, start_buses, device, turris_os_version
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
     # get ports
-    ports = res["data"]["networks"]["wan"] + res["data"]["networks"]["lan"] \
-        + res["data"]["networks"]["guest"] + res["data"]["networks"]["none"]
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
     assert len(ports) == 0
 
 
 @pytest.mark.parametrize(
     "device,turris_os_version",
-    [
-        ("omnia", "3.10.7"),
-        ("turris", "3.10.7"),
-        ("turris", "4.0"),
-    ],
-    indirect=True
+    [("omnia", "3.10.7"), ("turris", "3.10.7"), ("turris", "4.0")],
+    indirect=True,
 )
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt_unsupported(
-    uci_configs_init, lock_backend, infrastructure, start_buses, device, turris_os_version,
+    uci_configs_init, lock_backend, infrastructure, start_buses, device, turris_os_version
 ):
-    if infrastructure.backend_name in ['openwrt']:
+    if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "firewall": {
-                "ssh_on_wan": False,
-                "http_on_wan": True,
-                "https_on_wan": True,
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": {"ssh_on_wan": False, "http_on_wan": True, "https_on_wan": True},
+                "networks": {"wan": [], "lan": [], "guest": [], "none": []},
             },
-            "networks": {
-                "wan": [],
-                "lan": [],
-                "guest": [],
-                "none": [],
-            }
         }
-    })
+    )
     assert res["data"] == {"result": False}
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
 def test_wifi_devices(
-    uci_configs_init, lock_backend, init_script_result, infrastructure, start_buses,
-    network_restart_command, device, turris_os_version
+    uci_configs_init,
+    lock_backend,
+    init_script_result,
+    infrastructure,
+    start_buses,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
     prepare_turrishw("mox+ALL")
     uci = get_uci_module(lock_backend)
     os.environ["TURRISHW_ROOT"] = TURRISHW_ROOT
     import turrishw
+
     interfaces = turrishw.get_ifaces()
-    macaddr = [e['macaddr'] for e in interfaces.values() if e['type'] == 'wifi']
+    macaddr = [e["macaddr"] for e in interfaces.values() if e["type"] == "wifi"]
     assert len(macaddr) == 1
     macaddr = macaddr[0]
 
@@ -753,42 +745,36 @@ config wifi-iface 'guest_iface_0'
 	option ifname 'guest_turris_0'
 	option isolate '1'
 	option disabled '0'""",
-            "wireless"
+            "wireless",
         )
-        backend.set_option('wireless', 'radio0', 'macaddr', macaddr)
+        backend.set_option("wireless", "radio0", "macaddr", macaddr)
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
-    assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 1
-    assert [e["ssid"] for e in res['data']['networks']['none'] if e['type'] == 'wifi'] == [""]
-    assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 0
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
+    assert len([e["id"] for e in res["data"]["networks"]["none"] if e["type"] == "wifi"]) == 1
+    assert [e["ssid"] for e in res["data"]["networks"]["none"] if e["type"] == "wifi"] == [""]
+    assert len([e["id"] for e in res["data"]["networks"]["lan"] if e["type"] == "wifi"]) == 0
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("wireless", "radio0", "disabled", uci.store_bool(False))
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
-    assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 0
-    assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 1
-    assert [e["ssid"] for e in res['data']['networks']['lan'] if e['type'] == 'wifi'] == ["Turris"]
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
+    assert len([e["id"] for e in res["data"]["networks"]["none"] if e["type"] == "wifi"]) == 0
+    assert len([e["id"] for e in res["data"]["networks"]["lan"] if e["type"] == "wifi"]) == 1
+    assert [e["ssid"] for e in res["data"]["networks"]["lan"] if e["type"] == "wifi"] == ["Turris"]
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("wireless", "default_radio0", "disabled", uci.store_bool(True))
 
-    res = infrastructure.process_message({
-        "module": "networks",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
 
-    assert len([e['id'] for e in res['data']['networks']['none'] if e['type'] == 'wifi']) == 1
-    assert len([e['id'] for e in res['data']['networks']['lan'] if e['type'] == 'wifi']) == 0
+    assert len([e["id"] for e in res["data"]["networks"]["none"] if e["type"] == "wifi"]) == 1
+    assert len([e["id"] for e in res["data"]["networks"]["lan"] if e["type"] == "wifi"]) == 0
 
 
 def test_network_change_notification(uci_configs_init, infrastructure, start_buses, notify_api):
@@ -797,14 +783,17 @@ def test_network_change_notification(uci_configs_init, infrastructure, start_bus
     def check_notification(dev, network, action):
         notifications = infrastructure.get_notifications(filters=filters)
         notify_api(
-            "networks", "network_change",
+            "networks",
+            "network_change",
             {"device": dev, "network": network, "action": action},
-            True
+            True,
         )
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1] == {
-            "module": "networks", "action": "network_change", "kind": "notification",
-            "data": {"device": dev, "network": network, "action": action}
+            "module": "networks",
+            "action": "network_change",
+            "kind": "notification",
+            "data": {"device": dev, "network": network, "action": action},
         }
 
     check_notification("eth0", "lan", "ifup")

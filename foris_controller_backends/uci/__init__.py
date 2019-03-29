@@ -37,7 +37,7 @@ def parse_bool(value):
         return True
     elif value in ("0", "off", "false", "no", "disabled"):
         return False
-    raise UciTypeException(value, ['bool'])
+    raise UciTypeException(value, ["bool"])
 
 
 def store_bool(value):
@@ -58,10 +58,7 @@ def get_section(data, config, section):
     named section
     """
     res = get_config(data, config)
-    res = [
-        e for e in res
-        if e["name"] == section
-    ]
+    res = [e for e in res if e["name"] == section]
     if not res:
         raise UciRecordNotFound(config, section=section)
 
@@ -85,10 +82,7 @@ def get_sections_by_type(data, config, section_type):
     get sections of specified type (anonymous as well as named)
     """
     res = get_config(data, config)
-    res = [
-        e for e in data[config]
-        if e["type"] == section_type
-    ]
+    res = [e for e in data[config] if e["type"] == section_type]
     return res
 
 
@@ -108,7 +102,8 @@ def get_option_anonymous(data, config, section_type, idx, option, default=None):
     except KeyError:
         if default is None:
             raise UciRecordNotFound(
-                config, section_type=section_type, section_idx=idx, option=option)
+                config, section_type=section_type, section_idx=idx, option=option
+            )
         else:
             res = default
     return res
@@ -158,15 +153,19 @@ class UciBackend(object):
         :return: command output
         :rtype: str
         """
-        fail_on_error = kwargs['fail_on_error'] if 'fail_on_error' in kwargs else True
+        fail_on_error = kwargs["fail_on_error"] if "fail_on_error" in kwargs else True
         changes_path_option = "-p" if args[0] == "commit" else "-P"
         export_anonymous = ["-n"] if args[0] == "export" else []
-        cmdline_args = ["uci"] + export_anonymous + [
-            "-c", self.config_dir, changes_path_option, UciBackend.CHANGES_DIR
-        ] + list(args)
+        cmdline_args = (
+            ["uci"]
+            + export_anonymous
+            + ["-c", self.config_dir, changes_path_option, UciBackend.CHANGES_DIR]
+            + list(args)
+        )
         logger.debug("uci cmd '%s'" % str(args))
         retval, stdout, stderr = handle_command(
-            *cmdline_args, input_data=kwargs.pop("input_data", None))
+            *cmdline_args, input_data=kwargs.pop("input_data", None)
+        )
         logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)
         logger.debug("stderr: %s" % stderr)
@@ -184,8 +183,7 @@ class UciBackend(object):
             retval = self._run_uci_command("add", config, section_type, fail_on_error=False)
             retval = retval.strip()
         else:
-            self._run_uci_command(
-                "set", "%s.%s=%s" % (config, section_name, section_type))
+            self._run_uci_command("set", "%s.%s=%s" % (config, section_name, section_type))
 
         self.affected_configs.add(config)
         return retval
@@ -212,7 +210,8 @@ class UciBackend(object):
         """
         for value in values:
             self._run_uci_command(
-                "add_list", "%s.%s.%s=%s" % (config, section_name, list_name, value))
+                "add_list", "%s.%s.%s=%s" % (config, section_name, list_name, value)
+            )
 
         self.affected_configs.add(config)
 
@@ -223,7 +222,8 @@ class UciBackend(object):
         if values:
             for value in values:
                 self._run_uci_command(
-                    "del_list", "%s.%s.%s=%s" % (config, section_name, list_name, value))
+                    "del_list", "%s.%s.%s=%s" % (config, section_name, list_name, value)
+                )
         else:
             self._run_uci_command("delete", "%s.%s.%s" % (config, section_name, list_name))
         self.affected_configs.add(config)
@@ -252,11 +252,9 @@ class UciBackend(object):
         """ Converts value to originall value which is was put to uci
             "'Tom'\''sNet'" -> "Tom'sNet"
         """
-        return "".join([
-            "'" if e == "\\'" else e.strip("'")
-            for e in re.split(r"('[^']*'|\\')", value)
-            if e
-        ])
+        return "".join(
+            ["'" if e == "\\'" else e.strip("'") for e in re.split(r"('[^']*'|\\')", value) if e]
+        )
 
     def _parse_section(self, lines):
         result = collections.OrderedDict()
@@ -290,9 +288,12 @@ class UciBackend(object):
                     matched = re.match(r"^config ([^\s]+) '([^\s]+)'$", line)
                     section_type, section_name = matched.group(1, 2)
                     section = {
-                        "type": section_type, "name": section_name,
+                        "type": section_type,
+                        "name": section_name,
                         "data": self._parse_section(lines),
-                        "anonymous": True if re.search(r"^cfg[0-9a-f]{6}$", section_name) else False
+                        "anonymous": True
+                        if re.search(r"^cfg[0-9a-f]{6}$", section_name)
+                        else False,
                     }
                     result.append(section)
                 elif lines[0].startswith("package"):
@@ -318,8 +319,9 @@ class UciBackend(object):
                 package_line = lines.pop(0)
                 while not package_line.startswith("package"):
                     package_line = lines.pop(0)
-                result[re.match(r"^package ([^\s]+)$", package_line).group(1)] = \
-                    self._parse_package(lines)
+                result[
+                    re.match(r"^package ([^\s]+)$", package_line).group(1)
+                ] = self._parse_package(lines)
 
         except IndexError:
             pass
@@ -332,8 +334,9 @@ class UciBackend(object):
         return self._parse_packages(lines)
 
     def export_data(self, config=None):
-        output = self._run_uci_command("export", config) if config \
-            else self._run_uci_command("export")
+        output = (
+            self._run_uci_command("export", config) if config else self._run_uci_command("export")
+        )
         return output
 
     def import_data(self, data, config):

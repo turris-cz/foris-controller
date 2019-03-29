@@ -25,10 +25,10 @@ from foris_controller.utils import RWLock
 
 
 class Locker(object):
-    PLACE_BEGIN = 'B'
-    PLACE_END = 'E'
-    KIND_READ = 'R'
-    KIND_WRITE = 'W'
+    PLACE_BEGIN = "B"
+    PLACE_END = "E"
+    KIND_READ = "R"
+    KIND_WRITE = "W"
 
     def __init__(self, locking_module, entity_object, output):
         self.lock = RWLock(locking_module)
@@ -45,10 +45,12 @@ class Locker(object):
 def locker_instance(request):
     if request.param == "threading":
         import threading
+
         output = []
         locker = Locker(threading, threading.Thread, output)
     elif request.param == "multiprocessing":
         import multiprocessing
+
         manager = multiprocessing.Manager()
         output = manager.list()
         locker = Locker(multiprocessing, multiprocessing.Process, output)
@@ -97,7 +99,7 @@ def test_multiple_reads(locker_instance, thread_count):
     entity_class = locker_instance.entity
     entities = []
     for _ in range(thread_count):
-        e = entity_class(target=activity, args=(locker_instance, ))
+        e = entity_class(target=activity, args=(locker_instance,))
         entities.append(e)
         e.start()
 
@@ -130,7 +132,7 @@ def test_multiple_writes(locker_instance, thread_count):
     entity_class = locker_instance.entity
     entities = []
     for _ in range(thread_count):
-        e = entity_class(target=activity, args=(locker_instance, ))
+        e = entity_class(target=activity, args=(locker_instance,))
         entities.append(e)
         e.start()
 
@@ -143,10 +145,8 @@ def test_multiple_writes(locker_instance, thread_count):
     ] * thread_count == list(locker_instance.output)
 
 
-@pytest.mark.parametrize(
-    "read_thread_count,write_thread_count", [(5, 15), (10, 10), (15, 5)])
+@pytest.mark.parametrize("read_thread_count,write_thread_count", [(5, 15), (10, 10), (15, 5)])
 def test_multiple_reads_and_writes(locker_instance, read_thread_count, write_thread_count):
-
     def activity_write(locker_instance):
         with locker_instance.lock.writelock:
             time.sleep(random.uniform(0.1, 0.01))
@@ -166,12 +166,12 @@ def test_multiple_reads_and_writes(locker_instance, read_thread_count, write_thr
     entity_class = locker_instance.entity
     entities = []
     for _ in range(read_thread_count):
-        e = entity_class(target=activity_read, args=(locker_instance, ))
+        e = entity_class(target=activity_read, args=(locker_instance,))
         entities.append(e)
         e.start()
 
     for _ in range(write_thread_count):
-        e = entity_class(target=activity_write, args=(locker_instance, ))
+        e = entity_class(target=activity_write, args=(locker_instance,))
         entities.append(e)
         e.start()
 
@@ -189,7 +189,10 @@ def test_multiple_reads_and_writes(locker_instance, read_thread_count, write_thr
             assert False
 
         if kind == locker_instance.KIND_WRITE and place == locker_instance.PLACE_END:
-            assert (prev_kind, prev_place) == (locker_instance.KIND_WRITE, locker_instance.PLACE_BEGIN)
+            assert (prev_kind, prev_place) == (
+                locker_instance.KIND_WRITE,
+                locker_instance.PLACE_BEGIN,
+            )
 
         assert b_count >= e_count
         prev_kind, prev_place = kind, place

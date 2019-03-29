@@ -50,10 +50,6 @@ class AboutModule(BaseModule):
         return self.handler.get_registration_number()
 
 
-@wrap_required_functions([
-    'get_device_info',
-    'get_serial',
-    'get_registration_number',
-])
+@wrap_required_functions(["get_device_info", "get_serial", "get_registration_number"])
 class Handler(object):
     pass

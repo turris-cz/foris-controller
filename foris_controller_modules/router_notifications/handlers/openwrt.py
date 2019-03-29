@@ -25,7 +25,8 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.router_notifications import (
-    RouterNotificationsCmds, RouterNotificationsUci
+    RouterNotificationsCmds,
+    RouterNotificationsUci,
 )
 
 from .. import Handler
@@ -46,7 +47,8 @@ class OpenwrtRouterNotificationsHandler(Handler, BaseOpenwrtHandler):
                 "displayed": notification["displayed"],
                 "severity": notification["severity"],
                 "created_at": datetime.fromtimestamp(
-                    int(notification['id'].split("-")[0])).isoformat()
+                    int(notification["id"].split("-")[0])
+                ).isoformat(),
             }
             msg = notification["messages"].get(lang, None)
             if msg is not None:

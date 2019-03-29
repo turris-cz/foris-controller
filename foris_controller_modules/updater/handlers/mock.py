@@ -48,46 +48,35 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 " Fernzugriff-API (z. B. für Anwendung in Spectator oder Android"
                 " Applikationen) erlaubt.",
             },
-            "title": {
-                "en": "Access tokens",
-                "cs": "Přístupové tokeny",
-                "de": "Zugangsverwaltung",
-            },
+            "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
             "enabled": False,
             "hidden": False,
         },
         {
             "name": "automation",
             "msg": {
-                "cs": 'Software pro ovládání domácí automatizace, včetně Turris Gadgets.',
-                "de": 'Steuerungssoftware für die Hausautomation, einschließlich Turris '
-                'Gadgets.',
-                "en": 'Control software for home automation, including Turris Gadgets.',
-
+                "cs": "Software pro ovládání domácí automatizace, včetně Turris Gadgets.",
+                "de": "Steuerungssoftware für die Hausautomation, einschließlich Turris "
+                "Gadgets.",
+                "en": "Control software for home automation, including Turris Gadgets.",
             },
-            "title": {
-                "cs": 'Domácí automatizace',
-                "de": 'Hausautomation',
-                "en": 'Home automation',
-            },
+            "title": {"cs": "Domácí automatizace", "de": "Hausautomation", "en": "Home automation"},
             "enabled": False,
             "hidden": False,
         },
         {
             "name": "dev-detect",
             "msg": {
-                'cs': 'Software pro detekci nově připojených zařízení na lokální síti'
-                ' (EXPERIMENTÁLNÍ).',
-                'de': 'Software für die Erkennung neuer Geräte im lokalen Netzwerk'
-                ' (EXPERIMENTELL).',
-                'en': 'Software for detecting new devices on local network (EXPERIMENTAL).',
-
+                "cs": "Software pro detekci nově připojených zařízení na lokální síti"
+                " (EXPERIMENTÁLNÍ).",
+                "de": "Software für die Erkennung neuer Geräte im lokalen Netzwerk"
+                " (EXPERIMENTELL).",
+                "en": "Software for detecting new devices on local network (EXPERIMENTAL).",
             },
             "title": {
-                'cs': 'Detekce připojených zařízení',
-                'de': 'Geräterkennung',
-                'en': 'Device detection',
-
+                "cs": "Detekce připojených zařízení",
+                "de": "Geräterkennung",
+                "en": "Device detection",
             },
             "enabled": False,
             "hidden": False,
@@ -95,51 +84,33 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         {
             "name": "dvb",
             "msg": {
-                'cs': 'Software na sdílení televizního vysílání přijímaného Turrisem.'
-                ' Neobsahuje ovladače pro zařízení.',
-                'de': 'Software für die Weiterleitung von Fernsehsignal, welcher mittels'
-                ' DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.',
-                'en': 'Software for sharing television received by a DVB tuner on Turris.' 
-                ' Does not include device drivers.'
+                "cs": "Software na sdílení televizního vysílání přijímaného Turrisem."
+                " Neobsahuje ovladače pro zařízení.",
+                "de": "Software für die Weiterleitung von Fernsehsignal, welcher mittels"
+                " DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.",
+                "en": "Software for sharing television received by a DVB tuner on Turris."
+                " Does not include device drivers.",
             },
-            "title": {
-                'cs': 'Televizní tuner',
-                'de': 'DVB-Tuner',
-                'en': 'DVB tuner',
-
-            },
+            "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
             "enabled": False,
             "hidden": False,
         },
         {
             "name": "i_agree_honeypot",
             "msg": {
-                "cs": 'Past na roboty zkoušející hesla na SSH.',
-                "de": 'Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten'
-                ' versuchen.',
-                "en": 'Trap for password-guessing robots on SSH.',
-
+                "cs": "Past na roboty zkoušející hesla na SSH.",
+                "de": "Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten"
+                " versuchen.",
+                "en": "Trap for password-guessing robots on SSH.",
             },
-            "title": {
-                "cs": 'SSH Honeypot',
-                "de": 'SSH-Honigtopf',
-                "en": 'SSH Honeypot',
-            },
+            "title": {"cs": "SSH Honeypot", "de": "SSH-Honigtopf", "en": "SSH Honeypot"},
             "enabled": False,
             "hidden": False,
         },
         {
             "name": "i_agree_datacollect",
-            "msg": {
-                "cs": "",
-                "de": "",
-                "en": "",
-            },
-            "title": {
-                "cs": "",
-                "de": "",
-                "en": "",
-            },
+            "msg": {"cs": "", "de": "", "en": ""},
+            "title": {"cs": "", "de": "", "en": ""},
             "enabled": False,
             "hidden": True,
         },
@@ -169,10 +140,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :returns: current updater settings
         :rtype: dict
         """
-        result = {
-            "approval_settings": {"status": self.approvals_status},
-            "enabled": self.enabled,
-        }
+        result = {"approval_settings": {"status": self.approvals_status}, "enabled": self.enabled}
         if self.approvals_delay:
             result["approval_settings"]["delay"] = self.approvals_delay
         return result
@@ -212,22 +180,24 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :returns: current approval or {"present": False}
         :rtype: dict
         """
-        return random.choice([
-            {"present": False},
-            {
-                "present": True,
-                "hash": str(uuid.uuid4()),
-                "status": random.choice(["asked", "granted", "denied"]),
-                "time": datetime.now().isoformat(),
-                "plan": [
-                    {"name": "package1", "op": "install", "new_ver": "1.0"},
-                    {"name": "package2", "op": "remove", "cur_ver": "2.0"},
-                    {"name": "package3", "op": "upgrade", "cur_ver": "1.0", "new_ver": "1.1"},
-                    {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "new_ver": "2.0"},
-                ],
-                "reboot": random.choice([True, False]),
-            }
-        ])
+        return random.choice(
+            [
+                {"present": False},
+                {
+                    "present": True,
+                    "hash": str(uuid.uuid4()),
+                    "status": random.choice(["asked", "granted", "denied"]),
+                    "time": datetime.now().isoformat(),
+                    "plan": [
+                        {"name": "package1", "op": "install", "new_ver": "1.0"},
+                        {"name": "package2", "op": "remove", "cur_ver": "2.0"},
+                        {"name": "package3", "op": "upgrade", "cur_ver": "1.0", "new_ver": "1.1"},
+                        {"name": "package4", "op": "downgrade", "cur_ver": "2.1", "new_ver": "2.0"},
+                    ],
+                    "reboot": random.choice([True, False]),
+                },
+            ]
+        )
 
     @logger_wrapper(logger)
     def get_user_lists(self, lang):
@@ -238,13 +208,15 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         """
         exported = []
         for record in MockUpdaterHandler.user_lists:
-            exported.append({
-                "name": record["name"],
-                "hidden": record["hidden"],
-                "enabled": record["enabled"],
-                "msg": record["msg"].get(lang, record["msg"]["en"]),
-                "title": record["title"].get(lang, record["title"]["en"]),
-            })
+            exported.append(
+                {
+                    "name": record["name"],
+                    "hidden": record["hidden"],
+                    "enabled": record["enabled"],
+                    "msg": record["msg"].get(lang, record["msg"]["en"]),
+                    "title": record["title"].get(lang, record["title"]["en"]),
+                }
+            )
         return exported
 
     @logger_wrapper(logger)

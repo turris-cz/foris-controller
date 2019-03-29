@@ -58,10 +58,6 @@ class MaintainModule(BaseModule):
         return {"result": res}
 
 
-@wrap_required_functions([
-    'reboot',
-    'generate_backup',
-    'restore_backup',
-])
+@wrap_required_functions(["reboot", "generate_backup", "restore_backup"])
 class Handler(object):
     pass

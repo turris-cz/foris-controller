@@ -41,15 +41,15 @@ class MockTimeHandler(Handler, BaseMockHandler):
     time = datetime.now()
     ntpdate_id_set = set()
     ntp_servers = [
-        '217.31.202.100',
-        '195.113.144.201',
-        '195.113.144.238',
-        '2001:1488:ffff::100',
-        'ntp.nic.cz',
-        '0.openwrt.pool.ntp.org',
-        '1.openwrt.pool.ntp.org',
-        '2.openwrt.pool.ntp.org',
-        '3.openwrt.pool.ntp.org',
+        "217.31.202.100",
+        "195.113.144.201",
+        "195.113.144.238",
+        "2001:1488:ffff::100",
+        "ntp.nic.cz",
+        "0.openwrt.pool.ntp.org",
+        "1.openwrt.pool.ntp.org",
+        "2.openwrt.pool.ntp.org",
+        "3.openwrt.pool.ntp.org",
     ]
 
     @logger_wrapper(logger)
@@ -73,8 +73,13 @@ class MockTimeHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def update_settings(
-        self, region: str, country: str, city: str, timezone: str, how_to_set_time: str,
-        time: typing.Optional[datetime] = None
+        self,
+        region: str,
+        country: str,
+        city: str,
+        timezone: str,
+        how_to_set_time: str,
+        time: typing.Optional[datetime] = None,
     ) -> bool:
         """ Mocks updates current time settings
 
@@ -106,6 +111,6 @@ class MockTimeHandler(Handler, BaseMockHandler):
         :returns: generated_ntpdate_id
         :rtype: str
         """
-        new_ntpdate_id = "%032X" % random.randrange(2**32)
+        new_ntpdate_id = "%032X" % random.randrange(2 ** 32)
         self.ntpdate_id_set.add(new_ntpdate_id)
         return new_ntpdate_id

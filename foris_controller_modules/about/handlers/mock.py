@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 
 
 class MockAboutHandler(Handler, BaseMockHandler):
-
     @logger_wrapper(logger)
     def get_device_info(self):
         """ Returns fake info about the device

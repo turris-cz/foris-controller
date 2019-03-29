@@ -22,9 +22,14 @@ import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, file_root_init,
-    only_backends, reboot_command,
-    start_buses, ubusd_test, mosquitto_test,
+    infrastructure,
+    uci_configs_init,
+    file_root_init,
+    only_backends,
+    reboot_command,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
 )
 
 from foris_controller_testtools.utils import reboot_was_called
@@ -35,30 +40,22 @@ FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test
 
 
 def test_reboot(uci_configs_init, infrastructure, start_buses, reboot_command):
-    res = infrastructure.process_message({
-        "module": "maintain",
-        "action": "reboot",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "maintain", "action": "reboot", "kind": "request"}
+    )
     assert res["data"]["result"]
 
 
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_reboot_opewrt(uci_configs_init, infrastructure, start_buses, reboot_command):
-    infrastructure.process_message({
-        "module": "maintain",
-        "action": "reboot",
-        "kind": "request",
-    })
+    infrastructure.process_message({"module": "maintain", "action": "reboot", "kind": "request"})
     assert reboot_was_called([])
 
 
 def test_generate_backup(uci_configs_init, infrastructure, start_buses):
-    res = infrastructure.process_message({
-        "module": "maintain",
-        "action": "generate_backup",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "maintain", "action": "generate_backup", "kind": "request"}
+    )
     assert "backup" in res["data"].keys()
     base64.b64decode(res["data"]["backup"])
 
@@ -69,18 +66,18 @@ def test_restore_backup(file_root_init, uci_configs_init, infrastructure, start_
     with open(os.path.join("/tmp/foris_files/tmp", "backup.tar.bz2.base64")) as f:
         backup = f.read()
 
-    res = infrastructure.process_message({
-        "module": "maintain",
-        "action": "restore_backup",
-        "kind": "request",
-        "data": {
-            "backup": backup,
-        },
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "maintain",
+            "action": "restore_backup",
+            "kind": "request",
+            "data": {"backup": backup},
+        }
+    )
     assert res["data"] == {u"result": True}
 
 
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure, start_buses):
     # read backup
@@ -89,17 +86,19 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
 
     filters = [("updater", "run"), ("maintain", "reboot_required")]
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "maintain",
-        "action": "restore_backup",
-        "kind": "request",
-        "data": {
-            "backup": backup,
-        },
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "maintain",
+            "action": "restore_backup",
+            "kind": "request",
+            "data": {"backup": backup},
+        }
+    )
     assert res["data"] == {u"result": True}
     wait_for_updater_run_finished(notifications, infrastructure)
-    notifications = infrastructure.get_notifications(notifications, filters=[("maintain", "reboot_required")])
+    notifications = infrastructure.get_notifications(
+        notifications, filters=[("maintain", "reboot_required")]
+    )
     assert notifications[-1] == {
         "module": "maintain",
         "action": "reboot_required",
@@ -108,19 +107,17 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
 
 
 def test_generate_and_restore(uci_configs_init, infrastructure, start_buses):
-    res = infrastructure.process_message({
-        "module": "maintain",
-        "action": "generate_backup",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "maintain", "action": "generate_backup", "kind": "request"}
+    )
     assert "backup" in res["data"].keys()
 
-    res = infrastructure.process_message({
-        "module": "maintain",
-        "action": "restore_backup",
-        "kind": "request",
-        "data": {
-            "backup": res["data"]["backup"],
-        },
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "maintain",
+            "action": "restore_backup",
+            "kind": "request",
+            "data": {"backup": res["data"]["backup"]},
+        }
+    )
     assert res["data"] == {u"result": True}

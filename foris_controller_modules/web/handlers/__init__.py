@@ -20,7 +20,4 @@
 from .mock import MockWebHandler
 from .openwrt import OpenwrtWebHandler
 
-__all__ = [
-    'MockWebHandler',
-    'OpenwrtWebHandler',
-]
+__all__ = ["MockWebHandler", "OpenwrtWebHandler"]

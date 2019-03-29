@@ -82,7 +82,6 @@ def handle_command(*args, **kwargs):
 
 
 class BaseCmdLine(object):
-
     @staticmethod
     def _run_command_in_background(*args):
         """ Executes command in background
@@ -142,13 +141,15 @@ class BaseCmdLine(object):
         """
         retval, stdout, stderr = BaseCmdLine._run_command(*args)
         if not retval == expected_retval:
-            logger.error("Command %s unexpected returncode (%d, expected %d)." % (
-                str(args), retval, expected_retval))
+            logger.error(
+                "Command %s unexpected returncode (%d, expected %d)."
+                % (str(args), retval, expected_retval)
+            )
             raise BackendCommandFailed(retval, args)
         return stdout, stderr
 
     @staticmethod
-    def _trigger_and_parse(args, regex, groups=(1, )):
+    def _trigger_and_parse(args, regex, groups=(1,)):
         """ Runs command and parses the output by regex,
             raises an exception when the output doesn't match regex
 
@@ -178,7 +179,7 @@ class AsyncProcessData(object):
         :type manager: multiprocessing.managers.SyncManager
         """
         self.lock = manager.Lock()
-        self.id = "%016x" % random.randrange(2**64)
+        self.id = "%016x" % random.randrange(2 ** 64)
         self._data = manager.list()
         self._retval = manager.Value(int, 0)
         self._exitted = manager.Value(bool, False)
@@ -283,11 +284,14 @@ class AsyncCommand(object):
             # make sure that program dies when parent is terminated
             prctl.set_pdeathsig(signal.SIGKILL)
             # for python programs this will force that stdout/stderr are flushed immediatelly
-            os.environ['PYTHONUNBUFFERED'] = "1"
+            os.environ["PYTHONUNBUFFERED"] = "1"
 
         process = subprocess.Popen(
-            args, preexec_fn=preexec,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True,
+            args,
+            preexec_fn=preexec,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
             universal_newlines=True,
         )
 
@@ -306,6 +310,7 @@ class AsyncCommand(object):
                     handler(match, process_data)
 
             return True
+
         while process.poll() is None:
             process_output_line()
 
@@ -347,6 +352,7 @@ class AsyncCommand(object):
         def worker_thread(process_started):
 
             import logging
+
             logger = logging.getLogger(__name__)
 
             # Prepare ready event to wait for the process to be initialized
@@ -354,10 +360,17 @@ class AsyncCommand(object):
             ready.clear()
 
             logger.debug("Preparing async worker process.")
-            process = multiprocessing.Process(target=AsyncCommand._command_worker, args=(
-                args, reset_notify_function, handler_list, handler_exit,
-                new_data_process, ready
-            ))
+            process = multiprocessing.Process(
+                target=AsyncCommand._command_worker,
+                args=(
+                    args,
+                    reset_notify_function,
+                    handler_list,
+                    handler_exit,
+                    new_data_process,
+                    ready,
+                ),
+            )
 
             with self.lock.writelock:
                 # test whether there is still space in buffer and remove midd
@@ -372,7 +385,7 @@ class AsyncCommand(object):
             process.join()
             logger.debug("Async worker process finished.")
 
-        work_thread = threading.Thread(target=worker_thread, args=(process_started, ))
+        work_thread = threading.Thread(target=worker_thread, args=(process_started,))
         work_thread.daemon = True
         work_thread.start()
 

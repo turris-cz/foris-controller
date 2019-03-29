@@ -21,8 +21,13 @@ import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    uci_configs_init, infrastructure, notify_api, notify_cmd,
-    start_buses, ubusd_test, mosquitto_test,
+    uci_configs_init,
+    infrastructure,
+    notify_api,
+    notify_cmd,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
 )
 
 
@@ -30,9 +35,7 @@ from foris_controller_testtools.fixtures import (
 def extra_module_paths():
     """ Override of extra module paths fixture
     """
-    return [
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
-    ]
+    return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
 
 
 def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, start_buses):
@@ -50,13 +53,15 @@ def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, start_buses):
     }
 
     retval, stdout, stderr = notify_cmd(
-        "web", "set_language", {"language": "en", "invalid": True}, True)
+        "web", "set_language", {"language": "en", "invalid": True}, True
+    )
     assert retval == 1
     assert b"ValidationError" in stderr
     assert notifications == infrastructure.get_notifications(filters=filters)
 
     retval, stdout, stderr = notify_cmd(
-        "web", "set_language", {"language": "en", "invalid": True}, False)
+        "web", "set_language", {"language": "en", "invalid": True}, False
+    )
     assert retval == 0
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
@@ -82,6 +87,7 @@ def test_notify_api(uci_configs_init, infrastructure, start_buses, notify_api):
     }
 
     from jsonschema import ValidationError
+
     with pytest.raises(ValidationError):
         notify("web", "set_language", {"language": "en", "invalid": True}, True)
     assert notifications == infrastructure.get_notifications(filters=filters)
@@ -97,8 +103,4 @@ def test_notify_api(uci_configs_init, infrastructure, start_buses, notify_api):
 
     notify("echo", "echo")
     notifications = infrastructure.get_notifications(notifications, filters=filters)
-    assert notifications[-1] == {
-        u"module": u"echo",
-        u"action": u"echo",
-        u"kind": u"notification",
-    }
+    assert notifications[-1] == {u"module": u"echo", u"action": u"echo", u"kind": u"notification"}

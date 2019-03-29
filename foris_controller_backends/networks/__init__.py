@@ -25,7 +25,11 @@ from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.uci import (
-    UciBackend, get_option_named, store_bool, parse_bool, get_sections_by_type
+    UciBackend,
+    get_option_named,
+    store_bool,
+    parse_bool,
+    get_sections_by_type,
 )
 
 from foris_controller.exceptions import UciException, UciRecordNotFound
@@ -34,7 +38,6 @@ logger = logging.getLogger(__name__)
 
 
 class NetworksUci(object):
-
     def _prepare_network(self, data, section, ports_map):
         interfaces = get_option_named(data, "network", section, "ifname", [])
         interfaces = interfaces if isinstance(interfaces, (tuple, list)) else interfaces.split(" ")
@@ -49,7 +52,8 @@ class NetworksUci(object):
         :returns: None if no valid iterface section found, or list of (network, ssid) (can be empty)
         """
         iface_sections = [
-            section for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
+            section
+            for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
             if section["data"].get("ifname") == ifname and section["data"].get("device")
         ]
         if not iface_sections:
@@ -82,7 +86,8 @@ class NetworksUci(object):
         :returns: None if no valid device section found, or list of (network, ssid) (can be empty)
         """
         device_sections = [
-            section for section in get_sections_by_type(wireless_data, "wireless", "wifi-device")
+            section
+            for section in get_sections_by_type(wireless_data, "wireless", "wifi-device")
             if section["data"].get("macaddr") == macaddr
         ]
         if not device_sections:
@@ -92,10 +97,13 @@ class NetworksUci(object):
             if parse_bool(device_section["data"].get("disabled", "0")):
                 continue
             interface_sections = [
-                section for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
-                if section["data"].get("device") == device_section["name"] and
-                not parse_bool(section["data"].get("disabled", "0")) and
-                (section["data"].get("ifname") == ifname or section["data"].get("ifname") is None)
+                section
+                for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
+                if section["data"].get("device") == device_section["name"]
+                and not parse_bool(section["data"].get("disabled", "0"))
+                and (
+                    section["data"].get("ifname") == ifname or section["data"].get("ifname") is None
+                )
             ]
             for interface_section in interface_sections:
                 network = interface_section["data"].get("network", None)
@@ -124,7 +132,7 @@ class NetworksUci(object):
                     res.append(v)
         except Exception:
             res = [], []  # when turrishw get fail -> return empty dict
-        return sorted(res, key=lambda x: x["id"]), sorted(res_wireless, key=lambda x: x["id"]),
+        return sorted(res, key=lambda x: x["id"]), sorted(res_wireless, key=lambda x: x["id"])
 
     @staticmethod
     def get_interface_count(network_data, wireless_data, network_name, up_only=False):
@@ -142,10 +150,12 @@ class NetworksUci(object):
             }
 
             for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface"):
-                if not parse_bool(section["data"].get("disabled", "0")) and \
-                        section["data"]["device"] in enabled_radios and \
-                        section["data"]["network"] == network_name:
-                            wifi_iface_count += 1
+                if (
+                    not parse_bool(section["data"].get("disabled", "0"))
+                    and section["data"]["device"] in enabled_radios
+                    and section["data"]["network"] == network_name
+                ):
+                    wifi_iface_count += 1
 
         except UciRecordNotFound:
             pass
@@ -158,8 +168,11 @@ class NetworksUci(object):
         except Exception:
             hw_interfaces = []
         config_interfaces = get_option_named(network_data, "network", network_name, "ifname", [])
-        config_interfaces = config_interfaces if isinstance(config_interfaces, (list, tuple)) \
+        config_interfaces = (
+            config_interfaces
+            if isinstance(config_interfaces, (list, tuple))
             else [config_interfaces]
+        )
         return len(set(hw_interfaces).intersection(config_interfaces)) + wifi_iface_count
 
     def get_settings(self):
@@ -210,11 +223,14 @@ class NetworksUci(object):
 
         # parse firewall options
         ssh_on_wan = parse_bool(
-            get_option_named(firewall_data, "firewall", "wan_ssh_turris_rule", "enabled", "0"))
+            get_option_named(firewall_data, "firewall", "wan_ssh_turris_rule", "enabled", "0")
+        )
         http_on_wan = parse_bool(
-            get_option_named(firewall_data, "firewall", "wan_http_turris_rule", "enabled", "0"))
+            get_option_named(firewall_data, "firewall", "wan_http_turris_rule", "enabled", "0")
+        )
         https_on_wan = parse_bool(
-            get_option_named(firewall_data, "firewall", "wan_https_turris_rule", "enabled", "0"))
+            get_option_named(firewall_data, "firewall", "wan_https_turris_rule", "enabled", "0")
+        )
 
         return {
             "device": {
@@ -231,7 +247,7 @@ class NetworksUci(object):
                 "lan": lan_network,
                 "guest": guest_network,
                 "none": none_network,
-            }
+            },
         }
 
     def update_settings(self, firewall, networks):
@@ -280,6 +296,7 @@ class NetworksUci(object):
         # update wizard passed in foris web (best effort)
         try:
             from foris_controller_backends.web import WebUciCommands
+
             WebUciCommands.update_passed("networks")
         except UciException:
             pass

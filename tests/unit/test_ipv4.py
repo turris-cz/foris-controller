@@ -23,31 +23,14 @@ import itertools
 
 from foris_controller.utils import IPv4
 
-WRONG_IPS = [
-    "1.1.1.1.1",
-    "255.255.255",
-    "1.1.1.256",
-    "x1.1.1.1",
-]
+WRONG_IPS = ["1.1.1.1.1", "255.255.255", "1.1.1.256", "x1.1.1.1"]
 
-WRONG_NUMBERS = [
-    -1,
-    2**32,
-]
+WRONG_NUMBERS = [-1, 2 ** 32]
 
-WRONG_NETMASKS = [
-    "255.255.254.255",
-    "255.255.255.253",
-    "255.255.253.0",
-    "255.253.0.0",
-    "253.0.0.0",
-]
+WRONG_NETMASKS = ["255.255.254.255", "255.255.255.253", "255.255.253.0", "255.253.0.0", "253.0.0.0"]
 
 
-WRONG_PREFIXES= [
-    -1,
-    33,
-]
+WRONG_PREFIXES = [-1, 33]
 
 
 def test_str_to_num():
@@ -87,6 +70,7 @@ def test_mask_to_prefix():
     for netmask in WRONG_NETMASKS + WRONG_IPS:
         with pytest.raises(ValueError):
             IPv4.mask_to_prefix(netmask)
+
 
 def test_prefix_to_mask():
     assert IPv4.prefix_to_mask(32) == "255.255.255.255"

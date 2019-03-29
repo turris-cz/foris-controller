@@ -42,8 +42,13 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(
-            self, forwarding_enabled, dnssec_enabled, dns_from_dhcp_enabled,
-            forwarder=None, dns_from_dhcp_domain=None):
+        self,
+        forwarding_enabled,
+        dnssec_enabled,
+        dns_from_dhcp_enabled,
+        forwarder=None,
+        dns_from_dhcp_domain=None,
+    ):
         """ updates current dns settings
 
         :param forwarding_enabled: set whether the forwarding is enabled
@@ -59,6 +64,9 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
         :rtype: str
         """
         return OpenwrtDnsHandler.uci_dns_cmds.update_settings(
-            forwarding_enabled, dnssec_enabled, dns_from_dhcp_enabled, forwarder,
-            dns_from_dhcp_domain
+            forwarding_enabled,
+            dnssec_enabled,
+            dns_from_dhcp_enabled,
+            forwarder,
+            dns_from_dhcp_domain,
         )

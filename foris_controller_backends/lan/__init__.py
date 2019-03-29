@@ -24,7 +24,11 @@ import ipaddress
 from foris_controller.exceptions import UciException
 from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.uci import (
-    UciBackend, get_option_named, parse_bool, store_bool, get_sections_by_type
+    UciBackend,
+    get_option_named,
+    parse_bool,
+    store_bool,
+    get_sections_by_type,
 )
 
 from foris_controller_backends.files import BaseFile, path_exists
@@ -55,13 +59,15 @@ class LanFiles(BaseFile):
             if ipaddress.ip_address(ip) in ipaddress.ip_network(
                 f"{network}/{netmask}", strict=False
             ):
-                res.append({
-                    "expires": timestamp,
-                    "mac": mac,
-                    "ip": ip,
-                    "hostname": hostname,
-                    "active": ("src=%s " % ip) in conntrack or ("dst=%s " % ip) in conntrack,
-                })
+                res.append(
+                    {
+                        "expires": timestamp,
+                        "mac": mac,
+                        "ip": ip,
+                        "hostname": hostname,
+                        "active": ("src=%s " % ip) in conntrack or ("dst=%s " % ip) in conntrack,
+                    }
+                )
 
         return res
 
@@ -77,7 +83,8 @@ class LanUci(object):
         file_records = LanFiles().get_dhcp_clients(network, netmask)
         uci_data = get_sections_by_type(uci_data, "dhcp", "host")
         uci_map = {
-            e["data"]["mac"]: e["data"] for e in uci_data
+            e["data"]["mac"]: e["data"]
+            for e in uci_data
             if len(e["data"]["mac"].split(" ")) == 1  # ignore multi mac records
             and "ip" in e["data"]
             and (
@@ -93,13 +100,15 @@ class LanUci(object):
                 record["hostname"] = hostname if hostname else record["hostname"]
                 del uci_map[record["mac"]]
         for record in uci_map.values():
-            file_records.append({
-                "ip": record["ip"],
-                "hostname": record.get("name", ""),
-                "mac": record["mac"],
-                "active": False,
-                "expires": 0,
-            })
+            file_records.append(
+                {
+                    "ip": record["ip"],
+                    "hostname": record.get("name", ""),
+                    "mac": record["mac"],
+                    "active": False,
+                    "expires": 0,
+                }
+            )
         return file_records
 
     @staticmethod
@@ -130,21 +139,27 @@ class LanUci(object):
 
         mode_managed = {"dhcp": {}}
         mode_managed["router_ip"] = get_option_named(
-            network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP)
+            network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
+        )
         mode_managed["netmask"] = get_option_named(
-            network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK)
+            network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
+        )
         mode_managed["dhcp"]["enabled"] = not parse_bool(
-            get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0"))
-        mode_managed["dhcp"]["start"] = int(get_option_named(
-            dhcp_data, "dhcp", "lan", "start", self.DEFAULT_DHCP_START))
-        mode_managed["dhcp"]["limit"] = int(get_option_named(
-            dhcp_data, "dhcp", "lan", "limit", self.DEFAULT_DHCP_LIMIT))
+            get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0")
+        )
+        mode_managed["dhcp"]["start"] = int(
+            get_option_named(dhcp_data, "dhcp", "lan", "start", self.DEFAULT_DHCP_START)
+        )
+        mode_managed["dhcp"]["limit"] = int(
+            get_option_named(dhcp_data, "dhcp", "lan", "limit", self.DEFAULT_DHCP_LIMIT)
+        )
         mode_managed["dhcp"]["lease_time"] = LanUci._normalize_lease(
             get_option_named(dhcp_data, "dhcp", "lan", "leasetime", self.DEFAULT_LEASE_TIME)
         )
         if mode_managed["dhcp"]["enabled"]:
             mode_managed["dhcp"]["clients"] = self.get_client_list(
-                dhcp_data, mode_managed["router_ip"], mode_managed["netmask"])
+                dhcp_data, mode_managed["router_ip"], mode_managed["netmask"]
+            )
         else:
             mode_managed["dhcp"]["clients"] = []
 
@@ -154,13 +169,19 @@ class LanUci(object):
         mode_unmanaged["lan_dhcp"] = {"hostname": hostname} if hostname else {}
         mode_unmanaged["lan_static"] = {
             "ip": get_option_named(
-                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP),
+                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
+            ),
             "netmask": get_option_named(
-                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK),
+                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
+            ),
             "gateway": get_option_named(
-                network_data, "network", "lan", "gateway",
+                network_data,
+                "network",
+                "lan",
+                "gateway",
                 get_option_named(
-                    network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP),
+                    network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
+                ),
             ),
         }
         dns = get_option_named(network_data, "network", "lan", "dns", [])
@@ -174,18 +195,22 @@ class LanUci(object):
             "mode": mode,
             "mode_managed": mode_managed,
             "mode_unmanaged": mode_unmanaged,
-            "interface_count": NetworksUci.get_interface_count(
-                network_data, wireless_data, "lan"
-            ),
+            "interface_count": NetworksUci.get_interface_count(network_data, wireless_data, "lan"),
             "interface_up_count": NetworksUci.get_interface_count(
                 network_data, wireless_data, "lan", True
             ),
         }
 
     def filter_dhcp_client_records(
-        self, backend: UciBackend, dhcp_data,
-        old_router_ip: typing.Optional[str], old_netmask: typing.Optional[str],
-        new_router_ip: str, new_netmask: str, new_start: int, new_limit: int,
+        self,
+        backend: UciBackend,
+        dhcp_data,
+        old_router_ip: typing.Optional[str],
+        old_netmask: typing.Optional[str],
+        new_router_ip: str,
+        new_netmask: str,
+        new_start: int,
+        new_limit: int,
     ):
         for record in get_sections_by_type(dhcp_data, "dhcp", "host"):
             if "ip" in record["data"] and record["data"]["ip"] != "ignore":
@@ -197,9 +222,7 @@ class LanUci(object):
                 if old_router_ip and old_netmask:
                     if self.in_network(
                         record["data"]["ip"], old_router_ip, old_netmask
-                    ) and not self.in_network(
-                        record["data"]["ip"], new_router_ip, new_netmask
-                    ):
+                    ) and not self.in_network(record["data"]["ip"], new_router_ip, new_netmask):
                         backend.del_section("dhcp", record["name"])
 
     def update_settings(self, mode, mode_managed=None, mode_unmanaged=None):
@@ -240,32 +263,38 @@ class LanUci(object):
 
                 backend.add_section("dhcp", "dhcp", "lan")
                 dhcp = mode_managed["dhcp"]
-                backend.set_option(
-                    "dhcp", "lan", "ignore", store_bool(not dhcp["enabled"]))
+                backend.set_option("dhcp", "lan", "ignore", store_bool(not dhcp["enabled"]))
 
                 # set dhcp part (this device acts as a server here)
                 if dhcp["enabled"]:
                     backend.set_option("dhcp", "lan", "start", dhcp["start"])
                     backend.set_option("dhcp", "lan", "limit", dhcp["limit"])
                     backend.set_option(
-                        "dhcp", "lan", "leasetime",
-                        "infinite" if dhcp["lease_time"] == 0 else dhcp["lease_time"]
+                        "dhcp",
+                        "lan",
+                        "leasetime",
+                        "infinite" if dhcp["lease_time"] == 0 else dhcp["lease_time"],
                     )
 
                     # this will override all user dhcp options
                     # TODO we might want to preserve some options
                     backend.replace_list(
-                        "dhcp", "lan", "dhcp_option", ["6,%s" % mode_managed["router_ip"]])
+                        "dhcp", "lan", "dhcp_option", ["6,%s" % mode_managed["router_ip"]]
+                    )
 
                     # update dhcp records when changing lan ip+network or start+limit
                     # get old network
                     old_router_ip = get_option_named(network_data, "network", "lan", "ipaddr", "")
                     old_netmask = get_option_named(network_data, "network", "lan", "netmask", "")
                     self.filter_dhcp_client_records(
-                        backend, dhcp_data,
-                        old_router_ip, old_netmask,
-                        mode_managed["router_ip"], mode_managed["netmask"],
-                        dhcp["start"], dhcp["limit"]
+                        backend,
+                        dhcp_data,
+                        old_router_ip,
+                        old_netmask,
+                        mode_managed["router_ip"],
+                        mode_managed["netmask"],
+                        dhcp["start"],
+                        dhcp["limit"],
                     )
 
             elif mode == "unmanaged":
@@ -276,18 +305,22 @@ class LanUci(object):
                 if mode_unmanaged["lan_type"] == "dhcp":
                     if "hostname" in mode_unmanaged["lan_dhcp"]:
                         backend.set_option(
-                            "network", "lan", "hostname",
-                            mode_unmanaged["lan_dhcp"]["hostname"])
+                            "network", "lan", "hostname", mode_unmanaged["lan_dhcp"]["hostname"]
+                        )
 
                 elif mode_unmanaged["lan_type"] == "static":
                     backend.set_option(
-                        "network", "lan", "ipaddr", mode_unmanaged["lan_static"]["ip"])
+                        "network", "lan", "ipaddr", mode_unmanaged["lan_static"]["ip"]
+                    )
                     backend.set_option(
-                        "network", "lan", "netmask", mode_unmanaged["lan_static"]["netmask"])
+                        "network", "lan", "netmask", mode_unmanaged["lan_static"]["netmask"]
+                    )
                     backend.set_option(
-                        "network", "lan", "gateway", mode_unmanaged["lan_static"]["gateway"])
+                        "network", "lan", "gateway", mode_unmanaged["lan_static"]["gateway"]
+                    )
                     dns = [
-                        mode_unmanaged["lan_static"][name] for name in ("dns2", "dns1")
+                        mode_unmanaged["lan_static"][name]
+                        for name in ("dns2", "dns1")
                         if name in mode_unmanaged["lan_static"]
                     ]  # dns with higher priority should be added last
                     backend.replace_list("network", "lan", "dns", dns)
@@ -297,6 +330,7 @@ class LanUci(object):
         # update wizard passed in foris web (best effort)
         try:
             from foris_controller_backends.web import WebUciCommands
+
             WebUciCommands.update_passed("lan")
         except UciException:
             pass
@@ -344,13 +378,17 @@ class LanUci(object):
             network_data = backend.read("network")
 
             router_ip = get_option_named(
-                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP)
+                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
+            )
             netmask = get_option_named(
-                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK)
-            start = int(get_option_named(
-                dhcp_data, "dhcp", "lan", "start", LanUci.DEFAULT_DHCP_START))
-            limit = int(get_option_named(
-                dhcp_data, "dhcp", "lan", "limit", LanUci.DEFAULT_DHCP_LIMIT))
+                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
+            )
+            start = int(
+                get_option_named(dhcp_data, "dhcp", "lan", "start", LanUci.DEFAULT_DHCP_START)
+            )
+            limit = int(
+                get_option_named(dhcp_data, "dhcp", "lan", "limit", LanUci.DEFAULT_DHCP_LIMIT)
+            )
 
             if ip != "ignore":  # ignore means that dhcp server won't provide ip for givem macaddr
                 if LanUci.in_range(ip, router_ip, start, limit):
@@ -364,7 +402,8 @@ class LanUci(object):
                     return "disabled"
 
                 dhcp_enabled = not parse_bool(
-                    get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0"))
+                    get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0")
+                )
                 if not dhcp_enabled:
                     return "disabled"
 

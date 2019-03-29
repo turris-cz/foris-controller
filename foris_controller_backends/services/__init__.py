@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class OpenwrtServices(object):
-    DEFAUL_SERVICE_SCRIPTS_PATH = '/etc/init.d/'
+    DEFAUL_SERVICE_SCRIPTS_PATH = "/etc/init.d/"
 
     services_lock = RWLock(app_info["lock_backend"])
 
@@ -64,7 +64,8 @@ class OpenwrtServices(object):
         except OSError as e:
             if fail_on_error:
                 raise ServiceCmdFailed(
-                    service_name, cmd, "unable to call '%s %s'" % (script_path, cmd))
+                    service_name, cmd, "unable to call '%s %s'" % (script_path, cmd)
+                )
             retval = e.errno
             stdout = ""
             stderr = e.strerror
@@ -89,15 +90,19 @@ class OpenwrtServices(object):
         """
         script_path = os.path.join(self.service_scripts_path, service_name)
         logger.debug(
-            "Starting to call '%s %s' in background (delay=%d)" % (script_path, cmd, delay))
+            "Starting to call '%s %s' in background (delay=%d)" % (script_path, cmd, delay)
+        )
         try:
             BaseCmdLine._run_command(
-                "/bin/sh", "-c", "( sleep %(delay)d; %(script_path)s %(cmd)s ) &" %
-                dict(delay=delay, script_path=script_path, cmd=cmd)
+                "/bin/sh",
+                "-c",
+                "( sleep %(delay)d; %(script_path)s %(cmd)s ) &"
+                % dict(delay=delay, script_path=script_path, cmd=cmd),
             )
         except OSError:
             raise ServiceCmdFailed(
-                service_name, cmd, "unable to call '%s %s' in background" % (script_path, cmd))
+                service_name, cmd, "unable to call '%s %s' in background" % (script_path, cmd)
+            )
 
         # as the command is triggered in background the retval can't be check..
 

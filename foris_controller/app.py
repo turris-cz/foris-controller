@@ -29,8 +29,7 @@ from foris_controller.utils import get_modules, get_handler, get_module_class, g
 
 logger = logging.getLogger(__name__)
 
-app_info = {
-}
+app_info = {}
 
 
 def set_app_info(program_options):
@@ -43,17 +42,19 @@ def set_app_info(program_options):
     app_info["bus"] = program_options.bus
     app_info["debug"] = program_options.debug
     app_info["backend"] = program_options.backend
-    app_info["filter_modules"] = [e[0] for e in program_options.module] \
-        if program_options.module else None
+    app_info["filter_modules"] = (
+        [e[0] for e in program_options.module] if program_options.module else None
+    )
     app_info["extra_module_paths"] = [e[0] for e in program_options.extra_module_path]
 
     import multiprocessing
     import threading
+
     app_info["lock_backend"] = multiprocessing if app_info["bus"] in ["ubus"] else threading
     if app_info["bus"] == "ubus":
         app_info["ubus_single_process"] = program_options.single
 
-    controller_id = getattr(program_options, 'controller_id', None)
+    controller_id = getattr(program_options, "controller_id", None)
     app_info["controller_id"] = controller_id or f"{uuid.getnode():016X}"
 
     app_info["mqtt_credentials"] = getattr(program_options, "passwd_file", None)
@@ -62,13 +63,19 @@ def set_app_info(program_options):
 def _gen_notify(module_name):
     """ Generator for notify function which wrapps module name inside the notify call
     """
+
     def notify(self, action, data=None):
         self.logger.debug(
-            "New notification (module=%s, action=%s, data=%s)" % (module_name, action, data))
+            "New notification (module=%s, action=%s, data=%s)" % (module_name, action, data)
+        )
         app_info["notification_sender"].notify(
-            module_name, action, data, app_info["validator"],
+            module_name,
+            action,
+            data,
+            app_info["validator"],
             controller_id=app_info["controller_id"],
         )
+
     return notify
 
 
@@ -90,7 +97,7 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
 
     # and global definitions
     definition_dirs = [
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions"),
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions")
     ]
 
     schema_dirs = []
@@ -98,7 +105,8 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
         # try to obtain version
         try:
             version = importlib.import_module(
-                "foris_controller_%s_module" % module_name).__version__
+                "foris_controller_%s_module" % module_name
+            ).__version__
         except (ImportError, AttributeError):
             version = __version__
 
@@ -118,11 +126,13 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
             continue
 
         app_info["modules"][module_name] = module_class(
-            handler, _gen_notify(module_name), _reset_notify)
+            handler, _gen_notify(module_name), _reset_notify
+        )
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     logger.debug("Modules loaded %s." % app_info["modules"].keys())
     from foris_schema import ForisValidator
+
     app_info["validator"] = ForisValidator(schema_dirs, definition_dirs)
 
 
@@ -133,6 +143,7 @@ def set_validator(filter_modules):
     """
     global app_info
     from foris_schema import ForisValidator
+
     app_info["validator"] = ForisValidator(*get_validator_dirs(filter_modules))
 
 

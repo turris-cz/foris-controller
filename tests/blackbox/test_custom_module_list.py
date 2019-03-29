@@ -19,9 +19,7 @@
 
 import pytest
 
-from foris_controller_testtools.fixtures import (
-    only_message_buses, uci_configs_init, infrastructure
-)
+from foris_controller_testtools.fixtures import only_message_buses, uci_configs_init, infrastructure
 
 
 @pytest.fixture(scope="module")
@@ -33,18 +31,12 @@ def controller_modules():
     return ["dns"]
 
 
-@pytest.mark.only_message_buses(['unix-socket'])
+@pytest.mark.only_message_buses(["unix-socket"])
 def test_call_existing_and_non_existing(uci_configs_init, infrastructure):
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "dns", "action": "get_settings", "kind": "request"}
+    )
     assert "errors" not in res
 
-    res = infrastructure.process_message({
-        "module": "web",
-        "action": "get_data",
-        "kind": "request",
-    })
+    res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert "errors" in res

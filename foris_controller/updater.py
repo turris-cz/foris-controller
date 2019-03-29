@@ -26,15 +26,9 @@ from importlib import import_module
 updater_module = os.environ.get("FC_UPDATER_MODULE", "svupdater")
 
 svupdater = import_module(updater_module, "svupdater")
-svupdater_exceptions = import_module(
-        "%s.exceptions" % updater_module, "svupdater.exceptions")
-svupdater_hook = import_module(
-    "%s.hook" % updater_module, "svupdater.hook")
-svupdater_approvals = import_module(
-    "%s.approvals" % updater_module, "svupdater.approvals")
-svupdater_l10n = import_module(
-    "%s.l10n" % updater_module, "svupdater.l10n")
-svupdater_lists = import_module(
-    "%s.lists" % updater_module, "svupdater.lists")
-svupdater_autorun = import_module(
-    "%s.autorun" % updater_module, "svupdater.autorun")
+svupdater_exceptions = import_module("%s.exceptions" % updater_module, "svupdater.exceptions")
+svupdater_hook = import_module("%s.hook" % updater_module, "svupdater.hook")
+svupdater_approvals = import_module("%s.approvals" % updater_module, "svupdater.approvals")
+svupdater_l10n = import_module("%s.l10n" % updater_module, "svupdater.l10n")
+svupdater_lists = import_module("%s.lists" % updater_module, "svupdater.lists")
+svupdater_autorun = import_module("%s.autorun" % updater_module, "svupdater.autorun")

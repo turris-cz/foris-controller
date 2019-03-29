@@ -31,9 +31,7 @@ from foris_controller.exceptions import UciException, UciTypeException, UciRecor
 from foris_controller_testtools.fixtures import lock_backend, uci_configs_init
 from foris_controller_testtools.utils import get_uci_module
 
-CONFIG_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "uci_configs",
-)
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "uci_configs")
 
 
 def show(config_dir):
@@ -299,63 +297,83 @@ def test_read(uci_configs_init, lock_backend):
     backend_class = get_uci_module(lock_backend).UciBackend
 
     with backend_class(config_dir) as backend:
-        res1 = backend.read('test1')
-        res2 = backend.read('test2')
+        res1 = backend.read("test1")
+        res2 = backend.read("test2")
         res3 = backend.read()
         with pytest.raises(UciException):
-            backend.read('non-existing')
+            backend.read("non-existing")
 
     assert res1 == {"test1": []}
 
     assert res2["test2"][0]["data"] == OrderedDict()
     assert res2["test2"][0]["type"] == "anonymous"
     assert res2["test2"][0]["anonymous"] is True
-    assert res2["test2"][1]["data"] == OrderedDict([
-        ('option1', 'aeb bb'),
-        ('option2', 'xxx'),
-        ('list1', ['single item']),
-        ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
-        ('list3', ['itema', 'itemb']),
-    ])
+    assert res2["test2"][1]["data"] == OrderedDict(
+        [
+            ("option1", "aeb bb"),
+            ("option2", "xxx"),
+            ("list1", ["single item"]),
+            ("list2", ["item 1", "item 2", "item 3", "item 4"]),
+            ("list3", ["itema", "itemb"]),
+        ]
+    )
     assert res2["test2"][1]["type"] == "anonymous"
     assert res2["test2"][1]["anonymous"] is True
-    assert res2["test2"][2] == \
-        {'data': OrderedDict(), 'type': 'named', 'name': 'named1', "anonymous": False}
+    assert res2["test2"][2] == {
+        "data": OrderedDict(),
+        "type": "named",
+        "name": "named1",
+        "anonymous": False,
+    }
     assert res2["test2"][3] == {
-        'data': OrderedDict([
-            ('option1', 'aeb bb'),
-            ('option2', 'xxx'),
-            ('list1', ['single item']),
-            ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
-            ('list3', ['itema', 'itemb']),
-        ]),
-        'type': 'named', 'name': 'named2', "anonymous": False
+        "data": OrderedDict(
+            [
+                ("option1", "aeb bb"),
+                ("option2", "xxx"),
+                ("list1", ["single item"]),
+                ("list2", ["item 1", "item 2", "item 3", "item 4"]),
+                ("list3", ["itema", "itemb"]),
+            ]
+        ),
+        "type": "named",
+        "name": "named2",
+        "anonymous": False,
     }
 
     assert res3["test1"] == []
     assert res3["test2"][0]["data"] == OrderedDict()
     assert res3["test2"][0]["type"] == "anonymous"
     assert res3["test2"][0]["anonymous"] is True
-    assert res3["test2"][1]["data"] == OrderedDict([
-        ('option1', 'aeb bb'),
-        ('option2', 'xxx'),
-        ('list1', ['single item']),
-        ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
-        ('list3', ['itema', 'itemb']),
-    ])
+    assert res3["test2"][1]["data"] == OrderedDict(
+        [
+            ("option1", "aeb bb"),
+            ("option2", "xxx"),
+            ("list1", ["single item"]),
+            ("list2", ["item 1", "item 2", "item 3", "item 4"]),
+            ("list3", ["itema", "itemb"]),
+        ]
+    )
     assert res3["test2"][1]["type"] == "anonymous"
     assert res3["test2"][1]["anonymous"] is True
-    assert res3["test2"][2] == \
-        {'data': OrderedDict(), 'type': 'named', 'name': 'named1', "anonymous": False}
+    assert res3["test2"][2] == {
+        "data": OrderedDict(),
+        "type": "named",
+        "name": "named1",
+        "anonymous": False,
+    }
     assert res3["test2"][3] == {
-        'data': OrderedDict([
-            ('option1', 'aeb bb'),
-            ('option2', 'xxx'),
-            ('list1', ['single item']),
-            ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
-            ('list3', ['itema', 'itemb']),
-        ]),
-        'type': 'named', 'name': 'named2', 'anonymous': False
+        "data": OrderedDict(
+            [
+                ("option1", "aeb bb"),
+                ("option2", "xxx"),
+                ("list1", ["single item"]),
+                ("list2", ["item 1", "item 2", "item 3", "item 4"]),
+                ("list3", ["itema", "itemb"]),
+            ]
+        ),
+        "type": "named",
+        "name": "named2",
+        "anonymous": False,
     }
 
 
@@ -388,46 +406,53 @@ def test_parse_read_data(uci_configs_init, lock_backend):
 
     backend_class = get_uci_module(lock_backend).UciBackend
     with backend_class(config_dir) as backend:
-        res1 = backend.read('test1')
-        res2 = backend.read('test2')
+        res1 = backend.read("test1")
+        res2 = backend.read("test2")
 
-    assert uci.get_config(res1, 'test1') == []
-    assert uci.get_section(res2, 'test2', 'named1') == \
-        {'data': OrderedDict(), 'type': 'named', 'name': 'named1', 'anonymous': False}
-    assert uci.get_option_named(res2, 'test2', 'named2', 'option2') == 'xxx'
-    assert uci.get_sections_by_type(res2, 'test2', 'anonymous')[0]["data"] == OrderedDict()
-    assert uci.get_sections_by_type(res2, 'test2', 'anonymous')[0]["type"] == "anonymous"
-    assert uci.get_sections_by_type(res2, 'test2', 'anonymous')[0]["anonymous"] is True
+    assert uci.get_config(res1, "test1") == []
+    assert uci.get_section(res2, "test2", "named1") == {
+        "data": OrderedDict(),
+        "type": "named",
+        "name": "named1",
+        "anonymous": False,
+    }
+    assert uci.get_option_named(res2, "test2", "named2", "option2") == "xxx"
+    assert uci.get_sections_by_type(res2, "test2", "anonymous")[0]["data"] == OrderedDict()
+    assert uci.get_sections_by_type(res2, "test2", "anonymous")[0]["type"] == "anonymous"
+    assert uci.get_sections_by_type(res2, "test2", "anonymous")[0]["anonymous"] is True
 
-    assert uci.get_sections_by_type(res2, 'test2', 'anonymous')[1]["data"] == OrderedDict([
-        ('option1', 'aeb bb'),
-        ('option2', 'xxx'),
-        ('list1', ['single item']),
-        ('list2', ['item 1', 'item 2', 'item 3', 'item 4']),
-        ('list3', ['itema', 'itemb']),
-    ])
-    assert uci.get_sections_by_type(res2, 'test2', 'anonymous')[1]["type"] == "anonymous"
-    assert uci.get_sections_by_type(res2, 'test2', 'anonymous')[1]["anonymous"] is True
+    assert uci.get_sections_by_type(res2, "test2", "anonymous")[1]["data"] == OrderedDict(
+        [
+            ("option1", "aeb bb"),
+            ("option2", "xxx"),
+            ("list1", ["single item"]),
+            ("list2", ["item 1", "item 2", "item 3", "item 4"]),
+            ("list3", ["itema", "itemb"]),
+        ]
+    )
+    assert uci.get_sections_by_type(res2, "test2", "anonymous")[1]["type"] == "anonymous"
+    assert uci.get_sections_by_type(res2, "test2", "anonymous")[1]["anonymous"] is True
 
-    assert uci.get_section_idx(res2, 'test2', 'anonymous', 0)["data"] == OrderedDict()
-    assert uci.get_section_idx(res2, 'test2', 'anonymous', 0)["type"] == "anonymous"
-    assert uci.get_section_idx(res2, 'test2', 'anonymous', 0)["anonymous"] is True
-    assert uci.get_option_anonymous(res2, 'test2', 'anonymous', 1, 'option2') == 'xxx'
+    assert uci.get_section_idx(res2, "test2", "anonymous", 0)["data"] == OrderedDict()
+    assert uci.get_section_idx(res2, "test2", "anonymous", 0)["type"] == "anonymous"
+    assert uci.get_section_idx(res2, "test2", "anonymous", 0)["anonymous"] is True
+    assert uci.get_option_anonymous(res2, "test2", "anonymous", 1, "option2") == "xxx"
 
     with pytest.raises(UciRecordNotFound):
-        uci.get_config(res1, 'non_existing')
+        uci.get_config(res1, "non_existing")
     with pytest.raises(UciRecordNotFound):
-        uci.get_section(res2, 'test2', 'non_existing')
+        uci.get_section(res2, "test2", "non_existing")
     with pytest.raises(UciRecordNotFound):
-        uci.get_option_named(res2, 'test2', 'named2', 'non_existing')
-    assert "def1" == uci.get_option_named(res2, 'test2', 'named2', 'non_existing', default="def1")
-    assert uci.get_sections_by_type(res2, 'test2', 'non_existing') == []
+        uci.get_option_named(res2, "test2", "named2", "non_existing")
+    assert "def1" == uci.get_option_named(res2, "test2", "named2", "non_existing", default="def1")
+    assert uci.get_sections_by_type(res2, "test2", "non_existing") == []
     with pytest.raises(UciRecordNotFound):
-        uci.get_section_idx(res2, 'test2', 'anonymous', 99)
+        uci.get_section_idx(res2, "test2", "anonymous", 99)
     with pytest.raises(UciRecordNotFound):
-        uci.get_option_anonymous(res2, 'test2', 'anonymous', 1, 'non_existing')
+        uci.get_option_anonymous(res2, "test2", "anonymous", 1, "non_existing")
     assert "def2" == uci.get_option_anonymous(
-        res2, 'test2', 'anonymous', 1, 'non_existing', default="def2")
+        res2, "test2", "anonymous", 1, "non_existing", default="def2"
+    )
 
 
 IMPORT_DATA = """
@@ -451,8 +476,9 @@ def test_import_data(uci_configs_init, lock_backend):
     with backend_class(config_dir) as backend:
         data = backend.read("import_test")
 
-    assert uci.get_option_named(data, 'import_test', 'import1', 'ipass') == '1'
-    assert uci.get_option_anonymous(data, 'import_test', 'import', 1, 'ipass') == '0'
+    assert uci.get_option_named(data, "import_test", "import1", "ipass") == "1"
+    assert uci.get_option_anonymous(data, "import_test", "import", 1, "ipass") == "0"
+
 
 @pytest.mark.uci_config_path(CONFIG_PATH)
 def test_strange_chars_in_value(uci_configs_init, lock_backend):
@@ -476,10 +502,10 @@ def test_strange_chars_in_value(uci_configs_init, lock_backend):
             backend.replace_list("test1", "special_values", "my_list", SPECIAL_VALUES)
 
     with backend_class(config_dir) as backend:
-        data = backend.read('test1')
+        data = backend.read("test1")
 
     for idx, value in enumerate(SPECIAL_VALUES):
-        assert uci.get_option_named(data, 'test1', 'special_values', "val_%d" % idx) \
-            == value
-    assert [e for e in SPECIAL_VALUES] == \
-        uci.get_option_named(data, "test1", "special_values", "my_list")
+        assert uci.get_option_named(data, "test1", "special_values", "val_%d" % idx) == value
+    assert [e for e in SPECIAL_VALUES] == uci.get_option_named(
+        data, "test1", "special_values", "my_list"
+    )

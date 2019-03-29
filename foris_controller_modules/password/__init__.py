@@ -58,10 +58,6 @@ class PasswordModule(BaseModule):
         return res
 
 
-@wrap_required_functions([
-    'check_foris_password',
-    'set_foris_password',
-    'set_system_password',
-])
+@wrap_required_functions(["check_foris_password", "set_foris_password", "set_system_password"])
 class Handler(object):
     pass

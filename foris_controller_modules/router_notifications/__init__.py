@@ -66,14 +66,18 @@ class RouterNotificationsModule(BaseModule):
         :rtype: dict
         """
         res = self.handler.update_settings(
-            emails_settings=data["emails"], reboots_settings=data["reboots"])
+            emails_settings=data["emails"], reboots_settings=data["reboots"]
+        )
         if res:
-            self.notify("update_settings", {
-                "reboots": data["reboots"],
-                "emails": {
-                    "enabled": True, "smtp_type": data["emails"]["smtp_type"]
-                } if data["emails"]["enabled"] else {"enabled": False}
-            })
+            self.notify(
+                "update_settings",
+                {
+                    "reboots": data["reboots"],
+                    "emails": {"enabled": True, "smtp_type": data["emails"]["smtp_type"]}
+                    if data["emails"]["enabled"]
+                    else {"enabled": False},
+                },
+            )
         return {"result": res}
 
     def action_create(self, data):
@@ -88,12 +92,6 @@ class RouterNotificationsModule(BaseModule):
         return {"result": self.handler.create(**data)}
 
 
-@wrap_required_functions([
-    'list',
-    'mark_as_displayed',
-    'get_settings',
-    'update_settings',
-    'create',
-])
+@wrap_required_functions(["list", "mark_as_displayed", "get_settings", "update_settings", "create"])
 class Handler(object):
     pass

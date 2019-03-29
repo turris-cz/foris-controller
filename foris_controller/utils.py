@@ -104,6 +104,7 @@ def logger_wrapper(logger):
     :param logger: logger which will be used to trigger debug outputs
     :type logger: logging.Logger
     """
+
     def outer(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -126,6 +127,7 @@ def readlock(lock, logger):
     :param logger: logger which will be used to trigger debug outputs
     :type logger: logging.Logger
     """
+
     def outer(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -133,7 +135,9 @@ def readlock(lock, logger):
             with lock.readlock:
                 return func(*args, **kwargs)
             logger.debug("Releasing read lock for '%s'" % (func.__name__))
+
         return inner
+
     return outer
 
 
@@ -146,6 +150,7 @@ def writelock(lock, logger):
     :param logger: logger which will be used to trigger debug outputs
     :type logger: logging.Logger
     """
+
     def outer(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -153,7 +158,9 @@ def writelock(lock, logger):
             with lock.writelock:
                 return func(*args, **kwargs)
             logger.debug("Releasing write lock for '%s'" % (func.__name__))
+
         return inner
+
     return outer
 
 
@@ -181,10 +188,14 @@ def get_modules(filter_modules, module_paths=[]):
         name = os.path.basename(modules_path)
         fp, pathname, description = imp.find_module(name, [os.path.dirname(modules_path)])
         try:
-            res.append((
-                name,
-                imp.load_module("foris_controller_modules.%s" % name, fp, pathname, description)
-            ))
+            res.append(
+                (
+                    name,
+                    imp.load_module(
+                        "foris_controller_modules.%s" % name, fp, pathname, description
+                    ),
+                )
+            )
         finally:
             if fp:
                 fp.close()
@@ -203,13 +214,13 @@ def get_handler(module, base_handler_class):
     handlers_path = os.path.join(module.__path__[0], "handlers")
     for _, handler_name, _ in pkgutil.iter_modules([handlers_path]):
         # load <module>.handlers module
-        handler_mod = importlib.import_module(
-            ".".join([module.__name__, "handlers", handler_name]))
+        handler_mod = importlib.import_module(".".join([module.__name__, "handlers", handler_name]))
 
         # find subclass of base_handler (Mock/Openwrt)
         for _, handler_class in inspect.getmembers(handler_mod, inspect.isclass):
-            if handler_class is not base_handler_class and \
-                    issubclass(handler_class, base_handler_class):
+            if handler_class is not base_handler_class and issubclass(
+                handler_class, base_handler_class
+            ):
                 return handler_class()
 
 
@@ -232,7 +243,7 @@ def get_validator_dirs(filter_modules, module_paths=[]):
 
     # and global definitions
     definition_dirs = [
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions"),
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions")
     ]
 
     schema_dirs = []
@@ -299,9 +310,9 @@ class IPv4(object):
         :param prefix: int
         :return mask: str
         """
-        if not(0 <= subnet <= 32):
+        if not (0 <= subnet <= 32):
             raise ValueError("Incorrect subnet %s" % subnet)
-        return IPv4.num_to_str(int('1' * subnet + '0' * (32 - subnet), 2))
+        return IPv4.num_to_str(int("1" * subnet + "0" * (32 - subnet), 2))
 
 
 def make_multiprocessing_manager():

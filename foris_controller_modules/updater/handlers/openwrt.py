@@ -56,8 +56,8 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :returns: True on success False otherwise
         :rtype: bool
         """
-        approvals_status = approvals_settings['status'] if approvals_settings else None
-        approvals_delay = approvals_settings.get('delay', None) if approvals_settings else None
+        approvals_status = approvals_settings["status"] if approvals_settings else None
+        approvals_delay = approvals_settings.get("delay", None) if approvals_settings else None
         return OpenwrtUpdaterHandler.uci.update_settings(
             user_lists, languages, approvals_status, approvals_delay, enabled
         )

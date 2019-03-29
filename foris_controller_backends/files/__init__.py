@@ -82,7 +82,7 @@ class BaseFile(object):
         logger.debug("content: %s" % content)
         return content
 
-    def _read_and_parse(self, path, regex, groups=(1, )):
+    def _read_and_parse(self, path, regex, groups=(1,)):
         """ Reads and parses a content of the file by regex,
             raises an exception when the output doesn't match regex
 

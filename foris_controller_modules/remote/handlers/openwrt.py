@@ -22,9 +22,7 @@ import logging
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
-from foris_controller_backends.remote import (
-    CaGenAsync, CaGenCmds, RemoteUci, RemoteFiles
-)
+from foris_controller_backends.remote import CaGenAsync, CaGenCmds, RemoteUci, RemoteFiles
 
 from .. import Handler
 
@@ -74,7 +72,4 @@ class OpenwrtRemoteHandler(Handler, BaseOpenwrtHandler):
         if filtered[0]["status"] == "revoked":
             return {"status": "revoked"}
 
-        return {
-            "status": "valid",
-            "token": self.files.get_token(id=id, name=filtered[0]["name"])
-        }
+        return {"status": "valid", "token": self.files.get_token(id=id, name=filtered[0]["name"])}

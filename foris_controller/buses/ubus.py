@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 class RequestStorage(object):
     """ Storage for multipart requests"""
+
     data = {}
 
     @staticmethod
@@ -64,13 +65,14 @@ def _register_object(module_name, module):
     if not methods:
         logger.warning("No suitable method found in '%s' module. Skipping" % module_name)
 
-    object_name = 'foris-controller-%s' % module_name
+    object_name = "foris-controller-%s" % module_name
     logger.debug("Trying to register '%s' object." % object_name)
 
     def handler_gen(module, action):
         def handler(handler, data):
             logger.debug(
-                "Handling request '%s' (multipart=%s)" % (data["request_id"], data["multipart"]))
+                "Handling request '%s' (multipart=%s)" % (data["request_id"], data["multipart"])
+            )
             logger.debug("Data received '%s'." % str(data)[:LOGGER_MAX_LEN])
             router = Router()
             data["module"] = module
@@ -89,9 +91,9 @@ def _register_object(module_name, module):
                     except ValueError:
                         logger.debug("Failed to parse multipart message.")
                         res = {
-                            "errors": [{
-                                "description": "failed to parse multipart", "stacktrace": ""
-                            }]
+                            "errors": [
+                                {"description": "failed to parse multipart", "stacktrace": ""}
+                            ]
                         }
                         handler.reply({"data": json.dumps(res)})
                         return
@@ -114,7 +116,7 @@ def _register_object(module_name, module):
 
             logger.debug("Sending response %s" % str(dumped_data)[:LOGGER_MAX_LEN])
             for i in range(0, len(dumped_data), 512 * 1024):
-                handler.reply({"data": dumped_data[i: i + 512 * 1024]})
+                handler.reply({"data": dumped_data[i : i + 512 * 1024]})
                 logger.debug("Part %d was sent." % (i / (512 * 1024) + 1))
             logger.debug("Handling finished.")
 
@@ -123,13 +125,17 @@ def _register_object(module_name, module):
     ubus.add(
         object_name,
         {
-            method_name: {"method": handler_gen(module_name, method_name), "signature": {
-                "request_id": ubus.BLOBMSG_TYPE_STRING,  # unique request id
-                "final": ubus.BLOBMSG_TYPE_BOOL,  # final part?
-                "multipart": ubus.BLOBMSG_TYPE_BOOL,  # more parts present
-                "payload": ubus.BLOBMSG_TYPE_TABLE,
-            }} for method_name in methods
-        }
+            method_name: {
+                "method": handler_gen(module_name, method_name),
+                "signature": {
+                    "request_id": ubus.BLOBMSG_TYPE_STRING,  # unique request id
+                    "final": ubus.BLOBMSG_TYPE_BOOL,  # final part?
+                    "multipart": ubus.BLOBMSG_TYPE_BOOL,  # more parts present
+                    "payload": ubus.BLOBMSG_TYPE_TABLE,
+                },
+            }
+            for method_name in methods
+        },
     )
     logger.debug("Object '%s' was successfully registered." % object_name)
 
@@ -179,7 +185,6 @@ def ubus_all_in_one_worker(socket_path, modules_list):
 
 
 class UbusListener(BaseSocketListener):
-
     def __init__(self, socket_path):
         """ Inits object which handle listening on ubus
 
@@ -192,18 +197,21 @@ class UbusListener(BaseSocketListener):
         self.workers = []
         if app_info["ubus_single_process"]:
             worker = multiprocessing.Process(
-                name="all-in-one", target=ubus_all_in_one_worker,
-                args=(socket_path, get_modules(
-                    app_info["filter_modules"], app_info["extra_module_paths"])
-                )
+                name="all-in-one",
+                target=ubus_all_in_one_worker,
+                args=(
+                    socket_path,
+                    get_modules(app_info["filter_modules"], app_info["extra_module_paths"]),
+                ),
             )
             self.workers.append(worker)
         else:
             modules = get_modules(app_info["filter_modules"], app_info["extra_module_paths"])
             for module_name, module in modules:
                 worker = multiprocessing.Process(
-                    name=module_name, target=ubus_listener_worker,
-                    args=(socket_path, module_name, module)
+                    name=module_name,
+                    target=ubus_listener_worker,
+                    args=(socket_path, module_name, module),
                 )
                 self.workers.append(worker)
 
@@ -227,7 +235,6 @@ class UbusListener(BaseSocketListener):
 
 
 class UbusNotificationSender(BaseNotificationSender):
-
     def __init__(self, socket_path):
         """ Inits object which handles sending notification via ubus
 
@@ -241,12 +248,16 @@ class UbusNotificationSender(BaseNotificationSender):
             logger.debug("Connecting to ubus.")
             ubus.connect(self.socket_path)
 
-        object_name = 'foris-controller-%s' % module
+        object_name = "foris-controller-%s" % module
         logger.debug(
-            "Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data))
+            "Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data)
+        )
 
-        ubus_msg = {"action": msg["action"], "data": msg["data"]} if "data" in msg \
+        ubus_msg = (
+            {"action": msg["action"], "data": msg["data"]}
+            if "data" in msg
             else {"action": msg["action"]}
+        )
         ubus.send(object_name, ubus_msg)
 
     def disconnect(self):

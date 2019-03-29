@@ -36,7 +36,8 @@ class CryptoWrapperCmds(BaseCmdLine):
         :rtype: str
         """
         return self._trigger_and_parse(
-            ("/usr/bin/crypto-wrapper", "serial-number"), r'^([0-9a-fA-F]{16})$', (1, ))
+            ("/usr/bin/crypto-wrapper", "serial-number"), r"^([0-9a-fA-F]{16})$", (1,)
+        )
 
 
 class SystemInfoCmds(BaseCmdLine):
@@ -46,7 +47,7 @@ class SystemInfoCmds(BaseCmdLine):
         :returns: kernel version
         :rtype: str
         """
-        return self._trigger_and_parse(("/bin/uname", "-r"), r'^([^\s]+)$', (1, ))
+        return self._trigger_and_parse(("/bin/uname", "-r"), r"^([^\s]+)$", (1,))
 
 
 class SystemInfoFiles(BaseFile):
@@ -62,8 +63,7 @@ class SystemInfoFiles(BaseFile):
         :returns: os version
         :rtype: str
         """
-        return self._read_and_parse(
-            SystemInfoFiles.OS_RELEASE_PATH, r'^([0-9]+(\.[0-9]+)*)$', (1, ))
+        return self._read_and_parse(SystemInfoFiles.OS_RELEASE_PATH, r"^([0-9]+(\.[0-9]+)*)$", (1,))
 
     @readlock(file_lock, logger)
     def get_model_name(self):
@@ -72,7 +72,7 @@ class SystemInfoFiles(BaseFile):
         :returns: model
         :rtype: str
         """
-        return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r'^(\w+.*)$', (1, ))
+        return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r"^(\w+.*)$", (1,))
 
     def get_model(self):
         """ display standartized model name (omnia/mox/turris)
@@ -91,7 +91,7 @@ class SystemInfoFiles(BaseFile):
         :returns: board name
         :rtype: str
         """
-        return self._read_and_parse(SystemInfoFiles.BOARD_NAME_PATH, r'^(\w+).*$', (1, ))
+        return self._read_and_parse(SystemInfoFiles.BOARD_NAME_PATH, r"^(\w+).*$", (1,))
 
 
 class ServerUplinkFiles(BaseFile):
@@ -105,7 +105,7 @@ class ServerUplinkFiles(BaseFile):
         :rtype: str
         """
         try:
-            res = self._read_and_parse(ServerUplinkFiles.REGNUM_PATH, r'^([a-zA-Z0-9]{16})$', (1, ))
+            res = self._read_and_parse(ServerUplinkFiles.REGNUM_PATH, r"^([a-zA-Z0-9]{16})$", (1,))
         except:
             # failed to read file -> return False
             res = False

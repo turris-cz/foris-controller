@@ -34,12 +34,8 @@ class MockPasswordHandler(Handler, BaseMockHandler):
     foris_password = None
 
     filter_passwords = {
-        b"password_from_haas": {
-            "count": 101, "list": "haas"
-        },
-        b"password_from_other": {
-            "count": 666, "list": "other"
-        },
+        b"password_from_haas": {"count": 101, "list": "haas"},
+        b"password_from_other": {"count": 666, "list": "other"},
     }
 
     @logger_wrapper(logger)

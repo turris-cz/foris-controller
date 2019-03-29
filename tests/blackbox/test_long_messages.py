@@ -24,7 +24,11 @@ import string
 import uuid
 
 from foris_controller_testtools.fixtures import (
-    only_message_buses, infrastructure, start_buses, ubusd_test, mosquitto_test,
+    only_message_buses,
+    infrastructure,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
 )
 
 
@@ -32,9 +36,7 @@ from foris_controller_testtools.fixtures import (
 def extra_module_paths():
     """ Override of extra module paths fixture
     """
-    return [
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
-    ]
+    return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))
@@ -42,16 +44,13 @@ def test_long_messsages(infrastructure, start_buses, chars_len):
     data = {
         "random_characters": "".join(random.choice(string.ascii_letters) for _ in range(chars_len))
     }
-    res = infrastructure.process_message({
-        "module": "echo",
-        "action": "echo",
-        "kind": "request",
-        "data": {"request_msg": data}
-    })
+    res = infrastructure.process_message(
+        {"module": "echo", "action": "echo", "kind": "request", "data": {"request_msg": data}}
+    )
     assert res["data"]["reply_msg"] == data
 
 
-@pytest.mark.only_message_buses(['ubus'])
+@pytest.mark.only_message_buses(["ubus"])
 def test_ubus_malformed_multipart_resend(infrastructure, start_buses):
     # First lets test whether the multipart is working
     request_id = str(uuid.uuid4())
@@ -59,7 +58,7 @@ def test_ubus_malformed_multipart_resend(infrastructure, start_buses):
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,
-        multipart_data='{',
+        multipart_data="{",
         final=False,
     )
     assert res is None
@@ -74,7 +73,7 @@ def test_ubus_malformed_multipart_resend(infrastructure, start_buses):
         "module": "echo",
         "action": "echo",
         "kind": "reply",
-        "data": {"reply_msg": {"xx": "yy"}}
+        "data": {"reply_msg": {"xx": "yy"}},
     }
 
     # resend last message
@@ -86,14 +85,14 @@ def test_ubus_malformed_multipart_resend(infrastructure, start_buses):
         final=True,
     )
     assert res == {
-        u'action': u'echo',
-        u'errors': [{u'description': u'failed to parse multipart', u'stacktrace': u''}],
-        u'kind': u'reply',
-        u'module': u'echo'
+        u"action": u"echo",
+        u"errors": [{u"description": u"failed to parse multipart", u"stacktrace": u""}],
+        u"kind": u"reply",
+        u"module": u"echo",
     }
 
 
-@pytest.mark.only_message_buses(['ubus'])
+@pytest.mark.only_message_buses(["ubus"])
 def test_ubus_malformed_multipart_one(infrastructure, start_buses):
     # resend wrong json in one multipart
     request_id = str(uuid.uuid4())
@@ -105,14 +104,14 @@ def test_ubus_malformed_multipart_one(infrastructure, start_buses):
         final=True,
     )
     assert res == {
-        u'action': u'echo',
-        u'errors': [{u'description': u'failed to parse multipart', u'stacktrace': u''}],
-        u'kind': u'reply',
-        u'module': u'echo'
+        u"action": u"echo",
+        u"errors": [{u"description": u"failed to parse multipart", u"stacktrace": u""}],
+        u"kind": u"reply",
+        u"module": u"echo",
     }
 
 
-@pytest.mark.only_message_buses(['ubus'])
+@pytest.mark.only_message_buses(["ubus"])
 def test_ubus_malformed_multipart_two(infrastructure, start_buses):
     # resend wrong json in two multiparts
     request_id = str(uuid.uuid4())
@@ -120,7 +119,7 @@ def test_ubus_malformed_multipart_two(infrastructure, start_buses):
         data={"action": "echo", "kind": "request", "module": "echo", "data": {}},
         request_id=request_id,
         multipart=True,
-        multipart_data='{',
+        multipart_data="{",
         final=False,
     )
     assert res is None
@@ -133,8 +132,8 @@ def test_ubus_malformed_multipart_two(infrastructure, start_buses):
     )
 
     assert res == {
-        u'action': u'echo',
-        u'errors': [{u'description': u'failed to parse multipart', u'stacktrace': u''}],
-        u'kind': u'reply',
-        u'module': u'echo'
+        u"action": u"echo",
+        u"errors": [{u"description": u"failed to parse multipart", u"stacktrace": u""}],
+        u"kind": u"reply",
+        u"module": u"echo",
     }

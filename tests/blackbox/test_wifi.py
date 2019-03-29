@@ -21,12 +21,22 @@ import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    only_backends, uci_configs_init, infrastructure, lock_backend,
-    file_root_init, init_script_result, network_restart_command, UCI_CONFIG_DIR_PATH,
-    start_buses, ubusd_test, mosquitto_test,
+    only_backends,
+    uci_configs_init,
+    infrastructure,
+    lock_backend,
+    file_root_init,
+    init_script_result,
+    network_restart_command,
+    UCI_CONFIG_DIR_PATH,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
 )
 from foris_controller_testtools.utils import (
-    match_subdict, get_uci_module, network_restart_was_called
+    match_subdict,
+    get_uci_module,
+    network_restart_was_called,
 )
 
 
@@ -43,57 +53,53 @@ DEFAULT_CONFIG = [
         u"htmode": u"VHT80",
         u"hwmode": u"11a",
         u"password": u"",
-        u"guest_wifi": {
-            u"enabled": False,
-            u"SSID": u"Turris-guest",
-            u"password": u""
-        },
+        u"guest_wifi": {u"enabled": False, u"SSID": u"Turris-guest", u"password": u""},
         u"available_bands": [
             {
                 u"hwmode": "11g",
                 u"available_htmodes": [u"NOHT", u"HT20", u"HT40"],
                 u"available_channels": [
-                    {u"number": 1, u'frequency': 2412, u'radar': False},
-                    {u"number": 2, u'frequency': 2417, u'radar': False},
-                    {u"number": 3, u'frequency': 2422, u'radar': False},
-                    {u"number": 4, u'frequency': 2427, u'radar': False},
-                    {u"number": 5, u'frequency': 2432, u'radar': False},
-                    {u"number": 6, u'frequency': 2437, u'radar': False},
-                    {u"number": 7, u'frequency': 2442, u'radar': False},
-                    {u"number": 8, u'frequency': 2447, u'radar': False},
-                    {u"number": 9, u'frequency': 2452, u'radar': False},
-                    {u"number": 10, u'frequency': 2457, u'radar': False},
-                    {u"number": 11, u'frequency': 2462, u'radar': False},
-                    {u"number": 12, u'frequency': 2467, u'radar': False},
-                    {u"number": 13, u'frequency': 2472, u'radar': False},
+                    {u"number": 1, u"frequency": 2412, u"radar": False},
+                    {u"number": 2, u"frequency": 2417, u"radar": False},
+                    {u"number": 3, u"frequency": 2422, u"radar": False},
+                    {u"number": 4, u"frequency": 2427, u"radar": False},
+                    {u"number": 5, u"frequency": 2432, u"radar": False},
+                    {u"number": 6, u"frequency": 2437, u"radar": False},
+                    {u"number": 7, u"frequency": 2442, u"radar": False},
+                    {u"number": 8, u"frequency": 2447, u"radar": False},
+                    {u"number": 9, u"frequency": 2452, u"radar": False},
+                    {u"number": 10, u"frequency": 2457, u"radar": False},
+                    {u"number": 11, u"frequency": 2462, u"radar": False},
+                    {u"number": 12, u"frequency": 2467, u"radar": False},
+                    {u"number": 13, u"frequency": 2472, u"radar": False},
                 ],
             },
             {
                 u"hwmode": "11a",
                 u"available_htmodes": [u"NOHT", u"HT20", u"HT40", u"VHT20", u"VHT40", u"VHT80"],
                 u"available_channels": [
-                    {u"number": 36, u'frequency': 5180, u'radar': False},
-                    {u"number": 40, u'frequency': 5200, u'radar': False},
-                    {u"number": 44, u'frequency': 5220, u'radar': False},
-                    {u"number": 48, u'frequency': 5240, u'radar': False},
-                    {u"number": 52, u'frequency': 5260, u'radar': True},
-                    {u"number": 56, u'frequency': 5280, u'radar': True},
-                    {u"number": 60, u'frequency': 5300, u'radar': True},
-                    {u"number": 64, u'frequency': 5320, u'radar': True},
-                    {u"number": 100, u'frequency': 5500, u'radar': True},
-                    {u"number": 104, u'frequency': 5520, u'radar': True},
-                    {u"number": 108, u'frequency': 5540, u'radar': True},
-                    {u"number": 112, u'frequency': 5560, u'radar': True},
-                    {u"number": 116, u'frequency': 5580, u'radar': True},
-                    {u"number": 120, u'frequency': 5600, u'radar': True},
-                    {u"number": 124, u'frequency': 5620, u'radar': True},
-                    {u"number": 128, u'frequency': 5640, u'radar': True},
-                    {u"number": 132, u'frequency': 5660, u'radar': True},
-                    {u"number": 136, u'frequency': 5680, u'radar': True},
-                    {u"number": 140, u'frequency': 5700, u'radar': True},
+                    {u"number": 36, u"frequency": 5180, u"radar": False},
+                    {u"number": 40, u"frequency": 5200, u"radar": False},
+                    {u"number": 44, u"frequency": 5220, u"radar": False},
+                    {u"number": 48, u"frequency": 5240, u"radar": False},
+                    {u"number": 52, u"frequency": 5260, u"radar": True},
+                    {u"number": 56, u"frequency": 5280, u"radar": True},
+                    {u"number": 60, u"frequency": 5300, u"radar": True},
+                    {u"number": 64, u"frequency": 5320, u"radar": True},
+                    {u"number": 100, u"frequency": 5500, u"radar": True},
+                    {u"number": 104, u"frequency": 5520, u"radar": True},
+                    {u"number": 108, u"frequency": 5540, u"radar": True},
+                    {u"number": 112, u"frequency": 5560, u"radar": True},
+                    {u"number": 116, u"frequency": 5580, u"radar": True},
+                    {u"number": 120, u"frequency": 5600, u"radar": True},
+                    {u"number": 124, u"frequency": 5620, u"radar": True},
+                    {u"number": 128, u"frequency": 5640, u"radar": True},
+                    {u"number": 132, u"frequency": 5660, u"radar": True},
+                    {u"number": 136, u"frequency": 5680, u"radar": True},
+                    {u"number": 140, u"frequency": 5700, u"radar": True},
                 ],
-            }
-        ]
+            },
+        ],
     },
     {
         u"id": 1,
@@ -104,32 +110,28 @@ DEFAULT_CONFIG = [
         u"htmode": u"HT20",
         u"hwmode": u"11g",
         u"password": u"",
-        u"guest_wifi": {
-            u"enabled": False,
-            u"SSID": u"Turris-guest",
-            u"password": u""
-        },
+        u"guest_wifi": {u"enabled": False, u"SSID": u"Turris-guest", u"password": u""},
         u"available_bands": [
             {
                 u"hwmode": "11g",
                 u"available_htmodes": [u"NOHT", u"HT20", u"HT40"],
                 u"available_channels": [
-                    {u"number": 1, u'frequency': 2412, u'radar': False},
-                    {u"number": 2, u'frequency': 2417, u'radar': False},
-                    {u"number": 3, u'frequency': 2422, u'radar': False},
-                    {u"number": 4, u'frequency': 2427, u'radar': False},
-                    {u"number": 5, u'frequency': 2432, u'radar': False},
-                    {u"number": 6, u'frequency': 2437, u'radar': False},
-                    {u"number": 7, u'frequency': 2442, u'radar': False},
-                    {u"number": 8, u'frequency': 2447, u'radar': False},
-                    {u"number": 9, u'frequency': 2452, u'radar': False},
-                    {u"number": 10, u'frequency': 2457, u'radar': False},
-                    {u"number": 11, u'frequency': 2462, u'radar': False},
-                    {u"number": 12, u'frequency': 2467, u'radar': False},
-                    {u"number": 13, u'frequency': 2472, u'radar': False},
+                    {u"number": 1, u"frequency": 2412, u"radar": False},
+                    {u"number": 2, u"frequency": 2417, u"radar": False},
+                    {u"number": 3, u"frequency": 2422, u"radar": False},
+                    {u"number": 4, u"frequency": 2427, u"radar": False},
+                    {u"number": 5, u"frequency": 2432, u"radar": False},
+                    {u"number": 6, u"frequency": 2437, u"radar": False},
+                    {u"number": 7, u"frequency": 2442, u"radar": False},
+                    {u"number": 8, u"frequency": 2447, u"radar": False},
+                    {u"number": 9, u"frequency": 2452, u"radar": False},
+                    {u"number": 10, u"frequency": 2457, u"radar": False},
+                    {u"number": 11, u"frequency": 2462, u"radar": False},
+                    {u"number": 12, u"frequency": 2467, u"radar": False},
+                    {u"number": 13, u"frequency": 2472, u"radar": False},
                 ],
             }
-        ]
+        ],
     },
 ]
 
@@ -148,11 +150,9 @@ def wifi_opt(request):
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_settings(file_root_init, uci_configs_init, infrastructure, start_buses):
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
     # test initial situation (based on default omnia settings)
@@ -161,25 +161,31 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure, start_bu
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_update_settings(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, start_buses,
-    network_restart_command
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    network_restart_command,
 ):
     filters = [("wifi", "update_settings")]
 
     def update(result, *devices):
         devices = list(devices)
         notifications = infrastructure.get_notifications(filters=filters)
-        res = infrastructure.process_message({
-            "module": "wifi",
-            "action": "update_settings",
-            "kind": "request",
-            "data": {"devices": devices}
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "wifi",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {"devices": devices},
+            }
+        )
         assert res == {
-            u'action': u'update_settings',
-            u'data': {u'result': result},
-            u'kind': u'reply',
-            u'module': u'wifi'
+            u"action": u"update_settings",
+            u"data": {u"result": result},
+            u"kind": u"reply",
+            u"module": u"wifi",
         }
 
         if not result:
@@ -190,14 +196,12 @@ def test_update_settings(
             "module": "wifi",
             "action": "update_settings",
             "kind": "notification",
-            "data": {"devices": devices}
+            "data": {"devices": devices},
         }
 
-        res = infrastructure.process_message({
-            "module": "wifi",
-            "action": "get_settings",
-            "kind": "request",
-        })
+        res = infrastructure.process_message(
+            {"module": "wifi", "action": "get_settings", "kind": "request"}
+        )
 
         assert res["module"] == "wifi"
         assert res["action"] == "get_settings"
@@ -220,14 +224,9 @@ def test_update_settings(
             "htmode": "HT20",
             "hwmode": "11g",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
-        {
-            "id": 1,
-            "enabled": False,
-        },
+        {"id": 1, "enabled": False},
     )
     update(
         True,
@@ -240,9 +239,7 @@ def test_update_settings(
             "htmode": "VHT20",
             "hwmode": "11a",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
         {
             "id": 1,
@@ -253,12 +250,8 @@ def test_update_settings(
             "htmode": "NOHT",
             "hwmode": "11g",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": True,
-                "SSID": "Turris-testik",
-                "password": "ssapssap",
-            },
-        }
+            "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+        },
     )
 
     # test auto channels
@@ -273,9 +266,7 @@ def test_update_settings(
             "htmode": "VHT20",
             "hwmode": "11a",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
         {
             "id": 1,
@@ -286,12 +277,8 @@ def test_update_settings(
             "htmode": "NOHT",
             "hwmode": "11g",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": True,
-                "SSID": "Turris-testik",
-                "password": "ssapssap",
-            },
-        }
+            "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+        },
     )
 
     # more records than devices
@@ -306,9 +293,7 @@ def test_update_settings(
             "htmode": "HT20",
             "hwmode": "11g",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
         {
             "id": 1,
@@ -319,9 +304,7 @@ def test_update_settings(
             "htmode": "HT20",
             "hwmode": "11g",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
         {
             "id": 2,
@@ -332,9 +315,7 @@ def test_update_settings(
             "htmode": "HT20",
             "hwmode": "11g",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
     )
 
@@ -350,9 +331,7 @@ def test_update_settings(
             "htmode": "VHT20",
             "hwmode": "11a",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
         {
             "id": 1,
@@ -363,36 +342,39 @@ def test_update_settings(
             "htmode": "NOHT",
             "hwmode": "11a",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": True,
-                "SSID": "Turris-testik",
-                "password": "ssapssap",
-            },
-        }
+            "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+        },
     )
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_uci(
-    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, start_buses,
-    network_restart_command
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    lock_backend,
+    infrastructure,
+    start_buses,
+    network_restart_command,
 ):
 
     uci = get_uci_module(lock_backend)
 
     def update(*devices):
-        res = infrastructure.process_message({
-            "module": "wifi",
-            "action": "update_settings",
-            "kind": "request",
-            "data": {"devices": devices}
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "wifi",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {"devices": devices},
+            }
+        )
         assert res == {
-            u'action': u'update_settings',
-            u'data': {u'result': True},
-            u'kind': u'reply',
-            u'module': u'wifi'
+            u"action": u"update_settings",
+            u"data": {u"result": True},
+            u"kind": u"reply",
+            u"module": u"wifi",
         }
         network_restart_was_called([])
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -402,12 +384,14 @@ def test_update_settings_uci(
     def get_sections(data, radio_name):
         # get sections where device is radioX
         real_section = [
-            e for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
+            e
+            for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
             if e["data"].get("device") == radio_name
             and not e.get("name", "").startswith("guest_iface_")
         ][0]["name"]
         guest_section = [
-            e for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
+            e
+            for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
             if e["data"].get("device") == radio_name
             and e.get("name", "").startswith("guest_iface_")
         ][0]["name"]
@@ -423,9 +407,7 @@ def test_update_settings_uci(
             "htmode": "VHT80",
             "hwmode": "11a",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
         {
             "id": 1,
@@ -436,43 +418,53 @@ def test_update_settings_uci(
             "htmode": "HT20",
             "hwmode": "11g",
             "password": "ssapssap",
-            "guest_wifi": {
-                "enabled": False,
-            },
-        }
+            "guest_wifi": {"enabled": False},
+        },
     )
 
     assert uci.get_option_named(data, "wireless", "radio0", "channel") == "36"
     assert uci.get_option_named(data, "wireless", "radio0", "hwmode") == "11a"
     assert uci.get_option_named(data, "wireless", "radio0", "htmode") == "VHT80"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) \
-        is False
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is False
+    )
     real_section, guest_section = get_sections(data, "radio0")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev1"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "passpass"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
         is False
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) \
-        is False
+    )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
+    )
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "psk2+ccmp"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is True
+    )
 
     assert uci.get_option_named(data, "wireless", "radio1", "channel") == "11"
     assert uci.get_option_named(data, "wireless", "radio1", "hwmode") == "11g"
     assert uci.get_option_named(data, "wireless", "radio1", "htmode") == "HT20"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) \
-        is False
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is False
+    )
     real_section, guest_section = get_sections(data, "radio1")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev2"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "ssapssap"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
         is False
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) \
-        is False
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) \
+    )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
+    )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is True
+    )
 
     data = update(
         {
@@ -484,9 +476,7 @@ def test_update_settings_uci(
             "htmode": "VHT40",
             "hwmode": "11a",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": False,
-            },
+            "guest_wifi": {"enabled": False},
         },
         {
             "id": 1,
@@ -497,46 +487,54 @@ def test_update_settings_uci(
             "htmode": "HT40",
             "hwmode": "11g",
             "password": "ssapssap",
-            "guest_wifi": {
-                "enabled": True,
-                "SSID": "Dev22G",
-                "password": "ssapssapg",
-            },
-        }
+            "guest_wifi": {"enabled": True, "SSID": "Dev22G", "password": "ssapssapg"},
+        },
     )
 
     assert uci.get_option_named(data, "wireless", "radio0", "channel") == "40"
     assert uci.get_option_named(data, "wireless", "radio0", "hwmode") == "11a"
     assert uci.get_option_named(data, "wireless", "radio0", "htmode") == "VHT40"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) \
-        is False
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is False
+    )
     real_section, guest_section = get_sections(data, "radio0")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev11"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "passpass"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
         is False
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) \
-        is False
+    )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
+    )
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "psk2+ccmp"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is True
+    )
 
     assert uci.get_option_named(data, "wireless", "radio1", "channel") == "12"
     assert uci.get_option_named(data, "wireless", "radio1", "hwmode") == "11g"
     assert uci.get_option_named(data, "wireless", "radio1", "htmode") == "HT40"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) \
-        is False
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is False
+    )
     real_section, guest_section = get_sections(data, "radio1")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev22"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "ssapssap"
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
         is False
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) \
-        is True
+    )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is True
+    )
 
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is False
+    )
     assert uci.get_option_named(data, "wireless", guest_section, "ssid") == "Dev22G"
     assert uci.get_option_named(data, "wireless", guest_section, "key") == "ssapssapg"
     assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
@@ -544,8 +542,10 @@ def test_update_settings_uci(
     assert uci.get_option_named(data, "wireless", guest_section, "mode") == "ap"
     assert uci.get_option_named(data, "wireless", guest_section, "network") == "guest_turris"
 
-    assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0"))
         is True
+    )
 
     data = update(
         {
@@ -557,16 +557,9 @@ def test_update_settings_uci(
             "htmode": "NOHT",
             "hwmode": "11a",
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": True,
-                "password": "passpassg",
-                "SSID": "Dev111G",
-            },
+            "guest_wifi": {"enabled": True, "password": "passpassg", "SSID": "Dev111G"},
         },
-        {
-            "id": 1,
-            "enabled": False,
-        }
+        {"id": 1, "enabled": False},
     )
 
     assert uci.get_option_named(data, "wireless", "radio0", "channel") == "auto"
@@ -576,257 +569,271 @@ def test_update_settings_uci(
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is True
     real_section, guest_section = get_sections(data, "radio1")
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
         is True
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) \
-        is True
-
-    assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0")) \
-        is True
-
-    data = update(
-        {
-            "id": 0,
-            "enabled": False,
-        },
-        {
-            "id": 1,
-            "enabled": False,
-        }
     )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
+        is True
+    )
+
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0"))
+        is True
+    )
+
+    data = update({"id": 0, "enabled": False}, {"id": 1, "enabled": False})
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is True
     real_section, guest_section = get_sections(data, "radio0")
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
         is True
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) \
+    )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is True
+    )
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is True
     real_section, guest_section = get_sections(data, "radio1")
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) \
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
         is True
-    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) \
+    )
+    assert (
+        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is True
+    )
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_wrong_update(file_root_init, uci_configs_init, infrastructure, start_buses):
-
     def update(*devices):
-        res = infrastructure.process_message({
-            "module": "wifi",
-            "action": "update_settings",
-            "kind": "request",
-            "data": {"devices": devices},
-        })
+        res = infrastructure.process_message(
+            {
+                "module": "wifi",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {"devices": devices},
+            }
+        )
         assert "errors" in res
 
     # enabled false
-    update([{
-        "id": 1,
-        "enabled": False,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 11,
-        "htmode": "HT20",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-        },
-    }])
+    update(
+        [
+            {
+                "id": 1,
+                "enabled": False,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False},
+            }
+        ]
+    )
 
     # enabled wifi false
-    update([{
-        "id": 1,
-        "enabled": True,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 11,
-        "htmode": "HT20",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-            "SSID": "Turris-guest",
-            "password": "passpass"
-        },
-    }])
+    update(
+        [
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False, "SSID": "Turris-guest", "password": "passpass"},
+            }
+        ]
+    )
 
     # wrong ht mode
-    update([{
-        "id": 1,
-        "enabled": True,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 11,
-        "htmode": "VTH20",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-        },
-    }])
-    update([{
-        "id": 1,
-        "enabled": True,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 11,
-        "htmode": "VTH40",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-        },
-    }])
-    update([{
-        "id": 1,
-        "enabled": True,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 11,
-        "htmode": "VTH80",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-        },
-    }])
+    update(
+        [
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "VTH20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False},
+            }
+        ]
+    )
+    update(
+        [
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "VTH40",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False},
+            }
+        ]
+    )
+    update(
+        [
+            {
+                "id": 1,
+                "enabled": True,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 11,
+                "htmode": "VTH80",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False},
+            }
+        ]
+    )
 
     # mismatching frequences
-    update([{
-        "id": 0,
-        "enabled": False,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 40,
-        "htmode": "HT20",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-        },
-    }])
-    update([{
-        "id": 0,
-        "enabled": False,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 10,
-        "htmode": "HT20",
-        "hwmode": "11a",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-        },
-    }])
+    update(
+        [
+            {
+                "id": 0,
+                "enabled": False,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 40,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False},
+            }
+        ]
+    )
+    update(
+        [
+            {
+                "id": 0,
+                "enabled": False,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 10,
+                "htmode": "HT20",
+                "hwmode": "11a",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False},
+            }
+        ]
+    )
 
     # too long SSID
-    update([{
-        "id": 0,
-        "enabled": False,
-        "SSID": "This SSID has more than 32 charac",
-        "hidden": False,
-        "channel": 10,
-        "htmode": "HT20",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": False,
-        },
-    }])
-    update([{
-        "id": 0,
-        "enabled": False,
-        "SSID": "Turris",
-        "hidden": False,
-        "channel": 40,
-        "htmode": "HT20",
-        "hwmode": "11g",
-        "password": "passpass",
-        "guest_wifi": {
-            "enabled": True,
-            "SSID": "This SSID has more than 32 charac",
-            "password": "passpass"
-        },
-    }])
+    update(
+        [
+            {
+                "id": 0,
+                "enabled": False,
+                "SSID": "This SSID has more than 32 charac",
+                "hidden": False,
+                "channel": 10,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {"enabled": False},
+            }
+        ]
+    )
+    update(
+        [
+            {
+                "id": 0,
+                "enabled": False,
+                "SSID": "Turris",
+                "hidden": False,
+                "channel": 40,
+                "htmode": "HT20",
+                "hwmode": "11g",
+                "password": "passpass",
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "This SSID has more than 32 charac",
+                    "password": "passpass",
+                },
+            }
+        ]
+    )
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_reset(
     wifi_opt, file_root_init, uci_configs_init, infrastructure, start_buses, network_restart_command
 ):
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "devices": [
-                {
-                    "id": 0,
-                    "enabled": True,
-                    "SSID": "TurrisY",
-                    "hidden": True,
-                    "channel": 0,
-                    "htmode": "VHT20",
-                    "hwmode": "11a",
-                    "password": "passpass",
-                    "guest_wifi": {
-                        "enabled": False,
-                    },
-                },
-                {
-                    "id": 1,
-                    "enabled": True,
-                    "SSID": "TurrisX",
-                    "hidden": True,
-                    "channel": 0,
-                    "htmode": "NOHT",
-                    "hwmode": "11g",
-                    "password": "passpass",
-                    "guest_wifi": {
+    res = infrastructure.process_message(
+        {
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "devices": [
+                    {
+                        "id": 0,
                         "enabled": True,
-                        "SSID": "Turris-testik",
-                        "password": "ssapssap",
+                        "SSID": "TurrisY",
+                        "hidden": True,
+                        "channel": 0,
+                        "htmode": "VHT20",
+                        "hwmode": "11a",
+                        "password": "passpass",
+                        "guest_wifi": {"enabled": False},
                     },
-                }
-            ]
+                    {
+                        "id": 1,
+                        "enabled": True,
+                        "SSID": "TurrisX",
+                        "hidden": True,
+                        "channel": 0,
+                        "htmode": "NOHT",
+                        "hwmode": "11g",
+                        "password": "passpass",
+                        "guest_wifi": {
+                            "enabled": True,
+                            "SSID": "Turris-testik",
+                            "password": "ssapssap",
+                        },
+                    },
+                ]
+            },
         }
-    })
+    )
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'wifi'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"wifi",
     }
 
     filters = [("wifi", "reset")]
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "reset",
-        "kind": "request",
-    })
+    res = infrastructure.process_message({"module": "wifi", "action": "reset", "kind": "request"})
     assert res == {
-        u'action': u'reset',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'wifi'
+        u"action": u"reset",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"wifi",
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
-    assert notifications[-1] == {
-        u"module": u"wifi",
-        u"action": u"reset",
-        u"kind": u"notification",
-    }
+    assert notifications[-1] == {u"module": u"wifi", u"action": u"reset", u"kind": u"notification"}
 
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
     # test initial situation (based on default omnia settings)
@@ -835,79 +842,88 @@ def test_reset(
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_too_long_generated_guest_ssid(
     file_root_init, uci_configs_init, infrastructure, start_buses, network_restart_command
 ):
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "devices": [{
-                "id": 0,
-                "enabled": True,
-                "SSID": "This SSID has less than 32 chars",
-                "hidden": False,
-                "channel": 10,
-                "htmode": "HT20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {
-                    "enabled": False,
-                },
-            }]
+    res = infrastructure.process_message(
+        {
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "devices": [
+                    {
+                        "id": 0,
+                        "enabled": True,
+                        "SSID": "This SSID has less than 32 chars",
+                        "hidden": False,
+                        "channel": 10,
+                        "htmode": "HT20",
+                        "hwmode": "11g",
+                        "password": "passpass",
+                        "guest_wifi": {"enabled": False},
+                    }
+                ]
+            },
         }
-    })
+    )
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'wifi'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"wifi",
     }
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
     assert res["data"]["devices"][0]["guest_wifi"]["SSID"] == "Turris-guest"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_modify_encryption_only_if_none(
-    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, start_buses,
-    network_restart_command
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    lock_backend,
+    infrastructure,
+    start_buses,
+    network_restart_command,
 ):
     uci = get_uci_module(lock_backend)
 
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "devices": [{
-                "id": 0,
-                "enabled": True,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 10,
-                "htmode": "HT20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {
-                    "SSID": "Turris-guest",
-                    "enabled": True,
-                    "password": "passpass",
-                },
-            }]
+    res = infrastructure.process_message(
+        {
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "devices": [
+                    {
+                        "id": 0,
+                        "enabled": True,
+                        "SSID": "Turris",
+                        "hidden": False,
+                        "channel": 10,
+                        "htmode": "HT20",
+                        "hwmode": "11g",
+                        "password": "passpass",
+                        "guest_wifi": {
+                            "SSID": "Turris-guest",
+                            "enabled": True,
+                            "password": "passpass",
+                        },
+                    }
+                ]
+            },
         }
-    })
+    )
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'wifi'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"wifi",
     }
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
@@ -918,74 +934,71 @@ def test_modify_encryption_only_if_none(
         backend.set_option("wireless", "@wifi-iface[0]", "encryption", "psk2+tkip+ccmp")
         backend.set_option("wireless", "guest_iface_0", "encryption", "psk2+tkip+ccmp")
 
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "devices": [{
-                "id": 0,
-                "enabled": True,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 10,
-                "htmode": "HT20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {
-                    "SSID": "Turris-guest",
-                    "enabled": True,
-                    "password": "passpass",
-                },
-            }]
+    res = infrastructure.process_message(
+        {
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "devices": [
+                    {
+                        "id": 0,
+                        "enabled": True,
+                        "SSID": "Turris",
+                        "hidden": False,
+                        "channel": 10,
+                        "htmode": "HT20",
+                        "hwmode": "11g",
+                        "password": "passpass",
+                        "guest_wifi": {
+                            "SSID": "Turris-guest",
+                            "enabled": True,
+                            "password": "passpass",
+                        },
+                    }
+                ]
+            },
         }
-    })
+    )
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'wifi'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"wifi",
     }
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
-    assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") \
+    assert (
+        uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption")
         == "psk2+tkip+ccmp"
-    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") \
-        == "psk2+tkip+ccmp"
+    )
+    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "psk2+tkip+ccmp"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_settings_and_reset(
     wifi_opt, file_root_init, uci_configs_init, infrastructure, start_buses
 ):
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
     # test initial situation (based on default omnia settings)
     assert res["data"]["devices"] == DEFAULT_CONFIG
 
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "reset",
-        "kind": "request",
-    })
+    res = infrastructure.process_message({"module": "wifi", "action": "reset", "kind": "request"})
     assert res == {
-        u'action': u'reset',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'wifi'
+        u"action": u"reset",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"wifi",
     }
 
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
     # test initial situation (based on default omnia settings)
@@ -993,24 +1006,27 @@ def test_get_settings_and_reset(
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_get_settings_missing_wireless(
-    file_root_init, uci_configs_init, lock_backend, infrastructure, start_buses,
+    file_root_init, uci_configs_init, lock_backend, infrastructure, start_buses
 ):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
-    res = infrastructure.process_message({
-        "module": "wifi",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_uci_country(
-    init_script_result, file_root_init, uci_configs_init, lock_backend, infrastructure, start_buses,
-    network_restart_command
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    lock_backend,
+    infrastructure,
+    start_buses,
+    network_restart_command,
 ):
 
     uci = get_uci_module(lock_backend)
@@ -1020,39 +1036,38 @@ def test_update_settings_uci_country(
             backend.set_option("system", "@system[0]", "_country", country)
 
     def update():
-        res = infrastructure.process_message({
-            "module": "wifi",
-            "action": "update_settings",
-            "kind": "request",
-            "data": {
-                "devices": [
-                    {
-                        "id": 0,
-                        "enabled": True,
-                        "SSID": "Devxxx",
-                        "hidden": True,
-                        "channel": 0,
-                        "htmode": "NOHT",
-                        "hwmode": "11a",
-                        "password": "passpass",
-                        "guest_wifi": {
+        res = infrastructure.process_message(
+            {
+                "module": "wifi",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {
+                    "devices": [
+                        {
+                            "id": 0,
                             "enabled": True,
-                            "password": "passpassg",
-                            "SSID": "Dev111G",
+                            "SSID": "Devxxx",
+                            "hidden": True,
+                            "channel": 0,
+                            "htmode": "NOHT",
+                            "hwmode": "11a",
+                            "password": "passpass",
+                            "guest_wifi": {
+                                "enabled": True,
+                                "password": "passpassg",
+                                "SSID": "Dev111G",
+                            },
                         },
-                    },
-                    {
-                        "id": 1,
-                        "enabled": False,
-                    }
-                ]
+                        {"id": 1, "enabled": False},
+                    ]
+                },
             }
-        })
+        )
         assert res == {
-            u'action': u'update_settings',
-            u'data': {u'result': True},
-            u'kind': u'reply',
-            u'module': u'wifi'
+            u"action": u"update_settings",
+            u"data": {u"result": True},
+            u"kind": u"reply",
+            u"module": u"wifi",
         }
         network_restart_was_called([])
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:

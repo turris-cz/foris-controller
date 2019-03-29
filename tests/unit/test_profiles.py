@@ -24,37 +24,41 @@ from foris_controller import profiles
 
 @pytest.fixture(
     params=[
-        (profiles.WORKFLOW_OLD, [
-            profiles.STEP_PASSWORD,
-            profiles.STEP_WAN,
-            profiles.STEP_TIME,
-            profiles.STEP_DNS,
-            profiles.STEP_UPDATER,
-            profiles.STEP_FINISHED,
-        ]),
-        (profiles.WORKFLOW_UNSET, [
-            profiles.STEP_PASSWORD,
-            profiles.STEP_PROFILE,
-        ]),
-        (profiles.WORKFLOW_MIN, [
-            profiles.STEP_PASSWORD,
-            profiles.STEP_PROFILE,
-            profiles.STEP_FINISHED,
-        ]),
-        (profiles.WORKFLOW_ROUTER, [
-            profiles.STEP_PASSWORD,
-            profiles.STEP_PROFILE,
-            profiles.STEP_NETWORKS,
-            profiles.STEP_WAN,
-            profiles.STEP_TIME,
-            profiles.STEP_DNS,
-            profiles.STEP_UPDATER,
-            profiles.STEP_FINISHED,
-        ]),
+        (
+            profiles.WORKFLOW_OLD,
+            [
+                profiles.STEP_PASSWORD,
+                profiles.STEP_WAN,
+                profiles.STEP_TIME,
+                profiles.STEP_DNS,
+                profiles.STEP_UPDATER,
+                profiles.STEP_FINISHED,
+            ],
+        ),
+        (profiles.WORKFLOW_UNSET, [profiles.STEP_PASSWORD, profiles.STEP_PROFILE]),
+        (
+            profiles.WORKFLOW_MIN,
+            [profiles.STEP_PASSWORD, profiles.STEP_PROFILE, profiles.STEP_FINISHED],
+        ),
+        (
+            profiles.WORKFLOW_ROUTER,
+            [
+                profiles.STEP_PASSWORD,
+                profiles.STEP_PROFILE,
+                profiles.STEP_NETWORKS,
+                profiles.STEP_WAN,
+                profiles.STEP_TIME,
+                profiles.STEP_DNS,
+                profiles.STEP_UPDATER,
+                profiles.STEP_FINISHED,
+            ],
+        ),
     ],
     ids=[
-        profiles.WORKFLOW_OLD, profiles.WORKFLOW_UNSET,
-        profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER
+        profiles.WORKFLOW_OLD,
+        profiles.WORKFLOW_UNSET,
+        profiles.WORKFLOW_MIN,
+        profiles.WORKFLOW_ROUTER,
     ],
 )
 def all_profiles(request):
@@ -74,25 +78,24 @@ def test_strait_workflow(all_profiles):
 
 @pytest.fixture(
     params=[
-        (profiles.WORKFLOW_UNSET, [
-            profiles.STEP_PASSWORD,
-            profiles.STEP_PROFILE,
-        ]),
-        (profiles.WORKFLOW_MIN, [
-            profiles.STEP_PASSWORD,
-            profiles.STEP_PROFILE,
-            profiles.STEP_FINISHED,
-        ]),
-        (profiles.WORKFLOW_ROUTER, [
-            profiles.STEP_PASSWORD,
-            profiles.STEP_PROFILE,
-            profiles.STEP_NETWORKS,
-            profiles.STEP_WAN,
-            profiles.STEP_TIME,
-            profiles.STEP_DNS,
-            profiles.STEP_UPDATER,
-            profiles.STEP_FINISHED,
-        ]),
+        (profiles.WORKFLOW_UNSET, [profiles.STEP_PASSWORD, profiles.STEP_PROFILE]),
+        (
+            profiles.WORKFLOW_MIN,
+            [profiles.STEP_PASSWORD, profiles.STEP_PROFILE, profiles.STEP_FINISHED],
+        ),
+        (
+            profiles.WORKFLOW_ROUTER,
+            [
+                profiles.STEP_PASSWORD,
+                profiles.STEP_PROFILE,
+                profiles.STEP_NETWORKS,
+                profiles.STEP_WAN,
+                profiles.STEP_TIME,
+                profiles.STEP_DNS,
+                profiles.STEP_UPDATER,
+                profiles.STEP_FINISHED,
+            ],
+        ),
     ],
     ids=[profiles.WORKFLOW_UNSET, profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER],
 )

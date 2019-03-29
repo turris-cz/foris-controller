@@ -20,7 +20,4 @@
 from .mock import MockAboutHandler
 from .openwrt import OpenwrtAboutHandler
 
-__all__ = [
-    'MockAboutHandler',
-    'OpenwrtAboutHandler',
-]
+__all__ = ["MockAboutHandler", "OpenwrtAboutHandler"]

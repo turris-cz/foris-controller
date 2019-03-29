@@ -42,10 +42,10 @@ class WebModule(BaseModule):
         :returns: current language {'result': true}
         :rtype: dict
         """
-        res = self.handler.set_language(data['language'])
+        res = self.handler.set_language(data["language"])
         if res:
             self.notify("set_language", data)
-        return {'result': res}
+        return {"result": res}
 
     def action_list_languages(self, data):
         """ Returns a list of available languages
@@ -54,7 +54,7 @@ class WebModule(BaseModule):
         :returns: current language {'languages': ['en', 'cs', ..]}
         :rtype: dict
         """
-        return {'languages': self.handler.list_languages()}
+        return {"languages": self.handler.list_languages()}
 
     def action_update_guide(self, data):
         """ Update current guide settings
@@ -83,13 +83,9 @@ class WebModule(BaseModule):
         """
         return {"result": self.handler.reset_guide(**data)}
 
-@wrap_required_functions([
-    'set_language',
-    'list_languages',
-    'update_guide',
-    'get_data',
-    'get_guide',
-    'reset_guide',
-])
+
+@wrap_required_functions(
+    ["set_language", "list_languages", "update_guide", "get_data", "get_guide", "reset_guide"]
+)
 class Handler(object):
     pass

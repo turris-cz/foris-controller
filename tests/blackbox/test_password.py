@@ -25,9 +25,15 @@ import random
 import string
 
 from foris_controller_testtools.fixtures import (
-    uci_configs_init, infrastructure, only_backends, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    only_backends,
+    device,
+    turris_os_version,
     file_root_init,
-    start_buses, ubusd_test, mosquitto_test,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
 )
 
 PASS_PATH = "/tmp/passwd_input"
@@ -50,110 +56,112 @@ def pass_file():
         pass
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_set_and_check_system(
-    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version,
+    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version
 ):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "set",
-        "kind": "request",
-        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8"), "type": "system"},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "password": base64.b64encode(new_pass.encode()).decode("utf-8"),
+                "type": "system",
+            },
+        }
+    )
     assert res == {
-        u'action': u'set',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"set",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"password",
     }
     assert infrastructure.get_notifications(old_notifications, filters=filters)[-1] == {
         u"module": u"password",
         u"action": u"set",
         u"kind": u"notification",
-        u"data": {
-            u"type": u"system"
-        }
+        u"data": {u"type": u"system"},
     }
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "check",
-        "kind": "request",
-        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8")},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "check",
+            "kind": "request",
+            "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8")},
+        }
+    )
     assert res["data"]["status"] != u"good"
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_set_and_check_foris(
-    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version,
+    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version
 ):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "set",
-        "kind": "request",
-        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8"), "type": "foris"},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "password": base64.b64encode(new_pass.encode()).decode("utf-8"),
+                "type": "foris",
+            },
+        }
+    )
     assert res == {
-        u'action': u'set',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"set",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"password",
     }
     assert infrastructure.get_notifications(old_notifications, filters=filters)[-1] == {
         u"module": u"password",
         u"action": u"set",
         u"kind": u"notification",
-        u"data": {
-            u"type": u"foris"
+        u"data": {u"type": u"foris"},
+    }
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "check",
+            "kind": "request",
+            "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8")},
         }
-    }
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "check",
-        "kind": "request",
-        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8")},
-    })
+    )
     assert res == {
-        u'action': u'check',
-        u'data': {u'status': u"good"},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"check",
+        u"data": {u"status": u"good"},
+        u"kind": u"reply",
+        u"module": u"password",
     }
 
 
-
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.only_backends(["openwrt"])
 def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, start_buses):
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "set",
-        "kind": "request",
-        "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8"), "type": "system"},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "password": base64.b64encode(new_pass.encode()).decode("utf-8"),
+                "type": "system",
+            },
+        }
+    )
     assert res == {
-        u'action': u'set',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"set",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"password",
     }
     with open(pass_file) as f:
         assert f.read() == ("%(password)s\n%(password)s\n" % dict(password=new_pass))
@@ -161,51 +169,71 @@ def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, start_bus
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_password_filter(uci_configs_init, pass_file, infrastructure, start_buses):
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "set",
-        "kind": "request",
-        "data": {"password": base64.b64encode("password_from_haas".encode()).decode("utf-8"), "type": "system"},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "password": base64.b64encode("password_from_haas".encode()).decode("utf-8"),
+                "type": "system",
+            },
+        }
+    )
     assert res == {
-        u'action': u'set',
-        u'data': {u'result': False, "list": "haas", "count": 101},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"set",
+        u"data": {u"result": False, "list": "haas", "count": 101},
+        u"kind": u"reply",
+        u"module": u"password",
     }
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "set",
-        "kind": "request",
-        "data": {"password": base64.b64encode("password_from_other".encode()).decode("utf-8"), "type": "foris"},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "password": base64.b64encode("password_from_other".encode()).decode("utf-8"),
+                "type": "foris",
+            },
+        }
+    )
     assert res == {
-        u'action': u'set',
-        u'data': {u'result': False, "list": "other", "count": 666},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"set",
+        u"data": {u"result": False, "list": "other", "count": 666},
+        u"kind": u"reply",
+        u"module": u"password",
     }
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "set",
-        "kind": "request",
-        "data": {"password": base64.b64encode("valid".encode()).decode("utf-8"), "type": "system"},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "password": base64.b64encode("valid".encode()).decode("utf-8"),
+                "type": "system",
+            },
+        }
+    )
     assert res == {
-        u'action': u'set',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"set",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"password",
     }
-    res = infrastructure.process_message({
-        "module": "password",
-        "action": "set",
-        "kind": "request",
-        "data": {"password": base64.b64encode("valid".encode()).decode("utf-8"), "type": "foris"},
-    })
+    res = infrastructure.process_message(
+        {
+            "module": "password",
+            "action": "set",
+            "kind": "request",
+            "data": {
+                "password": base64.b64encode("valid".encode()).decode("utf-8"),
+                "type": "foris",
+            },
+        }
+    )
     assert res == {
-        u'action': u'set',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'password'
+        u"action": u"set",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"password",
     }

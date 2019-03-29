@@ -27,7 +27,6 @@ class RemoteModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_generate_ca(self, data):
-
         def notify(msg):
             self.notify("generate_ca", msg)
 
@@ -40,7 +39,6 @@ class RemoteModule(BaseModule):
         return self.handler.get_status()
 
     def action_generate_token(self, data):
-
         def notify(msg):
             self.notify("generate_token", msg)
 
@@ -78,15 +76,17 @@ class RemoteModule(BaseModule):
         return self.handler.get_token(**data)
 
 
-@wrap_required_functions([
-    'generate_ca',
-    'get_status',
-    'generate_token',
-    'revoke',
-    'delete_ca',
-    'get_settings',
-    'update_settings',
-    'get_token',
-])
+@wrap_required_functions(
+    [
+        "generate_ca",
+        "get_status",
+        "generate_token",
+        "revoke",
+        "delete_ca",
+        "get_settings",
+        "update_settings",
+        "get_token",
+    ]
+)
 class Handler(object):
     pass

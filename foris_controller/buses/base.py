@@ -28,18 +28,13 @@ from foris_controller.utils import get_modules, get_module_class
 
 
 class BaseNotificationSender(object):
-
     def _validate(self, msg, validator):
         logger.debug("Starting to validate notification.")
         validator.validate(msg)
         logger.debug("Notification validation passed.")
 
     def _prepare_msg(self, module, action, data=None):
-        msg = {
-            "module": module,
-            "kind": "notification",
-            "action": action,
-        }
+        msg = {"module": module, "kind": "notification", "action": action}
         if data is not None:
             msg["data"] = data
         return msg
@@ -68,7 +63,6 @@ class BaseNotificationSender(object):
 
 
 class BaseSocketListener(object):
-
     def serve_forever(self):
         raise NotImplementedError()
 
@@ -90,10 +84,12 @@ def get_method_names_from_module(module):
 
     # read all names fucntions which starts with action_
     res = [
-        e[0] for e in inspect.getmembers(
+        e[0]
+        for e in inspect.getmembers(
             module_class, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x)
-        ) if e[0].startswith("action_")
+        )
+        if e[0].startswith("action_")
     ]
 
     # remove action_ prefix
-    return [e[len("action_"):] for e in res]
+    return [e[len("action_") :] for e in res]

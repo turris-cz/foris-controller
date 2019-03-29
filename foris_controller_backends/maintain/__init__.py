@@ -20,9 +20,7 @@
 import logging
 import os
 
-from foris_controller.updater import (
-    svupdater, svupdater_exceptions, svupdater_hook
-)
+from foris_controller.updater import svupdater, svupdater_exceptions, svupdater_hook
 from foris_controller_backends.cmdline import BackendCommandFailed, BaseCmdLine
 
 
@@ -30,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class MaintainCommands(BaseCmdLine):
-    REBOOT_INDICATOR_PATH = '/tmp/device-reboot-required'
+    REBOOT_INDICATOR_PATH = "/tmp/device-reboot-required"
 
     def reboot(self):
         self._run_command_in_background("/usr/bin/maintain-reboot")

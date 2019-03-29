@@ -50,9 +50,6 @@ class NetworksModule(BaseModule):
         return {"result": res}
 
 
-@wrap_required_functions([
-    'get_settings',
-    'update_settings',
-])
+@wrap_required_functions(["get_settings", "update_settings"])
 class Handler(object):
     pass

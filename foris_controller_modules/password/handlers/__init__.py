@@ -20,7 +20,4 @@
 from .mock import MockPasswordHandler
 from .openwrt import OpenwrtPasswordHandler
 
-__all__ = [
-    'MockPasswordHandler',
-    'OpenwrtPasswordHandler',
-]
+__all__ = ["MockPasswordHandler", "OpenwrtPasswordHandler"]

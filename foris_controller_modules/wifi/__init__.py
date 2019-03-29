@@ -60,10 +60,6 @@ class WifiModule(BaseModule):
         return {"result": res}
 
 
-@wrap_required_functions([
-    'get_settings',
-    'update_settings',
-    'reset',
-])
+@wrap_required_functions(["get_settings", "update_settings", "reset"])
 class Handler(object):
     pass

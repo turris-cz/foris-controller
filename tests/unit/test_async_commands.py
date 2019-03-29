@@ -43,6 +43,7 @@ def get_data(old_data=None):
 @pytest.fixture(scope="function")
 def async_infrastructure(lock_backend):
     from foris_controller.app import app_info
+
     app_info["lock_backend"] = lock_backend
 
     os.environ["FORIS_CMDLINE_ROOT"] = os.path.join(
@@ -95,9 +96,9 @@ def test_async_complex(async_infrastructure):
                 notify("%s: %s" % (process_data.id, data))
 
             handlers = [
-                (r'FIRST (\w+)', handler),
-                (r'SECOND (\w+)', handler),
-                (r'THIRD (\w+)', handler),
+                (r"FIRST (\w+)", handler),
+                (r"SECOND (\w+)", handler),
+                (r"THIRD (\w+)", handler),
             ]
 
             def exit_handler(process_data):
@@ -108,10 +109,7 @@ def test_async_complex(async_infrastructure):
                     f.flush()
 
             return self.start_process(
-                [SCRIPT_PATH, "10", "11", "22", "33"],
-                handlers,
-                exit_handler,
-                reset_notify_function,
+                [SCRIPT_PATH, "10", "11", "22", "33"], handlers, exit_handler, reset_notify_function
             )
 
     command = TestCommand()
@@ -135,8 +133,6 @@ def test_async_complex(async_infrastructure):
 
     assert data[3] == "%s: exitted 10" % cmd_id
 
-    assert command.read_data(cmd_id) == (
-        "finished", 10, ["11", "22", "33"]
-    )
+    assert command.read_data(cmd_id) == ("finished", 10, ["11", "22", "33"])
 
     assert os.path.exists(RESET_PATH)

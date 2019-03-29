@@ -46,8 +46,13 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(
-        self, region: str, country: str, city: str, timezone: str, how_to_set_time: str,
-        time: typing.Optional[datetime] = None
+        self,
+        region: str,
+        country: str,
+        city: str,
+        timezone: str,
+        how_to_set_time: str,
+        time: typing.Optional[datetime] = None,
     ) -> bool:
         """ Updates current time settings
 

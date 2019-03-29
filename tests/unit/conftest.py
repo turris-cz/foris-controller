@@ -21,21 +21,15 @@ import os
 import pytest
 
 
-from foris_controller_testtools.fixtures import (
-    file_root, uci_config_default_path
-)
+from foris_controller_testtools.fixtures import file_root, uci_config_default_path
 
 
 @pytest.fixture(scope="session")
 def uci_config_default_path():
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "uci_configs",
-    )
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "uci_configs")
 
 
 @pytest.fixture(scope="session")
 def file_root():
     # default src dirctory will be the same as for the scripts  (could be override later)
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "test_root"
-    )
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_root")

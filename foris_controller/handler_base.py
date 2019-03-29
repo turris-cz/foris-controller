@@ -31,6 +31,7 @@ def wrap_required_functions(required_functions):
     param required_functions: list of names of required functions
     type required_functions: list of str
     """
+
     def wrapped(base_class):
         class MetaClass(type):
             def __init__(cls, name, bases, dct):
@@ -43,8 +44,8 @@ def wrap_required_functions(required_functions):
                 super(MetaClass, cls).__init__(name, bases, dct)
 
         body = vars(base_class).copy()
-        body.pop('__dict__', None)
-        body.pop('__weakref__', None)
+        body.pop("__dict__", None)
+        body.pop("__weakref__", None)
 
         return MetaClass(base_class.__name__, base_class.__bases__, body)
 

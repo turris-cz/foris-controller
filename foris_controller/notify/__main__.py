@@ -29,7 +29,7 @@ from foris_controller import __version__
 from foris_controller.utils import get_validator_dirs, read_passwd_file
 
 
-available_buses: typing.List[str] = ['unix-socket']
+available_buses: typing.List[str] = ["unix-socket"]
 
 
 try:
@@ -52,51 +52,67 @@ logger = logging.getLogger("foris_notify")
 def main():
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-notify")
-    parser.add_argument('--version', action='version', version=__version__)
+    parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
-        "-m", "--module", dest="module", help="module which will be used",
-        required=True, type=str,
+        "-m", "--module", dest="module", help="module which will be used", required=True, type=str
     )
     parser.add_argument(
-        "-a", "--action", dest="action", help="action which will be performed",
-        required=True, type=str
+        "-a",
+        "--action",
+        dest="action",
+        help="action which will be performed",
+        required=True,
+        type=str,
     )
 
     subparsers = parser.add_subparsers(help="buses", dest="bus")
     subparsers.required = True
 
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to send notification")
-    unix_parser.add_argument("--path", default='/tmp/foris-controller.soc')
+    unix_parser.add_argument("--path", default="/tmp/foris-controller.soc")
     if "ubus" in available_buses:
         ubus_parser = subparsers.add_parser("ubus", help="use ubus to send notifications")
-        ubus_parser.add_argument("--path", default='/var/run/ubus.sock')
+        ubus_parser.add_argument("--path", default="/var/run/ubus.sock")
 
     if "mqtt" in available_buses:
         mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt to send notification")
-        mqtt_parser.add_argument("--host", default='localhost')
+        mqtt_parser.add_argument("--host", default="localhost")
         mqtt_parser.add_argument("--port", type=int, default=1883)
         mqtt_parser.add_argument(
-            "--controller-id", type=lambda x: re.match(r"[0-9a-zA-Z]{16}", x).group().upper(),
-            required=False
+            "--controller-id",
+            type=lambda x: re.match(r"[0-9a-zA-Z]{16}", x).group().upper(),
+            required=False,
         )
         mqtt_parser.add_argument(
-            "--passwd-file", type=lambda x: read_passwd_file(x),
+            "--passwd-file",
+            type=lambda x: read_passwd_file(x),
             help="path to passwd file (first record will be used to authenticate)",
-            default=None, required=False,
+            default=None,
+            required=False,
         )
 
     parser.add_argument("-d", "--debug", action="store_true", default=False)
     parser.add_argument(
-        "-n", "--no-validation", action="store_true", default=False,
-        help="disables schema validation (based on foris-controller modules)"
+        "-n",
+        "--no-validation",
+        action="store_true",
+        default=False,
+        help="disables schema validation (based on foris-controller modules)",
     )
     parser.add_argument(
-        '--extra-module-path', nargs=1, action='append', default=[],
-        help="set extra path to module", required=False
+        "--extra-module-path",
+        nargs=1,
+        action="append",
+        default=[],
+        help="set extra path to module",
+        required=False,
     )
     parser.add_argument(
-        "notification", metavar='NOTIFICATION', nargs="+", type=str,
-        help="notification to be sent (in json format)"
+        "notification",
+        metavar="NOTIFICATION",
+        nargs="+",
+        type=str,
+        help="notification to be sent (in json format)",
     )
 
     options = parser.parse_args()
@@ -110,16 +126,19 @@ def main():
     logger.debug("Version %s" % __version__)
     if options.bus == "ubus":
         from foris_controller.buses.ubus import UbusNotificationSender
+
         logger.info("Using ubus to send notifications.")
         sender = UbusNotificationSender(options.path)
 
     elif options.bus == "unix-socket":
         from foris_controller.buses.unix_socket import UnixSocketNotificationSender
+
         logger.info("Using unix-socket to send notifications.")
         sender = UnixSocketNotificationSender(options.path)
 
     elif options.bus == "mqtt":
         from foris_controller.buses.mqtt import MqttNotificationSender
+
         logger.info("Using mqtt to send notifications.")
         sender = MqttNotificationSender(options.host, options.port, options.passwd_file)
 
@@ -127,6 +146,7 @@ def main():
     if not options.no_validation:
         logger.debug("Validation will be performed.")
         from foris_schema import ForisValidator
+
         validator = ForisValidator(
             *get_validator_dirs([options.module], [e[0] for e in options.extra_module_path])
         )
@@ -136,8 +156,11 @@ def main():
 
     for notification in notifications:
         sender.notify(
-            options.module, options.action, notification if notification else None,
-            validator, getattr(options, 'controller_id', None)
+            options.module,
+            options.action,
+            notification if notification else None,
+            validator,
+            getattr(options, "controller_id", None),
         )
 
 

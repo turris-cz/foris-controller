@@ -23,7 +23,10 @@ from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
 
 from foris_controller_backends.about import (
-    SystemInfoCmds, SystemInfoFiles, ServerUplinkFiles, CryptoWrapperCmds,
+    SystemInfoCmds,
+    SystemInfoFiles,
+    ServerUplinkFiles,
+    CryptoWrapperCmds,
 )
 
 from .. import Handler

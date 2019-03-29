@@ -38,100 +38,59 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             "displayed": False,
             "id": "1518776436-2593",
             "severity": "restart",
-            "messages": {
-                "cs": "REBOOT1 CS",
-                "en": "REBOOT1 EN",
-                "nb_NO": "REBOOT1 nb_NO",
-            }
+            "messages": {"cs": "REBOOT1 CS", "en": "REBOOT1 EN", "nb_NO": "REBOOT1 nb_NO"},
         },
         {
             "displayed": False,
             "id": "1518776436-2598",
             "severity": "restart",
-            "messages": {
-                "cs": "REBOOT2 CS",
-                "en": "REBOOT2 EN",
-                "nb_NO": "REBOOT2 nb_NO",
-            }
+            "messages": {"cs": "REBOOT2 CS", "en": "REBOOT2 EN", "nb_NO": "REBOOT2 nb_NO"},
         },
         {
             "displayed": False,
             "id": "1518776436-2603",
             "severity": "news",
-            "messages": {
-                "cs": "NEWS1 CS",
-                "en": "NEWS1 EN",
-                "nb_NO": "NEWS1 nb_NO",
-            }
+            "messages": {"cs": "NEWS1 CS", "en": "NEWS1 EN", "nb_NO": "NEWS1 nb_NO"},
         },
         {
             "displayed": False,
             "id": "1518776436-2608",
             "severity": "news",
-            "messages": {
-                "cs": "NEWS2 CS",
-                "en": "NEWS2 EN",
-                "nb_NO": "NEWS2 nb_NO",
-            }
+            "messages": {"cs": "NEWS2 CS", "en": "NEWS2 EN", "nb_NO": "NEWS2 nb_NO"},
         },
         {
             "displayed": False,
             "id": "1518776436-2613",
             "severity": "error",
-            "messages": {
-                "cs": "ERROR1 CS",
-                "en": "ERROR1 EN",
-                "nb_NO": "ERROR1 nb_NO",
-            }
+            "messages": {"cs": "ERROR1 CS", "en": "ERROR1 EN", "nb_NO": "ERROR1 nb_NO"},
         },
         {
             "displayed": False,
             "id": "1518776436-2618",
             "severity": "error",
-            "messages": {
-                "cs": "ERROR2 CS",
-                "en": "ERROR2 EN",
-                "nb_NO": "ERROR2 nb_NO",
-            }
+            "messages": {"cs": "ERROR2 CS", "en": "ERROR2 EN", "nb_NO": "ERROR2 nb_NO"},
         },
         {
             "displayed": False,
             "id": "1518776436-2623",
             "severity": "update",
-            "messages": {
-                "cs": "UPDATE1 CS",
-                "en": "UPDATE1 EN",
-                "nb_NO": "UPDATE1 nb_NO",
-            }
+            "messages": {"cs": "UPDATE1 CS", "en": "UPDATE1 EN", "nb_NO": "UPDATE1 nb_NO"},
         },
         {
             "displayed": False,
             "id": "1518776436-2628",
             "severity": "update",
-            "messages": {
-                "cs": "UPDATE2 CS",
-                "en": "UPDATE2 EN",
-                "nb_NO": "UPDATE2 nb_NO",
-            }
-        }
+            "messages": {"cs": "UPDATE2 CS", "en": "UPDATE2 EN", "nb_NO": "UPDATE2 nb_NO"},
+        },
     ]
 
-    reboots_settings = {
-        "time": "03:00",
-        "delay": 3,
-    }
+    reboots_settings = {"time": "03:00", "delay": 3}
 
     emails_settings = {
         "enabled": False,
-        "common": {
-            "to": [],
-            "severity_filter": 1,
-            "send_news": True
-        },
+        "common": {"to": [], "severity_filter": 1, "send_news": True},
         "smtp_type": "turris",
-        "smtp_turris": {
-            "sender_name": "turris"
-        },
+        "smtp_turris": {"sender_name": "turris"},
         "smtp_custom": {
             "from": "turris@example.com",
             "host": "example.com",
@@ -151,7 +110,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
                 "displayed": notification["displayed"],
                 "severity": notification["severity"],
                 "created_at": datetime.fromtimestamp(
-                    int(notification['id'].split("-")[0])).isoformat()
+                    int(notification["id"].split("-")[0])
+                ).isoformat(),
             }
             msg = notification["messages"].get(lang, None)
             if msg:
@@ -177,10 +137,7 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        return {
-            "emails": self.emails_settings,
-            "reboots": self.reboots_settings,
-        }
+        return {"emails": self.emails_settings, "reboots": self.reboots_settings}
 
     @logger_wrapper(logger)
     def update_settings(self, emails_settings, reboots_settings):
@@ -201,13 +158,13 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def create(self, msg, severity, immediate):
         self.notification_counter += 1
-        MockRouterNotificationsHandler.notifications.append({
-            "displayed": False,
-            "id": "%d-%d" % (time.mktime(datetime.utcnow().timetuple()), self.notification_counter),
-            "severity": severity,
-            "messages": {
-                "en": msg,
-                "cs": msg,
+        MockRouterNotificationsHandler.notifications.append(
+            {
+                "displayed": False,
+                "id": "%d-%d"
+                % (time.mktime(datetime.utcnow().timetuple()), self.notification_counter),
+                "severity": severity,
+                "messages": {"en": msg, "cs": msg},
             }
-        })
+        )
         return True

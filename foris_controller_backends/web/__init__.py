@@ -35,7 +35,6 @@ DEFAULT_LANGUAGE = "en"
 
 
 class WebUciCommands(object):
-
     @staticmethod
     def get_language(foris_data):
         try:
@@ -61,7 +60,7 @@ class WebUciCommands(object):
 
     @staticmethod
     def _get_configurable_ifaces():
-        return [k for k, v in turrishw.get_ifaces().items() if v['type'] != 'wifi']
+        return [k for k, v in turrishw.get_ifaces().items() if v["type"] != "wifi"]
 
     @staticmethod
     def _detect_basic_workflow():
@@ -94,15 +93,12 @@ class WebUciCommands(object):
             else:
                 if len(WebUciCommands._get_configurable_ifaces()) > 1:
                     return [
-                        e for e in profiles.WORKFLOWS if e not in (
-                            profiles.WORKFLOW_OLD,
-                            profiles.WORKFLOW_UNSET,
-                        )
+                        e
+                        for e in profiles.WORKFLOWS
+                        if e not in (profiles.WORKFLOW_OLD, profiles.WORKFLOW_UNSET)
                     ]
                 else:
-                    return [
-                        profiles.WORKFLOW_MIN, profiles.WORKFLOW_BRIDGE,
-                    ]
+                    return [profiles.WORKFLOW_MIN, profiles.WORKFLOW_BRIDGE]
         if model in ["turris", "omnia"]:
             return [profiles.WORKFLOW_OLD]
         return []
@@ -110,20 +106,16 @@ class WebUciCommands(object):
     @staticmethod
     def get_guide_data(foris_data):
 
-        finished = parse_bool(get_option_named(foris_data, "foris", "wizard", "finished", '0'))
+        finished = parse_bool(get_option_named(foris_data, "foris", "wizard", "finished", "0"))
         # remedy for migration from older wizard
-        step = int(get_option_named(foris_data, "foris", "wizard", "allowed_step_max", '0'))
+        step = int(get_option_named(foris_data, "foris", "wizard", "allowed_step_max", "0"))
         enabled = not finished and step < 7
         workflow = get_option_named(
             foris_data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow()
         )
         passed = get_option_named(foris_data, "foris", "wizard", "passed", [])
 
-        res = {
-            "enabled": enabled,
-            "workflow": workflow,
-            "passed": passed,
-        }
+        res = {"enabled": enabled, "workflow": workflow, "passed": passed}
         next_step = profiles.next_step(passed, workflow)
         if enabled and next_step:
             res["next_step"] = next_step
@@ -167,7 +159,8 @@ class WebUciCommands(object):
                 backend.add_section("foris", "config", "wizard")
                 backend.replace_list("foris", "wizard", "passed", passed)
             workflow = get_option_named(
-                data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
+                data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow()
+            )
             if set(profiles.WORKFLOWS[workflow]).issubset(set(passed)):
                 backend.add_section("foris", "config", "wizard")
                 backend.set_option("foris", "wizard", "finished", store_bool(True))
@@ -176,7 +169,8 @@ class WebUciCommands(object):
         with UciBackend() as backend:
             data = backend.read("foris")
         current_workflow = get_option_named(
-            data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
+            data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow()
+        )
         recommended_workflow = WebUciCommands._detect_recommended_workflow()
         available_workflows = WebUciCommands._detect_available_workflows()
         return {
@@ -206,11 +200,10 @@ class WebUciCommands(object):
 
 class Languages(object):
     LANG_DIR = "/usr/lib/python%s.%s/site-packages/foris/langs/" % (
-        sys.version_info.major, sys.version_info.minor)
-    INSTALLED_LANG_MATCHES = [
-        os.path.join(LANG_DIR, "??.py"),
-        os.path.join(LANG_DIR, "??_??.py"),
-    ]
+        sys.version_info.major,
+        sys.version_info.minor,
+    )
+    INSTALLED_LANG_MATCHES = [os.path.join(LANG_DIR, "??.py"), os.path.join(LANG_DIR, "??_??.py")]
 
     @staticmethod
     def list_languages():
@@ -220,6 +213,5 @@ class Languages(object):
         """
 
         return [DEFAULT_LANGUAGE] + [
-            os.path.basename(e)[:-3]
-            for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCHES)
+            os.path.basename(e)[:-3] for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCHES)
         ]

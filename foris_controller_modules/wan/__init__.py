@@ -69,7 +69,8 @@ class WanModule(BaseModule):
 
         return {
             "test_id": self.handler.connection_test_trigger(
-                data["test_kinds"], notify, exit_notify, self.reset_notify)
+                data["test_kinds"], notify, exit_notify, self.reset_notify
+            )
         }
 
     def action_connection_test_status(self, data):
@@ -79,7 +80,7 @@ class WanModule(BaseModule):
         :returns: data about connection test {'status': 'xxxx', 'data': {...}}
         :rtype: dict
         """
-        return self.handler.connection_test_status(data['test_id'])
+        return self.handler.connection_test_status(data["test_id"])
 
     def action_get_wan_status(self, data):
         """ Obtains info regarding wan interface status
@@ -91,12 +92,14 @@ class WanModule(BaseModule):
         return self.handler.get_wan_status()
 
 
-@wrap_required_functions([
-    'get_settings',
-    'update_settings',
-    'connection_test_trigger',
-    'connection_test_status',
-    'get_wan_status',
-])
+@wrap_required_functions(
+    [
+        "get_settings",
+        "update_settings",
+        "connection_test_trigger",
+        "connection_test_status",
+        "get_wan_status",
+    ]
+)
 class Handler(object):
     pass

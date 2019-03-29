@@ -49,8 +49,10 @@ class UpdaterModule(BaseModule):
         """
         return {
             "result": self.handler.update_settings(
-                data.get("user_lists", None), data.get("languages", None),
-                data.get("approval_settings", None), data["enabled"],
+                data.get("user_lists", None),
+                data.get("languages", None),
+                data.get("approval_settings", None),
+                data["enabled"],
             )
         }
 
@@ -87,15 +89,17 @@ class UpdaterModule(BaseModule):
         return {"enabled": self.handler.get_enabled()}
 
 
-@wrap_required_functions([
-    'get_settings',
-    'update_settings',
-    'get_approval',
-    'get_user_lists',
-    'get_languages',
-    'resolve_approval',
-    'run',
-    'get_enabled',
-])
+@wrap_required_functions(
+    [
+        "get_settings",
+        "update_settings",
+        "get_approval",
+        "get_user_lists",
+        "get_languages",
+        "resolve_approval",
+        "run",
+        "get_enabled",
+    ]
+)
 class Handler(object):
     pass

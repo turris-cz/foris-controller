@@ -23,8 +23,13 @@ import typing
 from datetime import datetime
 
 from foris_controller.updater import (
-    svupdater, svupdater_approvals, svupdater_exceptions,
-    svupdater_hook, svupdater_l10n, svupdater_lists, svupdater_autorun
+    svupdater,
+    svupdater_approvals,
+    svupdater_exceptions,
+    svupdater_hook,
+    svupdater_l10n,
+    svupdater_lists,
+    svupdater_autorun,
 )
 from foris_controller.exceptions import UciException
 
@@ -32,16 +37,13 @@ logger = logging.getLogger(__name__)
 
 
 class UpdaterUci(object):
-
     def get_settings(self):
 
         res = {
             "enabled": svupdater_autorun.enabled(),
             "user_lists": [k for k, v in svupdater_lists.pkglists("en").items() if v["enabled"]],
             "languages": svupdater_l10n.languages(),
-            "approval_settings": {
-                "status": "on" if svupdater_autorun.approvals() else "off",
-            }
+            "approval_settings": {"status": "on" if svupdater_autorun.approvals() else "off"},
         }
 
         delay_time = svupdater_autorun.auto_approve_time()
@@ -55,9 +57,7 @@ class UpdaterUci(object):
     def get_enabled(self) -> typing.Optional[bool]:
         return svupdater_autorun.enabled()
 
-    def update_settings(
-        self, user_lists, languages, approvals_status, approvals_delay, enabled
-    ):
+    def update_settings(self, user_lists, languages, approvals_status, approvals_delay, enabled):
         svupdater_autorun.set_enabled(enabled)
 
         if approvals_status is not None:
@@ -81,6 +81,7 @@ class UpdaterUci(object):
         # update wizard passed in foris web (best effort)
         try:
             from foris_controller_backends.web import WebUciCommands
+
             WebUciCommands.update_passed("updater")
         except UciException:
             pass
@@ -134,8 +135,11 @@ class Updater(object):
         logger.debug("Userlists obtained: %s", user_lists)
         return [
             {
-                "name": k, "enabled": v["enabled"], "hidden": v["hidden"],
-                "title": v["title"], "msg": v["message"],
+                "name": k,
+                "enabled": v["enabled"],
+                "hidden": v["hidden"],
+                "title": v["title"],
+                "msg": v["message"],
             }
             for k, v in user_lists.items()
         ]
@@ -151,8 +155,9 @@ class Updater(object):
         """
         try:
             logger.debug("Resolving approval %s (->%s)", approval_id, solution)
-            svupdater_approvals.approve(approval_id) if solution == "grant" \
-                else svupdater_approvals.deny(approval_id)
+            svupdater_approvals.approve(
+                approval_id
+            ) if solution == "grant" else svupdater_approvals.deny(approval_id)
             logger.debug("Approval resolved %s (->%s)", approval_id, solution)
 
             # Run updater after approval was granted
@@ -175,7 +180,8 @@ class Updater(object):
 
         try:
             logger.debug(
-                "Staring to trigger updater (set_reboot_indicator=%s)", set_reboot_indicator)
+                "Staring to trigger updater (set_reboot_indicator=%s)", set_reboot_indicator
+            )
             hooks = ["/usr/bin/maintain-reboot-needed"] if set_reboot_indicator else []
             svupdater.run(hooklist=hooks)
             logger.debug("Updater triggered")

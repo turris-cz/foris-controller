@@ -20,8 +20,16 @@
 import pytest
 
 from foris_controller_testtools.fixtures import (
-    infrastructure, uci_configs_init, ubusd_test, init_script_result, mosquitto_test,
-    only_backends, device, turris_os_version, FILE_ROOT_PATH, lock_backend,
+    infrastructure,
+    uci_configs_init,
+    ubusd_test,
+    init_script_result,
+    mosquitto_test,
+    only_backends,
+    device,
+    turris_os_version,
+    FILE_ROOT_PATH,
+    lock_backend,
     UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import check_service_result, FileFaker, get_uci_module
@@ -47,18 +55,18 @@ description="DNS resolver cznic"
 ipv4="217.31.204.130"
 ipv6="2001:1488:800:400::130"
 """
-    with \
-            FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/odvr-nic-dns.conf", False, res1) as res1, \
-            FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/quad9-normal.conf", False, res2) as res2:
+    with FileFaker(
+        FILE_ROOT_PATH, "/etc/resolver/dns_servers/odvr-nic-dns.conf", False, res1
+    ) as res1, FileFaker(
+        FILE_ROOT_PATH, "/etc/resolver/dns_servers/quad9-normal.conf", False, res2
+    ) as res2:
         yield res1, res2
 
 
 def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mosquitto_test):
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "get_settings",
-        "kind": "request",
-    })
+    res = infrastructure.process_message(
+        {"module": "dns", "action": "get_settings", "kind": "request"}
+    )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "forwarding_enabled" in res["data"].keys()
     assert "available_forwarders" in res["data"].keys()
@@ -67,34 +75,29 @@ def test_get_settings(uci_configs_init, infrastructure, ubusd_test, mosquitto_te
     assert "dns_from_dhcp_enabled" in res["data"].keys()
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    uci_configs_init, infrastructure, ubusd_test, device, turris_os_version,
-    init_script_result
+    uci_configs_init, infrastructure, ubusd_test, device, turris_os_version, init_script_result
 ):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": False,
-            "dnssec_enabled": False,
-            "dns_from_dhcp_enabled": False,
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": False,
+                "dnssec_enabled": False,
+                "dns_from_dhcp_enabled": False,
+            },
         }
-    })
+    )
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'dns'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"dns",
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
@@ -105,19 +108,21 @@ def test_update_settings(
             u"forwarding_enabled": False,
             u"dnssec_enabled": False,
             u"dns_from_dhcp_enabled": False,
-        }
+        },
     }
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": False,
-            "dnssec_enabled": False,
-            "dns_from_dhcp_enabled": False,
-            "dns_from_dhcp_domain": "test",
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": False,
+                "dnssec_enabled": False,
+                "dns_from_dhcp_enabled": False,
+                "dns_from_dhcp_domain": "test",
+            },
         }
-    })
+    )
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -128,44 +133,39 @@ def test_update_settings(
             u"dnssec_enabled": False,
             u"dns_from_dhcp_enabled": False,
             u"dns_from_dhcp_domain": "test",
-        }
+        },
     }
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'dns'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"dns",
     }
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_and_get_settings(
-    uci_configs_init, infrastructure, ubusd_test, device, turris_os_version,
-    init_script_result,
+    uci_configs_init, infrastructure, ubusd_test, device, turris_os_version, init_script_result
 ):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": False,
-            "dnssec_enabled": False,
-            "dns_from_dhcp_enabled": False,
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": False,
+                "dnssec_enabled": False,
+                "dns_from_dhcp_enabled": False,
+            },
         }
-    })
+    )
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'dns'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"dns",
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
@@ -176,28 +176,28 @@ def test_update_and_get_settings(
             u"forwarding_enabled": False,
             u"dnssec_enabled": False,
             u"dns_from_dhcp_enabled": False,
-        }
+        },
     }
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "get_settings",
-        "kind": "request",
-    })
-    assert res['data']["forwarding_enabled"] is False
-    assert res['data']["dnssec_enabled"] is False
-    assert res['data']["dns_from_dhcp_enabled"] is False
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": True,
-            "forwarder": "",
-            "dnssec_enabled": True,
-            "dns_from_dhcp_enabled": True,
-            "dns_from_dhcp_domain": "test",
+    res = infrastructure.process_message(
+        {"module": "dns", "action": "get_settings", "kind": "request"}
+    )
+    assert res["data"]["forwarding_enabled"] is False
+    assert res["data"]["dnssec_enabled"] is False
+    assert res["data"]["dns_from_dhcp_enabled"] is False
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": True,
+                "forwarder": "",
+                "dnssec_enabled": True,
+                "dns_from_dhcp_enabled": True,
+                "dns_from_dhcp_domain": "test",
+            },
         }
-    })
+    )
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
         u"module": u"dns",
@@ -209,103 +209,102 @@ def test_update_and_get_settings(
             u"dnssec_enabled": True,
             u"dns_from_dhcp_enabled": True,
             u"dns_from_dhcp_domain": u"test",
-        }
+        },
     }
     assert res == {
-        u'action': u'update_settings',
-        u'data': {u'result': True},
-        u'kind': u'reply',
-        u'module': u'dns'
+        u"action": u"update_settings",
+        u"data": {u"result": True},
+        u"kind": u"reply",
+        u"module": u"dns",
     }
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "get_settings",
-        "kind": "request",
-    })
-    assert res['data']["forwarding_enabled"] is True
-    assert res['data']["forwarder"] == ""
-    assert res['data']["dnssec_enabled"] is True
-    assert res['data']["dns_from_dhcp_enabled"] is True
-    assert res['data']["dns_from_dhcp_domain"] == "test"
+    res = infrastructure.process_message(
+        {"module": "dns", "action": "get_settings", "kind": "request"}
+    )
+    assert res["data"]["forwarding_enabled"] is True
+    assert res["data"]["forwarder"] == ""
+    assert res["data"]["dnssec_enabled"] is True
+    assert res["data"]["dns_from_dhcp_enabled"] is True
+    assert res["data"]["dns_from_dhcp_domain"] == "test"
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_service_restart(
-    uci_configs_init, init_script_result, infrastructure, ubusd_test, device, turris_os_version,
+    uci_configs_init, init_script_result, infrastructure, ubusd_test, device, turris_os_version
 ):
 
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": False,
-            "dnssec_enabled": False,
-            "dns_from_dhcp_enabled": False,
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": False,
+                "dnssec_enabled": False,
+                "dns_from_dhcp_enabled": False,
+            },
         }
-    })
+    )
     check_service_result("resolver", "restart", True)
 
 
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [
-        ("mox", "4.0"),
-    ],
-    indirect=True
-)
-@pytest.mark.only_backends(['openwrt'])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_forwarder(
-    lock_backend, custom_forwarders, uci_configs_init, init_script_result, infrastructure,
-    ubusd_test, device, turris_os_version,
+    lock_backend,
+    custom_forwarders,
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+    ubusd_test,
+    device,
+    turris_os_version,
 ):
     uci = get_uci_module(lock_backend)
 
     # Get forwarder list
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "get_settings",
-        "kind": "request",
-    })
-    assert sorted(res["data"]["available_forwarders"], key=lambda x: x["name"]) == sorted([
-        {"name": "", "description": ""},
-        {"name": "odvr-nic-dns", "description": "DNS resolver cznic"},
-        {"name": "quad9-normal", "description": "Quad DNS resolver without filtering."},
-        ], key=lambda x: x["name"])
+    res = infrastructure.process_message(
+        {"module": "dns", "action": "get_settings", "kind": "request"}
+    )
+    assert sorted(res["data"]["available_forwarders"], key=lambda x: x["name"]) == sorted(
+        [
+            {"name": "", "description": ""},
+            {"name": "odvr-nic-dns", "description": "DNS resolver cznic"},
+            {"name": "quad9-normal", "description": "Quad DNS resolver without filtering."},
+        ],
+        key=lambda x: x["name"],
+    )
 
     # Update non-existing
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": True,
-            "forwarder": "non-existing",
-            "dnssec_enabled": False,
-            "dns_from_dhcp_enabled": False,
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": True,
+                "forwarder": "non-existing",
+                "dnssec_enabled": False,
+                "dns_from_dhcp_enabled": False,
+            },
         }
-    })
+    )
     assert res["data"]["result"] is False
 
     # Update to providers dns
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": True,
-            "forwarder": "",
-            "dnssec_enabled": False,
-            "dns_from_dhcp_enabled": False,
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": True,
+                "forwarder": "",
+                "dnssec_enabled": False,
+                "dns_from_dhcp_enabled": False,
+            },
         }
-    })
+    )
     assert res["data"]["result"] is True
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -313,17 +312,19 @@ def test_update_settings_forwarder(
     assert uci.get_option_named(data, "resolver", "common", "forward_custom", "") is ""
 
     # Update to some
-    res = infrastructure.process_message({
-        "module": "dns",
-        "action": "update_settings",
-        "kind": "request",
-        "data": {
-            "forwarding_enabled": True,
-            "forwarder": "odvr-nic-dns",
-            "dnssec_enabled": False,
-            "dns_from_dhcp_enabled": False,
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": True,
+                "forwarder": "odvr-nic-dns",
+                "dnssec_enabled": False,
+                "dns_from_dhcp_enabled": False,
+            },
         }
-    })
+    )
     assert res["data"]["result"] is True
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:

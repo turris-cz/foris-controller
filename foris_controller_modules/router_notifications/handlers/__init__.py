@@ -20,7 +20,4 @@
 from .mock import MockRouterNotificationsHandler
 from .openwrt import OpenwrtRouterNotificationsHandler
 
-__all__ = [
-    'MockRouterNotificationsHandler',
-    'OpenwrtRouterNotificationsHandler',
-]
+__all__ = ["MockRouterNotificationsHandler", "OpenwrtRouterNotificationsHandler"]

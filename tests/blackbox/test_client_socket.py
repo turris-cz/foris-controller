@@ -22,7 +22,10 @@ import pytest
 
 
 from foris_controller_testtools.fixtures import (
-    infrastructure, start_buses, ubusd_test, mosquitto_test,
+    infrastructure,
+    start_buses,
+    ubusd_test,
+    mosquitto_test,
 )
 
 
@@ -30,9 +33,7 @@ from foris_controller_testtools.fixtures import (
 def extra_module_paths():
     """ Override of extra module paths fixture
     """
-    return [
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")
-    ]
+    return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
 
 
 def test_request(infrastructure, start_buses):
@@ -40,29 +41,35 @@ def test_request(infrastructure, start_buses):
         res = infrastructure.client_socket.request(req)
         assert res == reply
 
-    request({
-        "module": "echo",
-        "action": "echo",
-        "kind": "request",
-        "data": {"request_msg": {"text": "testmsg1"}}
-    }, {
-        "module": "echo",
-        "action": "echo",
-        "kind": "reply",
-        "data": {"reply_msg": {"text": "testmsg1"}}
-    })
+    request(
+        {
+            "module": "echo",
+            "action": "echo",
+            "kind": "request",
+            "data": {"request_msg": {"text": "testmsg1"}},
+        },
+        {
+            "module": "echo",
+            "action": "echo",
+            "kind": "reply",
+            "data": {"reply_msg": {"text": "testmsg1"}},
+        },
+    )
 
-    request({
-        "module": "echo",
-        "action": "echo",
-        "kind": "request",
-        "data": {"request_msg": {"text": "testmsg2"}}
-    }, {
-        "module": "echo",
-        "action": "echo",
-        "kind": "reply",
-        "data": {"reply_msg": {"text": "testmsg2"}}
-    })
+    request(
+        {
+            "module": "echo",
+            "action": "echo",
+            "kind": "request",
+            "data": {"request_msg": {"text": "testmsg2"}},
+        },
+        {
+            "module": "echo",
+            "action": "echo",
+            "kind": "reply",
+            "data": {"reply_msg": {"text": "testmsg2"}},
+        },
+    )
 
 
 def test_request_error(infrastructure, start_buses):
@@ -75,35 +82,39 @@ def test_request_error(infrastructure, start_buses):
         infrastructure.client_socket.close()
         infrastructure.client_socket.connect()
 
-    request_error({
-        "module": "echox",
-        "action": "echo",
-        "kind": "request",
-        "data": {"request_msg": {"text": "testmsg1"}}
-    })
-    request_error({
-        "module": "echo",
-        "action": "echox",
-        "kind": "request",
-        "data": {"request_msg": {"text": "testmsg1"}}
-    })
-    request_error({
-        "module": "echo",
-        "action": "echo",
-        "kind": "requestx",
-        "data": {"request_msg": {"text": "testmsg1"}}
-    })
-    request_error({
-        "module": "echo",
-        "action": "echo",
-        "kind": "request",
-        "data": {"request_msgx": {"text": "testmsg1"}}
-    })
-    request_error({
-        "module": "echo",
-        "action": "echo",
-        "kind": "request",
-    })
+    request_error(
+        {
+            "module": "echox",
+            "action": "echo",
+            "kind": "request",
+            "data": {"request_msg": {"text": "testmsg1"}},
+        }
+    )
+    request_error(
+        {
+            "module": "echo",
+            "action": "echox",
+            "kind": "request",
+            "data": {"request_msg": {"text": "testmsg1"}},
+        }
+    )
+    request_error(
+        {
+            "module": "echo",
+            "action": "echo",
+            "kind": "requestx",
+            "data": {"request_msg": {"text": "testmsg1"}},
+        }
+    )
+    request_error(
+        {
+            "module": "echo",
+            "action": "echo",
+            "kind": "request",
+            "data": {"request_msgx": {"text": "testmsg1"}},
+        }
+    )
+    request_error({"module": "echo", "action": "echo", "kind": "request"})
 
 
 def test_notification(infrastructure, start_buses):
@@ -114,18 +125,16 @@ def test_notification(infrastructure, start_buses):
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1] == msg
 
-    notify({
-        "module": "echo",
-        "action": "echo",
-        "kind": "notification",
-    })
+    notify({"module": "echo", "action": "echo", "kind": "notification"})
 
-    notify({
-        "module": "echo",
-        "action": "echo2",
-        "kind": "notification",
-        "data": {"msg": "notification text"}
-    })
+    notify(
+        {
+            "module": "echo",
+            "action": "echo2",
+            "kind": "notification",
+            "data": {"msg": "notification text"},
+        }
+    )
 
 
 def test_notification_error(infrastructure, start_buses):
@@ -138,38 +147,16 @@ def test_notification_error(infrastructure, start_buses):
         infrastructure.client_socket.notification(msg)
         infrastructure.client_socket.close()
         infrastructure.client_socket.connect()
-        infrastructure.client_socket.notification({
-            "module": "echo",
-            "action": "echo",
-            "kind": "notification",
-        })
+        infrastructure.client_socket.notification(
+            {"module": "echo", "action": "echo", "kind": "notification"}
+        )
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert old_len + 1 == len(notifications)
-        assert notifications[-1] == {
-            "module": "echo",
-            "action": "echo",
-            "kind": "notification",
-        }
+        assert notifications[-1] == {"module": "echo", "action": "echo", "kind": "notification"}
 
-    notify_error({
-        "module": "echo",
-        "action": "echox",
-        "kind": "notification",
-    })
-    notify_error({
-        "module": "echox",
-        "action": "echo",
-        "kind": "notification",
-    })
-    notify_error({
-        "module": "echo",
-        "action": "echo",
-        "kind": "notification",
-        "data": {},
-    })
-    notify_error({
-        "module": "echo",
-        "action": "echo2",
-        "kind": "notification",
-        "data": {"msgx": "dafdafda"},
-    })
+    notify_error({"module": "echo", "action": "echox", "kind": "notification"})
+    notify_error({"module": "echox", "action": "echo", "kind": "notification"})
+    notify_error({"module": "echo", "action": "echo", "kind": "notification", "data": {}})
+    notify_error(
+        {"module": "echo", "action": "echo2", "kind": "notification", "data": {"msgx": "dafdafda"}}
+    )

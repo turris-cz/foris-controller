@@ -35,7 +35,9 @@ if sys.version_info >= (3, 0):
     from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
 else:
     from SocketServer import (
-        BaseRequestHandler, UnixStreamServer, ThreadingMixIn as NonObjectThreadingMixIn
+        BaseRequestHandler,
+        UnixStreamServer,
+        ThreadingMixIn as NonObjectThreadingMixIn,
     )
 
     class ThreadingMixIn(object, NonObjectThreadingMixIn):
@@ -43,9 +45,13 @@ else:
 
 
 def worker(
-    socket_path, timeout, validator,
-    sender_class, sender_args,
-    notification_sender_class, notification_sender_args
+    socket_path,
+    timeout,
+    validator,
+    sender_class,
+    sender_args,
+    notification_sender_class,
+    notification_sender_args,
 ):
     os.umask(0o0077)
     # make sure that it exits if parent is killed
@@ -57,7 +63,8 @@ def worker(
     notification_sender_instance = notification_sender_class(*notification_sender_args)
 
     server = ClientSocketListener(
-        socket_path, validator, sender_instance, notification_sender_instance, timeout)
+        socket_path, validator, sender_instance, notification_sender_instance, timeout
+    )
 
     server.serve_forever()
 
@@ -78,8 +85,10 @@ class ClientSocketHandler(BaseRequestHandler):
         logger.debug("Forwarding notification.")
         with self.server.notification_sender_lock:
             self.server.notification_sender.notify(
-                notification["module"], notification["action"],
-                notification.get("data", None), self.server.validator
+                notification["module"],
+                notification["action"],
+                notification.get("data", None),
+                self.server.validator,
             )
         logger.debug("Notification forwarded.")
 
@@ -87,8 +96,10 @@ class ClientSocketHandler(BaseRequestHandler):
         logger.debug("Forwarding request.")
         with self.server.sender_lock:
             msg = self.server.sender.send(
-                request["module"], request["action"], request.get("data", None),
-                timeout=self.server.timeout
+                request["module"],
+                request["action"],
+                request.get("data", None),
+                timeout=self.server.timeout,
             )
         logger.debug("Request forwarded and response recieved.")
 
@@ -102,9 +113,9 @@ class ClientSocketHandler(BaseRequestHandler):
         logger.debug("Sending msg back to client.")
         response = json.dumps(response).encode("utf8")
         response_length = struct.pack("I", len(response))
-        logger.debug("Sending response (len=%d) %s" % (
-            len(response), str(response)[:LOGGER_MAX_LEN]
-        ))
+        logger.debug(
+            "Sending response (len=%d) %s" % (len(response), str(response)[:LOGGER_MAX_LEN])
+        )
         self.request.sendall(response_length + response)
         logger.debug("Message delivered to client.")
 

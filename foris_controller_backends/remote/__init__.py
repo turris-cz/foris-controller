@@ -32,8 +32,12 @@ from foris_controller.app import app_info
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
 from foris_controller_backends.files import BaseFile
 from foris_controller_backends.uci import (
-    UciBackend, get_option_named, parse_bool, UciException, store_bool,
-    get_option_anonymous
+    UciBackend,
+    get_option_named,
+    parse_bool,
+    UciException,
+    store_bool,
+    get_option_anonymous,
 )
 from foris_controller_backends.services import OpenwrtServices
 
@@ -41,18 +45,19 @@ logger = logging.getLogger(__name__)
 
 
 class CaGenAsync(AsyncCommand):
-
     def generate_ca(self, notify_function, exit_notify_function, reset_notify_function):
-
         def handler_exit(process_data):
-            exit_notify_function({
-                "task_id": process_data.id,
-                "status": "succeeded" if process_data.get_retval() == 0 else "failed"
-            })
+            exit_notify_function(
+                {
+                    "task_id": process_data.id,
+                    "status": "succeeded" if process_data.get_retval() == 0 else "failed",
+                }
+            )
 
         def gen_handler(status):
             def handler(matched, process_data):
                 notify_function({"task_id": process_data.id, "status": status})
+
             return handler
 
         task_id = self.start_process(
@@ -70,17 +75,19 @@ class CaGenAsync(AsyncCommand):
         return task_id
 
     def generate_token(self, name, notify_function, exit_notify_function, reset_notify_function):
-
         def handler_exit(process_data):
-            exit_notify_function({
-                "task_id": process_data.id,
-                "name": name,
-                "status": "succeeded" if process_data.get_retval() == 0 else "failed"
-            })
+            exit_notify_function(
+                {
+                    "task_id": process_data.id,
+                    "name": name,
+                    "status": "succeeded" if process_data.get_retval() == 0 else "failed",
+                }
+            )
 
         def gen_handler(status):
             def handler(matched, process_data):
                 notify_function({"task_id": process_data.id, "status": status, "name": name})
+
             return handler
 
         task_id = self.start_process(
@@ -97,10 +104,10 @@ class CaGenAsync(AsyncCommand):
 
 
 class CaGenCmds(BaseCmdLine):
-
     def get_status(self):
         output, _ = self._run_command_and_check_retval(
-            ["/usr/bin/turris-cagen-status", "remote"], 0)
+            ["/usr/bin/turris-cagen-status", "remote"], 0
+        )
         output = output.decode("utf-8")
         ca_status = re.search(r"^status: (\w+)$", output, re.MULTILINE).group(1)
         clients = []
@@ -111,11 +118,7 @@ class CaGenCmds(BaseCmdLine):
                 try:
                     cert_id, cert_type, name, status = line.split(" ")
                     if cert_type == "client":
-                        clients.append({
-                            "id": cert_id,
-                            "name": name,
-                            "status": status,
-                        })
+                        clients.append({"id": cert_id, "name": name, "status": status})
                     elif cert_type == "server" and status == "valid":
                         server_cert_found = True  # at least one valid server certificate required
                 except ValueError:
@@ -126,10 +129,7 @@ class CaGenCmds(BaseCmdLine):
         # if server cert is missing this means that remote CA hasn't been generated yet
         ca_status = "generating" if ca_status == "ready" and not server_cert_found else ca_status
 
-        return {
-            "status": ca_status,
-            "tokens": clients,
-        }
+        return {"status": ca_status, "tokens": clients}
 
     def revoke(self, cert_id):
         retval, _, _ = self._run_command(
@@ -145,11 +145,7 @@ class CaGenCmds(BaseCmdLine):
 
 
 class RemoteUci(object):
-    DEFAULTS = {
-        "enabled": False,
-        "wan_access": False,
-        "port": 11883,
-    }
+    DEFAULTS = {"enabled": False, "wan_access": False, "port": 11883}
 
     def get_settings(self):
         with UciBackend() as backend:
@@ -157,21 +153,21 @@ class RemoteUci(object):
             firewall_data = backend.read("firewall")
 
         try:
-            enabled = parse_bool(get_option_named(
-                fosquitto_data, "fosquitto", "remote", "enabled", "0"))
+            enabled = parse_bool(
+                get_option_named(fosquitto_data, "fosquitto", "remote", "enabled", "0")
+            )
             enabled = enabled and app_info["bus"] == "mqtt"
             port = int(get_option_named(fosquitto_data, "fosquitto", "remote", "port", "11884"))
-            wan_access = parse_bool(get_option_named(
-                firewall_data, "firewall", "wan_fosquitto_turris_rule", "enabled", "0"))
+            wan_access = parse_bool(
+                get_option_named(
+                    firewall_data, "firewall", "wan_fosquitto_turris_rule", "enabled", "0"
+                )
+            )
 
         except UciException:
             return RemoteUci.DEFAULTS
 
-        return {
-            "enabled": enabled,
-            "port": port,
-            "wan_access": wan_access,
-        }
+        return {"enabled": enabled, "port": port, "wan_access": wan_access}
 
     def update_settings(self, enabled, wan_access=None, port=None):
         result = True
@@ -192,7 +188,8 @@ class RemoteUci(object):
                 backend.add_section("firewall", "rule", "wan_fosquitto_turris_rule")
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "name", "fosquitto_wan")
                 backend.set_option(
-                    "firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(wan_access))
+                    "firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(wan_access)
+                )
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "target", "ACCEPT")
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "dest_port", port)
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "proto", "tcp")
@@ -205,7 +202,8 @@ class RemoteUci(object):
             else:
                 backend.add_section("firewall", "rule", "wan_fosquitto_turris_rule")
                 backend.set_option(
-                    "firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(False))
+                    "firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(False)
+                )
 
                 backend.add_section("fosquitto", "remote", "remote")
                 backend.set_option("fosquitto", "remote", "enabled", store_bool(False))
@@ -309,14 +307,20 @@ class RemoteFiles(BaseFile):
             add_to_tar(tar, "%s/token.key" % name, key_content)
             add_to_tar(tar, "%s/ca.crt" % name, ca_content)
             hostname, port, ips, dhcp_names = self.detect_location()
-            add_to_tar(tar, "%s/conf.json" % name, json.dumps({
-                "name": name,
-                "hostname": hostname,
-                "ipv4_ips": ips,
-                "dhcp_names": dhcp_names,
-                "port": port,
-                "device_id": app_info["controller_id"],
-            }))
+            add_to_tar(
+                tar,
+                "%s/conf.json" % name,
+                json.dumps(
+                    {
+                        "name": name,
+                        "hostname": hostname,
+                        "ipv4_ips": ips,
+                        "dhcp_names": dhcp_names,
+                        "port": port,
+                        "device_id": app_info["controller_id"],
+                    }
+                ),
+            )
 
         fake_file.seek(0)
         final_content = fake_file.read()
