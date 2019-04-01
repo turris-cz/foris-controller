@@ -1,3 +1,15 @@
+0.11.11 (2019-04-01)
+--------------------
+
+* remote: display netboot status in advertize and add set_netboot_configured call
+* all python source code reformatted using black
+* updater: reflect api changes of svupdater
+* time: properly set regulatory domain after timezone was updated
+* lan: support for customizing static dhcp clients added
+* wifi: update notification contains all new data
+* router_notification: add separate functions for setting emails and reboots
+* router_notification: different default
+
 0.11.10 (2019-03-13)
 --------------------
 
