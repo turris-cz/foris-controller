@@ -57,7 +57,7 @@
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["ips"]
+                    "required": ["ips", "remains"]
                 }
             },
             "additionalProperties": false,
@@ -68,7 +68,7 @@
             "properties": {
                 "module": {"enum": ["maintain"]},
                 "kind": {"enum": ["notification"]},
-                "action": {"enum": ["network_restart"]},
+                "action": {"enum": ["network-restart"]},
                 "data": {
                     "type": "object",
                     "properties": {
@@ -84,7 +84,29 @@
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["new"]
+                    "required": ["ips", "remains"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Notification that lighttpd restart was triggered",
+            "properties": {
+                "module": {"enum": ["maintain"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["lighttpd-restart"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "remains": {
+                            "description": "remaining time in micro seconds",
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["remains"]
                 }
             },
             "additionalProperties": false,

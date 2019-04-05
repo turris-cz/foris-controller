@@ -36,6 +36,9 @@ class MaintainCommands(BaseCmdLine):
     def restart_network(self):
         self._run_command_in_background("/usr/bin/maintain-network-restart")
 
+    def restart_lighttpd(self):
+        self._run_command_in_background("/usr/bin/maintain-lighttpd-restart")
+
     def generate_backup(self):
         logger.debug("Starting to prepare the backup.")
         cmd = "/usr/bin/maintain-config-backup"
