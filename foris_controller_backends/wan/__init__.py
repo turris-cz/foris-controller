@@ -69,7 +69,7 @@ class WanUci(object):
         # WAN6
         wan6_settings = {}
         wan6_settings["wan6_type"] = get_option_named(
-            network_data, "network", "wan6", "proto", "none"
+            network_data, "network", "wan6", "proto", "dhcpv6"
         )
         if wan6_settings["wan6_type"] == "static":
             wan6_settings["wan6_static"] = {

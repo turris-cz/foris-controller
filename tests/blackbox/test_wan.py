@@ -1050,7 +1050,7 @@ def test_missing_wan6_openwrt(
         {"module": "wan", "action": "get_settings", "kind": "request"}
     )
     assert "wan6_settings" in res["data"].keys()
-    assert res["data"]["wan6_settings"]["wan6_type"] == "none"
+    assert res["data"]["wan6_settings"]["wan6_type"] == "dhcpv6"
 
     res = infrastructure.process_message(
         {
