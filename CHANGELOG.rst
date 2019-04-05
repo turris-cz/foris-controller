@@ -1,3 +1,10 @@
+0.11.12 (2019-04-05)
+--------------------
+
+* wan: wan6 defaults from 'none' to 'dhcpv6'
+* updater: get enabled fix
+* maintain: lighttpd restart command added
+
 0.11.11 (2019-04-01)
 --------------------
 
