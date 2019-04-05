@@ -100,9 +100,13 @@ class TimeUciCommands(object):
             backend.set_option("system", "@system[0]", "_country", country)
             backend.set_option("system", "@system[0]", "zonename", "%s/%s" % (region, city))
             backend.set_option("system", "ntp", "enabled", store_bool(how_to_set_time == "ntp"))
-            data = backend.read("wireless")
-            # set regulatory domain for all wifi devices
-            WifiUci.update_regulator_domain(data, backend, country)
+            # Just in case we have no WiFi and no /etc/config/wireless
+            try:
+                data = backend.read("wireless")
+                # set regulatory domain for all wifi devices
+                WifiUci.update_regulator_domain(data, backend, country)
+            except UciException:
+                pass
 
         # update wizard passed in foris web (best effort)
         try:
