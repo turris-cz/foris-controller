@@ -222,7 +222,12 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "enabled": {"type": "boolean"}
+                        "enabled": {
+                            "oneOf": [
+                                {"type": "boolean"},
+                                {"type": "null"}
+                            ]
+                        }
                     },
                     "additionalProperties": false,
                     "required": ["enabled"]
