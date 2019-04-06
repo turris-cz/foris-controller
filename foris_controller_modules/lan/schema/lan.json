@@ -8,7 +8,8 @@
             ]
         },
         "lan_unmanaged_settings_get": {
-            "description": "this devices manages lan (acts like a router)",
+            "description": "this device doesn't manage lan network it acts as a client",
+
             "type": "object",
             "properties": {
                 "lan_type": {"$ref": "#/definitions/lan_type"},
@@ -19,7 +20,7 @@
             "required": ["lan_type", "lan_dhcp", "lan_static"]
         },
         "lan_unmanaged_settings_set": {
-            "description": "this devices manages lan (acts like a router)",
+            "description": "this device doesn't manage lan network it acts as a client",
             "oneOf": [
                 {
                     "type": "object",
@@ -50,7 +51,7 @@
             ]
         },
         "lan_managed_settings_get": {
-            "description": "this device doesn't manage lan network it acts as a client",
+            "description": "this device manages lan (acts like a router)",
             "type": "object",
             "properties": {
                 "router_ip": { "format": "ipv4", "description": "router IP in lan network"},
@@ -61,7 +62,7 @@
             "required": ["router_ip", "netmask", "dhcp"]
         },
         "lan_managed_settings_set": {
-            "description": "this device doesn't manage lan network it acts as a client",
+            "description": "this device manages lan (acts like a router)",
             "type": "object",
             "properties": {
                 "router_ip": { "format": "ipv4", "description": "router IP in lan network"},
