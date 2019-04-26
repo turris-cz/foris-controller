@@ -85,7 +85,8 @@ class LanUci(object):
         uci_map = {
             e["data"]["mac"]: e["data"]
             for e in uci_data
-            if len(e["data"]["mac"].split(" ")) == 1  # ignore multi mac records
+            if "mac" in e["data"]
+            and len(e["data"]["mac"].split(" ")) == 1  # ignore multi mac records
             and "ip" in e["data"]
             and (
                 e["data"]["ip"] == "ignore"

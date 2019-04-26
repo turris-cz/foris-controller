@@ -1451,3 +1451,12 @@ def test_dhcp_client_settings_openwrt(
     assert len(uci_data) == 1
     assert "192.168.8.2" not in [e["ip"] for e in uci_data]
     assert "192.168.8.4" not in [e["ip"] for e in uci_data]
+
+    # test missing mac in dhcp client
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section_name = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section_name, "ip", "192.168.9.25")  # only ip is mandatory
+    client_list = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )["data"]["mode_managed"]["dhcp"]["clients"]
+    assert "192.168.9.25" not in [e["ip"] for e in client_list]
