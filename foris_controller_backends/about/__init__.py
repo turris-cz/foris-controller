@@ -53,7 +53,6 @@ class SystemInfoCmds(BaseCmdLine):
 class SystemInfoFiles(BaseFile):
     OS_RELEASE_PATH = "/etc/turris-version"
     MODEL_PATH = "/tmp/sysinfo/model"
-    BOARD_NAME_PATH = "/tmp/sysinfo/board_name"
     file_lock = RWLock(app_info["lock_backend"])
 
     @readlock(file_lock, logger)
@@ -83,15 +82,6 @@ class SystemInfoFiles(BaseFile):
         elif "Mox" in repr_model:
             return "mox"
         return "turris"
-
-    @readlock(file_lock, logger)
-    def get_board_name(self):
-        """ Returns board name
-
-        :returns: board name
-        :rtype: str
-        """
-        return self._read_and_parse(SystemInfoFiles.BOARD_NAME_PATH, r"^(\w+).*$", (1,))
 
 
 class ServerUplinkFiles(BaseFile):

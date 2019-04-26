@@ -38,7 +38,6 @@ class MockAboutHandler(Handler, BaseMockHandler):
         """
         return {
             "model": "Turris Omnia",
-            "board_name": "rtrom01",
             "kernel": "4.4.77-967673b9d511e4292e3bcb76c9e064bc-0",
             "os_version": "3.7",
         }

@@ -50,7 +50,6 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
         """
         return {
             "model": self.system_info_files.get_model_name(),
-            "board_name": self.system_info_files.get_board_name(),
             "kernel": self.system_info_cmds.get_kernel_version(),
             "os_version": self.system_info_files.get_os_version(),
         }

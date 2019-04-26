@@ -48,7 +48,6 @@ def test_wrong_input_kind(infrastructure, start_buses):
             "kind": "reply",
             "data": {
                 "model": "Turris Omnia",
-                "board_name": "rtrom01",
                 "kernel": "4.4.77-967673b9d511e4292e3bcb76c9e064bc-0",
                 "os_version": "3.7",
                 "serial": "0000000B00009CD6",
