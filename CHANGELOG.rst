@@ -1,3 +1,11 @@
+0.11.13 (2019-04-29)
+--------------------
+
+* about: remove board_name
+* lan: don't fail when mac is missing in static lease record
+* time: don't require wifi uci file to save time settings
+* lan: fix schema description
+
 0.11.12 (2019-04-05)
 --------------------
 
