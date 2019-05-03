@@ -1,3 +1,8 @@
+0.11.14 (2019-05-03)
+--------------------
+
+* updater: approval max delay period extended from 7 to 31 days
+
 0.11.13 (2019-04-29)
 --------------------
 
