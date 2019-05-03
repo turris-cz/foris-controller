@@ -112,16 +112,12 @@ def stored_notifications():
         pass
 
 
-@pytest.mark.parametrize("language", ["en", "cs", "nb_NO"])
+@pytest.mark.parametrize("language", ["en", "cs", "nb_NO", ""])
 def test_list(language, stored_notifications, uci_configs_init, infrastructure, start_buses):
-    res = infrastructure.process_message(
-        {
-            "module": "router_notifications",
-            "action": "list",
-            "kind": "request",
-            "data": {"lang": language},
-        }
-    )
+    msg = {"module": "router_notifications", "action": "list", "kind": "request"}
+    if language:
+        msg["data"] = {"lang": language}
+    res = infrastructure.process_message(msg)
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "notifications" in res["data"].keys()
 

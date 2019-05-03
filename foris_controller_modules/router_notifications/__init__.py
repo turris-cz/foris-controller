@@ -29,12 +29,12 @@ class RouterNotificationsModule(BaseModule):
     def action_list(self, data):
         """ Displays current notifications
 
-        :param data: input data (supposed to be {"lang": "en/cs/.."})
+        :param data: input data (supposed to be {"lang": "en/cs/.."} or {})
         :type data: dict
         :returns: response to request
         :rtype: dict
         """
-        return {"notifications": self.handler.list(data["lang"])}
+        return {"notifications": self.handler.list(data.get("lang", "en"))}
 
     def action_mark_as_displayed(self, data):
         """ Marks notifications as displayed
