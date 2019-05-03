@@ -1,5 +1,10 @@
 {
     "definitions": {
+        "updater_approval_delay_range": {
+            "description": "allowed approval range (in hours)",
+            "type": "integer",
+            "minimum": 1, "maximum": 774
+        },
         "updater_user_list_name": {"type": "string", "minLength": 1},
         "updater_user_lists_get": {
             "type": "array",
@@ -41,7 +46,7 @@
             "type": "object",
             "properties": {
                 "status": {"$ref": "#/definitions/updater_approvals_status"},
-                "delay": {"type": "integer", "minimum": 1, "maximum": 168}
+                "delay": {"$ref": "#/definitions/updater_approval_delay_range"}
             },
             "additionalProperties": false,
             "required": ["status"]
@@ -57,7 +62,7 @@
                                 {"enum": ["delayed"]}
                             ]
                         },
-                        "delay": {"type": "integer", "minimum": 1, "maximum": 168}
+                        "delay": {"$ref": "#/definitions/updater_approval_delay_range"}
                     },
                     "additionalProperties": false,
                     "required": ["status", "delay"]
