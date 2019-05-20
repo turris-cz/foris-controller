@@ -19,9 +19,9 @@
 
 import collections
 import json
+import pathlib
 import pytest
 import uuid
-import jsonschema
 
 
 from paho.mqtt import client as mqtt
@@ -41,6 +41,9 @@ from foris_controller_testtools.fixtures import (
 from foris_controller_testtools.utils import FileFaker
 
 
+SCRIPT_ROOT_DIR = str(pathlib.Path(__file__).parent / "test_root")
+
+
 @pytest.fixture(scope="function")
 def mount_on_netboot():
     script = """\
@@ -50,7 +53,7 @@ tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
 tmpfs on /dev type tmpfs (rw,nosuid,relatime,size=512k,mode=755)
 EOF
 """
-    with FileFaker(FILE_ROOT_PATH, "/bin/mount", True, script) as mount_script:
+    with FileFaker(SCRIPT_ROOT_DIR, "/bin/mount", True, script) as mount_script:
         yield mount_script
 
 
@@ -70,7 +73,7 @@ devpts on /dev/pts type devpts (rw,nosuid,noexec,relatime,mode=600,ptmxmode=000)
 debugfs on /sys/kernel/debug type debugfs (rw,noatime)
 EOF
 """
-    with FileFaker(FILE_ROOT_PATH, "/bin/mount", True, script) as mount_script:
+    with FileFaker(SCRIPT_ROOT_DIR, "/bin/mount", True, script) as mount_script:
         yield mount_script
 
 
