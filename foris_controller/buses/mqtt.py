@@ -25,8 +25,10 @@ import re
 import sys
 import threading
 import time
+import typing
 
 from paho.mqtt import client as mqtt
+from paho.mqtt.publish import single
 from jsonschema import ValidationError
 
 from foris_controller.app import app_info
@@ -40,10 +42,11 @@ logger = logging.getLogger(__name__)
 
 bus_info = {"bus_thread": None}
 
-ANNOUNCER_PERIOD_DEFAULT = 1.0
+ANNOUNCER_PERIOD_DEFAULT = 1.0  # i in seconds
 ANNOUNCER_PERIOD = float(
     os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", ANNOUNCER_PERIOD_DEFAULT)
 )  # in seconds
+CLEAR_RETAIN_PERIOD = 10.0  # in seconds
 
 
 def _publish_advertize(client, data):
@@ -104,7 +107,7 @@ def announcer_worker(host, port):
 
 class MqttListener(BaseSocketListener):
     router = Router()
-    subscriptions = {}
+    subscriptions: typing.Dict[int, bool] = {}
 
     @staticmethod
     def handle_on_connect(client, userdata, flags, rc):
@@ -170,14 +173,39 @@ class MqttListener(BaseSocketListener):
         modules_dict = dict(get_modules(app_info["filter_modules"], app_info["extra_module_paths"]))
         return get_method_names_from_module(modules_dict.get(module_name)) or []
 
-    def __init__(self, host, port):
-        self.announcer_thread_running = False
-        self.unpublished_mids = {}
-        self.mqtt_client_id = f"{uuid.uuid4()}-controller-request"
+    def clear_retained_messages(self, topic: str):
+        """ Clear retained messages in other thread """
+
+        def work():
+            time.sleep(CLEAR_RETAIN_PERIOD)
+            logger.debug("Clearing retained messages '%s'", topic)
+            auth: typing.Optional[typing.Dict[str, str]] = None
+            if app_info.get("mqtt_credentials", None) and app_info["mqtt_credentials"]:
+                auth = {
+                    "username": app_info["mqtt_credentials"][0],
+                    "password": app_info["mqtt_credentials"][1],
+                }
+            single(
+                topic, payload="", qos=2, retain=True, hostname=self.host, port=self.port, auth=auth
+            )
+            logger.debug("Retained messages '%s' should be cleared", topic)
+
+        thread = threading.Thread(target=work, name=f"clean-retain-{topic}", daemon=False)
+        thread.start()
+
+    def __init__(self, host: str, port: int):
+        self.announcer_thread_running: bool = False
+        self.unpublished_mids: typing.Dict[int, typing.Tuple[str, bytes]] = {}
+        self.mqtt_client_id: str = f"{uuid.uuid4()}-controller-request"
+        self.host: str = host
+        self.port: int = port
 
         def on_publish(client, userdata, mid):
             logger.debug("Mid %s is published", mid)
             if mid in self.unpublished_mids:
+                # clear retained messages
+                topic, _ = self.unpublished_mids[mid]
+                self.clear_retained_messages(topic)
                 del self.unpublished_mids[mid]
 
         def on_subscribe(client, userdata, mid, granted_qos):
@@ -199,7 +227,7 @@ class MqttListener(BaseSocketListener):
 
                 # try to republish unfinished messages
                 for topic, message in self.unpublished_mids.values():
-                    client.publish(topic, message, qos=0)
+                    client.publish(topic, message, qos=0, retain=True)
 
                 self.unpublished_mids = {}
 
@@ -251,7 +279,7 @@ class MqttListener(BaseSocketListener):
 
             if response is not None:
                 raw_response = json.dumps(response)
-                mqtt_message = client.publish(reply_topic, raw_response, qos=0)
+                mqtt_message = client.publish(reply_topic, raw_response, qos=0, retain=True)
                 self.unpublished_mids[mqtt_message.mid] = (reply_topic, raw_response)
                 logger.debug(
                     "Publishing message (mid=%s) for %s: %s",
