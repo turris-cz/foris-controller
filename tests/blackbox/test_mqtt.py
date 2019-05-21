@@ -192,6 +192,13 @@ def test_action_list(ubusd_test, infrastructure, file_root_init, mosquitto_test)
 
 
 @pytest.mark.only_message_buses(["mqtt"])
+def test_working_replies(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+    infrastructure.wait_mqtt_connected()
+    topic = "foris-controller/%s/working_replies" % MQTT_ID
+    assert isinstance(query_bus(topic), list)
+
+
+@pytest.mark.only_message_buses(["mqtt"])
 def test_wrong_id(ubusd_test, infrastructure, file_root_init, mosquitto_test):
     infrastructure.wait_mqtt_connected()
 

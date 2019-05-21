@@ -129,29 +129,25 @@ class MqttListener(BaseSocketListener):
                 sys.exit(1)  # can't connect to bus -> exitting
             MqttListener.subscriptions[mid] = False
 
+        def subscribe(topic):
+            rc, mid = client.subscribe(topic, qos=0)
+            check_subscription(rc, mid, topic)
+            logger.debug("Subscribing to '%s'." % topic)
+
         # subscription for listing modules
-        list_modules_topic = "foris-controller/%s/list" % app_info["controller_id"]
-        rc, mid = client.subscribe(list_modules_topic, qos=0)
-        check_subscription(rc, mid, list_modules_topic)
-        logger.debug("Subscribing to '%s'." % list_modules_topic)
+        subscribe(f"foris-controller/{app_info['controller_id']}/list")
+
+        # subscription for listing working replies
+        subscribe(f"foris-controller/{app_info['controller_id']}/working_replies")
 
         # subscription for obtaining the entire schema
-        schema_topic = "foris-controller/%s/jsonschemas" % app_info["controller_id"]
-        rc, mid = client.subscribe(schema_topic, qos=0)
-        check_subscription(rc, mid, schema_topic)
-        logger.debug("Subscribing to '%s'." % schema_topic)
+        subscribe(f"foris-controller/{app_info['controller_id']}/jsonschemas")
 
         # subscription for listing module actions
-        action_topic = "foris-controller/%s/request/+/list" % app_info["controller_id"]
-        rc, mid = client.subscribe(action_topic, qos=0)
-        check_subscription(rc, mid, action_topic)
-        logger.debug("Subscribing to '%s'." % action_topic)
+        subscribe(f"foris-controller/{app_info['controller_id']}/request/+/list")
 
         # listen to all requests for my node
-        request_topics = "foris-controller/%s/request/+/action/+" % app_info["controller_id"]
-        rc, mid = client.subscribe(request_topics, qos=0)
-        check_subscription(rc, mid, request_topics)
-        logger.debug("Subscribing to '%s'." % request_topics)
+        subscribe(f"foris-controller/{app_info['controller_id']}/request/+/action/+")
 
     @staticmethod
     def list_modules():
@@ -172,6 +168,10 @@ class MqttListener(BaseSocketListener):
     def list_actions(module_name):
         modules_dict = dict(get_modules(app_info["filter_modules"], app_info["extra_module_paths"]))
         return get_method_names_from_module(modules_dict.get(module_name)) or []
+
+    def list_working_replies(self):
+        with self.working_replies_lock:
+            return [e for e in self.working_replies]
 
     def start_message_worker(self, reply_topic: str, reply_id: str, msg: dict):
         """ Performs the work and sends the reply
@@ -205,10 +205,6 @@ class MqttListener(BaseSocketListener):
             )
             logger.debug("Reply '%s' published.", reply_id)
 
-            # unmark reply_id as working reply
-            with self.working_replies_lock:
-                self.working_replies.remove(reply_id)
-
             # clear retains
             time.sleep(CLEAR_RETAIN_PERIOD)
             logger.debug("Clearing retained messages '%s'", reply_topic)
@@ -222,6 +218,10 @@ class MqttListener(BaseSocketListener):
                 auth=auth,
             )
             logger.debug("Retained messages '%s' should be cleared", reply_topic)
+
+            # unmark reply_id as working reply
+            with self.working_replies_lock:
+                self.working_replies.remove(reply_id)
 
         thread = threading.Thread(target=work, name=f"worker-{reply_id}", daemon=False)
         thread.start()
@@ -291,6 +291,10 @@ class MqttListener(BaseSocketListener):
             if match:
                 module_name = match.group(1)
                 response = MqttListener.list_actions(module_name)
+
+            match = re.match(r"^foris-controller/[^/]+/working_replies$", msg.topic)
+            if match:
+                response = self.list_working_replies()
 
             match = re.match(r"^foris-controller/[^/]+/request/([^/]+)/action/([^/]+)$", msg.topic)
             if match:
