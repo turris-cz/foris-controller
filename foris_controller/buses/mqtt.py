@@ -173,40 +173,69 @@ class MqttListener(BaseSocketListener):
         modules_dict = dict(get_modules(app_info["filter_modules"], app_info["extra_module_paths"]))
         return get_method_names_from_module(modules_dict.get(module_name)) or []
 
-    def clear_retained_messages(self, topic: str):
-        """ Clear retained messages in other thread """
+    def start_message_worker(self, reply_topic: str, reply_id: str, msg: dict):
+        """ Performs the work and sends the reply
+        :param reply_topic: where the reply is supposed to be send
+        :param reply_id: id of reply
+        :param msg: message to be processed
+        """
+        auth: typing.Optional[typing.Dict[str, str]] = None
+        if app_info.get("mqtt_credentials", None) and app_info["mqtt_credentials"]:
+            auth = {
+                "username": app_info["mqtt_credentials"][0],
+                "password": app_info["mqtt_credentials"][1],
+            }
 
         def work():
-            time.sleep(CLEAR_RETAIN_PERIOD)
-            logger.debug("Clearing retained messages '%s'", topic)
-            auth: typing.Optional[typing.Dict[str, str]] = None
-            if app_info.get("mqtt_credentials", None) and app_info["mqtt_credentials"]:
-                auth = {
-                    "username": app_info["mqtt_credentials"][0],
-                    "password": app_info["mqtt_credentials"][1],
-                }
-            single(
-                topic, payload="", qos=2, retain=True, hostname=self.host, port=self.port, auth=auth
-            )
-            logger.debug("Retained messages '%s' should be cleared", topic)
+            # mark reply_id as working reply
+            with self.working_replies_lock:
+                self.working_replies.add(reply_id)
 
-        thread = threading.Thread(target=work, name=f"clean-retain-{topic}", daemon=False)
+            response = MqttListener.router.process_message(msg)
+            logger.debug("Publishing response '%s' to '%s'", response, reply_topic)
+            raw_response = json.dumps(response)
+            single(
+                reply_topic,
+                payload=raw_response,
+                qos=0,
+                retain=True,
+                hostname=self.host,
+                port=self.port,
+                auth=auth,
+            )
+            logger.debug("Reply '%s' published.", reply_id)
+
+            # unmark reply_id as working reply
+            with self.working_replies_lock:
+                self.working_replies.remove(reply_id)
+
+            # clear retains
+            time.sleep(CLEAR_RETAIN_PERIOD)
+            logger.debug("Clearing retained messages '%s'", reply_topic)
+            single(
+                reply_topic,
+                payload="",
+                qos=2,
+                retain=True,
+                hostname=self.host,
+                port=self.port,
+                auth=auth,
+            )
+            logger.debug("Retained messages '%s' should be cleared", reply_topic)
+
+        thread = threading.Thread(target=work, name=f"worker-{reply_id}", daemon=False)
         thread.start()
 
     def __init__(self, host: str, port: int):
         self.announcer_thread_running: bool = False
-        self.unpublished_mids: typing.Dict[int, typing.Tuple[str, bytes]] = {}
         self.mqtt_client_id: str = f"{uuid.uuid4()}-controller-request"
         self.host: str = host
         self.port: int = port
+        self.working_replies: typing.Set[str] = set()
+        self.working_replies_lock: threading.Lock = threading.Lock()
 
         def on_publish(client, userdata, mid):
             logger.debug("Mid %s is published", mid)
-            if mid in self.unpublished_mids:
-                # clear retained messages
-                topic, _ = self.unpublished_mids[mid]
-                self.clear_retained_messages(topic)
-                del self.unpublished_mids[mid]
 
         def on_subscribe(client, userdata, mid, granted_qos):
             MqttListener.subscriptions[mid] = True
@@ -224,12 +253,6 @@ class MqttListener(BaseSocketListener):
                     announcer_thread.daemon = False
                     announcer_thread.start()
                     self.announcer_thread_running = True
-
-                # try to republish unfinished messages
-                for topic, message in self.unpublished_mids.values():
-                    client.publish(topic, message, qos=0, retain=True)
-
-                self.unpublished_mids = {}
 
         def on_message(client, userdata, msg):
             logger.debug(
@@ -275,12 +298,12 @@ class MqttListener(BaseSocketListener):
                 msg = {"module": module_name, "kind": "request", "action": action_name}
                 if "data" in parsed:
                     msg["data"] = parsed["data"]
-                response = MqttListener.router.process_message(msg)
+                self.start_message_worker(reply_topic, parsed["reply_msg_id"], msg)
+                return  # reply will be performed elsewhere
 
             if response is not None:
                 raw_response = json.dumps(response)
                 mqtt_message = client.publish(reply_topic, raw_response, qos=0, retain=True)
-                self.unpublished_mids[mqtt_message.mid] = (reply_topic, raw_response)
                 logger.debug(
                     "Publishing message (mid=%s) for %s: %s",
                     mqtt_message.mid,
