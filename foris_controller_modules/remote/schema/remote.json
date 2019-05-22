@@ -414,10 +414,14 @@
                     "properties": {
                         "id": {"$ref": "#/definitions/controller_id"},
                         "state": {"enum": ["running", "started", "exitted"]},
-                        "netboot": {"enum": ["no", "booted", "ready", "unknown"]}
+                        "netboot": {"enum": ["no", "booted", "ready", "unknown"]},
+                        "working_replies": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
                     },
                     "additionalProperties": false,
-                    "required": ["id", "state"]
+                    "required": ["id", "state", "netboot", "working_replies"]
                 }
             },
             "additionalProperties": false,

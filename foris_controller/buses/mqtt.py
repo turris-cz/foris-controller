@@ -49,7 +49,13 @@ ANNOUNCER_PERIOD = float(
 CLEAR_RETAIN_PERIOD = 10.0  # in seconds
 
 
-def _publish_advertize(client, data):
+def _publish_advertize(
+    client: mqtt.Client, data: dict, working_replies: list, working_replies_lock: threading.Lock
+):
+
+    with working_replies_lock:
+        data["working_replies"]: typing.List[str] = list(working_replies)
+
     ANNOUNCER_TOPIC = (
         f"foris-controller/{app_info['controller_id']}/notification/remote/action/advertize"
     )
@@ -74,12 +80,17 @@ def _publish_advertize(client, data):
         logger.debug("Error: \n%s" % str(exc))
 
 
-def announcer_worker(host, port):
+def announcer_worker(host, port, working_replies, working_replies_lock):
     def on_connect(client, userdata, flags, rc):
         logger.debug("Announcer handles connect.")
         if rc == 0:
             logger.debug("Announcer thread connected.")
-            _publish_advertize(client, {"state": "started", "id": app_info["controller_id"]})
+            _publish_advertize(
+                client,
+                {"state": "started", "id": app_info["controller_id"]},
+                working_replies,
+                working_replies_lock,
+            )
         else:
             logger.error("Failed to connect announcer thread!")
 
@@ -99,9 +110,19 @@ def announcer_worker(host, port):
     while bus_info["bus_thread"].is_alive():
         time.sleep(ANNOUNCER_PERIOD or ANNOUNCER_PERIOD_DEFAULT)
         if ANNOUNCER_PERIOD:
-            _publish_advertize(client, {"state": "running", "id": app_info["controller_id"]})
+            _publish_advertize(
+                client,
+                {"state": "running", "id": app_info["controller_id"]},
+                working_replies,
+                working_replies_lock,
+            )
 
-    _publish_advertize(client, {"state": "exitted", "id": app_info["controller_id"]})
+    _publish_advertize(
+        client,
+        {"state": "exitted", "id": app_info["controller_id"]},
+        working_replies,
+        working_replies_lock,
+    )
     client.loop_stop()
 
 
@@ -248,7 +269,12 @@ class MqttListener(BaseSocketListener):
                     announcer_thread = threading.Thread(
                         name="announcer_thread",
                         target=announcer_worker,
-                        kwargs={"host": host, "port": port},
+                        kwargs={
+                            "host": host,
+                            "port": port,
+                            "working_replies": self.working_replies,
+                            "working_replies_lock": self.working_replies_lock,
+                        },
                     )
                     announcer_thread.daemon = False
                     announcer_thread.start()
