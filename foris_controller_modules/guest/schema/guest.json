@@ -98,7 +98,7 @@
             "additionalProperties": false
         },
         {
-            "description": "request to get guest settings",
+            "description": "reply to get guest settings",
             "properties": {
                 "module": {"enum": ["guest"]},
                 "kind": {"enum": ["reply"]},
