@@ -50,11 +50,14 @@ CLEAR_RETAIN_PERIOD = 10.0  # in seconds
 
 
 def _publish_advertize(
-    client: mqtt.Client, data: dict, working_replies: list, working_replies_lock: threading.Lock
+    client: mqtt.Client,
+    data: dict,
+    working_replies: typing.Dict[str, typing.Tuple[threading.Thread, float]],
+    working_replies_lock: threading.Lock,
 ):
 
     with working_replies_lock:
-        data["working_replies"]: typing.List[str] = list(working_replies)
+        data["working_replies"]: typing.List[str] = [e for e in working_replies.keys()]
 
     ANNOUNCER_TOPIC = (
         f"foris-controller/{app_info['controller_id']}/notification/remote/action/advertize"
@@ -192,7 +195,7 @@ class MqttListener(BaseSocketListener):
 
     def list_working_replies(self):
         with self.working_replies_lock:
-            return [e for e in self.working_replies]
+            return [e for e in self.working_replies.keys()]
 
     def start_message_worker(self, reply_topic: str, reply_id: str, msg: dict):
         """ Performs the work and sends the reply
@@ -210,7 +213,7 @@ class MqttListener(BaseSocketListener):
         def work():
             # mark reply_id as working reply
             with self.working_replies_lock:
-                self.working_replies.add(reply_id)
+                self.working_replies[reply_id] = (threading.current_thread(), time.time())
 
             response = MqttListener.router.process_message(msg)
             logger.debug("Publishing response '%s' to '%s'", response, reply_topic)
@@ -224,16 +227,10 @@ class MqttListener(BaseSocketListener):
                 auth=auth,
             )
             try:
-                single(
-                    reply_topic,
-                    **kwargs,
-                )
+                single(reply_topic, **kwargs)
             except ConnectionRefusedError:
                 # retry in case the connection was interrupted (due to fosquitto restart)
-                single(
-                    reply_topic,
-                    **kwargs,
-                )
+                single(reply_topic, **kwargs)
             logger.debug("Reply '%s' published.", reply_id)
 
             # clear retains
@@ -253,9 +250,18 @@ class MqttListener(BaseSocketListener):
             # unmark reply_id as working reply
             with self.working_replies_lock:
                 try:
-                    self.working_replies.remove(reply_id)
+                    del self.working_replies[reply_id]
                 except KeyError:
                     pass
+                # perform a cleanup
+                # (if corresponding thread is not alive and retain period was reached)
+                ids_to_delete = [
+                    k
+                    for k, v in self.working_replies.items()
+                    if not v[0].is_alive() and time.time() - v[1] > CLEAR_RETAIN_PERIOD
+                ]
+                for del_id in ids_to_delete:
+                    del self.working_replies[del_id]
 
         thread = threading.Thread(target=work, name=f"worker-{reply_id}", daemon=False)
         thread.start()
@@ -265,7 +271,7 @@ class MqttListener(BaseSocketListener):
         self.mqtt_client_id: str = f"{uuid.uuid4()}-controller-request"
         self.host: str = host
         self.port: int = port
-        self.working_replies: typing.Set[str] = set()
+        self.working_replies: typing.Set[typing.Dict[str, threading.Thread]] = dict()
         self.working_replies_lock: threading.Lock = threading.Lock()
 
         def on_publish(client, userdata, mid):
