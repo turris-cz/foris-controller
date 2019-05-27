@@ -1,3 +1,14 @@
+1.0 (2019-05-27)
+----------------
+
+* mqtt: retry to send messages (with a small timeout)
+* remote: add working_replies field into advertizements
+* mqtt: allow to process messages concurrently
+* mqtt: doc file which describes erroneous situations added
+* mqtt: use retain and clean the messages afterwards
+* tests: fix fork bomb
+* router_notifications: making lang optional
+
 0.11.14 (2019-05-03)
 --------------------
 
