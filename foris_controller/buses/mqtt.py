@@ -216,7 +216,6 @@ class MqttListener(BaseSocketListener):
                 self.working_replies[reply_id] = (threading.current_thread(), time.time())
 
             response = MqttListener.router.process_message(msg)
-            logger.debug("Publishing response '%s' to '%s'", response, reply_topic)
             raw_response = json.dumps(response)
             kwargs = dict(
                 payload=raw_response,
@@ -226,11 +225,21 @@ class MqttListener(BaseSocketListener):
                 port=self.port,
                 auth=auth,
             )
+            logger.debug("Publishing response '%s' to '%s'", response, reply_topic)
             try:
                 single(reply_topic, **kwargs)
             except ConnectionRefusedError:
                 # retry in case the connection was interrupted (due to fosquitto restart)
-                single(reply_topic, **kwargs)
+                logger.warning("Publishing response to '%s' failed (resending)", reply_topic)
+                time.sleep(0.3)
+                try:
+                    single(reply_topic, **kwargs)
+                except ConnectionAbortedError:
+                    logger.error(
+                        "Publishing response to '%s' failed (failed - message not sent))",
+                        reply_topic
+                    )
+                    raise
             logger.debug("Reply '%s' published.", reply_id)
 
             # clear retains
