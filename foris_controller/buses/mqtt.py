@@ -70,8 +70,13 @@ def _publish_advertize(
         netboot = app_info["modules"]["remote"].handler.get_netboot_status()
     except Exception:
         netboot = "unknown"
-
     msg["data"]["netboot"] = netboot
+
+    # inject modules name and versions
+    msg["data"]["modules"] = [
+        {"name": k, "version": v.version} for k, v in app_info["modules"].items()
+    ]
+
     try:
         # Hope that calling validator is treadsafe otherwise
         # some locking mechanism should be implemented
@@ -237,7 +242,7 @@ class MqttListener(BaseSocketListener):
                 except ConnectionAbortedError:
                     logger.error(
                         "Publishing response to '%s' failed (failed - message not sent))",
-                        reply_topic
+                        reply_topic,
                     )
                     raise
             logger.debug("Reply '%s' published.", reply_id)

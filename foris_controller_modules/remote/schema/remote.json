@@ -418,10 +418,22 @@
                         "working_replies": {
                             "type": "array",
                             "items": {"type": "string"}
+                        },
+                        "modules": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "version": {"type": "string"}
+                                },
+                                "additionalProperties": false,
+                                "required": ["name", "version"]
+                            }
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["id", "state", "netboot", "working_replies"]
+                    "required": ["id", "state", "netboot", "working_replies", "modules"]
                 }
             },
             "additionalProperties": false,

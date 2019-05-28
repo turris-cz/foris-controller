@@ -119,6 +119,8 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
             )
             continue
         module_class = get_module_class(module)
+        # insert version
+        module_class.version = version
         if not module_class:
             logger.error(
                 "Failed to find a module class for module '%s'. Skipping module." % (module_name)

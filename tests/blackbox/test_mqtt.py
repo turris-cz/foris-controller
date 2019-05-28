@@ -39,6 +39,7 @@ from foris_controller_testtools.fixtures import (
 )
 
 from foris_controller_testtools.utils import FileFaker
+from foris_controller import __version__
 
 
 SCRIPT_ROOT_DIR = str(pathlib.Path(__file__).parent / "test_root")
@@ -136,6 +137,7 @@ def test_advertize(ubusd_test, infrastructure, file_root_init, mosquitto_test, m
         assert notification["data"]["id"] == MQTT_ID
         assert notification["data"]["netboot"] == "no"
         assert isinstance(notification["data"]["working_replies"], list)
+        assert {"name": "remote", "version": __version__ in notification["data"]["modules"]}
 
 
 @pytest.mark.only_backends(["openwrt"])
