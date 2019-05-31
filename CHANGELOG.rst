@@ -1,3 +1,8 @@
+1.0.1 (2019-05-31)
+------------------
+
+* remote: include module names and version into advertizements
+
 1.0 (2019-05-27)
 ----------------
 
