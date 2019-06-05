@@ -188,6 +188,11 @@ class LanUci(object):
         dns = get_option_named(network_data, "network", "lan", "dns", [])
         dns = dns if isinstance(dns, (list, tuple)) else [e for e in dns.split(" ") if e]
         dns = reversed(dns)  # dns with higher priority should be added last
+        try:
+            # use ipv4 addresses only
+            dns = [e for e in dns if isinstance(ipaddress.ip_address(e), ipaddress.IPv4Address)]
+        except ValueError:
+            dns = []
         mode_unmanaged["lan_static"].update(zip(("dns1", "dns2"), dns))
 
         from foris_controller_backends.networks import NetworksUci
