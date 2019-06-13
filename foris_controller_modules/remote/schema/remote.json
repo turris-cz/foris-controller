@@ -415,6 +415,7 @@
                         "id": {"$ref": "#/definitions/controller_id"},
                         "state": {"enum": ["running", "started", "exitted"]},
                         "netboot": {"enum": ["no", "booted", "ready", "unknown"]},
+                        "hostname": {"type": "string"},
                         "working_replies": {
                             "type": "array",
                             "items": {"type": "string"}
@@ -433,7 +434,7 @@
                         }
                     },
                     "additionalProperties": false,
-                    "required": ["id", "state", "netboot", "working_replies", "modules"]
+                    "required": ["id", "state", "hostname", "netboot", "working_replies", "modules"]
                 }
             },
             "additionalProperties": false,

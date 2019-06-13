@@ -135,6 +135,7 @@ def test_advertize(ubusd_test, infrastructure, file_root_init, mosquitto_test, m
         assert notification["kind"] == "notification"
         assert notification["data"]["state"] in ["running", "started", "exitted"]
         assert notification["data"]["id"] == MQTT_ID
+        assert "hostname" in notification["data"]
         assert notification["data"]["netboot"] == "no"
         assert isinstance(notification["data"]["working_replies"], list)
         assert {"name": "remote", "version": __version__ in notification["data"]["modules"]}

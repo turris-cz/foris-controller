@@ -22,6 +22,7 @@ import json
 import os
 import uuid
 import re
+import socket
 import sys
 import threading
 import time
@@ -49,6 +50,22 @@ ANNOUNCER_PERIOD = float(
 CLEAR_RETAIN_PERIOD = 10.0  # in seconds
 
 
+def _build_advertizement(state: str) -> dict:
+    # Try to obtain netboot status
+    try:
+        netboot = app_info["modules"]["remote"].handler.get_netboot_status()
+    except Exception:
+        netboot = "unknown"
+
+    return {
+        "state": "started",
+        "id": app_info["controller_id"],
+        "hostname": socket.gethostname(),
+        "netboot": netboot,
+        "modules": [{"name": k, "version": v.version} for k, v in app_info["modules"].items()],
+    }
+
+
 def _publish_advertize(
     client: mqtt.Client,
     data: dict,
@@ -64,18 +81,6 @@ def _publish_advertize(
     )
     logger.debug("Starting to validate advertize notification.")
     msg = {"module": "remote", "action": "advertize", "kind": "notification", "data": data}
-
-    # Try to obtain netboot status
-    try:
-        netboot = app_info["modules"]["remote"].handler.get_netboot_status()
-    except Exception:
-        netboot = "unknown"
-    msg["data"]["netboot"] = netboot
-
-    # inject modules name and versions
-    msg["data"]["modules"] = [
-        {"name": k, "version": v.version} for k, v in app_info["modules"].items()
-    ]
 
     try:
         # Hope that calling validator is treadsafe otherwise
@@ -94,10 +99,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         if rc == 0:
             logger.debug("Announcer thread connected.")
             _publish_advertize(
-                client,
-                {"state": "started", "id": app_info["controller_id"]},
-                working_replies,
-                working_replies_lock,
+                client, _build_advertizement("started"), working_replies, working_replies_lock
             )
         else:
             logger.error("Failed to connect announcer thread!")
@@ -119,17 +121,11 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         time.sleep(ANNOUNCER_PERIOD or ANNOUNCER_PERIOD_DEFAULT)
         if ANNOUNCER_PERIOD:
             _publish_advertize(
-                client,
-                {"state": "running", "id": app_info["controller_id"]},
-                working_replies,
-                working_replies_lock,
+                client, _build_advertizement("running"), working_replies, working_replies_lock
             )
 
     _publish_advertize(
-        client,
-        {"state": "exitted", "id": app_info["controller_id"]},
-        working_replies,
-        working_replies_lock,
+        client, _build_advertizement("running"), working_replies, working_replies_lock
     )
     client.loop_stop()
 
