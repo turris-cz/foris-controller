@@ -1461,6 +1461,15 @@ def test_dhcp_client_settings_openwrt(
     )["data"]["mode_managed"]["dhcp"]["clients"]
     assert "192.168.9.25" not in [e["ip"] for e in client_list]
 
+    # test tab in macaddress field
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("dhcp", "@host[0]", "mac", "\tEE:22:33:44:55:66")
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res
+
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])

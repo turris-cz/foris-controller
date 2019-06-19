@@ -62,7 +62,7 @@ class LanFiles(BaseFile):
                 res.append(
                     {
                         "expires": timestamp,
-                        "mac": mac,
+                        "mac": mac.upper().strip(),
                         "ip": ip,
                         "hostname": hostname,
                         "active": ("src=%s " % ip) in conntrack or ("dst=%s " % ip) in conntrack,
@@ -82,6 +82,11 @@ class LanUci(object):
     def get_client_list(self, uci_data, network, netmask):
         file_records = LanFiles().get_dhcp_clients(network, netmask)
         uci_data = get_sections_by_type(uci_data, "dhcp", "host")
+
+        for record in uci_data:
+            if "mac" in record["data"]:
+                record["data"]["mac"] = record["data"]["mac"].strip().upper()
+
         uci_map = {
             e["data"]["mac"]: e["data"]
             for e in uci_data
