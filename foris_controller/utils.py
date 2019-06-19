@@ -20,6 +20,7 @@
 import imp
 import importlib
 import inspect
+import ipaddress
 import os
 import pkgutil
 import prctl
@@ -332,3 +333,26 @@ def read_passwd_file(path: str) -> typing.Tuple[str]:
     """
     with open(path, "r") as f:
         return re.match(r"^([^:]+):(.*)$", f.readlines()[0][:-1]).groups()
+
+
+def check_dynamic_ranges(router_ip: str, netmask: str, start: int, limit: int) -> bool:
+    """ Test whether combination of router_ip, netmask, start, limit is a valid
+        dynamic dhcp range / ip combination
+        :returns: True if configuration is valid False otherwise
+    """
+    # test new_settings
+    ip = ipaddress.ip_address(router_ip)
+    network = ipaddress.ip_network(f"{ip}/{netmask}", strict=False)
+    try:
+        start_ip = network.network_address + start
+        last_ip = start_ip + limit
+    except ipaddress.AddressValueError:  # IP overflow
+        return False
+
+    if start_ip not in network or last_ip not in network:  # not in dynamic range
+        return False
+
+    if start_ip <= ip <= last_ip:  # router ip within dynamic range
+        return False
+
+    return True

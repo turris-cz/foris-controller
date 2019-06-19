@@ -21,6 +21,7 @@ import logging
 
 from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.utils import check_dynamic_ranges
 
 
 class GuestModule(BaseModule):
@@ -42,9 +43,18 @@ class GuestModule(BaseModule):
         :returns: result of the update {'result': True/False}
         :rtype: dict
         """
-        res = self.handler.update_settings(data)
-        if res:
-            self.notify("update_settings", data)
+        if (
+            data["enabled"]
+            and data["dhcp"]["enabled"]
+            and not check_dynamic_ranges(
+                data["ip"], data["netmask"], data["dhcp"]["start"], data["dhcp"]["limit"]
+            )
+        ):
+            res = False
+        else:
+            res = self.handler.update_settings(data)
+            if res:
+                self.notify("update_settings", data)
         return {"result": res}
 
 

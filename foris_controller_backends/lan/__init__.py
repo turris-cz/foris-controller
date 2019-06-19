@@ -247,19 +247,6 @@ class LanUci(object):
         :type mode_unmanaged: dict
         """
 
-        # test new_settings
-        if mode_managed and mode_managed["dhcp"]["enabled"]:
-            netmask = mode_managed["netmask"]
-            ip = mode_managed["router_ip"]
-            network = ipaddress.ip_network(f"{ip}/{netmask}", strict=False)
-            try:
-                start_ip = ipaddress.ip_address(ip) + mode_managed["dhcp"]["start"]
-                last_ip = start_ip + mode_managed["dhcp"]["limit"]
-            except ipaddress.AddressValueError:  # IP overflow
-                return False
-            if start_ip not in network or last_ip not in network:  # not in dynamic range
-                return False
-
         with UciBackend() as backend:
 
             backend.add_section("network", "interface", "lan")

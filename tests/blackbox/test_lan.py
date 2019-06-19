@@ -972,6 +972,10 @@ def test_update_settings_dhcp_range(
     update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 2, True)
     # too high number
     update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)
+    # last valid router ip
+    update("192.168.1.99", "255.255.255.0", 100, 150, True)
+    # router ip in range
+    update("192.168.1.100", "255.255.255.0", 100, 150, False)
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)

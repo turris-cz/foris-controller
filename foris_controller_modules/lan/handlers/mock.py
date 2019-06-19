@@ -107,20 +107,6 @@ class MockLanHandler(Handler, BaseMockHandler):
         :rtype: bool
         """
 
-        # test new_settings
-        if new_settings["mode"] == "managed" and new_settings["mode_managed"]["dhcp"]["enabled"]:
-            netmask = new_settings["mode_managed"]["netmask"]
-            ip = new_settings["mode_managed"]["router_ip"]
-            ip_norm = IPv4.normalize_subnet(ip, netmask)
-            start = new_settings["mode_managed"]["dhcp"]["start"]
-            limit = new_settings["mode_managed"]["dhcp"]["limit"]
-            last_ip_num = IPv4.str_to_num(ip_norm) + start + limit
-            if last_ip_num >= 2 ** 32:  # ip overflow
-                return False
-            last_ip_norm = IPv4.normalize_subnet(IPv4.num_to_str(last_ip_num), netmask)
-            if last_ip_norm != ip_norm:
-                return False
-
         MockLanHandler.mode = new_settings["mode"]
         if new_settings["mode"] == "managed":
             mode = new_settings["mode_managed"]

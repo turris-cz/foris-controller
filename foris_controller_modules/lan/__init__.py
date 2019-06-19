@@ -19,6 +19,7 @@
 
 import logging
 
+from foris_controller.utils import check_dynamic_ranges
 from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
 
@@ -38,9 +39,21 @@ class LanModule(BaseModule):
         :param data: new lan settings
         :returns: result of the update {'result': True/False}
         """
-        res = self.handler.update_settings(data)
-        if res:
-            self.notify("update_settings", data)
+        if (
+            data["mode"] == "managed"
+            and data["mode_managed"]["dhcp"]["enabled"]
+            and not check_dynamic_ranges(
+                data["mode_managed"]["router_ip"],
+                data["mode_managed"]["netmask"],
+                data["mode_managed"]["dhcp"]["start"],
+                data["mode_managed"]["dhcp"]["limit"],
+            )
+        ):
+            res = False
+        else:
+            res = self.handler.update_settings(data)
+            if res:
+                self.notify("update_settings", data)
         return {"result": res}
 
     def action_set_dhcp_client(self, data: dict) -> dict:
