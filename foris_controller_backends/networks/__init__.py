@@ -152,8 +152,8 @@ class NetworksUci(object):
             for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface"):
                 if (
                     not parse_bool(section["data"].get("disabled", "0"))
-                    and section["data"]["device"] in enabled_radios
-                    and section["data"]["network"] == network_name
+                    and section["data"].get("device", "") in enabled_radios
+                    and section["data"].get("network", "") == network_name
                 ):
                     wifi_iface_count += 1
 
