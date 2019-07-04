@@ -47,7 +47,42 @@ class DnsModule(BaseModule):
             self.notify("update_settings", data)
         return {"result": res}
 
+    def action_list_forwarders(self, data):
+        """ lists forwarders
+        :param data: new dns settings {}
+        :type data: dict
+        :returns: result of the update {"forwarders": [{"name": "00_nic", ...}, ...]}
+        :rtype: dict
+        """
+        return {"forwarders": self.handler.list_forwarders()}
 
-@wrap_required_functions(["get_settings", "update_settings"])
+    def action_set_forwarder(self, data):
+        """ set forwarder
+        :param data: forwarder settings {"name": "XXX", ...}
+        :type data: dict
+        :returns: result of the update {"result": True/False}
+        :rtype: dict
+        """
+        res = self.handler.set_forwarder(**data)
+        if res:
+            self.notify("set_forwarder", data)
+        return {"result": res}
+
+    def action_del_forwarder(self, data):
+        """ del forwarder
+        :param data: forwarder settings {"name": "XXX"}
+        :type data: dict
+        :returns: result of the update {"result": True/False}
+        :rtype: dict
+        """
+        res = self.handler.del_forwarder(**data)
+        if res:
+            self.notify("del_forwarder", data)
+        return {"result": res}
+
+
+@wrap_required_functions(
+    ["get_settings", "update_settings", "list_forwarders", "set_forwarder", "del_forwarder"]
+)
 class Handler(object):
     pass

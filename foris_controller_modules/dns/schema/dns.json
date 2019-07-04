@@ -1,14 +1,132 @@
 {
     "definitions": {
-        "forwarder_name": {"type": "string"},
-        "forwarder": {
+        "forwarder_name": {"type": "string", "minLength": 1},
+        "forwarder_tls_type": {"enum": ["no", "hostname", "pin"]},
+        "forwarder_hostname": {"type": "string", "format": "hostname", "minLength": 1},
+        "forwarder_pin": {"type": "string", "description": "base64 encoded sha256", "minLength": 1},
+        "forwarder_ipaddresses": {
+            "description": "at least one ip address",
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "ipv4": {"type": "string", "format": "ipv4"},
+                        "ipv6": {"enum": [""]}
+                    },
+                    "required": ["ipv4", "ipv6"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "ipv4": {"enum": [""]},
+                        "ipv6": {"type": "string", "format": "ipv6"}
+                    },
+                    "required": ["ipv4", "ipv6"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "ipv4": {"type": "string", "format": "ipv4"},
+                        "ipv6": {"type": "string", "format": "ipv6"}
+                    },
+                    "required": ["ipv4", "ipv6"],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "forwarder_list_item": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "oneOf": [
+                        {"$ref": "#/definitions/forwarder_name"},
+                        {"enum": [""]}
+                    ]
+                },
+                "description": {"type": "string"},
+                "editable": {"type": "boolean"}
+            },
+            "required": ["name", "description", "editable"],
+            "additionalProperties": false
+        },
+        "forwarder_get": {
             "type": "object",
             "properties": {
                 "name": {"$ref": "#/definitions/forwarder_name"},
-                "description": {"type": "string"}
+                "description": {"type": "string"},
+                "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                "editable": {"type": "boolean"},
+                "tls_type": {"$ref": "#/definitions/forwarder_tls_type"},
+                "tls_hostname": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/forwarder_hostname"
+                        },
+                        {
+                            "enum": [""]
+                        }
+                    ]
+                },
+                "tls_pin": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/forwarder_pin"
+                        },
+                        {
+                            "enum": [""]
+                        }
+                    ]
+                }
             },
-            "required": ["name", "description"],
+            "required": ["name", "description", "editable", "tls_type", "tls_hostname", "tls_pin"],
             "additionalProperties": false
+        },
+        "forwarder_set": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"},
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["no"]}]
+                        }
+                    },
+                    "required": ["name", "description", "tls_type"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"},
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["hostname"]}]
+                        },
+                        "tls_hostname": {"$ref": "#/definitions/forwarder_hostname"}
+                    },
+                    "required": ["name", "description", "tls_type", "tls_hostname"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"},
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["pin"]}]
+                        },
+                        "tls_pin": {"$ref": "#/definitions/forwarder_pin"}
+                    },
+                    "required": ["name", "description", "tls_type", "tls_pin"],
+                    "additionalProperties": false
+                }
+            ]
         }
     },
     "oneOf": [
@@ -31,10 +149,15 @@
                     "type": "object",
                     "properties": {
                         "forwarding_enabled": { "type": "boolean" },
-                        "forwarder": {"$ref": "#/definitions/forwarder_name"},
+                        "forwarder": {
+                            "oneOf": [
+                                {"$ref": "#/definitions/forwarder_name"},
+                                {"enum": [""]}
+                            ]
+                        },
                         "available_forwarders": {
                             "type": "array",
-                            "items": {"$ref": "#/definitions/forwarder"},
+                            "items": {"$ref": "#/definitions/forwarder_list_item"},
                             "minItems": 1
                         },
                         "dnssec_enabled": { "type": "boolean" },
@@ -71,7 +194,12 @@
                             "type": "object",
                             "properties": {
                                 "forwarding_enabled": { "enum": [true]},
-                                "forwarder": {"$ref": "#/definitions/forwarder_name"},
+                                "forwarder": {
+                                    "oneOf": [
+                                        {"$ref": "#/definitions/forwarder_name"},
+                                        {"enum": [""]}
+                                    ]
+                                },
                                 "dnssec_enabled": { "type": "boolean" },
                                 "dns_from_dhcp_enabled": { "type": "boolean" },
                                 "dns_from_dhcp_domain": { "type": "string" }
@@ -128,7 +256,12 @@
                             "type": "object",
                             "properties": {
                                 "forwarding_enabled": { "enum": [true]},
-                                "forwarder": {"$ref": "#/definitions/forwarder_name"},
+                                "forwarder": {
+                                    "oneOf": [
+                                        {"$ref": "#/definitions/forwarder_name"},
+                                        {"enum": [""]}
+                                    ]
+                                },
                                 "dnssec_enabled": { "type": "boolean" },
                                 "dns_from_dhcp_enabled": { "type": "boolean" },
                                 "dns_from_dhcp_domain": { "type": "string" }
@@ -143,6 +276,130 @@
                 }
             },
             "additionalProperties": false
+        },
+        {
+            "description": "request to list available forwarders",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["list_forwarders"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to list available forwarders",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["list_forwarders"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "forwarders": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/forwarder_get"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["forwarders"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to set(add or modify) dns forwarder",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["set_forwarder"]},
+                "data": {"$ref": "#/definitions/forwarder_set"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to set(add or modify) dns forwarder",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["set_forwarder"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that dns forwarder was set(added or modified)",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["set_forwarder"]},
+                "data": {"$ref": "#/definitions/forwarder_set"}
+            },
+            "required": ["data"],
+            "additionalProperties": false
+        },
+        {
+            "description": "request to delete dns forwarder",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["del_forwarder"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["name"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to delete forwarder",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["del_forwarder"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that dns forwarder was deleted",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["del_forwarder"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["name"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

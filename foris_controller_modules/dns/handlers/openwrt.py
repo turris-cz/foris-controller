@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.dns import DnsUciCommands
+from foris_controller_backends.dns import DnsUciCommands, DnsFiles
 
 from .. import Handler
 
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
     uci_dns_cmds = DnsUciCommands()
+    files = DnsFiles()
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -70,3 +71,25 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
             forwarder,
             dns_from_dhcp_domain,
         )
+
+    @logger_wrapper(logger)
+    def list_forwarders(self):
+        return OpenwrtDnsHandler.files.get_available_forwarders()
+
+    @logger_wrapper(logger)
+    def set_forwarder(
+        self,
+        name: str,
+        description: str,
+        ipaddresses: dict,
+        tls_type: str,
+        tls_hostname: str = "",
+        tls_pin: str = "",
+    ) -> bool:
+        return OpenwrtDnsHandler.files.set_forwarder(
+            name, description, ipaddresses, tls_type, tls_hostname, tls_pin
+        )
+
+    @logger_wrapper(logger)
+    def del_forwarder(self, name: str) -> bool:
+        return OpenwrtDnsHandler.files.del_forwarder(name)

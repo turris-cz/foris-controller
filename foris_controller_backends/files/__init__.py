@@ -21,6 +21,7 @@ import logging
 import re
 import os
 import glob
+import shutil
 
 
 from foris_controller.app import app_info
@@ -103,14 +104,12 @@ class BaseFile(object):
             raise FailedToParseFileContent(path, content)
         return match.group(*groups)
 
-    def _store_to_file(self, path, content):
-        """ Returns a content of a file
+    def _store_to_file(self, path: str, content: str) -> str:
+        """ Inserts a content into the file
 
         :param path: path to the file
-        :type path: str
 
         :returns: file content
-        :rtype: str
         """
         path = inject_file_root(path)
         logger.debug("Trying to write to file '%s'" % path)
@@ -120,6 +119,28 @@ class BaseFile(object):
         logger.debug("File '%s' was successfully updated." % path)
         logger.debug("content: %s" % content)
         return content
+
+    def delete_directory(self, path: str):
+        """ Deletes a directory on path (or raises an exception)
+
+        :param path: path to the file
+
+        """
+        path = inject_file_root(path)
+        logger.debug("Trying to delete '%s'" % path)
+        shutil.rmtree(path)
+        logger.debug("'%s' was successfully deleted" % path)
+
+    def delete_file(self, path: str):
+        """ Deletes a file on path (or raises an exception)
+
+        :param path: path to the file
+
+        """
+        path = inject_file_root(path)
+        logger.debug("Trying to delete '%s'" % path)
+        os.unlink(path)
+        logger.debug("'%s' was successfully deleted" % path)
 
 
 class BaseMatch(object):

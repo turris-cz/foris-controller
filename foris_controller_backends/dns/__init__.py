@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,8 +18,11 @@
 #
 
 import logging
-import os
+import re
+import pathlib
 
+from foris_controller.app import app_info
+from foris_controller.utils import RWLock
 from foris_controller_backends.uci import (
     UciBackend,
     get_option_anonymous,
@@ -27,26 +30,119 @@ from foris_controller_backends.uci import (
     parse_bool,
     store_bool,
 )
-from foris_controller_backends.files import BaseMatch, BaseFile
+from foris_controller_backends.files import BaseMatch, BaseFile, path_exists
 from foris_controller_backends.services import OpenwrtServices
 from foris_controller.exceptions import UciRecordNotFound, UciException
 
 logger = logging.getLogger(__name__)
 
 
-class DnsFiles(object):
-    RESOLVERS_DIR = "/etc/resolver/dns_servers/"
+class DnsFiles(BaseFile):
+    file_lock = RWLock(app_info["lock_backend"])
+    RESOLVERS_DIR = pathlib.Path("/etc/resolver/dns_servers/")
 
     @staticmethod
-    def get_available_resolvers():
-        res = [{"name": "", "description": ""}]  # default resovler -> forward to provider's dns
-        for e in BaseMatch.list_files([os.path.join(DnsFiles.RESOLVERS_DIR, "*.conf")]):
-            name = os.path.basename(e)[: -len(".conf")]
-            description = BaseFile()._read_and_parse(
-                os.path.join(DnsFiles.RESOLVERS_DIR, name + ".conf"), r'description="([^"]*)"', (1,)
-            )
-            res.append({"name": name, "description": description})
+    def empty_forwarder():
+        return {
+            "name": "",
+            "description": "",
+            "editable": False,
+        }  # default resovler -> forward to provider's dns
+
+    def set_forwarder(
+        self,
+        name: str,
+        description: str,
+        ipaddresses: dict,
+        tls_type: str,
+        tls_hostname: str,
+        tls_pin: str,
+    ) -> bool:
+        if name in [e["name"] for e in DnsFiles.get_available_forwarders() if not e["editable"]]:
+            return False
+
+        with DnsFiles.file_lock.readlock:
+            escaped_description = description.replace('"', '\\"')
+            content = f"""\
+name="{name}.conf"
+description="{escaped_description}"
+ipv4="{ipaddresses.get("ipv4", "")}"
+ipv6="{ipaddresses.get("ipv6", "")}"
+editable="true"
+"""
+            if tls_type == "pin":
+                content += f"""\
+enable_tls="1"
+port="853"
+pin_sha256="{tls_pin}"
+"""
+            elif tls_type == "hostname":
+                content += f"""\
+enable_tls="1"
+port="853"
+hostname="{tls_hostname}"
+ca_file="/etc/ssl/certs/ca-certificates.crt"
+
+"""
+            self._store_to_file(str(DnsFiles.RESOLVERS_DIR / f"{name}.conf"), content)
+
+        return True
+
+    def del_forwarder(self, name: str) -> bool:
+        path = str(DnsFiles.RESOLVERS_DIR / f"{name}.conf")
+        if not path_exists(path):
+            return False
+        if name in [e["name"] for e in DnsFiles.get_available_forwarders() if not e["editable"]]:
+            return False
+
+        print(dir(self))
+        self.delete_file(path)
+        return True
+
+    @staticmethod
+    def get_available_forwarders():
+        res = []
+        with DnsFiles.file_lock.readlock:
+            for e in BaseMatch.list_files([str(DnsFiles.RESOLVERS_DIR / "*.conf")]):
+                name = pathlib.Path(e).name[: -len(".conf")]
+                content = BaseFile()._file_content(str(DnsFiles.RESOLVERS_DIR / f"{name}.conf"))
+                description = re.search(r'description="([^"]*)"', content, re.MULTILINE).group(1)
+                editable = re.search(r'editable="([^"]*)"', content, re.MULTILINE)
+                ipv4 = re.search(r'ipv4="([^"]*)"', content, re.MULTILINE).group(1)
+                ipv6 = re.search(r'ipv6="([^"]*)"', content, re.MULTILINE).group(1)
+                editable = re.search(r'editable="([^"]*)"', content, re.MULTILINE)
+                if editable and editable.group(1).lower() == "true":
+                    editable = True
+                else:
+                    editable = False
+                record = {
+                    "name": name,
+                    "description": description,
+                    "ipaddresses": {"ipv4": ipv4, "ipv6": ipv6},
+                    "editable": editable,
+                    "tls_type": "no",
+                    "tls_hostname": "",
+                    "tls_pin": "",
+                }
+                hostname = re.search(r'^hostname="([^"]*)"', content, re.MULTILINE)
+                if hostname:
+                    record["tls_type"] = "hostname"
+                    record["tls_hostname"] = hostname.group(1)
+
+                pin = re.search(r'^pin_sha256="([^"]*)"', content, re.MULTILINE)
+                if pin:
+                    record["tls_type"] = "pin"
+                    record["tls_pin"] = pin.group(1)
+
+                res.append(record)
         return res
+
+    @staticmethod
+    def get_available_forwarders_short():
+        return [DnsFiles.empty_forwarder()] + [
+            {"name": e["name"], "description": e["description"], "editable": e["editable"]}
+            for e in DnsFiles.get_available_forwarders()
+        ]
 
 
 class DnsUciCommands(object):
@@ -69,7 +165,7 @@ class DnsUciCommands(object):
         res = {
             "forwarding_enabled": forwarding_enabled,
             "forwarder": forwarder,
-            "available_forwarders": DnsFiles.get_available_resolvers(),
+            "available_forwarders": DnsFiles.get_available_forwarders_short(),
             "dnssec_enabled": dnssec_enabled,
             "dns_from_dhcp_enabled": dns_from_dhcp_enabled,
         }
@@ -89,7 +185,9 @@ class DnsUciCommands(object):
         dns_from_dhcp_domain=None,
     ):
 
-        if forwarder and forwarder not in [e["name"] for e in DnsFiles.get_available_resolvers()]:
+        if forwarder and forwarder not in [
+            e["name"] for e in DnsFiles.get_available_forwarders_short()
+        ]:
             return False
 
         with UciBackend() as backend:
