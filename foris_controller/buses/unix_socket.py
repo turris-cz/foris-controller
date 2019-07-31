@@ -22,24 +22,13 @@ import logging
 import os
 import socket
 import struct
-import sys
+
+from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
 
 from foris_controller.message_router import Router
 from foris_controller.utils import LOGGER_MAX_LEN
 
 from .base import BaseNotificationSender, BaseSocketListener
-
-if sys.version_info >= (3, 0):
-    from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
-else:
-    from SocketServer import (
-        BaseRequestHandler,
-        UnixStreamServer,
-        ThreadingMixIn as NonObjectThreadingMixIn,
-    )
-
-    class ThreadingMixIn(object, NonObjectThreadingMixIn):
-        pass
 
 
 logger = logging.getLogger(__name__)

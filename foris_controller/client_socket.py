@@ -17,31 +17,20 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import json
 import logging
-import sys
 import prctl
 import os
 import signal
-import json
-import threading
 import struct
+import threading
 
 from jsonschema import ValidationError
+from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
+
 from foris_controller.utils import LOGGER_MAX_LEN
 
 logger = logging.getLogger(__name__)
-
-if sys.version_info >= (3, 0):
-    from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
-else:
-    from SocketServer import (
-        BaseRequestHandler,
-        UnixStreamServer,
-        ThreadingMixIn as NonObjectThreadingMixIn,
-    )
-
-    class ThreadingMixIn(object, NonObjectThreadingMixIn):
-        pass
 
 
 def worker(
