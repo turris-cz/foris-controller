@@ -23,7 +23,7 @@ import typing
 import ipaddress
 
 from foris_controller.handler_base import BaseMockHandler
-from foris_controller.utils import logger_wrapper, IPv4
+from foris_controller.utils import logger_wrapper
 
 from .. import Handler
 
