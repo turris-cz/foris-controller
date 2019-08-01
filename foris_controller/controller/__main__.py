@@ -240,6 +240,7 @@ def main():
             args=(
                 options.client_socket_path,
                 0,
+                getattr(options, "controller_id", None),
                 app_info["validator"],
                 sender_class,
                 sender_args,

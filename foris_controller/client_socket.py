@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 def worker(
     socket_path,
     timeout,
+    controller_id,
     validator,
     sender_class,
     sender_args,
@@ -52,7 +53,12 @@ def worker(
     notification_sender_instance = notification_sender_class(*notification_sender_args)
 
     server = ClientSocketListener(
-        socket_path, validator, sender_instance, notification_sender_instance, timeout
+        socket_path,
+        validator,
+        sender_instance,
+        notification_sender_instance,
+        timeout,
+        controller_id,
     )
 
     server.serve_forever()
@@ -78,6 +84,7 @@ class ClientSocketHandler(BaseRequestHandler):
                 notification["action"],
                 notification.get("data", None),
                 self.server.validator,
+                self.server.controller_id,
             )
         logger.debug("Notification forwarded.")
 
@@ -89,6 +96,7 @@ class ClientSocketHandler(BaseRequestHandler):
                 request["action"],
                 request.get("data", None),
                 timeout=self.server.timeout,
+                controller_id=self.server.controller_id,
             )
         logger.debug("Request forwarded and response recieved.")
 
@@ -165,13 +173,20 @@ class ClientSocketHandler(BaseRequestHandler):
 
 class ClientSocketListener(ThreadingMixIn, UnixStreamServer):
     def __init__(
-        self, socket_path, validator, sender_instance, notification_sender_instance, timeout=0
+        self,
+        socket_path,
+        validator,
+        sender_instance,
+        notification_sender_instance,
+        timeout=0,
+        controller_id=None,
     ):
 
         self.sender = sender_instance
         self.notification_sender = notification_sender_instance
         self.timeout = timeout
         self.validator = validator
+        self.controller_id = controller_id
 
         self.sender_lock = threading.Lock()
         self.notification_sender_lock = threading.Lock()
