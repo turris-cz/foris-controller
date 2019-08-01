@@ -39,6 +39,7 @@ from foris_controller_backends.uci import (
     store_bool,
     get_option_anonymous,
 )
+from foris_controller_backends.networks import NetworksCmd
 from foris_controller_backends.services import OpenwrtServices
 
 logger = logging.getLogger(__name__)
@@ -256,7 +257,7 @@ class RemoteFiles(BaseFile):
                 return get_option_named(network_data, "network", network_name, "hostname", "")
             return ""
 
-        def get_ips_from_network(network_data, network_name):
+        def get_ipv4_addresses_from_uci(network_data, network_name):
             proto = get_option_named(network_data, "network", network_name, "proto", "none")
             if proto == "static":
                 ip = get_option_named(network_data, "network", network_name, "ipaddr", "")
@@ -267,18 +268,13 @@ class RemoteFiles(BaseFile):
                     return ip
             return []
 
-        def get_ips_from_cmd(network_name):
-            retval, stdout, stderr = BaseCmdLine._run_command("/sbin/ifstatus", network_name)
-            if retval != 0:
+        def get_ipv4_addresess_from_cmd(network_name):
+            network_info = NetworksCmd().get_network_info(network_name)
+            if not network_info:
+                # not found
                 return []
-            try:
-                data = json.loads(stdout)
-            except ValueError:
-                return []
-            try:
-                return [e["address"] for e in data["ipv4-address"]]
-            except KeyError:
-                return []
+            else:
+                return network_info["ipv4"]
 
         # from uci
         with UciBackend() as backend:
@@ -286,10 +282,10 @@ class RemoteFiles(BaseFile):
             system_data = backend.read("system")
             fosquitto_data = backend.read("fosquitto")
 
-        ips["wan"].extend(get_ips_from_network(network_data, "wan"))
-        ips["lan"].extend(get_ips_from_network(network_data, "lan"))
-        ips["wan"].extend(get_ips_from_cmd("wan"))
-        ips["lan"].extend(get_ips_from_cmd("lan"))
+        ips["wan"].extend(get_ipv4_addresses_from_uci(network_data, "wan"))
+        ips["lan"].extend(get_ipv4_addresses_from_uci(network_data, "lan"))
+        ips["wan"].extend(get_ipv4_addresess_from_cmd("wan"))
+        ips["lan"].extend(get_ipv4_addresess_from_cmd("lan"))
 
         # remove ip duplicities, preserver order
         for network in ips:

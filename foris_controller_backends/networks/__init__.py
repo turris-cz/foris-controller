@@ -17,9 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import json
 import logging
-
 import turrishw
+import typing
 
 from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.guest import GuestUci
@@ -31,6 +32,7 @@ from foris_controller_backends.uci import (
     parse_bool,
     get_sections_by_type,
 )
+from foris_controller_backends.cmdline import BaseCmdLine
 
 from foris_controller.exceptions import UciException, UciRecordNotFound
 
@@ -304,3 +306,36 @@ class NetworksUci(object):
         MaintainCommands().restart_network()
 
         return True
+
+
+class NetworksCmd(BaseCmdLine):
+    def get_network_info(self, network_name: str) -> typing.Optional[dict]:
+
+        retval, stdout, stderr = BaseCmdLine._run_command("/sbin/ifstatus", network_name)
+        if retval != 0:
+            None
+        try:
+            data = json.loads(stdout.strip())
+        except ValueError:
+            logger.error("Failed to parse output from `ifstatus`")
+            logger.debug(stdout)
+            None
+        try:
+            ipv4 = [e["address"] for e in data.get("ipv4-address", [])]
+            ipv6 = [e["address"] for e in data.get("ipv6-address", [])]
+            up = data.get("up", False)
+            device = data.get("device", "")
+            proto = data.get("proto", "")
+
+            return {
+                "name": network_name,
+                "ipv4": ipv4,
+                "ipv6": ipv6,
+                "up": up,
+                "device": device,
+                "proto": proto,
+            }
+        except KeyError:
+            logger.error("can't deal with json structure of `ifstatus`")
+            logger.debug(stdout)
+            None

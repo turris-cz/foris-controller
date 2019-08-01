@@ -21,14 +21,11 @@ import logging
 import json
 
 from foris_controller_backends.uci import UciBackend, get_option_named, store_bool
-from foris_controller.exceptions import (
-    UciException,
-    BackendCommandFailed,
-    FailedToParseCommandOutput,
-)
+from foris_controller.exceptions import UciException, GenericError
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.files import BaseFile
+from foris_controller_backends.networks import NetworksCmd
 
 
 logger = logging.getLogger(__name__)
@@ -400,25 +397,20 @@ class WanStatusCommands(BaseCmdLine, BaseFile):
     DUID_STATUS_FILE = "/var/run/odhcp6c-duid"
 
     def get_status(self):
-        args = ("/bin/ubus", "-S", "call", "network.interface.wan", "status")
-        retval, stdout, _ = self._run_command(*args)
-        if not retval == 0:
-            logger.error("Command %s failed." % str(args))
-            raise BackendCommandFailed(retval, args)
-
-        try:
-            parsed = json.loads(stdout.strip())
-        except ValueError:
-            raise FailedToParseCommandOutput(args, stdout)
+        """ network info enriched by DUID """
+        network_info = NetworksCmd().get_network_info("wan")
+        if not network_info:
+            logger.error("Failed to obtain network info")
+            raise GenericError("Failed to obtain network info")
 
         # try to figure out duid (best effort)
-        device = parsed.get("device", None)
-        parsed["duid"] = ""
+        device = network_info.get("device", None)
+        network_info["duid"] = ""
         if device:
             duid_path = "%s.%s" % (WanStatusCommands.DUID_STATUS_FILE, device)
             try:
-                parsed["duid"] = self._file_content(duid_path).strip()
+                network_info["duid"] = self._file_content(duid_path).strip()
             except (OSError, IOError):
                 pass
 
-        return parsed
+        return network_info

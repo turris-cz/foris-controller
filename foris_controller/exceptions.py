@@ -18,7 +18,15 @@
 #
 
 
-class BackendCommandFailed(Exception):
+class ForisControllerError(Exception):
+    """ Base exception classs """
+
+
+class GenericError(ForisControllerError):
+    """ An generic unrecoverable error occured """
+
+
+class BackendCommandFailed(ForisControllerError):
     def __init__(self, retval, args, strerr=None):
         """ exception which indicates the command failed
 
@@ -36,7 +44,7 @@ class BackendCommandFailed(Exception):
         super(BackendCommandFailed, self).__init__(msg)
 
 
-class FailedToParseCommandOutput(Exception):
+class FailedToParseCommandOutput(ForisControllerError):
     def __init__(self, args, output):
         """ exception which indicates the output of the cmd was somehow incorrect
 
@@ -48,7 +56,7 @@ class FailedToParseCommandOutput(Exception):
         super(FailedToParseCommandOutput, self).__init__("%s: %s" % (args, output))
 
 
-class FailedToParseFileContent(Exception):
+class FailedToParseFileContent(ForisControllerError):
     def __init__(self, path, content):
         """ exception which inicates the there's something wrong with the content of a file
 
@@ -60,7 +68,7 @@ class FailedToParseFileContent(Exception):
         super(FailedToParseFileContent, self).__init__("%s: %s" % (path, content))
 
 
-class UciException(Exception):
+class UciException(ForisControllerError):
     def __init__(self, cmdline_args, stderr):
         """ exception which is raise when an uci cmd fails
 
@@ -72,7 +80,7 @@ class UciException(Exception):
         super(UciException, self).__init__("%s: command failed (%s)" % (cmdline_args, stderr))
 
 
-class UciTypeException(Exception):
+class UciTypeException(ForisControllerError):
     def __init__(self, value, required_types):
         """ exception which is raised when a values are incorrectly parsed from uci
         :param value: value that was matched
@@ -85,7 +93,7 @@ class UciTypeException(Exception):
         )
 
 
-class UciRecordNotFound(Exception):
+class UciRecordNotFound(ForisControllerError):
     def __init__(self, config, section=None, section_type=None, section_idx=None, option=None):
         """ excecption which is raised when a field is not found within uci config
 
@@ -113,7 +121,7 @@ class UciRecordNotFound(Exception):
         super(UciRecordNotFound, self).__init__("Uci record was not found '%s'." % uci_path)
 
 
-class ServiceCmdFailed(Exception):
+class ServiceCmdFailed(ForisControllerError):
     def __init__(self, service, cmd, explanation=None):
         """ exception which is raised during service cmd
 
