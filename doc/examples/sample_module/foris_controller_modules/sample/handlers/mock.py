@@ -23,4 +23,4 @@ class MockSampleHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def list(self):
-        return MockSampleHandler.data[:MockSampleHandler.slices]
+        return MockSampleHandler.data[: MockSampleHandler.slices]

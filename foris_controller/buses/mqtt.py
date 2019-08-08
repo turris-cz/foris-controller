@@ -28,6 +28,8 @@ import threading
 import time
 import typing
 
+import pkg_resources
+
 from paho.mqtt import client as mqtt
 from paho.mqtt.publish import single
 from jsonschema import ValidationError
@@ -50,6 +52,18 @@ ANNOUNCER_PERIOD = float(
 CLEAR_RETAIN_PERIOD = 10.0  # in seconds
 
 
+class EntryPointAnnouncer:
+    def __init__(self, period: int, callback: typing.Callable[[], typing.Optional[dict]]):
+        self.callback = callback
+        self.period = period
+        self.last_called = 0
+
+    def get_data(self, counter: int) -> typing.Optional[dict]:
+        if self.period + self.last_called <= counter:
+            self.last_called = counter
+            return self.callback()
+
+
 def _build_advertizement(state: str) -> dict:
     # Try to obtain netboot status
     try:
@@ -66,6 +80,23 @@ def _build_advertizement(state: str) -> dict:
     }
 
 
+def _publish(client: mqtt.Client, msg: dict):
+    ANNOUNCER_TOPIC = (
+        f"foris-controller/{app_info['controller_id']}/notification/"
+        f"{msg['module']}/action/{msg['action']}"
+    )
+    try:
+        logger.debug("Starting to validate announcement notification.")
+        # Hope that calling validator is treadsafe otherwise
+        # some locking mechanism should be implemented
+        app_info["validator"].validate(msg)
+        logger.debug("Publishing announcement notification. (%s)", msg)
+        client.publish(ANNOUNCER_TOPIC, json.dumps(msg), qos=0)
+    except ValidationError as exc:
+        logger.error("Failed to validate announcement notification.")
+        logger.debug("Error: \n%s" % str(exc))
+
+
 def _publish_advertize(
     client: mqtt.Client,
     data: dict,
@@ -76,21 +107,8 @@ def _publish_advertize(
     with working_replies_lock:
         data["working_replies"]: typing.List[str] = [e for e in working_replies.keys()]
 
-    ANNOUNCER_TOPIC = (
-        f"foris-controller/{app_info['controller_id']}/notification/remote/action/advertize"
-    )
-    logger.debug("Starting to validate advertize notification.")
     msg = {"module": "remote", "action": "advertize", "kind": "notification", "data": data}
-
-    try:
-        # Hope that calling validator is treadsafe otherwise
-        # some locking mechanism should be implemented
-        app_info["validator"].validate(msg)
-        logger.debug("Publishing advertize notification. (%s)", msg)
-        client.publish(ANNOUNCER_TOPIC, json.dumps(msg), qos=0)
-    except ValidationError as exc:
-        logger.error("Failed to validate advertize notification.")
-        logger.debug("Error: \n%s" % str(exc))
+    _publish(client, msg)
 
 
 def announcer_worker(host, port, working_replies, working_replies_lock):
@@ -117,12 +135,27 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
 
     client.loop_start()
 
+    counter = 1
+
+    # perpare entry points
+    announcers: typing.List[EntryPointAnnouncer] = []
+    for entry_point in pkg_resources.iter_entry_points("foris_controller_announcer"):
+        logger.debug("Loading announcer entry point %s", entry_point.name)
+        period, callback = entry_point.load()()
+        announcers.append(EntryPointAnnouncer(period, callback))
+
     while bus_info["bus_thread"].is_alive():
         time.sleep(ANNOUNCER_PERIOD or ANNOUNCER_PERIOD_DEFAULT)
         if ANNOUNCER_PERIOD:
             _publish_advertize(
                 client, _build_advertizement("running"), working_replies, working_replies_lock
             )
+            for announcer in announcers:
+                res = announcer.get_data(counter)
+                if res:
+                    _publish(client, res)
+
+        counter += ANNOUNCER_PERIOD
 
     _publish_advertize(
         client, _build_advertizement("running"), working_replies, working_replies_lock

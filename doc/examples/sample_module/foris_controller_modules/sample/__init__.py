@@ -20,10 +20,6 @@ class SampleModule(BaseModule):
         return {"records": self.handler.list()}
 
 
-@wrap_required_functions([
-    'set_slices',
-    'get_slices',
-    'list',
-])
+@wrap_required_functions(["set_slices", "get_slices", "list"])
 class Handler(object):
     pass

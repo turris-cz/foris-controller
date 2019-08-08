@@ -1,6 +1,7 @@
 import logging
 import random
-#import json
+
+# import json
 
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.uci import UciBackend, get_option_named
@@ -8,21 +9,21 @@ from foris_controller_backends.uci import UciBackend, get_option_named
 logger = logging.getLogger(__name__)
 
 
-class SampleUci():
+class SampleUci:
     ###
     slices = 10
     ###
 
     def get_slices(self):
-        #with UciBackend() as backend:
+        # with UciBackend() as backend:
         #    data = backend.read("sample")
-        #return int(get_option_named(data, "sample", "data", "slices"))
+        # return int(get_option_named(data, "sample", "data", "slices"))
         ###
         return SampleUci.slices
         ###
 
     def set_slices(self, slices):
-        #with UciBackend() as backend:
+        # with UciBackend() as backend:
         #    backend.set_option("sample", "data", "slices", slices)
         ###
         SampleUci.slices = slices
@@ -36,7 +37,7 @@ class SampleCmds(BaseCmdLine):
     ###
 
     def list(self):
-        #return json.loads(self._run_command("<command_to_obtain_data>")[1])
+        # return json.loads(self._run_command("<command_to_obtain_data>")[1])
         ###
         del SampleCmds.data[0]
         while len(SampleCmds.data) < SampleUci.slices:

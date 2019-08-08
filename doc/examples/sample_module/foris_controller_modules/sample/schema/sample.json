@@ -132,6 +132,24 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Notification announcement which prints current time in UTC",
+            "properties": {
+                "module": {"enum": ["sample"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["announce_time"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "timestamp": {"type": "number"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["timestamp"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }
