@@ -1,3 +1,14 @@
+1.0.2 (2019-08-08)
+------------------
+
+* client_socket: use controller_id - mqtt fix
+* use ipaddress module instead of foris_controller_utils.IPv4 and remove IPv4
+* removing python version ifs
+* doc: protocol documentation added + mqtt doc extended
+* lan: fix list dhcp clients (whitespace in mac field)
+* remote: add hostname into advertize
+* lan: show only valid ipv4 addresses in dns
+
 1.0.1 (2019-05-31)
 ------------------
 
