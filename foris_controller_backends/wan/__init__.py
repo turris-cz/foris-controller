@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -66,8 +66,8 @@ class WanUci:
             wan_settings["wan_static"].update(zip(("dns1", "dns2"), dns))
         elif wan_settings["wan_type"] == "pppoe":
             wan_settings["wan_pppoe"] = {
-                "username": get_option_named(network_data, "network", "wan", "username"),
-                "password": get_option_named(network_data, "network", "wan", "password"),
+                "username": get_option_named(network_data, "network", "wan", "username", ""),
+                "password": get_option_named(network_data, "network", "wan", "password", ""),
             }
 
         # WAN6

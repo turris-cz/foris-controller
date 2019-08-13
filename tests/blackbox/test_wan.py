@@ -178,6 +178,60 @@ def test_get_macaddr_from_device_openwrt(uci_configs_init, infrastructure, devic
 
 @pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
+def test_get_wan_settings_pppoe_credentials_missing_openwrt(
+    uci_configs_init, infrastructure, device, turris_os_version
+):
+    """Test that we can get at least some fallback values for PPPoE credentials, in case that uci options are missings.
+
+    For example:
+
+    config interface 'wan'
+        option device 'eth2'
+        option proto 'pppoe'
+        option username 'myuser'
+        # <-- mandatory `option password` is missing...
+
+    will give fallback to "" on missing option `password`
+
+    wan_pppoe: {username: "myuser", password: ""}
+    """
+    def check_get(expected_username: str, expected_password: str):
+        res = query_infrastructure(
+            infrastructure,
+            {"module": "wan", "action": "get_settings", "kind": "request"}
+        )
+
+        assert res["data"]["wan_settings"]["wan_type"] == "pppoe"
+        assert res["data"]["wan_settings"]["wan_pppoe"]["username"] == expected_username
+        assert res["data"]["wan_settings"]["wan_pppoe"]["password"] == expected_password
+
+    prepare_turrishw_root(device, turris_os_version)
+
+    uci = get_uci_module(infrastructure.name)
+
+    # password is missing
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("network", "wan", "proto", "pppoe")
+        backend.set_option("network", "wan", "username", "myuser")
+
+    check_get("myuser", "")
+
+    # username is missing
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_option("network", "wan", "username")
+        backend.set_option("network", "wan", "password", "mypassword")
+
+    check_get("", "mypassword")
+
+    # both username and password are missing
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_option("network", "wan", "password", fail_on_error=False)
+
+    check_get("", "")
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_do_the_old_syntax_migration_on_update_openwrt(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version
 ):
