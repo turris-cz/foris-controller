@@ -1,3 +1,5 @@
+{{ cookiecutter.license_short }}
+
 import pytest
 
 from foris_controller_testtools.fixtures import (
@@ -13,7 +15,7 @@ from foris_controller_testtools.fixtures import (
 
 def test_get_slices(infrastructure, start_buses):
     res = infrastructure.process_message(
-        {"module": "sample", "action": "get_slices", "kind": "request"}
+        {"module": "{{ cookiecutter.name_snake }}", "action": "get_slices", "kind": "request"}
     )
     assert "error" not in res
     assert "data" in res
@@ -22,46 +24,48 @@ def test_get_slices(infrastructure, start_buses):
 
 @pytest.mark.parametrize("slices", [10, 15])
 def test_set_slices(infrastructure, start_buses, slices):
-    notifications = infrastructure.get_notifications()
+    filters = [("{{ cookiecutter.name_snake }}", "set_slices")]
+
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message(
-        {"module": "sample", "action": "set_slices", "kind": "request", "data": {"slices": slices}}
+        {"module": "{{ cookiecutter.name_snake }}", "action": "set_slices", "kind": "request", "data": {"slices": slices}}
     )
-    notifications = infrastructure.get_notifications(notifications)
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"sample",
-        u"action": u"set_slices",
-        u"kind": u"notification",
-        u"data": {u"slices": slices},
+        u"module": "{{ cookiecutter.name_snake }}",
+        u"action": "set_slices",
+        u"kind": "notification",
+        u"data": {"slices": slices},
     }
     res = infrastructure.process_message(
-        {"module": "sample", "action": "get_slices", "kind": "request"}
+        {"module": "{{ cookiecutter.name_snake }}", "action": "get_slices", "kind": "request"}
     )
     assert res["data"]["slices"] == slices
 
 
 @pytest.mark.parametrize("slices", [10, 15])
 def test_reload_chart_notification(notify_api, infrastructure, start_buses, slices):
-    filters = [("sample", "reload_chart")]
+    filters = [("{{ cookiecutter.name_snake }}", "reload_chart")]
     notify = notify_api
     notifications = infrastructure.get_notifications(filters=filters)
-    notify("sample", "reload_chart", {})
+    notify("{{ cookiecutter.name_snake }}", "reload_chart", {})
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"sample",
-        u"action": u"reload_chart",
-        u"kind": u"notification",
-        u"data": {},
+        "module": "{{ cookiecutter.name_snake }}",
+        "action": "reload_chart",
+        "kind": "notification",
+        "data": {},
     }
 
 
 def test_list(infrastructure, start_buses):
-    res = infrastructure.process_message({"module": "sample", "action": "list", "kind": "request"})
+    res = infrastructure.process_message({"module": "{{ cookiecutter.name_snake }}", "action": "list", "kind": "request"})
     assert "records" in res["data"]
 
 
 @pytest.mark.only_message_buses(["mqtt"])
 def test_timestamp_announcements(mosquitto_test, start_buses, infrastructure):
-    filters = [("sample", "announce_time")]
+    filters = [("{{ cookiecutter.name_snake }}", "announce_time")]
 
     notifications = infrastructure.get_notifications([], filters=filters)
     assert "timestamp" in notifications[-1]["data"]

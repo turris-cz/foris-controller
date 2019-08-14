@@ -26,11 +26,17 @@ stages:
     # production backend + unix-socket bus
     - python setup.py test --addopts="--backend openwrt --message-bus unix-socket tests/blackbox/"
 
-    - cd doc/examples/sample_module/
+    # render cookiecutter template
+    - pip install cookiecutter
+    - rm -rf /tmp/cookiecutter/
+    - cookiecutter --no-input doc/examples -o /tmp/cookiecutter/
+
+    # install sample modole
+    - cd /tmp/cookiecutter/sample_example/
     - pip install .
 
     # test both backends here
-    - python setup.py test --addopts="--backend openwrt --backend mock"
+    - python setup.py test --addopts="--backend openwrt --backend mock --message-bus mqtt --message-bus ubus"
 
 test_python3:
   image: registry.labs.nic.cz/turris/foris-ci/python3

@@ -1,10 +1,12 @@
+{{ cookiecutter.license_short }}
+
 import logging
 
 from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
 
 
-class SampleModule(BaseModule):
+class {{ cookiecutter.name_camel }}Module(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_slices(self, data):

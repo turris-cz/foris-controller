@@ -1,6 +1,6 @@
-Foris controller sample module
+Foris Controller {{ cookiecutter.name }} module
 ==============================
-This is a sample module for foris-controller
+This is a {{ cookiecutter.name.lower() }} module for foris-controller
 
 Requirements
 ============

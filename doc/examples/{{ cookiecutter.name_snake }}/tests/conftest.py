@@ -1,3 +1,5 @@
+{{ cookiecutter.license_short }}
+
 import pytest
 import os
 
@@ -24,7 +26,7 @@ def cmdline_script_root():
 
 @pytest.fixture(scope="module")
 def controller_modules():
-    return ["remote", "sample"]
+    return ["remote", "{{ cookiecutter.name_snake }}"]
 
 
 def pytest_addoption(parser):

@@ -1,3 +1,5 @@
+{{ cookiecutter.license_short }}
+
 import datetime
 import time
 import typing
@@ -5,7 +7,7 @@ import typing
 
 def time_message() -> dict:
     return {
-        "module": "sample",
+        "module": "{{ cookiecutter.name_snake }}",
         "action": "announce_time",
         "kind": "notification",
         "data": {"timestamp": time.mktime(datetime.datetime.utcnow().timetuple())},

@@ -10,18 +10,18 @@
     },
     "oneOf": [
         {
-            "description": "Get number of slices from the sample module",
+            "description": "Get number of slices from the {{ cookiecutter.name }} module",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["request"]},
                 "action": {"enum": ["get_slices"]}
             },
             "additionalProperties": false
         },
         {
-            "description": "Get number of slices from the sample module",
+            "description": "Get number of slices from the {{ cookiecutter.name }} module",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["reply"]},
                 "action": {"enum": ["get_slices"]},
                 "data": {
@@ -37,9 +37,9 @@
             "required": ["data"]
         },
         {
-            "description": "Set the number of slices of the sample module",
+            "description": "Set the number of slices of the {{ cookiecutter.name }} module",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["request"]},
                 "action": {"enum": ["set_slices"]},
                 "data": {
@@ -55,9 +55,9 @@
             "required": ["data"]
         },
         {
-            "description": "Notification that slices were set in sample module",
+            "description": "Notification that slices were set in {{ cookiecutter.name }} module",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["notification"]},
                 "action": {"enum": ["set_slices"]},
                 "data": {
@@ -73,9 +73,9 @@
             "required": ["data"]
         },
         {
-            "description": "Reply to set the number of slices of the sample module",
+            "description": "Reply to set the number of slices of the {{ cookiecutter.name }} module",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["reply"]},
                 "action": {"enum": ["set_slices"]},
                 "data": {
@@ -93,7 +93,7 @@
         {
             "description": "List current data",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["request"]},
                 "action": {"enum": ["list"]}
             },
@@ -102,7 +102,7 @@
         {
             "description": "Reply to list current data",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["reply"]},
                 "action": {"enum": ["list"]},
                 "data": {
@@ -118,9 +118,9 @@
             "required": ["data"]
         },
         {
-            "description": "Notification to reload chart sample module",
+            "description": "Notification to reload chart {{ cookiecutter.name }} module",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["notification"]},
                 "action": {"enum": ["reload_chart"]},
                 "data": {
@@ -136,7 +136,7 @@
         {
             "description": "Notification announcement which prints current time in UTC",
             "properties": {
-                "module": {"enum": ["sample"]},
+                "module": {"enum": ["{{ cookiecutter.name_snake }}"]},
                 "kind": {"enum": ["notification"]},
                 "action": {"enum": ["announce_time"]},
                 "data": {
