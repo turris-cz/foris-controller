@@ -313,13 +313,13 @@ class NetworksCmd(BaseCmdLine):
 
         retval, stdout, stderr = BaseCmdLine._run_command("/sbin/ifstatus", network_name)
         if retval != 0:
-            None
+            return None
         try:
             data = json.loads(stdout.strip())
         except ValueError:
             logger.error("Failed to parse output from `ifstatus`")
             logger.debug(stdout)
-            None
+            return None
         try:
             ipv4 = [e["address"] for e in data.get("ipv4-address", [])]
             ipv6 = [e["address"] for e in data.get("ipv6-address", [])]
@@ -338,4 +338,5 @@ class NetworksCmd(BaseCmdLine):
         except KeyError:
             logger.error("can't deal with json structure of `ifstatus`")
             logger.debug(stdout)
-            None
+
+        return None
