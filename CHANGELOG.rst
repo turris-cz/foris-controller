@@ -1,3 +1,10 @@
+1.0.3 (2019-08-29)
+------------------
+
+* networks: get_network_info fix
+* mqtt: custom announcements via python entry_points
+* example project: using cookiecutter for generating new projects
+  
 1.0.2 (2019-08-08)
 ------------------
 
