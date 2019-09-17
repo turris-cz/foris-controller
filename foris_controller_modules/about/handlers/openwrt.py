@@ -52,6 +52,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
             "model": self.system_info_files.get_model_name(),
             "kernel": self.system_info_cmds.get_kernel_version(),
             "os_version": self.system_info_files.get_os_version(),
+            "os_branch": self.system_info_files.get_os_branch(),
         }
 
     @logger_wrapper(logger)

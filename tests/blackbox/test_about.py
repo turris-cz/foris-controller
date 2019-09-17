@@ -21,6 +21,7 @@ import os
 import pytest
 
 from foris_controller_testtools.fixtures import (
+    uci_configs_init,
     infrastructure,
     start_buses,
     file_root_init,
@@ -32,10 +33,10 @@ FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get(infrastructure, start_buses):
+def test_get(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({"module": "about", "action": "get", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert set(res["data"].keys()) == {"model", "serial", "os_version", "kernel"}
+    assert set(res["data"].keys()) == {"model", "serial", "os_version", "os_branch", "kernel"}
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)

@@ -1,0 +1,3 @@
+config turris 'turris'
+	option mode 'branch'
+	option branch 'hbk'

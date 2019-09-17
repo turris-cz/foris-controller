@@ -40,6 +40,10 @@ class MockAboutHandler(Handler, BaseMockHandler):
             "model": "Turris Omnia",
             "kernel": "4.4.77-967673b9d511e4292e3bcb76c9e064bc-0",
             "os_version": "3.7",
+            "os_branch": {
+                "mode": "branch",
+                "value": "hbk",
+            },
         }
 
     @logger_wrapper(logger)

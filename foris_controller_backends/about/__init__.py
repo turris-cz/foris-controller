@@ -23,6 +23,7 @@ from foris_controller.app import app_info
 from foris_controller.utils import writelock, readlock, RWLock
 from foris_controller_backends.cmdline import BaseCmdLine, i2c_lock
 from foris_controller_backends.files import server_uplink_lock, BaseFile
+from foris_controller_backends.uci import UciBackend, get_option_named
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,20 @@ class SystemInfoFiles(BaseFile):
         :rtype: str
         """
         return self._read_and_parse(SystemInfoFiles.OS_RELEASE_PATH, r"^([0-9]+(\.[0-9]+)*)$", (1,))
+
+    def get_os_branch(self):
+        """ Returns turris os branch
+
+        :returns: os branch or version
+        :rtype: dict
+        """
+        with UciBackend() as backend:
+            updater_data = backend.read("updater")
+
+        mode = get_option_named(updater_data, "updater", "turris", "mode")
+        value = get_option_named(updater_data, "updater", "turris", mode, "unknown")
+
+        return {"mode": mode, "value": value}
 
     @readlock(file_lock, logger)
     def get_model_name(self):

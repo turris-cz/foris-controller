@@ -21,6 +21,14 @@
                         "model": {"type": "string"},
                         "serial": {"type": "string"},
                         "os_version": {"$ref": "#/definitions/turris_os_version"},
+                        "os_branch": {
+                            "type": "object",
+                            "properties": {
+                                "mode": {"enum": ["branch", "version"]},
+                                "value": {"type": "string"}
+                            },
+                            "additionalProperties": false
+                        },
                         "kernel": {"type": "string"}
                     },
                     "additionalProperties": false
