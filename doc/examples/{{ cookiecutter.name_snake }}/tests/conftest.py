@@ -6,6 +6,7 @@ import os
 # load common fixtures
 from foris_controller_testtools.fixtures import (
     uci_config_default_path,
+    env_overrides,
     cmdline_script_root,
     controller_modules,
     extra_module_paths,
