@@ -27,7 +27,8 @@
                                 "mode": {"enum": ["branch", "version"]},
                                 "value": {"type": "string"}
                             },
-                            "additionalProperties": false
+                            "additionalProperties": false,
+                            "required": ["mode", "value"]
                         },
                         "kernel": {"type": "string"}
                     },

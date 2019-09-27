@@ -32,3 +32,4 @@ svupdater_approvals = import_module("%s.approvals" % updater_module, "svupdater.
 svupdater_l10n = import_module("%s.l10n" % updater_module, "svupdater.l10n")
 svupdater_lists = import_module("%s.lists" % updater_module, "svupdater.lists")
 svupdater_autorun = import_module("%s.autorun" % updater_module, "svupdater.autorun")
+svupdater_branch = import_module("%s.branch" % updater_module, "svupdater.branch")

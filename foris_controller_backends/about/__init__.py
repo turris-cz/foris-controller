@@ -23,7 +23,7 @@ from foris_controller.app import app_info
 from foris_controller.utils import writelock, readlock, RWLock
 from foris_controller_backends.cmdline import BaseCmdLine, i2c_lock
 from foris_controller_backends.files import server_uplink_lock, BaseFile
-from foris_controller_backends.uci import UciBackend, get_option_named
+from foris_controller.updater import svupdater_branch
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +71,7 @@ class SystemInfoFiles(BaseFile):
         :returns: os branch or version
         :rtype: dict
         """
-        with UciBackend() as backend:
-            updater_data = backend.read("updater")
-
-        mode = get_option_named(updater_data, "updater", "turris", "mode")
-        value = get_option_named(updater_data, "updater", "turris", mode, "unknown")
-
+        mode, value = svupdater_branch.get_branch_or_version()
         return {"mode": mode, "value": value}
 
     @readlock(file_lock, logger)
