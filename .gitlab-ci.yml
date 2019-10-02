@@ -12,16 +12,16 @@ stages:
     - pip install .
 
     # unit tests
-    - python setup.py test --addopts="--backend openwrt --message-bus ubus tests/unit/"
+    - python setup.py test --addopts="--backend openwrt --message-bus mqtt tests/unit/"
 
     # blackbox production config
-    - python setup.py test --addopts="--backend openwrt --message-bus ubus tests/blackbox/"
+    - python setup.py test --addopts="--backend openwrt --message-bus mqtt tests/blackbox/"
 
     # production bus + mock backend
-    - python setup.py test --addopts="--backend mock --message-bus ubus tests/blackbox/"
+    - python setup.py test --addopts="--backend mock --message-bus mqtt tests/blackbox/"
 
-    # production backend + mqtt bus
-    - python setup.py test --addopts="--backend openwrt --message-bus mqtt tests/blackbox/"
+    # production backend + ubus bus
+    - python setup.py test --addopts="--backend openwrt --message-bus ubus tests/blackbox/"
 
     # production backend + unix-socket bus
     - python setup.py test --addopts="--backend openwrt --message-bus unix-socket tests/blackbox/"
