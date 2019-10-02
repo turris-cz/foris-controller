@@ -24,7 +24,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     uci_configs_init,
     infrastructure,
-    lock_backend,
     file_root_init,
     init_script_result,
     network_restart_command,
@@ -353,13 +352,12 @@ def test_update_settings_uci(
     init_script_result,
     file_root_init,
     uci_configs_init,
-    lock_backend,
     infrastructure,
     start_buses,
     network_restart_command,
 ):
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     def update(*devices):
         res = infrastructure.process_message(
@@ -886,12 +884,11 @@ def test_modify_encryption_only_if_none(
     init_script_result,
     file_root_init,
     uci_configs_init,
-    lock_backend,
     infrastructure,
     start_buses,
     network_restart_command,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     res = infrastructure.process_message(
         {
@@ -1008,7 +1005,7 @@ def test_get_settings_and_reset(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_missing_wireless(
-    file_root_init, uci_configs_init, lock_backend, infrastructure, start_buses
+    file_root_init, uci_configs_init, infrastructure, start_buses
 ):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message(
@@ -1023,13 +1020,12 @@ def test_update_settings_uci_country(
     init_script_result,
     file_root_init,
     uci_configs_init,
-    lock_backend,
     infrastructure,
     start_buses,
     network_restart_command,
 ):
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     def set_country(country):
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:

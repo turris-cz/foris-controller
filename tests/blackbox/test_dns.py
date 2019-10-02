@@ -31,7 +31,6 @@ from foris_controller_testtools.fixtures import (
     device,
     turris_os_version,
     FILE_ROOT_PATH,
-    lock_backend,
     UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import check_service_result, FileFaker, get_uci_module
@@ -311,7 +310,6 @@ def test_update_settings_service_restart(
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_forwarder(
     file_root_init,
-    lock_backend,
     custom_forwarders,
     uci_configs_init,
     init_script_result,
@@ -320,7 +318,7 @@ def test_update_settings_forwarder(
     device,
     turris_os_version,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     # Get forwarder list
     res = infrastructure.process_message(

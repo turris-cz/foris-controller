@@ -30,7 +30,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     uci_configs_init,
     infrastructure,
-    lock_backend,
     clean_reboot_indicator,
     updater_languages,
     updater_userlists,

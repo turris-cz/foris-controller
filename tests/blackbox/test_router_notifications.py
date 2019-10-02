@@ -25,7 +25,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     uci_configs_init,
     infrastructure,
-    lock_backend,
     notify_cmd,
     start_buses,
     ubusd_test,

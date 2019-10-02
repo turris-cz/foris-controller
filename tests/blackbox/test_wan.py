@@ -24,7 +24,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     uci_configs_init,
     infrastructure,
-    lock_backend,
     network_restart_command,
     device,
     turris_os_version,
@@ -404,7 +403,6 @@ def test_update_settings(
 @pytest.mark.only_backends(["openwrt"])
 def test_wan_openwrt_backend(
     uci_configs_init,
-    lock_backend,
     infrastructure,
     start_buses,
     network_restart_command,
@@ -412,7 +410,7 @@ def test_wan_openwrt_backend(
     turris_os_version,
 ):
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     def update(data):
         res = infrastructure.process_message(
@@ -1035,14 +1033,13 @@ def test_connection_test(uci_configs_init, infrastructure, start_buses):
 @pytest.mark.only_backends(["openwrt"])
 def test_missing_wan6_openwrt(
     uci_configs_init,
-    lock_backend,
     infrastructure,
     start_buses,
     network_restart_command,
     device,
     turris_os_version,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_section("network", "wan6")
 
@@ -1084,14 +1081,13 @@ def test_missing_wan6_openwrt(
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_dns_option(
     uci_configs_init,
-    lock_backend,
     infrastructure,
     start_buses,
     network_restart_command,
     device,
     turris_os_version,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     res = infrastructure.process_message(
         {

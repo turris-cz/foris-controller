@@ -26,7 +26,6 @@ from foris_controller_testtools.fixtures import (
     uci_configs_init,
     start_buses,
     only_backends,
-    lock_backend,
     init_script_result,
     device,
     turris_os_version,
@@ -248,7 +247,6 @@ def test_openwrt_complex(
     cmdline_script_root,
     infrastructure,
     start_buses,
-    lock_backend,
     device,
     turris_os_version,
     regulatory_domain,
@@ -274,7 +272,7 @@ def test_openwrt_complex(
     assert res["data"]["result"] is True
     check_service_result("sysntpd", "restart", True)
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
@@ -313,7 +311,6 @@ def test_openwrt_complex(
     assert res["data"]["result"] is True
     check_service_result("sysntpd", "stop", True)
 
-    uci = get_uci_module(lock_backend)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
@@ -355,7 +352,6 @@ def test_ntpdate_trigger_pass_openwrt(
     cmdline_script_root,
     infrastructure,
     start_buses,
-    lock_backend,
     pass_ntpdate,
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]
@@ -393,7 +389,6 @@ def test_ntpdate_trigger_fail_openwrt(
     cmdline_script_root,
     infrastructure,
     start_buses,
-    lock_backend,
     fail_ntpdate,
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]

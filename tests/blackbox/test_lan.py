@@ -24,7 +24,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     uci_configs_init,
     infrastructure,
-    lock_backend,
     init_script_result,
     network_restart_command,
     device,
@@ -420,7 +419,6 @@ def test_dhcp_lease(
     uci_configs_init,
     infrastructure,
     start_buses,
-    lock_backend,
     network_restart_command,
     orig_backend_val,
     api_val,
@@ -428,7 +426,7 @@ def test_dhcp_lease(
     device,
     turris_os_version,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("dhcp", "lan", "leasetime", orig_backend_val)
@@ -467,12 +465,11 @@ def test_update_settings_openwrt(
     uci_configs_init,
     infrastructure,
     start_buses,
-    lock_backend,
     network_restart_command,
     device,
     turris_os_version,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     def update(data):
         res = infrastructure.process_message(
@@ -624,7 +621,6 @@ def test_dhcp_clients_openwrt(
     uci_configs_init,
     infrastructure,
     start_buses,
-    lock_backend,
     network_restart_command,
     device,
     turris_os_version,
@@ -988,7 +984,7 @@ def test_get_settings_dns_option(
     device,
     turris_os_version,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     res = infrastructure.process_message(
         {
@@ -1038,7 +1034,6 @@ def test_dhcp_client_settings(
     init_script_result,
     infrastructure,
     start_buses,
-    lock_backend,
     network_restart_command,
     device,
     turris_os_version,
@@ -1289,13 +1284,12 @@ def test_dhcp_client_settings_openwrt(
     init_script_result,
     infrastructure,
     start_buses,
-    lock_backend,
     network_restart_command,
     device,
     turris_os_version,
 ):
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     def get_uci_data():
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1478,9 +1472,9 @@ def test_dhcp_client_settings_openwrt(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_ipv6_address_in_dns(
-    uci_configs_init, infrastructure, start_buses, device, turris_os_version, lock_backend
+    uci_configs_init, infrastructure, start_buses, device, turris_os_version
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("network", "lan", "dns", "ff::")

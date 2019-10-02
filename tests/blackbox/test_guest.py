@@ -26,7 +26,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     uci_configs_init,
     infrastructure,
-    lock_backend,
     init_script_result,
     network_restart_command,
     FILE_ROOT_PATH,
@@ -181,15 +180,10 @@ def test_update_settings(uci_configs_init, infrastructure, start_buses, network_
 
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
-    uci_configs_init,
-    lock_backend,
-    init_script_result,
-    infrastructure,
-    start_buses,
-    network_restart_command,
+    uci_configs_init, init_script_result, infrastructure, start_buses, network_restart_command
 ):
     filters = [("guest", "update_settings")]
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     def update(data):
         notifications = infrastructure.get_notifications(filters=filters)
@@ -405,13 +399,12 @@ def test_dhcp_lease(
     uci_configs_init,
     infrastructure,
     start_buses,
-    lock_backend,
     network_restart_command,
     orig_backend_val,
     api_val,
     new_backend_val,
 ):
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.add_section("dhcp", "dhcp", "guest_turris")
@@ -447,7 +440,6 @@ def test_dhcp_lease(
 @pytest.mark.only_backends(["openwrt"])
 def test_dhcp_clients(
     uci_configs_init,
-    lock_backend,
     init_script_result,
     infrastructure,
     start_buses,

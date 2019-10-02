@@ -29,7 +29,6 @@ from foris_controller_testtools.fixtures import (
     init_script_result,
     FILE_ROOT_PATH,
     network_restart_command,
-    lock_backend,
     device,
     turris_os_version,
     UCI_CONFIG_DIR_PATH,
@@ -312,14 +311,13 @@ def test_update_guide_openwrt(
     start_buses,
     network_restart_command,
     workflow,
-    lock_backend,
     device,
     turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
@@ -406,18 +404,12 @@ def test_reset_guide(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_reset_guide_openwrt(
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    lock_backend,
-    device,
-    turris_os_version,
+    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     res = infrastructure.process_message(
         {"module": "web", "action": "reset_guide", "kind": "request"}

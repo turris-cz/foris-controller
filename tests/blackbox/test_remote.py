@@ -35,7 +35,6 @@ from foris_controller_testtools.fixtures import (
     only_message_buses,
     uci_configs_init,
     init_script_result,
-    lock_backend,
     file_root_init,
     network_restart_command,
     UCI_CONFIG_DIR_PATH,
@@ -549,7 +548,7 @@ def test_update_settings(
 
 @pytest.mark.only_message_buses(["unix-socket", "ubus"])
 def test_update_settings_ubus_unix(
-    uci_configs_init, init_script_result, lock_backend, infrastructure, start_buses
+    uci_configs_init, init_script_result, infrastructure, start_buses
 ):
     def update(new_settings):
         res = infrastructure.process_message(
@@ -581,10 +580,10 @@ def test_update_settings_ubus_unix(
 @pytest.mark.only_message_buses(["mqtt"])
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt_mqtt(
-    uci_configs_init, init_script_result, lock_backend, infrastructure, start_buses, ready_certs
+    uci_configs_init, init_script_result, infrastructure, start_buses, ready_certs
 ):
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     def update(data):
         res = infrastructure.process_message(
@@ -716,17 +715,11 @@ def test_get_token_mock(infrastructure, start_buses):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_get_token_openwrt(
-    ready_certs,
-    uci_configs_init,
-    init_script_result,
-    lock_backend,
-    infrastructure,
-    start_buses,
-    file_root_init,
+    ready_certs, uci_configs_init, init_script_result, infrastructure, start_buses, file_root_init
 ):
 
     query_data = {}
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("system", "@system[0]", "hostname", "testhostname")

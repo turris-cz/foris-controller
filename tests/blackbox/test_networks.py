@@ -24,7 +24,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     uci_configs_init,
     infrastructure,
-    lock_backend,
     init_script_result,
     network_restart_command,
     device,
@@ -524,7 +523,6 @@ def test_update_settings_set_non_configurable(
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
     uci_configs_init,
-    lock_backend,
     init_script_result,
     infrastructure,
     start_buses,
@@ -535,7 +533,7 @@ def test_update_settings_openwrt(
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
 
     res = infrastructure.process_message(
         {"module": "networks", "action": "get_settings", "kind": "request"}
@@ -643,7 +641,7 @@ def test_update_settings_openwrt(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_openwrt_unsupported(
-    uci_configs_init, lock_backend, infrastructure, start_buses, device, turris_os_version
+    uci_configs_init, infrastructure, start_buses, device, turris_os_version
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -668,7 +666,7 @@ def test_get_settings_openwrt_unsupported(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt_unsupported(
-    uci_configs_init, lock_backend, infrastructure, start_buses, device, turris_os_version
+    uci_configs_init, infrastructure, start_buses, device, turris_os_version
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -691,7 +689,6 @@ def test_update_settings_openwrt_unsupported(
 @pytest.mark.only_backends(["openwrt"])
 def test_wifi_devices(
     uci_configs_init,
-    lock_backend,
     init_script_result,
     infrastructure,
     start_buses,
@@ -700,7 +697,7 @@ def test_wifi_devices(
     turris_os_version,
 ):
     prepare_turrishw("mox+ALL")
-    uci = get_uci_module(lock_backend)
+    uci = get_uci_module(infrastructure.name)
     os.environ["TURRISHW_ROOT"] = TURRISHW_ROOT
     import turrishw
 
