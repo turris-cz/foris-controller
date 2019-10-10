@@ -35,8 +35,9 @@ FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get(uci_configs_init, infrastructure, start_buses):
     res = infrastructure.process_message({"module": "about", "action": "get", "kind": "request"})
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert set(res["data"].keys()) == {"model", "serial", "os_version", "os_branch", "kernel"}
+    assert res.keys() == {"action", "kind", "data", "module"}
+    assert res["data"].keys() == {"model", "serial", "os_version", "os_branch", "kernel"}
+    assert res["data"]["os_branch"].keys() == {"mode", "value"}
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
