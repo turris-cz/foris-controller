@@ -1,3 +1,10 @@
+1.0.4 (2019-10-18)
+------------------
+
+* about: get os branch from svupdater
+* dns: add add_forwarder action
+* tests: refactoring of tests
+
 1.0.3 (2019-08-29)
 ------------------
 
