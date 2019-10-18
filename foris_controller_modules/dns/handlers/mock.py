@@ -140,7 +140,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
         tls_pin: str = "",
     ) -> bool:
         def update_record(record: dict):
-            record["name"] = description
+            record["name"] = "myforward_6842e9378ffb5c6be0b97309a48f6bc4"
             record["description"] = description
             record["ipaddresses"] = ipaddresses
             record["tls_type"] = tls_type
@@ -164,7 +164,6 @@ class MockDnsHandler(Handler, BaseMockHandler):
         tls_pin: str = "",
     ) -> bool:
         def update_record(record: dict):
-            record["name"] = name
             record["description"] = description
             record["ipaddresses"] = ipaddresses
             record["tls_type"] = tls_type

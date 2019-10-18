@@ -17,9 +17,9 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
 import typing
 
+import pytest
 from foris_controller_testtools.fixtures import (
     infrastructure,
     uci_configs_init,
@@ -42,26 +42,36 @@ def list_forwarders(infrastructure) -> typing.List[dict]:
     )["data"]["forwarders"]
 
 
+def add_forwarder(infrastructure, data: dict, result: bool) -> typing.List[dict]:
+    return _edit_forwarder_wrapper("add_forwarder")(infrastructure, data, result)
+
+
 def set_forwarder(infrastructure, data: dict, result: bool) -> typing.List[dict]:
-    filters = [("dns", "set_forwarder")]
-    notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "set_forwarder", "kind": "request", "data": data}
-    )
-    assert res["data"]["result"] is result
-    if result:
-        notifications = infrastructure.get_notifications(notifications, filters=filters)
-        assert notifications[-1] == {
-            "module": "dns",
-            "action": "set_forwarder",
-            "kind": "notification",
-            "data": data,
-        }
+    return _edit_forwarder_wrapper("set_forwarder")(infrastructure, data, result)
+
+
+def _edit_forwarder_wrapper(action: str):
+    def _edit_forwarder_action(infrastructure, data: dict, result: bool) -> typing.List[dict]:
+        filters = [("dns", action)]
+        notifications = infrastructure.get_notifications(filters=filters)
+        res = infrastructure.process_message(
+            {"module": "dns", "action": action, "kind": "request", "data": data}
+        )
+        assert res["data"]["result"] is result
+        if result:
+            notifications = infrastructure.get_notifications(notifications, filters=filters)
+            assert notifications[-1] == {
+                "module": "dns",
+                "action": action,
+                "kind": "notification",
+                "data": data,
+            }
+
+    return _edit_forwarder_action
 
 
 @pytest.fixture(scope="function")
 def custom_forwarders():
-
     res1 = """\
 name="99_google.conf"
 description="Google"
@@ -290,8 +300,7 @@ def test_update_settings_service_restart(
     device,
     turris_os_version,
 ):
-
-    res = infrastructure.process_message(
+    infrastructure.process_message(
         {
             "module": "dns",
             "action": "update_settings",
@@ -402,17 +411,18 @@ def test_list_forwarders(
     assert len(res["data"]["forwarders"]) == 3
 
 
+@pytest.mark.only_backends(["openwrt"])
 def test_set_forwarder(
     custom_forwarders, uci_configs_init, infrastructure, ubusd_test, mosquitto_test
 ):
     # new
     data = {
-        "name": "80_myforwarder",
         "ipaddresses": {"ipv4": "2.2.2.2", "ipv6": "2001:4860:4860::2222"},
         "description": "Myforward",
         "tls_type": "no",
     }
-    set_forwarder(infrastructure, data, True)
+    add_forwarder(infrastructure, data, True)
+    data["name"] = "myforward_6842e9378ffb5c6be0b97309a48f6bc4"
     data["editable"] = True
     data["tls_pin"] = ""
     data["tls_hostname"] = ""
@@ -420,7 +430,7 @@ def test_set_forwarder(
 
     # update
     data = {
-        "name": "80_myforwarder",
+        "name": "myforward_6842e9378ffb5c6be0b97309a48f6bc4",
         "ipaddresses": {"ipv4": "2.2.2.2", "ipv6": "2001:4860:4860::2222"},
         "description": "Myforward (TLS)",
         "tls_type": "pin",
@@ -445,6 +455,7 @@ def test_set_forwarder(
     assert data not in list_forwarders(infrastructure)
 
 
+@pytest.mark.only_backends(["openwrt"])
 def test_del_forwarder(
     file_root_init, custom_forwarders, uci_configs_init, infrastructure, ubusd_test, mosquitto_test
 ):
@@ -453,12 +464,12 @@ def test_del_forwarder(
 
     # editable
     data = {
-        "name": "81_myforwarder",
         "ipaddresses": {"ipv4": "2.2.2.2", "ipv6": "2001:4860:4860::2222"},
         "description": "Myforward",
         "tls_type": "no",
     }
-    set_forwarder(infrastructure, data, True)
+    add_forwarder(infrastructure, data, True)
+    data["name"] = "myforward_6842e9378ffb5c6be0b97309a48f6bc4"
     data["editable"] = True
     data["tls_pin"] = ""
     data["tls_hostname"] = ""
@@ -469,7 +480,7 @@ def test_del_forwarder(
             "module": "dns",
             "action": "del_forwarder",
             "kind": "request",
-            "data": {"name": "81_myforwarder"},
+            "data": {"name": "myforward_6842e9378ffb5c6be0b97309a48f6bc4"},
         }
     )
     assert res["data"]["result"] is True
@@ -479,9 +490,9 @@ def test_del_forwarder(
         "module": "dns",
         "action": "del_forwarder",
         "kind": "notification",
-        "data": {"name": "81_myforwarder"},
+        "data": {"name": "myforward_6842e9378ffb5c6be0b97309a48f6bc4"},
     }
-    assert "81_myforwarder" not in [e["name"] for e in list_forwarders(infrastructure)]
+    assert "myforward_6842e9378ffb5c6be0b97309a48f6bc4" not in [e["name"] for e in list_forwarders(infrastructure)]
 
     # non-existing
     res = infrastructure.process_message(
