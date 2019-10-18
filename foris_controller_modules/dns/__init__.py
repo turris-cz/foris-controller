@@ -56,6 +56,18 @@ class DnsModule(BaseModule):
         """
         return {"forwarders": self.handler.list_forwarders()}
 
+    def action_add_forwarder(self, data):
+        """ set forwarder
+        :param data: forwarder settings {"description": "XXX", ...}
+        :type data: dict
+        :returns: result of the update {"result": True/False}
+        :rtype: dict
+        """
+        res = self.handler.add_forwarder(**data)
+        if res:
+            self.notify("add_forwarder", data)
+        return {"result": res}
+
     def action_set_forwarder(self, data):
         """ set forwarder
         :param data: forwarder settings {"name": "XXX", ...}
@@ -82,7 +94,7 @@ class DnsModule(BaseModule):
 
 
 @wrap_required_functions(
-    ["get_settings", "update_settings", "list_forwarders", "set_forwarder", "del_forwarder"]
+    ["get_settings", "update_settings", "list_forwarders", "set_forwarder", "add_forwarder", "del_forwarder"]
 )
 class Handler(object):
     pass

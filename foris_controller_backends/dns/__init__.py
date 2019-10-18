@@ -17,9 +17,12 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import hashlib
+import json
 import logging
 import re
 import pathlib
+from slugify import slugify
 
 from foris_controller.app import app_info
 from foris_controller.utils import RWLock
@@ -47,7 +50,40 @@ class DnsFiles(BaseFile):
             "name": "",
             "description": "",
             "editable": False,
-        }  # default resovler -> forward to provider's dns
+        }  # default resolver -> forward to provider's dns
+
+    def add_forwarder(
+        self,
+        description: str,
+        ipaddresses: dict,
+        tls_type: str,
+        tls_hostname: str,
+        tls_pin: str,
+    ) -> bool:
+
+        forwarder = {
+            "description": description,
+            "ipaddresses": ipaddresses,
+            "tls_type": tls_type,
+            "tls_hostname": tls_hostname,
+            "tls_pin": tls_pin,
+        }
+        forwarder_dump = json.dumps(forwarder).encode('utf-8')
+        forwarder_hash = hashlib.md5(forwarder_dump).hexdigest()
+        name = f'{slugify(description, separator="_")}_{forwarder_hash}'
+
+        path = str(DnsFiles.RESOLVERS_DIR / f"{name}.conf")
+        if path_exists(path):
+            return False
+
+        return self._store_forwarder_to_file(
+            name,
+            description,
+            ipaddresses,
+            tls_type,
+            tls_hostname,
+            tls_pin,
+        )
 
     def set_forwarder(
         self,
@@ -58,9 +94,31 @@ class DnsFiles(BaseFile):
         tls_hostname: str,
         tls_pin: str,
     ) -> bool:
+        path = str(DnsFiles.RESOLVERS_DIR / f"{name}.conf")
+        if not path_exists(path):
+            return False
+
         if name in [e["name"] for e in DnsFiles.get_available_forwarders() if not e["editable"]]:
             return False
 
+        return self._store_forwarder_to_file(
+            name,
+            description,
+            ipaddresses,
+            tls_type,
+            tls_hostname,
+            tls_pin,
+        )
+
+    def _store_forwarder_to_file(
+            self,
+            name: str,
+            description: str,
+            ipaddresses: dict,
+            tls_type: str,
+            tls_hostname: str,
+            tls_pin: str,
+     ) -> bool:
         with DnsFiles.file_lock.readlock:
             escaped_description = description.replace('"', '\\"')
             content = f"""\

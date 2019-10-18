@@ -17,7 +17,6 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import base64
 import logging
 
 from foris_controller.handler_base import BaseMockHandler

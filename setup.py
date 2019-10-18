@@ -114,6 +114,7 @@ setup(
         "foris-schema @ git+https://gitlab.labs.nic.cz/turris/foris-schema.git",
         "python-prctl",
         "pbkdf2",
+        "python-slugify",
         "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater/supervisor.git",
         "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
     ],

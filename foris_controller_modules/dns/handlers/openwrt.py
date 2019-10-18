@@ -77,6 +77,19 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
         return OpenwrtDnsHandler.files.get_available_forwarders()
 
     @logger_wrapper(logger)
+    def add_forwarder(
+        self,
+        description: str,
+        ipaddresses: dict,
+        tls_type: str,
+        tls_hostname: str = "",
+        tls_pin: str = "",
+    ) -> bool:
+        return OpenwrtDnsHandler.files.add_forwarder(
+            description, ipaddresses, tls_type, tls_hostname, tls_pin
+        )
+
+    @logger_wrapper(logger)
     def set_forwarder(
         self,
         name: str,

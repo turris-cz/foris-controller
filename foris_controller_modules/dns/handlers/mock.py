@@ -131,6 +131,29 @@ class MockDnsHandler(Handler, BaseMockHandler):
         return MockDnsHandler.available_forwarders
 
     @logger_wrapper(logger)
+    def add_forwarder(
+        self,
+        description: str,
+        ipaddresses: dict,
+        tls_type: str,
+        tls_hostname: str = "",
+        tls_pin: str = "",
+    ) -> bool:
+        def update_record(record: dict):
+            record["name"] = description
+            record["description"] = description
+            record["ipaddresses"] = ipaddresses
+            record["tls_type"] = tls_type
+            record["tls_hostname"] = tls_hostname
+            record["tls_pin"] = tls_pin
+            record["editable"] = True
+
+        record = {}
+        update_record(record)
+        MockDnsHandler.available_forwarders.append(record)
+        return True
+
+    @logger_wrapper(logger)
     def set_forwarder(
         self,
         name: str,
@@ -154,13 +177,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
                 if e["editable"]:
                     update_record(e)
                     return True
-                else:
-                    return False
-
-        record = {}
-        update_record(record)
-        MockDnsHandler.available_forwarders.append(record)
-        return True
+        return False
 
     @logger_wrapper(logger)
     def del_forwarder(self, name: str) -> bool:

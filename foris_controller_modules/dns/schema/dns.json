@@ -127,6 +127,48 @@
                     "additionalProperties": false
                 }
             ]
+        },
+        "forwarder_add": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["no"]}]
+                        }
+                    },
+                    "required": ["description", "tls_type"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["hostname"]}]
+                        },
+                        "tls_hostname": {"$ref": "#/definitions/forwarder_hostname"}
+                    },
+                    "required": ["description", "tls_type", "tls_hostname"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["pin"]}]
+                        },
+                        "tls_pin": {"$ref": "#/definitions/forwarder_pin"}
+                    },
+                    "required": ["description", "tls_type", "tls_pin"],
+                    "additionalProperties": false
+                }
+            ]
         }
     },
     "oneOf": [
@@ -308,7 +350,7 @@
             "required": ["data"]
         },
         {
-            "description": "request to set(add or modify) dns forwarder",
+            "description": "request to set(modify) dns forwarder",
             "properties": {
                 "module": {"enum": ["dns"]},
                 "kind": {"enum": ["request"]},
@@ -319,7 +361,7 @@
             "required": ["data"]
         },
         {
-            "description": "reply to set(add or modify) dns forwarder",
+            "description": "reply to set(modify) dns forwarder",
             "properties": {
                 "module": {"enum": ["dns"]},
                 "kind": {"enum": ["reply"]},
@@ -337,7 +379,47 @@
             "required": ["data"]
         },
         {
-            "description": "notification that dns forwarder was set(added or modified)",
+            "description": "request to add new dns forwarder",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["add_forwarder"]},
+                "data": {"$ref": "#/definitions/forwarder_add"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to add new dns forwarder",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["add_forwarder"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that dns forwarder was added",
+            "properties": {
+                "module": {"enum": ["dns"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["add_forwarder"]},
+                "data": {"$ref": "#/definitions/forwarder_add"}
+            },
+            "required": ["data"],
+            "additionalProperties": false
+        },
+        {
+            "description": "notification that dns forwarder was set(modified)",
             "properties": {
                 "module": {"enum": ["dns"]},
                 "kind": {"enum": ["notification"]},
