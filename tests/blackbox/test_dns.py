@@ -42,31 +42,44 @@ def list_forwarders(infrastructure) -> typing.List[dict]:
     )["data"]["forwarders"]
 
 
-def add_forwarder(infrastructure, data: dict, result: bool) -> typing.List[dict]:
-    return _edit_forwarder_wrapper("add_forwarder")(infrastructure, data, result)
+def add_forwarder(infrastructure, data: dict, result: bool):
+    action = "add_forwarder"
+    filters = [("dns", action)]
+    notifications = infrastructure.get_notifications(filters=filters)
+    _edit_forwarder_wrapper(action)(infrastructure, data, result)
+    if result:
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1]["data"]["name"]
+        del notifications[-1]["data"]["name"]
+        assert notifications[-1] == {
+            "module": "dns",
+            "action": action,
+            "kind": "notification",
+            "data": data,
+        }
 
 
-def set_forwarder(infrastructure, data: dict, result: bool) -> typing.List[dict]:
-    return _edit_forwarder_wrapper("set_forwarder")(infrastructure, data, result)
+def set_forwarder(infrastructure, data: dict, result: bool):
+    action = "set_forwarder"
+    filters = [("dns", action)]
+    notifications = infrastructure.get_notifications(filters=filters)
+    _edit_forwarder_wrapper(action)(infrastructure, data, result)
+    if result:
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1] == {
+            "module": "dns",
+            "action": action,
+            "kind": "notification",
+            "data": data,
+        }
 
 
 def _edit_forwarder_wrapper(action: str):
-    def _edit_forwarder_action(infrastructure, data: dict, result: bool) -> typing.List[dict]:
-        filters = [("dns", action)]
-        notifications = infrastructure.get_notifications(filters=filters)
+    def _edit_forwarder_action(infrastructure, data: dict, result: bool):
         res = infrastructure.process_message(
             {"module": "dns", "action": action, "kind": "request", "data": data}
         )
         assert res["data"]["result"] is result
-        if result:
-            notifications = infrastructure.get_notifications(notifications, filters=filters)
-            assert notifications[-1] == {
-                "module": "dns",
-                "action": action,
-                "kind": "notification",
-                "data": data,
-            }
-
     return _edit_forwarder_action
 
 
