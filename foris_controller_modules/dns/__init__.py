@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class DnsModule(BaseModule):
@@ -63,10 +63,11 @@ class DnsModule(BaseModule):
         :returns: result of the update {"result": True/False}
         :rtype: dict
         """
-        res = self.handler.add_forwarder(**data)
-        if res:
-            self.notify("add_forwarder", data)
-        return {"result": res}
+        name = self.handler.add_forwarder(**data)
+        if name:
+            self.notify("add_forwarder", {"name": name, **data})
+            return {"result": True}
+        return {"result": False}
 
     def action_set_forwarder(self, data):
         """ set forwarder

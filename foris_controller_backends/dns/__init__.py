@@ -59,8 +59,7 @@ class DnsFiles(BaseFile):
         tls_type: str,
         tls_hostname: str,
         tls_pin: str,
-    ) -> bool:
-
+    ):
         forwarder = {
             "description": description,
             "ipaddresses": ipaddresses,
@@ -76,7 +75,7 @@ class DnsFiles(BaseFile):
         if path_exists(path):
             return False
 
-        return self._store_forwarder_to_file(
+        res = self._store_forwarder_to_file(
             name,
             description,
             ipaddresses,
@@ -84,6 +83,10 @@ class DnsFiles(BaseFile):
             tls_hostname,
             tls_pin,
         )
+
+        if res:
+            return name
+        return False
 
     def set_forwarder(
         self,

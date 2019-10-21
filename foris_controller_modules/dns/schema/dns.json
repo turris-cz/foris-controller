@@ -169,6 +169,51 @@
                     "additionalProperties": false
                 }
             ]
+        },
+        "forwarder_add_notification": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"},
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["no"]}]
+                        }
+                    },
+                    "required": ["name", "description", "tls_type"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"},
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["hostname"]}]
+                        },
+                        "tls_hostname": {"$ref": "#/definitions/forwarder_hostname"}
+                    },
+                    "required": ["name", "description", "tls_type", "tls_hostname"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": {"$ref": "#/definitions/forwarder_name"},
+                        "description": {"type": "string"},
+                        "ipaddresses": {"$ref": "#/definitions/forwarder_ipaddresses"},
+                        "tls_type": {
+                            "allOf": [{"$ref": "#/definitions/forwarder_tls_type"}, {"enum": ["pin"]}]
+                        },
+                        "tls_pin": {"$ref": "#/definitions/forwarder_pin"}
+                    },
+                    "required": ["name", "description", "tls_type", "tls_pin"],
+                    "additionalProperties": false
+                }
+            ]
         }
     },
     "oneOf": [
@@ -413,7 +458,7 @@
                 "module": {"enum": ["dns"]},
                 "kind": {"enum": ["notification"]},
                 "action": {"enum": ["add_forwarder"]},
-                "data": {"$ref": "#/definitions/forwarder_add"}
+                "data": {"$ref": "#/definitions/forwarder_add_notification"}
             },
             "required": ["data"],
             "additionalProperties": false
