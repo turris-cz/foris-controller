@@ -67,6 +67,12 @@ def handle_command(*args, **kwargs):
         if input_data is not None:
             popen_kwargs["stdin"] = subprocess.PIPE
 
+        # update env
+        env = dict(os.environ)
+        cmd_env = kwargs.get("env", {})
+        env.update(cmd_env)
+        popen_kwargs["env"] = env
+
         process = subprocess.Popen(args, **popen_kwargs)
 
         if input_data:
