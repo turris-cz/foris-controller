@@ -71,7 +71,7 @@ class SystemInfoFiles(BaseFile):
         :returns: os branch or version
         :rtype: dict
         """
-        mode, value = svupdater_branch.get_branch_or_version()
+        mode, value = svupdater_branch.get_os_branch_or_version()
         return {"mode": mode, "value": value}
 
     @readlock(file_lock, logger)
