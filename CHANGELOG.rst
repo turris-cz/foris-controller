@@ -1,3 +1,8 @@
+1.0.7 (2019-10-31)
+------------------
+
+* cmdline: add env parameter to update newly created process env
+
 1.0.6 (2019-10-24)
 ------------------
 
