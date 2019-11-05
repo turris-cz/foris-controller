@@ -10,20 +10,29 @@
             "type": "array",
             "items": {
                 "type": "object",
-                    "properties": {
-                        "name": {"$ref": "#/definitions/updater_user_list_name"},
-                        "enabled": {"type": "boolean"},
-                        "hidden": {"type": "boolean"},
-                        "title": {"type": "string"},
-                        "msg": {"type": "string"}
-                    },
-                    "required": ["enabled", "name", "title", "msg", "hidden"],
-                    "additionalProperties": false
+                "properties": {
+                    "name": {"$ref": "#/definitions/updater_user_list_name"},
+                    "enabled": {"type": "boolean"},
+                    "hidden": {"type": "boolean"},
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "options": {"$ref": "#/definitions/updater_user_list_options_get"}
+                },
+                "required": ["enabled", "name", "title", "description", "hidden", "options"],
+                "additionalProperties": false
             }
         },
         "updater_user_lists_set": {
             "type": "array",
-            "items": {"$ref": "#/definitions/updater_user_list_name"}
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"$ref": "#/definitions/updater_user_list_name"},
+                    "options": {"$ref": "#/definitions/updater_user_list_options_set"}
+                },
+                "required": ["name"],
+                "additionalProperties": false
+            }
         },
         "updater_languages_get": {
             "type": "array",
@@ -159,6 +168,36 @@
                     "required": ["present"]
                 }
             ]
+        },
+        "updater_user_list_option_get": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "title": {"type": "string"},
+                "description": {"type": "string"},
+                "enabled": {"type": "boolean"}
+            },
+            "additionalProperties": false,
+            "required": ["name", "title", "description", "enabled"]
+        },
+        "updater_user_list_options_get": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/updater_user_list_option_get"}
+        },
+        "updater_user_list_option_set": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "enabled": {"type": "boolean"}
+            },
+            "additionalProperties": false,
+            "required": ["name", "enabled"]
+        },
+        "updater_user_list_options_set": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/updater_user_list_option_set"
+            }
         }
     },
     "oneOf": [

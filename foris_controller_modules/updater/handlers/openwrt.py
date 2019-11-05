@@ -46,7 +46,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         """ update updater settings
 
         :param user_lists: new user-list set
-        :type user_lists: list
+        :type user_lists: dictionary
         :param languages: languages which will be installed
         :type languages: list
         :param approvals_settings: new approval settings

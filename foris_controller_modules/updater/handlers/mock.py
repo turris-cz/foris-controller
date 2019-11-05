@@ -19,6 +19,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import copy
 import logging
 import random
 import uuid
@@ -36,10 +37,12 @@ logger = logging.getLogger(__name__)
 
 class MockUpdaterHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
-    user_lists = [
-        {
-            "name": "api-token",
-            "msg": {
+
+    # Enabled flag in option is there only for testing purposes
+    # On real system enabled/disabled status will be written in uci config file
+    DEFAULT_USERLISTS = {
+        "api-token": {
+            "description": {
                 "en": u"A Foris plugin allowing to manage remote API access tokens"
                 " (for example for use in Spectator or Android application).",
                 "cs": "Správa tokenů pro vzdálený API přístup"
@@ -52,9 +55,8 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "enabled": False,
             "hidden": False,
         },
-        {
-            "name": "automation",
-            "msg": {
+        "automation": {
+            "description": {
                 "cs": "Software pro ovládání domácí automatizace, včetně Turris Gadgets.",
                 "de": "Steuerungssoftware für die Hausautomation, einschließlich Turris "
                 "Gadgets.",
@@ -64,9 +66,8 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "enabled": False,
             "hidden": False,
         },
-        {
-            "name": "dev-detect",
-            "msg": {
+        "dev-detect": {
+            "description": {
                 "cs": "Software pro detekci nově připojených zařízení na lokální síti"
                 " (EXPERIMENTÁLNÍ).",
                 "de": "Software für die Erkennung neuer Geräte im lokalen Netzwerk"
@@ -81,9 +82,8 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "enabled": False,
             "hidden": False,
         },
-        {
-            "name": "dvb",
-            "msg": {
+        "dvb": {
+            "description": {
                 "cs": "Software na sdílení televizního vysílání přijímaného Turrisem."
                 " Neobsahuje ovladače pro zařízení.",
                 "de": "Software für die Weiterleitung von Fernsehsignal, welcher mittels"
@@ -95,9 +95,8 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "enabled": False,
             "hidden": False,
         },
-        {
-            "name": "i_agree_honeypot",
-            "msg": {
+        "i_agree_honeypot": {
+            "description": {
                 "cs": "Past na roboty zkoušející hesla na SSH.",
                 "de": "Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten"
                 " versuchen.",
@@ -106,15 +105,29 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "title": {"cs": "SSH Honeypot", "de": "SSH-Honigtopf", "en": "SSH Honeypot"},
             "enabled": False,
             "hidden": False,
+            "options": {
+                "minipot": {
+                    "title": "Minipots",
+                    "description": "Minimal honeypots to catch attackers for various protocols.",
+                    "default": True,
+                },
+                "haas": {
+                    "title": "SSH Honeypot",
+                    "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz).",
+                }
+            }
         },
-        {
-            "name": "i_agree_datacollect",
-            "msg": {"cs": "", "de": "", "en": ""},
+        "i_agree_datacollect": {
+            "description": {"cs": "", "de": "", "en": ""},
             "title": {"cs": "", "de": "", "en": ""},
             "enabled": False,
-            "hidden": True,
+            "hidden": False,
         },
-    ]
+    }
+
+    # actual stored user lists
+    USER_LISTS = {}
+
     languages = [
         {"code": "cs", "enabled": True},
         {"code": "de", "enabled": True},
@@ -145,24 +158,39 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             result["approval_settings"]["delay"] = self.approvals_delay
         return result
 
+    @staticmethod
     @logger_wrapper(logger)
-    def update_settings(self, user_lists, languages, approvals_settings, enabled):
+    def update_settings(user_lists, languages, approvals_settings, enabled):
         """ Mocks update updater settings
 
         :param user_lists: new user-list set
-        :type user_lists: list
+        :type user_lists: list of dictionaries
         :param languages: languages which will be installed
         :type languages: list
         :param approvals_settings: new approval settings
         :type approvals_settings: dict
-        :param enable: is updater enabled indicator
-        :type enable: bool
+        :param enabled: is updater enabled indicator
+        :type enabled: bool
         :returns: True on success False otherwise
         :rtype: bool
         """
+
         if user_lists is not None:
-            for record in MockUpdaterHandler.user_lists:
-                record["enabled"] = record["name"] in user_lists
+            MockUpdaterHandler.USER_LISTS = {}
+            for lst in user_lists:
+                list_name = lst["name"]
+                MockUpdaterHandler.USER_LISTS[list_name] = copy.deepcopy(MockUpdaterHandler.DEFAULT_USERLISTS[list_name])
+                MockUpdaterHandler.USER_LISTS[list_name]["enabled"] = True
+
+                default_list_options = MockUpdaterHandler.USER_LISTS[list_name].get("options", {})
+                opts = {}
+                for opt in lst.get("options", {}):
+                    if opt["name"] in default_list_options:
+                        opts[opt["name"]] = default_list_options[opt["name"]]
+                        opts[opt["name"]]["enabled"] = opt["enabled"]
+
+                MockUpdaterHandler.USER_LISTS[list_name]["options"] = opts
+
         if languages is not None:
             for record in MockUpdaterHandler.languages:
                 record["enabled"] = record["code"] in languages
@@ -199,24 +227,40 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             ]
         )
 
+    @staticmethod
     @logger_wrapper(logger)
-    def get_user_lists(self, lang):
+    def get_user_lists(lang):
         """ Mocks getting user lists
         :param lang: language en/cs/de
-        :returns: [{"name": "..", "enabled": True, "title": "..", "msg": "..", "hidden": True}, ...]
+        :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", "hidden": True}, ...]
         :rtype: dict
         """
         exported = []
-        for record in MockUpdaterHandler.user_lists:
+        for list_name, lst in MockUpdaterHandler.DEFAULT_USERLISTS.items():
+            opts = [
+                {
+                    "name": opt_name,
+                    "title": data["title"],
+                    "description": data["description"],
+                    "enabled": (MockUpdaterHandler.USER_LISTS[list_name]["options"][opt_name]["enabled"]
+                                if (list_name in MockUpdaterHandler.USER_LISTS and
+                                    opt_name in MockUpdaterHandler.USER_LISTS[list_name]["options"])
+                                else data.get("default", False)),
+                }
+                for opt_name, data in lst.get("options", {}).items()
+            ]
             exported.append(
                 {
-                    "name": record["name"],
-                    "hidden": record["hidden"],
-                    "enabled": record["enabled"],
-                    "msg": record["msg"].get(lang, record["msg"]["en"]),
-                    "title": record["title"].get(lang, record["title"]["en"]),
+                    "name": list_name,
+                    "hidden": lst["hidden"],
+                    "enabled": (MockUpdaterHandler.USER_LISTS[list_name]["enabled"]
+                                if list_name in MockUpdaterHandler.USER_LISTS else lst["enabled"]),
+                    "description": lst["description"].get(lang, lst["description"]["en"]),
+                    "title": lst["title"].get(lang, lst["title"]["en"]),
+                    "options": opts,
                 }
             )
+
         return exported
 
     @logger_wrapper(logger)

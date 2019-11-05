@@ -118,7 +118,7 @@ setup(
         "python-prctl",
         "pbkdf2",
         "python-slugify",
-        "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater/supervisor.git",
+        "svupdater @ git+https://gitlab.labs.nic.cz/turris/updater/supervisor.git#egg=supervisor",
         "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
     ],
     setup_requires=[

@@ -70,39 +70,151 @@ def wait_for_updater_run_finished(notifications, infrastructure):
         exit_count = notification_status_count(notifications, "exit")
 
 
+@pytest.mark.parametrize("lang", ["en", "cs", "de", "nb_NO", "xx"])
 def test_get_settings(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
+    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses, lang
 ):
-    def get(lang):
-        res = infrastructure.process_message(
-            {
-                "module": "updater",
-                "action": "get_settings",
-                "kind": "request",
-                "data": {"lang": lang},
-            }
-        )
-        assert set(res.keys()) == {"action", "kind", "data", "module"}
-        assert "enabled" in res["data"].keys()
-        assert "languages" in res["data"].keys()
-        assert {"enabled", "code"} == set(res["data"]["languages"][0].keys())
-        assert "user_lists" in res["data"].keys()
-        assert {"enabled", "name", "title", "msg", "hidden"} == set(
-            res["data"]["user_lists"][0].keys()
-        )
-        assert "approval_settings" in res["data"].keys()
-        assert "status" in res["data"]["approval_settings"].keys()
-        assert "approval" in res["data"].keys()
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "get_settings",
+            "kind": "request",
+            "data": {"lang": lang},
+        }
+    )
 
-    get("en")
-    get("cs")
-    get("de")
-    get("nb_NO")
-    get("xx")
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "enabled" in res["data"].keys()
+    assert "languages" in res["data"].keys()
+    assert {"enabled", "code"} == set(res["data"]["languages"][0].keys())
+    assert "user_lists" in res["data"].keys()
+    assert {"enabled", "name", "title", "description", "hidden", "options"} == set(
+        res["data"]["user_lists"][0].keys()
+    )
+    assert "approval_settings" in res["data"].keys()
+    assert "status" in res["data"]["approval_settings"].keys()
+    assert "approval" in res["data"].keys()
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.parametrize(
+    "settings,default_opts",
+    [
+        (
+            {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []},
+            None
+        ),
+        (
+            {
+                "enabled": True,
+                "approval_settings": {"status": "on"},
+                "user_lists": [
+                    {"name": "i_agree_honeypot", "options": [{"name": "minipot", "enabled": True}]}
+                ],
+                "languages": ["cs"],
+            },
+            None
+        ),
+        (
+            {
+                "enabled": True,
+                "approval_settings": {"status": "on"},
+                "user_lists": [
+                    {"name": "i_agree_honeypot", "options": [{"name": "minipot", "enabled": False}]}
+                ],
+                "languages": ["cs"],
+            },
+            None
+        ),
+        (
+            {
+                "enabled": True,
+                "approval_settings": {"status": "on"},
+                "user_lists": [
+                    {"name": "i_agree_honeypot", "options": [{"name": "haas", "enabled": True}]}
+                ],
+                "languages": ["cs"],
+            },
+            {"i_agree_honeypot": {"minipot"}}
+        ),
+        (
+            {
+                "enabled": True,
+                "approval_settings": {"status": "delayed", "delay": 24},
+                "user_lists": [
+                    {"name": "dvb"}
+                ],
+                "languages": ["cs", "de", "nb_NO"],
+            },
+            None
+        ),
+    ]
+)
 def test_update_settings(
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    device,
+    turris_os_version,
+    settings,
+    default_opts
+):
+    defaults = default_opts if default_opts else {}
+
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": settings,
+        }
+    )
+    assert "result" in res["data"] and res["data"]["result"] is True
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "get_settings",
+            "kind": "request",
+            "data": {"lang": "en"},
+        }
+    )
+
+    new_settings_options = {
+        ulist["name"]: {
+            opt["name"] for opt in ulist.get("options", []) if opt["enabled"]
+        }
+        for ulist in settings["user_lists"]
+    }
+
+    del res["data"]["approval"]
+    list_data = res["data"].pop("user_lists")
+    list_options = {
+        ulist["name"]: {
+            opt["name"] for opt in ulist.get("options", []) if opt["enabled"]
+        }
+        for ulist in list_data if ulist["enabled"]
+    }
+    assert new_settings_options.keys() == {e["name"] for e in list_data if e["enabled"]}
+
+    # compare user list options minus the expected defaults
+    # to confirm that everything was written succesfully
+    for lst, opts in list_options.items():
+        if lst in defaults:
+            list_options[lst] = opts.difference(defaults[lst])
+
+    assert new_settings_options == list_options
+    lang_data = res["data"].pop("languages")
+    assert set(settings["languages"]) == {e["code"] for e in lang_data if e["enabled"]}
+
+    del settings["user_lists"]
+    del settings["languages"]
+    assert match_subdict(settings, res["data"])
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_update_settings_expected(
     updater_languages,
     updater_userlists,
     uci_configs_init,
@@ -129,44 +241,19 @@ def test_update_settings(
                 "data": {"lang": "en"},
             }
         )
-
         new_settings = expected if expected else new_settings
         del res["data"]["approval"]
         list_data = res["data"].pop("user_lists")
         assert set(new_settings["user_lists"]) == {e["name"] for e in list_data if e["enabled"]}
         lang_data = res["data"].pop("languages")
         assert set(new_settings["languages"]) == {e["code"] for e in lang_data if e["enabled"]}
-
         del new_settings["user_lists"]
         del new_settings["languages"]
         assert match_subdict(new_settings, res["data"])
-
+    
     update_settings(
-        {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []}
+        {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []},
     )
-
-    update_settings(
-        {
-            "enabled": True,
-            "approval_settings": {"status": "on"},
-            "user_lists": ["api-token"],
-            "languages": ["cs"],
-        }
-    )
-
-    update_settings(
-        {
-            "enabled": True,
-            "approval_settings": {"status": "delayed", "delay": 24},
-            "user_lists": ["dvb"],
-            "languages": ["cs", "de", "nb_NO"],
-        }
-    )
-
-    update_settings(
-        {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []}
-    )
-
     update_settings(
         {"enabled": False},
         {

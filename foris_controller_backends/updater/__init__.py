@@ -73,7 +73,7 @@ class UpdaterUci(object):
                 raise NotImplementedError()
 
         if user_lists is not None:
-            svupdater_lists.update_pkglists(user_lists)
+            svupdater_lists.update_pkglists(self._jsonschema_to_svupdater(user_lists))
 
         if languages is not None:
             svupdater_l10n.update_languages(languages)
@@ -93,6 +93,14 @@ class UpdaterUci(object):
                 pass  # failed to run updater, but settings were updated
 
         return True
+
+    def _jsonschema_to_svupdater(self, user_lists):
+        """Restructure data from jsonschema format into structure that svupdater expects"""
+        res = {}
+        for lst in user_lists:
+            res[lst["name"]] = {opt["name"]: opt["enabled"] for opt in lst.get("options", {})}
+
+        return res
 
 
 class Updater(object):
@@ -139,10 +147,20 @@ class Updater(object):
                 "enabled": v["enabled"],
                 "hidden": v["hidden"],
                 "title": v["title"],
-                "msg": v["message"],
+                "description": v["description"],
+                "options": [] if "options" not in v else [
+                    {
+                        "name": name,
+                        "title": data["title"],
+                        "description": data["description"],
+                        "enabled": data.get("enabled", data.get("default", False)),
+                    }
+                    for name, data in v["options"].items()
+                ],
             }
             for k, v in user_lists.items()
         ]
+
 
     def get_languages(self):
         logger.debug("Getting languages")
