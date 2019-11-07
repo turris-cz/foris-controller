@@ -72,7 +72,7 @@ def _build_advertizement(state: str) -> dict:
         netboot = "unknown"
 
     return {
-        "state": "started",
+        "state": state,
         "id": app_info["controller_id"],
         "hostname": socket.gethostname(),
         "netboot": netboot,
