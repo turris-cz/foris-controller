@@ -106,12 +106,12 @@ setup(
         'foris_controller_modules',
         'foris_controller_backends',
     ],
-    url='https://gitlab.labs.nic.cz/turris/foris-controller',
+    url='https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller',
     license='COPYING',
     description=DESCRIPTION,
     long_description=open('README.rst').read(),
     install_requires=[
-        "foris-schema @ git+https://gitlab.labs.nic.cz/turris/foris-schema.git",
+        "foris-schema @ git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-schema.git",
         "python-prctl",
         "pbkdf2",
         "python-slugify",
@@ -131,7 +131,7 @@ setup(
     extras_require={
         'ubus': ["ubus"],
         'mqtt': ["paho-mqtt"],
-        'client-socket': ["foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-client.git"],
+        'client-socket': ["foris-client @ git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-client.git"],
     },
     entry_points={
         "console_scripts": [
@@ -140,8 +140,8 @@ setup(
         ]
     },
     dependency_links=[
-        "git+https://gitlab.labs.nic.cz/turris/foris-controller-testtools.git#egg=foris-controller-testtools",
-        "git+https://gitlab.labs.nic.cz/turris/foris-client.git#egg=foris-client",
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller-testtools.git#egg=foris-controller-testtools",
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-client.git#egg=foris-client",
     ],
     include_package_data=True,
     zip_safe=False,
