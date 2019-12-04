@@ -247,7 +247,7 @@ class MqttListener(BaseSocketListener):
         def work():
             # mark reply_id as working reply
             with self.working_replies_lock:
-                self.working_replies[reply_id] = (threading.current_thread(), time.time())
+                self.working_replies[reply_id] = (threading.current_thread(), time.monotonic())
 
             response = MqttListener.router.process_message(msg)
             raw_response = json.dumps(response)
@@ -301,7 +301,7 @@ class MqttListener(BaseSocketListener):
                 ids_to_delete = [
                     k
                     for k, v in self.working_replies.items()
-                    if not v[0].is_alive() and time.time() - v[1] > CLEAR_RETAIN_PERIOD
+                    if not v[0].is_alive() and time.monotonic() - v[1] > CLEAR_RETAIN_PERIOD
                 ]
                 for del_id in ids_to_delete:
                     del self.working_replies[del_id]

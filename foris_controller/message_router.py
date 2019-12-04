@@ -34,12 +34,12 @@ def display_spend_time(message_in, message_out):
     def real_decorator(function):
         @wraps(function)
         def wrapper(*args, **kwargs):
-            start = time.time()
+            start = time.monotonic()
             if message_in:
                 logger.debug(message_in)
             res = function(*args, **kwargs)
             if message_out:
-                logger.debug(message_out, time.time() - start)
+                logger.debug(message_out, time.monotonic() - start)
             return res
 
         return wrapper
