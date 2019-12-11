@@ -133,7 +133,7 @@ def test_advertize(ubusd_test, infrastructure, file_root_init, mosquitto_test, m
         assert notification["module"] == "remote"
         assert notification["action"] == "advertize"
         assert notification["kind"] == "notification"
-        assert notification["data"]["state"] in ["running", "started", "exitted"]
+        assert notification["data"]["state"] in ["running", "started", "exited"]
         assert notification["data"]["id"] == MQTT_ID
         assert "hostname" in notification["data"]
         assert notification["data"]["netboot"] == "no"

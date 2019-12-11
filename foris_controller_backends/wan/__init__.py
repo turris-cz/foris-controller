@@ -317,14 +317,14 @@ class WanTestCommands(AsyncCommand):
                 return {"status": "not_found"}
             process_data = self.processes[process_id]
 
-        exitted = process_data.get_exitted()
+        exited = process_data.get_exited()
 
-        data = {e: False for e in WanTestCommands.FIELDS} if exitted else {}
+        data = {e: False for e in WanTestCommands.FIELDS} if exited else {}
         for record in process_data.read_all_data():
             for option, res in record["data"].items():
                 data[option] = res or data.get(option, False)
 
-        return {"status": "finished" if process_data.get_exitted() else "running", "data": data}
+        return {"status": "finished" if process_data.get_exited() else "running", "data": data}
 
     def connection_test_trigger(
         self, test_kinds, notify_function, exit_notify_function, reset_notify_function

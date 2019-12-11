@@ -413,7 +413,7 @@
                     "type": "object",
                     "properties": {
                         "id": {"$ref": "#/definitions/controller_id"},
-                        "state": {"enum": ["running", "started", "exitted"]},
+                        "state": {"enum": ["running", "started", "exited"]},
                         "netboot": {"enum": ["no", "booted", "ready", "unknown"]},
                         "hostname": {"type": "string"},
                         "working_replies": {

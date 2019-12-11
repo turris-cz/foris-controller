@@ -84,7 +84,7 @@ def test_async_complex(async_infrastructure):
                 return "not_found", None, None
             process_data = self.processes[process_id]
 
-            if process_data.get_exitted():
+            if process_data.get_exited():
                 return "finished", process_data.get_retval(), process_data.read_all_data()
             else:
                 return "running", None, process_data.read_all_data()
@@ -102,7 +102,7 @@ def test_async_complex(async_infrastructure):
             ]
 
             def exit_handler(process_data):
-                notify("%s: exitted %d" % (process_data.id, process_data.get_retval()))
+                notify("%s: exited %d" % (process_data.id, process_data.get_retval()))
 
             def reset_notify_function():
                 with open(RESET_PATH, "w") as f:
@@ -131,7 +131,7 @@ def test_async_complex(async_infrastructure):
     if len(data) == 3:
         data = get_data(data)
 
-    assert data[3] == "%s: exitted 10" % cmd_id
+    assert data[3] == "%s: exited 10" % cmd_id
 
     assert command.read_data(cmd_id) == ("finished", 10, ["11", "22", "33"])
 

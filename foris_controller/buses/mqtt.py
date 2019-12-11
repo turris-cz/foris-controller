@@ -158,7 +158,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         counter += ANNOUNCER_PERIOD
 
     _publish_advertize(
-        client, _build_advertizement("exitted"), working_replies, working_replies_lock
+        client, _build_advertizement("exited"), working_replies, working_replies_lock
     )
     client.loop_stop()
 

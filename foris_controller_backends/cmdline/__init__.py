@@ -188,7 +188,7 @@ class AsyncProcessData(object):
         self.id = "%016x" % random.randrange(2 ** 64)
         self._data = manager.list()
         self._retval = manager.Value(int, 0)
-        self._exitted = manager.Value(bool, False)
+        self._exited = manager.Value(bool, False)
 
     def read_all_data(self):
         """ Reads and returns all data which were stored by the process
@@ -218,23 +218,23 @@ class AsyncProcessData(object):
 
     def get_retval(self):
         """ Returns the return value of the process.
-        Should be used only after get_exitted() returns True
+        Should be used only after get_exited() returns True
         :returns: retval of the process
         :rtype: int
         """
         return self._retval.get()
 
-    def set_exitted(self):
-        """ Sets the the process exitted
+    def set_exited(self):
+        """ Sets the the process exited
         """
-        self._exitted.set(True)
+        self._exited.set(True)
 
-    def get_exitted(self):
-        """ returns whether the process exitted
-        :returns: True if process exitted False if the process is still running
+    def get_exited(self):
+        """ returns whether the process exited
+        :returns: True if process exited False if the process is still running
         :rtype: bool
         """
-        return self._exitted.get()
+        return self._exited.get()
 
 
 class AsyncCommand(object):
@@ -324,7 +324,7 @@ class AsyncCommand(object):
             pass
 
         process_data.set_retval(process.returncode)
-        process_data.set_exitted()
+        process_data.set_exited()
         if handler_exit:
             handler_exit(process_data)
         logger.debug("Async process finished.")
