@@ -73,7 +73,7 @@ class TimeUciCommands(object):
         country = get_option_anonymous(system_data, "system", "system", 0, "_country", "00")
         zonename = get_option_anonymous(system_data, "system", "system", 0, "zonename", "UTC")
         try:
-            region, city = zonename.split("/")
+            region, city = zonename.split("/", maxsplit=1)
         except ValueError:
             region, city = "", ""
         ntp = parse_bool(get_option_named(system_data, "system", "ntp", "enabled", "1"))
