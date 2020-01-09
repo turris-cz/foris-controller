@@ -1,3 +1,9 @@
+1.0.9 (2020-01-09)
+------------------
+
+* time: fix reading of three-level names timezones
+* mqtt: fix advertizement state name when exitting
+
 1.0.8 (2019-11-13)
 ------------------
 
