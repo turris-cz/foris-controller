@@ -1,0 +1,34 @@
+{
+    "oneOf": [
+        {
+            "description": "List Foris Controller modules",
+            "properties": {
+                "module": {"enum": ["introspect"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["list_modules"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "Reply to list Foris Controller modules",
+            "properties": {
+                "module": {"enum": ["introspect"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["list_modules"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "modules": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["modules"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}

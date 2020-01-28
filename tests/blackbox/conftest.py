@@ -70,4 +70,5 @@ def controller_modules():
         "networks",
         "guest",
         "remote",
+        "introspect",
     ]
