@@ -12,7 +12,7 @@ setup(
     name="foris-controller-{{ cookiecutter.name_snake }}-module",
     version=__version__,
     author="CZ.NIC, z.s.p.o. (http://www.nic.cz/)",
-    author_email="packaging@nic.cz",
+    author_email="packaging@turris.cz",
     packages=[
         "foris_controller_{{ cookiecutter.name_snake }}_module",
         "foris_controller_backends",
