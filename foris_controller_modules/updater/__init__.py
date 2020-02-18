@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,9 +33,8 @@ class UpdaterModule(BaseModule):
         :returns: current updater settings
         :rtype: dict
         """
-        res = self.handler.get_settings()
+        res = self.handler.get_settings(data["lang"])
         res["approval"] = self.handler.get_approval()
-        res["user_lists"] = self.handler.get_user_lists(data["lang"])
         res["languages"] = self.handler.get_languages()
         return res
 

@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -122,6 +122,17 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "title": {"cs": "", "de": "", "en": ""},
             "enabled": False,
             "hidden": False,
+            "options": {
+                "survey": {
+                    "title": "Usage Survey",
+                    "description": "Collect data about router usage (installed packages, Internet connection type and etc.).",
+                },
+                "dynfw": {
+                    "title": "Dynamic Firewall",
+                    "description": "Add firewall rules to block attackers detected by Turris collection network.",
+                    "default": True,
+                }
+            },
         },
     }
 
@@ -147,13 +158,17 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     updater_running = False
 
     @logger_wrapper(logger)
-    def get_settings(self):
+    def get_settings(self, lang):
         """ Mocks get updater settings
 
         :returns: current updater settings
         :rtype: dict
         """
-        result = {"approval_settings": {"status": self.approvals_status}, "enabled": self.enabled}
+        result = {
+            "approval_settings": {"status": self.approvals_status},
+            "enabled": self.enabled,
+            "user_lists": self.get_user_lists(lang),
+        }
         if self.approvals_delay:
             result["approval_settings"]["delay"] = self.approvals_delay
         return result
@@ -228,6 +243,14 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         )
 
     @staticmethod
+    def _is_option_enabled(list_name, opt_name, opt_data):
+        if (list_name in MockUpdaterHandler.USER_LISTS and
+                opt_name in MockUpdaterHandler.USER_LISTS[list_name]["options"]):
+            return MockUpdaterHandler.USER_LISTS[list_name]["options"][opt_name]["enabled"]
+
+        return opt_data.get("default", False)
+
+    @staticmethod
     @logger_wrapper(logger)
     def get_user_lists(lang):
         """ Mocks getting user lists
@@ -242,10 +265,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                     "name": opt_name,
                     "title": data["title"],
                     "description": data["description"],
-                    "enabled": (MockUpdaterHandler.USER_LISTS[list_name]["options"][opt_name]["enabled"]
-                                if (list_name in MockUpdaterHandler.USER_LISTS and
-                                    opt_name in MockUpdaterHandler.USER_LISTS[list_name]["options"])
-                                else data.get("default", False)),
+                    "enabled": MockUpdaterHandler._is_option_enabled(list_name, opt_name, data),
                 }
                 for opt_name, data in lst.get("options", {}).items()
             ]

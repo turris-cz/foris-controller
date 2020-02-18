@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,13 +33,13 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
     updater = Updater()
 
     @logger_wrapper(logger)
-    def get_settings(self):
+    def get_settings(self, lang="en"):
         """ get updater settings
 
         :returns: current updater settings
         :rtype: dict
         """
-        return OpenwrtUpdaterHandler.uci.get_settings()
+        return OpenwrtUpdaterHandler.uci.get_settings(lang)
 
     @logger_wrapper(logger)
     def update_settings(self, user_lists, languages, approvals_settings, enabled):
@@ -51,8 +51,8 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :type languages: list
         :param approvals_settings: new approval settings
         :type approvals_settings: dict
-        :param enable: is updater enabled indicator
-        :type enable: bool
+        :param enabled: is updater enabled indicator
+        :type enabled: bool
         :returns: True on success False otherwise
         :rtype: bool
         """

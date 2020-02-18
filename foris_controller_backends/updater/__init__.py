@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,11 +37,11 @@ logger = logging.getLogger(__name__)
 
 
 class UpdaterUci(object):
-    def get_settings(self):
+    def get_settings(self, lang="en"):
 
         res = {
             "enabled": svupdater_autorun.enabled(),
-            "user_lists": [k for k, v in svupdater_lists.pkglists("en").items() if v["enabled"]],
+            "user_lists": Updater.get_user_lists(lang),
             "languages": svupdater_l10n.languages(),
             "approval_settings": {"status": "on" if svupdater_autorun.approvals() else "off"},
         }
@@ -137,28 +137,39 @@ class Updater(object):
         else:
             return {"present": False}
 
-    def get_user_lists(self, lang):
+    @staticmethod
+    def _get_userlist_options(lst):
+        if "options" not in lst:
+            return []
+
+        res = []
+        for name, data in lst["options"].items():
+            res.append(
+                {
+                    "name": name,
+                    "title": data["title"],
+                    "description": data["description"],
+                    "enabled": data.get("enabled", data.get("default", False)),
+                }
+            )
+
+        return res
+
+    @staticmethod
+    def get_user_lists(lang):
         logger.debug("Getting user lists for '%s'", lang)
         user_lists = svupdater_lists.pkglists(lang)
         logger.debug("Userlists obtained: %s", user_lists)
         return [
             {
-                "name": k,
-                "enabled": v["enabled"],
-                "hidden": v["hidden"],
-                "title": v["title"],
-                "description": v["description"],
-                "options": [] if "options" not in v else [
-                    {
-                        "name": name,
-                        "title": data["title"],
-                        "description": data["description"],
-                        "enabled": data.get("enabled", data.get("default", False)),
-                    }
-                    for name, data in v["options"].items()
-                ],
+                "name": lst_name,
+                "enabled": lst["enabled"],
+                "hidden": lst["hidden"],
+                "title": lst["title"],
+                "description": lst["description"],
+                "options": Updater._get_userlist_options(lst)
             }
-            for k, v in user_lists.items()
+            for lst_name, lst in user_lists.items()
         ]
 
 
