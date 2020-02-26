@@ -95,10 +95,6 @@ class WifiUci(object):
         else:
             return None
 
-        # hack because iw list returns nonsense (claims that 11g has VHT capabilities)
-        if hwmode == "11g":
-            htmodes = [e for e in htmodes if e not in VHTMODES]
-
         return {"available_htmodes": htmodes, "available_channels": channels, "hwmode": hwmode}
 
     @staticmethod
