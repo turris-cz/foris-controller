@@ -54,6 +54,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
             "enabled": False,
             "hidden": False,
+            "official": True,
         },
         "automation": {
             "description": {
@@ -81,6 +82,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             },
             "enabled": False,
             "hidden": False,
+            "official": True,
         },
         "dvb": {
             "description": {
@@ -94,6 +96,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
             "enabled": False,
             "hidden": False,
+            "url": "https://doc.turris.cz/doc/en/howto/dvb",
         },
         "i_agree_honeypot": {
             "description": {
@@ -102,9 +105,10 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 " versuchen.",
                 "en": "Trap for password-guessing robots on SSH.",
             },
-            "title": {"cs": "SSH Honeypot", "de": "SSH-Honigtopf", "en": "SSH Honeypot"},
+            "title": {"cs": "Honeypot", "de": "Honigtopf", "en": "Honeypot"},
             "enabled": False,
             "hidden": False,
+            "official": True,
             "options": {
                 "minipot": {
                     "title": "Minipots",
@@ -119,9 +123,10 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         },
         "i_agree_datacollect": {
             "description": {"cs": "", "de": "", "en": ""},
-            "title": {"cs": "", "de": "", "en": ""},
+            "title": {"cs": "datacollect", "de": "datacollect", "en": "datacollect"},
             "enabled": False,
             "hidden": False,
+            "official": True,
             "options": {
                 "survey": {
                     "title": "Usage Survey",
@@ -269,17 +274,18 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 }
                 for opt_name, data in lst.get("options", {}).items()
             ]
-            exported.append(
-                {
-                    "name": list_name,
-                    "hidden": lst["hidden"],
-                    "enabled": (MockUpdaterHandler.USER_LISTS[list_name]["enabled"]
-                                if list_name in MockUpdaterHandler.USER_LISTS else lst["enabled"]),
-                    "description": lst["description"].get(lang, lst["description"]["en"]),
-                    "title": lst["title"].get(lang, lst["title"]["en"]),
-                    "options": opts,
-                }
-            )
+            item = {
+                "name": list_name,
+                "hidden": lst["hidden"],
+                "enabled": MockUpdaterHandler.USER_LISTS.get(list_name, lst)["enabled"],
+                "description": lst["description"].get(lang, lst["description"]["en"]),
+                "title": lst["title"].get(lang, lst["title"]["en"]),
+                "official": lst.get("official", False),
+                "options": opts,
+            }
+            if lst.get("url") is not None:
+                item["url"] = lst["url"]
+            exported.append(item)
 
         return exported
 

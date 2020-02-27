@@ -16,9 +16,11 @@
                     "hidden": {"type": "boolean"},
                     "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "options": {"$ref": "#/definitions/updater_user_list_options_get"}
+                    "options": {"$ref": "#/definitions/updater_user_list_options_get"},
+                    "official": {"type": "boolean"},
+                    "url": {"type": "string"}
                 },
-                "required": ["enabled", "name", "title", "description", "hidden", "options"],
+                "required": ["enabled", "name", "title", "description", "hidden", "options", "official"],
                 "additionalProperties": false
             }
         },

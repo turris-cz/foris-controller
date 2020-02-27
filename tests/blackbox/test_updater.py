@@ -129,9 +129,18 @@ def test_get_settings(
     assert "languages" in res["data"].keys()
     assert {"enabled", "code"} == set(res["data"]["languages"][0].keys())
     assert "user_lists" in res["data"].keys()
-    assert {"enabled", "name", "title", "description", "hidden", "options"} == set(
-        res["data"]["user_lists"][0].keys()
-    )
+
+    user_list_keys = res["data"]["user_lists"][0].keys()
+    assert "enabled" in user_list_keys
+    assert "name" in user_list_keys
+    assert "title" in user_list_keys
+    assert "description" in user_list_keys
+    assert "hidden" in user_list_keys
+    assert "options" in user_list_keys
+    assert "official" in user_list_keys
+    if "url" in user_list_keys:
+        assert isinstance(res["data"]["user_lists"][0]["url"], str)
+
     assert "approval_settings" in res["data"].keys()
     assert "status" in res["data"]["approval_settings"].keys()
     assert "approval" in res["data"].keys()

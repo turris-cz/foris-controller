@@ -160,18 +160,24 @@ class Updater(object):
         logger.debug("Getting user lists for '%s'", lang)
         user_lists = svupdater_lists.pkglists(lang)
         logger.debug("Userlists obtained: %s", user_lists)
-        return [
-            {
+
+        exported = []
+        for lst_name, lst in user_lists.items():
+            item = {
                 "name": lst_name,
                 "enabled": lst["enabled"],
                 "hidden": lst["hidden"],
                 "title": lst["title"],
                 "description": lst["description"],
-                "options": Updater._get_userlist_options(lst)
+                "options": Updater._get_userlist_options(lst),
+                "official": lst["official"],
             }
-            for lst_name, lst in user_lists.items()
-        ]
+            if lst["url"] is not None:
+                item["url"] = lst["url"]
 
+            exported.append(item)
+
+        return exported
 
     def get_languages(self):
         logger.debug("Getting languages")
