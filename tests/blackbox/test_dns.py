@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -88,8 +88,8 @@ def custom_forwarders():
     res1 = """\
 name="99_google.conf"
 description="Google"
-ipv4="8.8.8.8"
-ipv6="2001:4860:4860::8888"
+ipv4="8.8.8.8 1.1.1.1"
+ipv6="2001:4860:4860::8888 2001:148f:fffe::1"
 """
 
     res2 = """\
@@ -98,7 +98,7 @@ description="Quad9 (TLS)"
 enable_tls="1"
 port="853"
 ipv4="9.9.9.10"
-ipv6="2620:fe::10"
+ipv6=""
 hostname="dns.quad9.net"
 #pin_sha256="yioEpqeR4WtDwE9YxNVnCEkTxIjx6EEIwFSQW+lJsbc="
 ca_file="/etc/ssl/certs/ca-certificates.crt"
@@ -110,7 +110,7 @@ description="Cloudflare (TLS)"
 enable_tls="1"
 port="853"
 #tls_port="453"
-ipv4="1.1.1.1"
+ipv4=""
 ipv6="2606:4700:4700::1111"
 #hostname="dns.quad9.net"
 pin_sha256="yioEpqeR4WtDwE9YxNVnCEkTxIjx6EEIwFSQW+lJsbc="
@@ -430,12 +430,12 @@ def test_set_forwarder(
 ):
     # new
     data = {
-        "ipaddresses": {"ipv4": "2.2.2.2", "ipv6": "2001:4860:4860::2222"},
+        "ipaddresses": {"ipv4": ["2.2.2.2"], "ipv6": ["2001:4860:4860::2222"]},
         "description": "Myforward",
         "tls_type": "no",
     }
     add_forwarder(infrastructure, data, True)
-    data["name"] = "myforward_6842e9378ffb5c6be0b97309a48f6bc4"
+    data["name"] = "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e"
     data["editable"] = True
     data["tls_pin"] = ""
     data["tls_hostname"] = ""
@@ -443,8 +443,8 @@ def test_set_forwarder(
 
     # update
     data = {
-        "name": "myforward_6842e9378ffb5c6be0b97309a48f6bc4",
-        "ipaddresses": {"ipv4": "2.2.2.2", "ipv6": "2001:4860:4860::2222"},
+        "name": "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e",
+        "ipaddresses": {"ipv4": ["2.2.2.2"], "ipv6": ["2001:4860:4860::2222"]},
         "description": "Myforward (TLS)",
         "tls_type": "pin",
         "tls_pin": "12345566777",
@@ -457,7 +457,7 @@ def test_set_forwarder(
     # non-editable
     data = {
         "name": "99_google",
-        "ipaddresses": {"ipv4": "3.3.3.3", "ipv6": "2001:4860:4860::2222"},
+        "ipaddresses": {"ipv4": ["3.3.3.3"], "ipv6": ["2001:4860:4860::2222"]},
         "description": "MyGoogle",
         "tls_type": "no",
     }
@@ -477,12 +477,12 @@ def test_del_forwarder(
 
     # editable
     data = {
-        "ipaddresses": {"ipv4": "2.2.2.2", "ipv6": "2001:4860:4860::2222"},
+        "ipaddresses": {"ipv4": ["2.2.2.2"], "ipv6": ["2001:4860:4860::2222"]},
         "description": "Myforward",
         "tls_type": "no",
     }
     add_forwarder(infrastructure, data, True)
-    data["name"] = "myforward_6842e9378ffb5c6be0b97309a48f6bc4"
+    data["name"] = "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e"
     data["editable"] = True
     data["tls_pin"] = ""
     data["tls_hostname"] = ""
@@ -493,7 +493,7 @@ def test_del_forwarder(
             "module": "dns",
             "action": "del_forwarder",
             "kind": "request",
-            "data": {"name": "myforward_6842e9378ffb5c6be0b97309a48f6bc4"},
+            "data": {"name": "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e"},
         }
     )
     assert res["data"]["result"] is True
@@ -503,7 +503,7 @@ def test_del_forwarder(
         "module": "dns",
         "action": "del_forwarder",
         "kind": "notification",
-        "data": {"name": "myforward_6842e9378ffb5c6be0b97309a48f6bc4"},
+        "data": {"name": "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e"},
     }
     assert "myforward_6842e9378ffb5c6be0b97309a48f6bc4" not in [e["name"] for e in list_forwarders(infrastructure)]
 
