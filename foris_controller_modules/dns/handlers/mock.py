@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
     available_forwarders = [
         {
             "name": "99_google",
-            "ipaddresses": {"ipv4": "8.8.8.8", "ipv6": "2001:4860:4860::8888"},
+            "ipaddresses": {"ipv4": ["8.8.8.8", "1.1.1.1"], "ipv6": ["2001:4860:4860::8888", "2001:148f:fffe::1"]},
             "description": "Google",
             "editable": False,
             "tls_type": "no",
@@ -44,7 +44,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
         {
             "name": "99_cloudflare",
             "description": "Cloudflare (TLS)",
-            "ipaddresses": {"ipv4": "1.1.1.1", "ipv6": "2606:4700:4700::1111"},
+            "ipaddresses": {"ipv4": ["1.1.1.1"], "ipv6": []},
             "editable": False,
             "tls_type": "pin",
             "tls_hostname": "",
@@ -53,7 +53,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
         {
             "name": "99_quad9",
             "description": "Quad9 (TLS)",
-            "ipaddresses": {"ipv4": "9.9.9.10", "ipv6": "2620:fe::10"},
+            "ipaddresses": {"ipv4": [], "ipv6": ["2620:fe::10"]},
             "editable": False,
             "tls_type": "hostname",
             "tls_hostname": "dns.quad9.net",

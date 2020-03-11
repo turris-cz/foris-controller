@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -127,8 +127,8 @@ class DnsFiles(BaseFile):
             content = f"""\
 name="{name}.conf"
 description="{escaped_description}"
-ipv4="{ipaddresses.get("ipv4", "")}"
-ipv6="{ipaddresses.get("ipv6", "")}"
+ipv4="{" ".join(ipaddresses.get("ipv4", ""))}"
+ipv6="{" ".join(ipaddresses.get("ipv6", ""))}"
 editable="true"
 """
             if tls_type == "pin":
@@ -161,6 +161,10 @@ ca_file="/etc/ssl/certs/ca-certificates.crt"
         return True
 
     @staticmethod
+    def _split_ip_addresses_list(ip_addresses):
+        return list(filter(None, ip_addresses.split(" ")))
+
+    @staticmethod
     def get_available_forwarders():
         res = []
         with DnsFiles.file_lock.readlock:
@@ -176,10 +180,14 @@ ca_file="/etc/ssl/certs/ca-certificates.crt"
                     editable = True
                 else:
                     editable = False
+
                 record = {
                     "name": name,
                     "description": description,
-                    "ipaddresses": {"ipv4": ipv4, "ipv6": ipv6},
+                    "ipaddresses": {
+                        "ipv4": DnsFiles._split_ip_addresses_list(ipv4),
+                        "ipv6": DnsFiles._split_ip_addresses_list(ipv6),
+                    },
                     "editable": editable,
                     "tls_type": "no",
                     "tls_hostname": "",

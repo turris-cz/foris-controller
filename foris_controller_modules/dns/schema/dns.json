@@ -4,14 +4,28 @@
         "forwarder_tls_type": {"enum": ["no", "hostname", "pin"]},
         "forwarder_hostname": {"type": "string", "format": "hostname", "minLength": 1},
         "forwarder_pin": {"type": "string", "description": "base64 encoded sha256", "minLength": 1},
+        "ipv4_addresses_list": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "ipv4"
+            }
+        },
+        "ipv6_addresses_list": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "ipv6"
+            }
+        },
         "forwarder_ipaddresses": {
             "description": "at least one ip address",
             "oneOf": [
                 {
                     "type": "object",
                     "properties": {
-                        "ipv4": {"type": "string", "format": "ipv4"},
-                        "ipv6": {"enum": [""]}
+                        "ipv4": {"allOf": [{"$ref": "#/definitions/ipv4_addresses_list"},{"minItems": 1}]},
+                        "ipv6": {"allOf": [{"$ref": "#/definitions/ipv6_addresses_list"},{"maxItems": 0}]}
                     },
                     "required": ["ipv4", "ipv6"],
                     "additionalProperties": false
@@ -19,8 +33,8 @@
                 {
                     "type": "object",
                     "properties": {
-                        "ipv4": {"enum": [""]},
-                        "ipv6": {"type": "string", "format": "ipv6"}
+                        "ipv4": {"allOf": [{"$ref": "#/definitions/ipv4_addresses_list"},{"maxItems": 0}]},
+                        "ipv6": {"allOf": [{"$ref": "#/definitions/ipv6_addresses_list"},{"minItems": 1}]}
                     },
                     "required": ["ipv4", "ipv6"],
                     "additionalProperties": false
@@ -28,8 +42,8 @@
                 {
                     "type": "object",
                     "properties": {
-                        "ipv4": {"type": "string", "format": "ipv4"},
-                        "ipv6": {"type": "string", "format": "ipv6"}
+                        "ipv4": {"allOf": [{"$ref": "#/definitions/ipv4_addresses_list"},{"minItems": 1}]},
+                        "ipv6": {"allOf": [{"$ref": "#/definitions/ipv6_addresses_list"},{"minItems": 1}]}
                     },
                     "required": ["ipv4", "ipv6"],
                     "additionalProperties": false
