@@ -1,3 +1,8 @@
+1.0.11 (2020-03-13)
+-------------------
+
+* dns: allow multiple ip addresses for DNS resolver
+
 1.0.10 (2020-02-11)
 -------------------
 
