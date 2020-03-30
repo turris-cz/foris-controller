@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2019-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,8 +53,6 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             },
             "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
             "enabled": False,
-            "hidden": False,
-            "official": True,
         },
         "automation": {
             "description": {
@@ -65,7 +63,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             },
             "title": {"cs": "Domácí automatizace", "de": "Hausautomation", "en": "Home automation"},
             "enabled": False,
-            "hidden": False,
+            "labels": ["community"],
         },
         "dev-detect": {
             "description": {
@@ -81,8 +79,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 "en": "Device detection",
             },
             "enabled": False,
-            "hidden": False,
-            "official": True,
+            "labels": ["experimental"],
         },
         "dvb": {
             "description": {
@@ -95,8 +92,8 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             },
             "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
             "enabled": False,
-            "hidden": False,
             "url": "https://doc.turris.cz/doc/en/howto/dvb",
+            "labels": ["community", "advanced"],
         },
         "i_agree_honeypot": {
             "description": {
@@ -107,8 +104,6 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             },
             "title": {"cs": "Honeypot", "de": "Honigtopf", "en": "Honeypot"},
             "enabled": False,
-            "hidden": False,
-            "official": True,
             "options": {
                 "minipot": {
                     "title": "Minipots",
@@ -119,14 +114,13 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                     "title": "SSH Honeypot",
                     "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz).",
                 }
-            }
+            },
+            "labels": ["experimental"],
         },
         "i_agree_datacollect": {
             "description": {"cs": "", "de": "", "en": ""},
             "title": {"cs": "datacollect", "de": "datacollect", "en": "datacollect"},
             "enabled": False,
-            "hidden": False,
-            "official": True,
             "options": {
                 "survey": {
                     "title": "Usage Survey",
@@ -143,6 +137,49 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     # actual stored user lists
     USER_LISTS = {}
+
+    OPTION_LABELS = {
+        "advanced": {
+            "title": "Advanced users",
+            "description": "This functionality is usable only for advanced users.",
+            "severity": "secondary"
+        },
+        "community": {
+            "title": "Community",
+            "description": "This package list is not officially supported. Turris team has no responsibility for stability of software that is part of this list.",
+            "severity": "success"
+        },
+        "experimental": {
+            "title": "Experimental",
+            "description": "Software that is part of this package list is considered experimental. Problems when using it can be expected.",
+            "severity": "danger"
+        },
+        "deprecated": {
+            "title": "Deprecated",
+            "description": "This package list and/or software that provides are planned to be removed. It is advised to not use it.",
+            "severity": "warning"
+        },
+        "storage": {
+            "title": "External storage",
+            "description": "External storage use is highly suggested for use of this package list",
+            "severity": "primary"
+        },
+        "high_memory": {
+            "title": "High memory usage",
+            "description": "Software in this package list consumes possibly higher amount of memory to run. It is not suggested to use it with small memory.",
+            "severity": "info"
+        },
+        "high_storage": {
+            "title": "High storage usage",
+            "description": "Software in this package list consumes possibly higher amount of storage space to install. It is not suggested to use it with small storages such as internal storage of Turris 1.x and SD cards with less than 1GB of storage.",
+            "severity": "info"
+        },
+        "netload": {
+            "title": "Network load",
+            "description": "This functionality can decreases network performance. That can be felt only on faster uplinks but because of that it still can be decremental to some users.",
+            "severity": "secondary"
+        }
+    }
 
     languages = [
         {"code": "cs", "enabled": True},
@@ -256,11 +293,27 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         return opt_data.get("default", False)
 
     @staticmethod
+    def _get_labels(labels):
+        desc = []
+        for label in labels:
+            if label in MockUpdaterHandler.OPTION_LABELS:
+                _d = MockUpdaterHandler.OPTION_LABELS[label]
+                record = {
+                    "name": label,
+                    "title": _d["title"],
+                    "description": _d["description"],
+                    "severity": _d.get("severity", "primary"),
+                }
+                desc.append(record)
+
+        return desc
+
+    @staticmethod
     @logger_wrapper(logger)
     def get_user_lists(lang):
         """ Mocks getting user lists
         :param lang: language en/cs/de
-        :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", "hidden": True}, ...]
+        :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", ...]
         :rtype: dict
         """
         exported = []
@@ -271,17 +324,17 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                     "title": data["title"],
                     "description": data["description"],
                     "enabled": MockUpdaterHandler._is_option_enabled(list_name, opt_name, data),
+                    "labels": MockUpdaterHandler._get_labels(data.get("labels", [])),
                 }
                 for opt_name, data in lst.get("options", {}).items()
             ]
             item = {
                 "name": list_name,
-                "hidden": lst["hidden"],
                 "enabled": MockUpdaterHandler.USER_LISTS.get(list_name, lst)["enabled"],
                 "description": lst["description"].get(lang, lst["description"]["en"]),
                 "title": lst["title"].get(lang, lst["title"]["en"]),
-                "official": lst.get("official", False),
                 "options": opts,
+                "labels": MockUpdaterHandler._get_labels(lst.get("labels", [])),
             }
             if lst.get("url") is not None:
                 item["url"] = lst["url"]

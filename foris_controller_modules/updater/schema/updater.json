@@ -13,14 +13,13 @@
                 "properties": {
                     "name": {"$ref": "#/definitions/updater_user_list_name"},
                     "enabled": {"type": "boolean"},
-                    "hidden": {"type": "boolean"},
                     "title": {"type": "string"},
                     "description": {"type": "string"},
                     "options": {"$ref": "#/definitions/updater_user_list_options_get"},
-                    "official": {"type": "boolean"},
+                    "labels": {"$ref": "#/definitions/updater_user_list_labels"},
                     "url": {"type": "string"}
                 },
-                "required": ["enabled", "name", "title", "description", "hidden", "options", "official"],
+                "required": ["enabled", "name", "title", "description", "options", "labels"],
                 "additionalProperties": false
             }
         },
@@ -177,10 +176,11 @@
                 "name": {"type": "string"},
                 "title": {"type": "string"},
                 "description": {"type": "string"},
-                "enabled": {"type": "boolean"}
+                "enabled": {"type": "boolean"},
+                "labels": {"$ref": "#/definitions/updater_user_list_labels"}
             },
             "additionalProperties": false,
-            "required": ["name", "title", "description", "enabled"]
+            "required": ["name", "title", "description", "enabled", "labels"]
         },
         "updater_user_list_options_get": {
             "type": "array",
@@ -200,6 +200,24 @@
             "items": {
                 "$ref": "#/definitions/updater_user_list_option_set"
             }
+        },
+        "updater_user_list_labels": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/updater_user_list_label"}
+        },
+        "label_severity": {"enum":
+            ["danger", "warning", "info", "success", "primary", "secondary", "light", "dark"]
+        },
+        "updater_user_list_label": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "title": {"type": "string"},
+                "description": {"type": "string"},
+                "severity": {"$ref": "#/definitions/label_severity"}
+            },
+            "additionalProperties": false,
+            "required": ["title", "description", "severity"]
         }
     },
     "oneOf": [

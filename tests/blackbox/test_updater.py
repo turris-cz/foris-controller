@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -135,9 +135,8 @@ def test_get_settings(
     assert "name" in user_list_keys
     assert "title" in user_list_keys
     assert "description" in user_list_keys
-    assert "hidden" in user_list_keys
     assert "options" in user_list_keys
-    assert "official" in user_list_keys
+    assert "labels" in user_list_keys
     if "url" in user_list_keys:
         assert isinstance(res["data"]["user_lists"][0]["url"], str)
 

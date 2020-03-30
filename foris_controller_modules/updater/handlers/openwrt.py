@@ -88,7 +88,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         """ Returns user list and translated messages and titles
 
         :param lang: language en/cs/de
-        :returns: [{"name": "..", "enabled": True, "title": "..", "msg": "..", "hidden": True}, ...]
+        :returns: [{"name": "..", "enabled": True, "title": "..", "msg": "..", ...]
         :rtype: dict
         """
         return self.updater.get_user_lists(lang)

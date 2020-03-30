@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -150,6 +150,7 @@ class Updater(object):
                     "title": data["title"],
                     "description": data["description"],
                     "enabled": data.get("enabled", data.get("default", False)),
+                    "labels": data["labels"],
                 }
             )
 
@@ -166,11 +167,10 @@ class Updater(object):
             item = {
                 "name": lst_name,
                 "enabled": lst["enabled"],
-                "hidden": lst["hidden"],
                 "title": lst["title"],
                 "description": lst["description"],
                 "options": Updater._get_userlist_options(lst),
-                "official": lst["official"],
+                "labels": lst["labels"],
             }
             if lst["url"] is not None:
                 item["url"] = lst["url"]
