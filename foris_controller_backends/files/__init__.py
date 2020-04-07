@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 server_uplink_lock = RWLock(app_info["lock_backend"])
 
 FILE_ROOT = os.environ.get("FORIS_FILE_ROOT", "")
-logger.debug("File root is set to '%s'." % str(FILE_ROOT))
+logger.debug("File root is set to '%s'.", FILE_ROOT)
 
 
 def inject_file_root(path):
@@ -77,10 +77,10 @@ class BaseFile(object):
         :rtype: str
         """
         path = inject_file_root(path)
-        logger.debug("Trying to read file '%s'" % path)
+        logger.debug("Trying to read file '%s'", path)
         with open(path) as f:
             content = f.read()
-        logger.debug("File '%s' was successfully read." % path)
+        logger.debug("File '%s' was successfully read.", path)
         logger.debug("content: %s" % content)
         return content
 
@@ -100,7 +100,7 @@ class BaseFile(object):
         content = self._file_content(path)
         match = re.search(regex, content, re.MULTILINE)
         if not match:
-            logger.error("Failed to parse content of the file.")
+            logger.error("Failed to parse content of the file '%s'", path)
             raise FailedToParseFileContent(path, content)
         return match.group(*groups)
 
@@ -112,12 +112,12 @@ class BaseFile(object):
         :returns: file content
         """
         path = inject_file_root(path)
-        logger.debug("Trying to write to file '%s'" % path)
+        logger.debug("Trying to write to file '%s'", path)
         with open(path, "w") as f:
             f.write(content)
             f.flush()
-        logger.debug("File '%s' was successfully updated." % path)
-        logger.debug("content: %s" % content)
+        logger.debug("File '%s' was successfully updated.", path)
+        logger.debug("content: %s", content)
         return content
 
     def delete_directory(self, path: str):
@@ -127,9 +127,9 @@ class BaseFile(object):
 
         """
         path = inject_file_root(path)
-        logger.debug("Trying to delete '%s'" % path)
+        logger.debug("Trying to delete '%s'", path)
         shutil.rmtree(path)
-        logger.debug("'%s' was successfully deleted" % path)
+        logger.debug("'%s' was successfully deleted", path)
 
     def delete_file(self, path: str):
         """ Deletes a file on path (or raises an exception)
@@ -138,9 +138,9 @@ class BaseFile(object):
 
         """
         path = inject_file_root(path)
-        logger.debug("Trying to delete '%s'" % path)
+        logger.debug("Trying to delete '%s'", path)
         os.unlink(path)
-        logger.debug("'%s' was successfully deleted" % path)
+        logger.debug("'%s' was successfully deleted", path)
 
 
 class BaseMatch(object):
@@ -155,6 +155,6 @@ class BaseMatch(object):
         res = []
         for file_match in file_matches:
             match = inject_file_root(file_match)
-            logger.debug("Listing '%s'" % match)
+            logger.debug("Listing '%s'", match)
             res.extend(glob.glob(match))
         return res
