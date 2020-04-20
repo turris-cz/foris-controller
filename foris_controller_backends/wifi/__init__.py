@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -436,17 +436,11 @@ class WifiCmds(BaseCmdLine):
                 # detection can be performed only when empty wireless is present
                 # import_data write to final conf immediatelly (not affected by commits)
                 backend.import_data("", "wireless")
-                try:
-                    # TODO detect should deprecated in TurrisOS >= 4.0
-                    # so this error handling can be removed later
-                    new_data, _ = self._run_command_and_check_retval(["/sbin/wifi", "detect"], 0)
-                    backend.import_data(new_data.decode("utf-8"), "wireless")
-                except BackendCommandFailed:
-                    # wifi config creates /etc/config/wireless and does not print output to stdout
-                    self._run_command_and_check_retval(["/sbin/wifi", "config"], 0)
+                # wifi config creates /etc/config/wireless and does not print output to stdout
+                self._run_command_and_check_retval(["/sbin/wifi", "config"], 0)
 
         except Exception as e:
-            logger.error("Exception occured during the reset '%s'" % str(e))
+            logger.error("Exception occured during the reset '%r'", e)
             # try to restore the backup
             with UciBackend() as backend:
                 backend.import_data(backup, "wireless")
