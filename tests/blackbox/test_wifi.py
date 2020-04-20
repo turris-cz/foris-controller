@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ DEFAULT_CONFIG = [
 ]
 
 
-@pytest.fixture(scope="function", params=["detect", "config"])
+@pytest.fixture(scope="function", params=["config"])
 def wifi_opt(request):
     WIFI_OPT_PATH = "/tmp/foris-controller-tests-wifi-detect-opt"
     with open(WIFI_OPT_PATH, "w") as f:
