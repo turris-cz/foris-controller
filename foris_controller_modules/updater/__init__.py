@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ class UpdaterModule(BaseModule):
 
     def action_get_settings(self, data):
         """ Get current updater settings
+
         :param data: supposed to be {'lang': }
         :type data: dict
         :returns: current updater settings
@@ -53,6 +54,29 @@ class UpdaterModule(BaseModule):
                 data.get("approval_settings", None),
                 data["enabled"],
             )
+        }
+
+    def action_get_package_lists(self, data):
+        """ Get current package lists settings
+
+        :param data: supposed to be {'lang': }
+        :type data: dict
+        :returns: current package lists
+        :rtype: dict
+
+        """
+        return {"package_lists": self.handler.get_package_lists(data["lang"])}
+
+    def action_update_package_lists(self, data):
+        """ Updates package lists settings
+
+        :param data: data containing new package lists settings
+        :type data: dict
+        :returns: {"result": True/False}
+        :rtype: dict
+        """
+        return {
+            "result": self.handler.update_package_lists(data["package_lists"])
         }
 
     def action_resolve_approval(self, data):
@@ -92,8 +116,9 @@ class UpdaterModule(BaseModule):
     [
         "get_settings",
         "update_settings",
+        "get_package_lists",
+        "update_package_lists",
         "get_approval",
-        "get_user_lists",
         "get_languages",
         "resolve_approval",
         "run",

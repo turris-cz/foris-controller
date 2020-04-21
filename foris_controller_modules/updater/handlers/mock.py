@@ -40,7 +40,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     # Enabled flag in option is there only for testing purposes
     # On real system enabled/disabled status will be written in uci config file
-    DEFAULT_USERLISTS = {
+    DEFAULT_PACKAGE_LISTS = {
         "api-token": {
             "description": {
                 "en": u"A Foris plugin allowing to manage remote API access tokens"
@@ -136,7 +136,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     }
 
     # actual stored user lists
-    USER_LISTS = {}
+    PACKAGE_LISTS = {}
 
     OPTION_LABELS = {
         "advanced": {
@@ -209,7 +209,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         result = {
             "approval_settings": {"status": self.approvals_status},
             "enabled": self.enabled,
-            "user_lists": self.get_user_lists(lang),
+            "user_lists": [],  # don't return package lists, return empty list for compatibility instead
         }
         if self.approvals_delay:
             result["approval_settings"]["delay"] = self.approvals_delay
@@ -221,7 +221,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         """ Mocks update updater settings
 
         :param user_lists: new user-list set
-        :type user_lists: list of dictionaries
+        :type user_lists: list of dictionaries, deprecated and ignored here
         :param languages: languages which will be installed
         :type languages: list
         :param approvals_settings: new approval settings
@@ -232,22 +232,6 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :rtype: bool
         """
 
-        if user_lists is not None:
-            MockUpdaterHandler.USER_LISTS = {}
-            for lst in user_lists:
-                list_name = lst["name"]
-                MockUpdaterHandler.USER_LISTS[list_name] = copy.deepcopy(MockUpdaterHandler.DEFAULT_USERLISTS[list_name])
-                MockUpdaterHandler.USER_LISTS[list_name]["enabled"] = True
-
-                default_list_options = MockUpdaterHandler.USER_LISTS[list_name].get("options", {})
-                opts = {}
-                for opt in lst.get("options", {}):
-                    if opt["name"] in default_list_options:
-                        opts[opt["name"]] = default_list_options[opt["name"]]
-                        opts[opt["name"]]["enabled"] = opt["enabled"]
-
-                MockUpdaterHandler.USER_LISTS[list_name]["options"] = opts
-
         if languages is not None:
             for record in MockUpdaterHandler.languages:
                 record["enabled"] = record["code"] in languages
@@ -256,6 +240,68 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             MockUpdaterHandler.approvals_status = approvals_settings["status"]
         MockUpdaterHandler.enabled = enabled
         MockUpdaterHandler.guide_set.set(True)
+
+        return True
+
+    @staticmethod
+    @logger_wrapper(logger)
+    def get_package_lists(lang):
+        """ Mocks getting package lists
+
+        :param lang: language en/cs/de
+        :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", "options": [], "labels": []]
+        :rtype: dict
+        """
+        exported = []
+        for list_name, lst in MockUpdaterHandler.DEFAULT_PACKAGE_LISTS.items():
+            opts = [
+                {
+                    "name": opt_name,
+                    "title": data["title"],
+                    "description": data["description"],
+                    "enabled": MockUpdaterHandler._is_option_enabled(list_name, opt_name, data),
+                    "labels": MockUpdaterHandler._get_labels(data.get("labels", [])),
+                }
+                for opt_name, data in lst.get("options", {}).items()
+            ]
+            item = {
+                "name": list_name,
+                "enabled": MockUpdaterHandler.PACKAGE_LISTS.get(list_name, lst)["enabled"],
+                "description": lst["description"].get(lang, lst["description"]["en"]),
+                "title": lst["title"].get(lang, lst["title"]["en"]),
+                "options": opts,
+                "labels": MockUpdaterHandler._get_labels(lst.get("labels", [])),
+            }
+            if lst.get("url") is not None:
+                item["url"] = lst["url"]
+            exported.append(item)
+
+        return exported
+
+    def update_package_lists(self, package_lists):
+        """ Update package lists
+
+        :param package_lists: new package list settings
+        :type package_lists: list of dictionaries
+        :returns: True on success False otherwise
+        :rtype: bool
+        """
+        if package_lists is not None:
+            MockUpdaterHandler.PACKAGE_LISTS = {}
+            for lst in package_lists:
+                list_name = lst["name"]
+                MockUpdaterHandler.PACKAGE_LISTS[list_name] = copy.deepcopy(MockUpdaterHandler.DEFAULT_PACKAGE_LISTS[list_name])
+                MockUpdaterHandler.PACKAGE_LISTS[list_name]["enabled"] = True
+
+                default_list_options = MockUpdaterHandler.PACKAGE_LISTS[list_name].get("options", {})
+                opts = {}
+                # options are not mandatory, therefore the explicit get
+                for opt in lst.get("options", {}):
+                    if opt["name"] in default_list_options:
+                        opts[opt["name"]] = default_list_options[opt["name"]]
+                        opts[opt["name"]]["enabled"] = opt["enabled"]
+
+                MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"] = opts
 
         return True
 
@@ -286,9 +332,9 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @staticmethod
     def _is_option_enabled(list_name, opt_name, opt_data):
-        if (list_name in MockUpdaterHandler.USER_LISTS and
-                opt_name in MockUpdaterHandler.USER_LISTS[list_name]["options"]):
-            return MockUpdaterHandler.USER_LISTS[list_name]["options"][opt_name]["enabled"]
+        if (list_name in MockUpdaterHandler.PACKAGE_LISTS and
+                opt_name in MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"]):
+            return MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"][opt_name]["enabled"]
 
         return opt_data.get("default", False)
 
@@ -297,50 +343,16 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         desc = []
         for label in labels:
             if label in MockUpdaterHandler.OPTION_LABELS:
-                _d = MockUpdaterHandler.OPTION_LABELS[label]
+                data = MockUpdaterHandler.OPTION_LABELS[label]
                 record = {
                     "name": label,
-                    "title": _d["title"],
-                    "description": _d["description"],
-                    "severity": _d.get("severity", "primary"),
+                    "title": data["title"],
+                    "description": data["description"],
+                    "severity": data.get("severity", "primary"),
                 }
                 desc.append(record)
 
         return desc
-
-    @staticmethod
-    @logger_wrapper(logger)
-    def get_user_lists(lang):
-        """ Mocks getting user lists
-        :param lang: language en/cs/de
-        :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", ...]
-        :rtype: dict
-        """
-        exported = []
-        for list_name, lst in MockUpdaterHandler.DEFAULT_USERLISTS.items():
-            opts = [
-                {
-                    "name": opt_name,
-                    "title": data["title"],
-                    "description": data["description"],
-                    "enabled": MockUpdaterHandler._is_option_enabled(list_name, opt_name, data),
-                    "labels": MockUpdaterHandler._get_labels(data.get("labels", [])),
-                }
-                for opt_name, data in lst.get("options", {}).items()
-            ]
-            item = {
-                "name": list_name,
-                "enabled": MockUpdaterHandler.USER_LISTS.get(list_name, lst)["enabled"],
-                "description": lst["description"].get(lang, lst["description"]["en"]),
-                "title": lst["title"].get(lang, lst["title"]["en"]),
-                "options": opts,
-                "labels": MockUpdaterHandler._get_labels(lst.get("labels", [])),
-            }
-            if lst.get("url") is not None:
-                item["url"] = lst["url"]
-            exported.append(item)
-
-        return exported
 
     @logger_wrapper(logger)
     def get_languages(self):

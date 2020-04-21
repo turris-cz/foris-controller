@@ -85,15 +85,15 @@ def updated_match_expected(result, new_settings):
     assert match_subdict(new_settings, result["data"])
 
 
-def match_userlist_options(result, new_settings, defaults):
-    """Check if returned user lists options match expected settings"""
-    list_data = result["data"].pop("user_lists")
+def match_package_list_options(result, new_settings, defaults):
+    """Check if returned package lists options match expected settings"""
+    list_data = result["data"].pop("package_lists")
 
     new_settings_options = {
         ulist["name"]: {
             opt["name"] for opt in ulist.get("options", []) if opt["enabled"]
         }
-        for ulist in new_settings["user_lists"]
+        for ulist in new_settings["package_lists"]
     }
     list_options = {
         ulist["name"]: {
@@ -129,16 +129,7 @@ def test_get_settings(
     assert "languages" in res["data"].keys()
     assert {"enabled", "code"} == set(res["data"]["languages"][0].keys())
     assert "user_lists" in res["data"].keys()
-
-    user_list_keys = res["data"]["user_lists"][0].keys()
-    assert "enabled" in user_list_keys
-    assert "name" in user_list_keys
-    assert "title" in user_list_keys
-    assert "description" in user_list_keys
-    assert "options" in user_list_keys
-    assert "labels" in user_list_keys
-    if "url" in user_list_keys:
-        assert isinstance(res["data"]["user_lists"][0]["url"], str)
+    assert res["data"]["user_lists"] == []
 
     assert "approval_settings" in res["data"].keys()
     assert "status" in res["data"]["approval_settings"].keys()
@@ -151,7 +142,6 @@ def test_update_settings_clear(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -222,9 +212,7 @@ def test_update_settings_clear_and_write(
         {
             "enabled": True,
             "approval_settings": {"status": "on"},
-            "user_lists": [
-                {"name": "dvb"}
-            ],
+            "user_lists": [],
             "languages": ["cs", "de", "nb_NO"],
         }
     )
@@ -270,7 +258,75 @@ def test_update_settings_languages(
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
-def test_update_settings_with_defaults(
+def test_update_settings_deprecated_user_lists(
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+):
+    """Test that old api ignores setting of user lists"""
+
+    settings = {
+        "enabled": True,
+        "approval_settings": {"status": "on"},
+        "user_lists": ["i_agree_honeypot", "dvb"],
+        "languages": ["cs", "de", "nb_NO"],
+    }
+
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": settings,
+        }
+    )
+    assert "result" in res["data"] and res["data"]["result"] is True
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "get_settings",
+            "kind": "request",
+            "data": {"lang": "en"},
+        }
+    )
+    assert res["data"]["user_lists"] == []
+
+
+@pytest.mark.parametrize("lang", ["en", "cs", "de", "nb_NO", "xx"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_get_package_lists(
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    start_buses,
+    device,
+    turris_os_version,
+    lang
+):
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "get_package_lists",
+            "kind": "request",
+            "data": {"lang": lang},
+        }
+    )
+    package_list_keys = res["data"]["package_lists"][0].keys()
+    assert "enabled" in package_list_keys
+    assert "name" in package_list_keys
+    assert "title" in package_list_keys
+    assert "description" in package_list_keys
+    assert "options" in package_list_keys
+    assert "labels" in package_list_keys
+    if "url" in package_list_keys:
+        assert isinstance(res["data"]["package_lists"][0]["url"], str)
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_package_lists_with_defaults(
     updater_languages,
     updater_userlists,
     uci_configs_init,
@@ -280,19 +336,16 @@ def test_update_settings_with_defaults(
     turris_os_version,
 ):
     settings = {
-        "enabled": True,
-        "approval_settings": {"status": "on"},
-        "user_lists": [
+        "package_lists": [
             {"name": "i_agree_honeypot", "options": [{"name": "haas", "enabled": True}]}
-        ],
-        "languages": ["cs"],
+        ]
     }
     defaults = {"i_agree_honeypot": {"minipot"}}
 
     res = infrastructure.process_message(
         {
             "module": "updater",
-            "action": "update_settings",
+            "action": "update_package_lists",
             "kind": "request",
             "data": settings,
         }
@@ -301,18 +354,17 @@ def test_update_settings_with_defaults(
     res = infrastructure.process_message(
         {
             "module": "updater",
-            "action": "get_settings",
+            "action": "get_package_lists",
             "kind": "request",
             "data": {"lang": "en"},
         }
     )
 
-    match_userlist_options(res, settings, defaults)
+    match_package_list_options(res, settings, defaults)
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
-def test_update_settings_overrride_defaults(
-    updater_languages,
+def test_update_package_lists_override_defaults(
     updater_userlists,
     uci_configs_init,
     infrastructure,
@@ -321,20 +373,17 @@ def test_update_settings_overrride_defaults(
     turris_os_version,
 ):
     settings = {
-        "enabled": True,
-        "approval_settings": {"status": "on"},
-        "user_lists": [
+        "package_lists": [
             {"name": "i_agree_honeypot", "options": [{"name": "minipot", "enabled": False}]},
             {"name": "i_agree_datacollect", "options": [{"name": "survey", "enabled": True}]},
-        ],
-        "languages": ["cs"],
+        ]
     }
     defaults = {"i_agree_datacollect": {"dynfw"}}
 
     res = infrastructure.process_message(
         {
             "module": "updater",
-            "action": "update_settings",
+            "action": "update_package_lists",
             "kind": "request",
             "data": settings,
         }
@@ -343,13 +392,13 @@ def test_update_settings_overrride_defaults(
     res = infrastructure.process_message(
         {
             "module": "updater",
-            "action": "get_settings",
+            "action": "get_package_lists",
             "kind": "request",
             "data": {"lang": "en"},
         }
     )
 
-    match_userlist_options(res, settings, defaults)
+    match_package_list_options(res, settings, defaults)
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)

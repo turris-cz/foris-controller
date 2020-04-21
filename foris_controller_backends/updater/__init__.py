@@ -41,7 +41,7 @@ class UpdaterUci(object):
 
         res = {
             "enabled": svupdater_autorun.enabled(),
-            "user_lists": Updater.get_user_lists(lang),
+            "user_lists": [],  # don't return package lists, return empty list for compatibility instead
             "languages": svupdater_l10n.languages(),
             "approval_settings": {"status": "on" if svupdater_autorun.approvals() else "off"},
         }
@@ -57,7 +57,7 @@ class UpdaterUci(object):
     def get_enabled(self) -> typing.Optional[bool]:
         return svupdater_autorun.enabled()
 
-    def update_settings(self, user_lists, languages, approvals_status, approvals_delay, enabled):
+    def update_settings(self, languages, approvals_status, approvals_delay, enabled):
         svupdater_autorun.set_enabled(enabled)
 
         if approvals_status is not None:
@@ -71,9 +71,6 @@ class UpdaterUci(object):
                 svupdater_autorun.set_auto_approve_time(approvals_delay)
             else:
                 raise NotImplementedError()
-
-        if user_lists is not None:
-            svupdater_lists.update_pkglists(self._jsonschema_to_svupdater(user_lists))
 
         if languages is not None:
             svupdater_l10n.update_languages(languages)
@@ -92,6 +89,10 @@ class UpdaterUci(object):
             except svupdater_exceptions.ExceptionUpdaterDisabled:
                 pass  # failed to run updater, but settings were updated
 
+        return True
+
+    def update_package_lists(self, package_lists):
+        svupdater_lists.update_pkglists(self._jsonschema_to_svupdater(package_lists))
         return True
 
     def _jsonschema_to_svupdater(self, user_lists):
@@ -138,39 +139,49 @@ class Updater(object):
             return {"present": False}
 
     @staticmethod
-    def _get_userlist_options(lst):
-        if "options" not in lst:
-            return []
+    def _get_options(lst):
+        """Reformat key-value dictionary into flat structure"""
 
-        res = []
-        for name, data in lst["options"].items():
-            res.append(
-                {
-                    "name": name,
-                    "title": data["title"],
-                    "description": data["description"],
-                    "enabled": data.get("enabled", data.get("default", False)),
-                    "labels": data["labels"],
-                }
-            )
-
-        return res
+        return [
+            {
+                "name": name,
+                "title": data["title"],
+                "description": data["description"],
+                "enabled": data.get("enabled", data.get("default", False)),
+                "labels": Updater._get_labels(data["labels"]),
+            }
+            for name, data in lst.get("options", {}).items()
+        ]
 
     @staticmethod
-    def get_user_lists(lang):
-        logger.debug("Getting user lists for '%s'", lang)
-        user_lists = svupdater_lists.pkglists(lang)
-        logger.debug("Userlists obtained: %s", user_lists)
+    def _get_labels(labels):
+        """Reformat nested dictionary into flat structure"""
+
+        return [
+            {
+                "name": name,
+                "title": data["title"],
+                "description": data["description"],
+                "severity": data["severity"],
+            }
+            for name, data in labels.items()
+        ]
+
+    @staticmethod
+    def get_package_lists(lang):
+        logger.debug("Getting package lists for '%s'", lang)
+        package_lists = svupdater_lists.pkglists(lang)
+        logger.debug("Package lists obtained: %s", package_lists)
 
         exported = []
-        for lst_name, lst in user_lists.items():
+        for lst_name, lst in package_lists.items():
             item = {
                 "name": lst_name,
                 "enabled": lst["enabled"],
                 "title": lst["title"],
                 "description": lst["description"],
-                "options": Updater._get_userlist_options(lst),
-                "labels": lst["labels"],
+                "options": Updater._get_options(lst),
+                "labels": Updater._get_labels(lst["labels"]),
             }
             if lst["url"] is not None:
                 item["url"] = lst["url"]

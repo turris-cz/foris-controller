@@ -5,31 +5,50 @@
             "type": "integer",
             "minimum": 1, "maximum": 774
         },
-        "updater_user_list_name": {"type": "string", "minLength": 1},
+        "updater_package_list_name": {"type": "string", "minLength": 1},
         "updater_user_lists_get": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "name": {"$ref": "#/definitions/updater_user_list_name"},
+                    "name": {"$ref": "#/definitions/updater_package_list_name"},
+                    "enabled": {"type": "boolean"},
+                    "hidden": {"type": "boolean"},
+                    "title": {"type": "string"},
+                    "msg": {"type": "string"}
+                },
+                "required": ["enabled", "name", "title", "msg", "hidden"],
+                "additionalProperties": false
+            }
+        },
+        "updater_user_lists_set": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/updater_package_list_name"}
+        },
+        "updater_package_lists_get": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"$ref": "#/definitions/updater_package_list_name"},
                     "enabled": {"type": "boolean"},
                     "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "options": {"$ref": "#/definitions/updater_user_list_options_get"},
-                    "labels": {"$ref": "#/definitions/updater_user_list_labels"},
+                    "options": {"$ref": "#/definitions/updater_package_list_options_get"},
+                    "labels": {"$ref": "#/definitions/updater_package_list_labels"},
                     "url": {"type": "string"}
                 },
                 "required": ["enabled", "name", "title", "description", "options", "labels"],
                 "additionalProperties": false
             }
         },
-        "updater_user_lists_set": {
+        "updater_package_lists_set": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "name": {"$ref": "#/definitions/updater_user_list_name"},
-                    "options": {"$ref": "#/definitions/updater_user_list_options_set"}
+                    "name": {"$ref": "#/definitions/updater_package_list_name"},
+                    "options": {"$ref": "#/definitions/updater_package_list_options_set"}
                 },
                 "required": ["name"],
                 "additionalProperties": false
@@ -170,54 +189,49 @@
                 }
             ]
         },
-        "updater_user_list_option_get": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "title": {"type": "string"},
-                "description": {"type": "string"},
-                "enabled": {"type": "boolean"},
-                "labels": {"$ref": "#/definitions/updater_user_list_labels"}
-            },
-            "additionalProperties": false,
-            "required": ["name", "title", "description", "enabled", "labels"]
-        },
-        "updater_user_list_options_get": {
-            "type": "array",
-            "items": {"$ref": "#/definitions/updater_user_list_option_get"}
-        },
-        "updater_user_list_option_set": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "enabled": {"type": "boolean"}
-            },
-            "additionalProperties": false,
-            "required": ["name", "enabled"]
-        },
-        "updater_user_list_options_set": {
+        "updater_package_list_options_get": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/updater_user_list_option_set"
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "enabled": {"type": "boolean"},
+                    "labels": {"$ref": "#/definitions/updater_package_list_labels"}
+                },
+                "additionalProperties": false,
+                "required": ["name", "title", "description", "enabled", "labels"]
             }
         },
-        "updater_user_list_labels": {
+        "updater_package_list_options_set": {
             "type": "array",
-            "items": {"$ref": "#/definitions/updater_user_list_label"}
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "enabled": {"type": "boolean"}
+                },
+                "additionalProperties": false,
+                "required": ["name", "enabled"]
+            }
+        },
+        "updater_package_list_labels": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "severity": {"$ref": "#/definitions/label_severity"}
+                },
+                "additionalProperties": false,
+                "required": ["title", "description", "severity"]
+            }
         },
         "label_severity": {"enum":
             ["danger", "warning", "info", "success", "primary", "secondary", "light", "dark"]
-        },
-        "updater_user_list_label": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "title": {"type": "string"},
-                "description": {"type": "string"},
-                "severity": {"$ref": "#/definitions/label_severity"}
-            },
-            "additionalProperties": false,
-            "required": ["title", "description", "severity"]
         }
     },
     "oneOf": [
@@ -269,7 +283,43 @@
             "required": ["data"]
         },
         {
-            "description": "request to obrain information whether updater is enabled",
+            "description": "request to get package lists",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_package_lists"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "lang": {"$ref": "#/definitions/locale_name"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["lang"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to get package lists",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_package_lists"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "package_lists": {"$ref": "#/definitions/updater_package_lists_get"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["package_lists"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to obtain information whether updater is running",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["request"]},
@@ -278,7 +328,7 @@
             "additionalProperties": false
         },
         {
-            "description": "reply to obrain information whether updater is enabled",
+            "description": "reply to obtain information whether updater is running",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["reply"]},
@@ -295,6 +345,42 @@
                     },
                     "additionalProperties": false,
                     "required": ["enabled"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to update package lists settings",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_package_lists"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "package_lists": {"$ref": "#/definitions/updater_package_lists_set"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["package_lists"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to update package lists settings",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_package_lists"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
                 }
             },
             "additionalProperties": false,
@@ -353,7 +439,7 @@
             "required": ["data"]
         },
         {
-            "description": "request to resolv approval",
+            "description": "request to resolve approval",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["request"]},
@@ -372,7 +458,7 @@
             "required": ["data"]
         },
         {
-            "description": "reply to resolv approval",
+            "description": "reply to resolve approval",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["reply"]},

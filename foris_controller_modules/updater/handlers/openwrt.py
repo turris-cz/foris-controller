@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017-20 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,9 +58,30 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         """
         approvals_status = approvals_settings["status"] if approvals_settings else None
         approvals_delay = approvals_settings.get("delay", None) if approvals_settings else None
+
+        # user_list are silently dropped as we don't use it anymore here
+        # function signature remains for backward compatibility
         return OpenwrtUpdaterHandler.uci.update_settings(
-            user_lists, languages, approvals_status, approvals_delay, enabled
+            languages, approvals_status, approvals_delay, enabled
         )
+
+    @logger_wrapper(logger)
+    def get_package_lists(self, lang):
+        """ Returns package lists with their options
+        :param lang: language en/cs/de
+        :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", "options": [], "labels": []]
+        :rtype: dict
+        """
+        return self.updater.get_package_lists(lang)
+
+    @logger_wrapper(logger)
+    def update_package_lists(self, package_lists):
+        """ Update package lists
+
+        :param package_lists: new package-lists set
+        :type package_lists: dictionary
+        """
+        return OpenwrtUpdaterHandler.uci.update_package_lists(package_lists)
 
     @logger_wrapper(logger)
     def get_approval(self):
@@ -82,16 +103,6 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :rtype: bool
         """
         return self.updater.resolve_approval(hash, solution)
-
-    @logger_wrapper(logger)
-    def get_user_lists(self, lang):
-        """ Returns user list and translated messages and titles
-
-        :param lang: language en/cs/de
-        :returns: [{"name": "..", "enabled": True, "title": "..", "msg": "..", ...]
-        :rtype: dict
-        """
-        return self.updater.get_user_lists(lang)
 
     @logger_wrapper(logger)
     def get_languages(self):
