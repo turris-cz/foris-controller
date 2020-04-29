@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,9 +25,6 @@ from foris_controller_testtools.fixtures import (
     infrastructure,
     notify_api,
     notify_cmd,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 
@@ -38,7 +35,7 @@ def extra_module_paths():
     return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
 
 
-def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, start_buses):
+def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure):
     filters = [("web", "set_language")]
     notifications = infrastructure.get_notifications(filters=filters)
     retval, stdout, stderr = notify_cmd("web", "set_language", {"language": "en"}, True)
@@ -73,7 +70,7 @@ def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure, start_buses):
     }
 
 
-def test_notify_api(uci_configs_init, infrastructure, start_buses, notify_api):
+def test_notify_api(uci_configs_init, infrastructure, notify_api):
     filters = [("web", "set_language"), ("echo", "echo")]
     notify = notify_api
     notifications = infrastructure.get_notifications(filters=filters)

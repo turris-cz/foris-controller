@@ -28,9 +28,6 @@ from foris_controller_testtools.fixtures import (
     init_script_result,
     network_restart_command,
     UCI_CONFIG_DIR_PATH,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 from foris_controller_testtools.utils import (
     match_subdict,
@@ -148,7 +145,7 @@ def wifi_opt(request):
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get_settings(file_root_init, uci_configs_init, infrastructure, start_buses):
+def test_get_settings(file_root_init, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
     )
@@ -160,12 +157,7 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure, start_bu
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_update_settings(
-    init_script_result,
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
+    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
 ):
     filters = [("wifi", "update_settings")]
 
@@ -349,12 +341,7 @@ def test_update_settings(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_uci(
-    init_script_result,
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
+    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
 ):
 
     uci = get_uci_module(infrastructure.name)
@@ -607,7 +594,7 @@ def test_update_settings_uci(
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_wrong_update(file_root_init, uci_configs_init, infrastructure, start_buses):
+def test_wrong_update(file_root_init, uci_configs_init, infrastructure):
     def update(*devices):
         res = infrastructure.process_message(
             {
@@ -770,9 +757,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, start_bu
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_reset(
-    wifi_opt, file_root_init, uci_configs_init, infrastructure, start_buses, network_restart_command
-):
+def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
     res = infrastructure.process_message(
         {
             "module": "wifi",
@@ -842,7 +827,7 @@ def test_reset(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_too_long_generated_guest_ssid(
-    file_root_init, uci_configs_init, infrastructure, start_buses, network_restart_command
+    file_root_init, uci_configs_init, infrastructure, network_restart_command
 ):
     res = infrastructure.process_message(
         {
@@ -881,12 +866,7 @@ def test_too_long_generated_guest_ssid(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_modify_encryption_only_if_none(
-    init_script_result,
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
+    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -974,9 +954,7 @@ def test_modify_encryption_only_if_none(
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get_settings_and_reset(
-    wifi_opt, file_root_init, uci_configs_init, infrastructure, start_buses
-):
+def test_get_settings_and_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
     )
@@ -1004,9 +982,7 @@ def test_get_settings_and_reset(
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
-def test_get_settings_missing_wireless(
-    file_root_init, uci_configs_init, infrastructure, start_buses
-):
+def test_get_settings_missing_wireless(file_root_init, uci_configs_init, infrastructure):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
@@ -1017,12 +993,7 @@ def test_get_settings_missing_wireless(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_uci_country(
-    init_script_result,
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
+    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
 ):
 
     uci = get_uci_module(infrastructure.name)

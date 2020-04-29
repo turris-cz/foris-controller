@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,9 +32,6 @@ from foris_controller_testtools.fixtures import (
     device,
     turris_os_version,
     UCI_CONFIG_DIR_PATH,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 from foris_controller_testtools.utils import (
     FileFaker,
@@ -93,9 +90,7 @@ def installed_languages(request):
     ],
     indirect=True,
 )
-def test_get_data(
-    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
-):
+def test_get_data(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
@@ -117,9 +112,7 @@ def test_get_data(
 
 
 @pytest.mark.parametrize("code", ["cs", "nb_NO"])
-def test_set_language(
-    installed_languages, code, file_root_init, uci_configs_init, infrastructure, start_buses
-):
+def test_set_language(installed_languages, code, file_root_init, uci_configs_init, infrastructure):
     filters = [("web", "set_language")]
     old_notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message(
@@ -140,7 +133,7 @@ def test_set_language(
 
 
 def test_set_language_missing(
-    installed_languages, file_root_init, uci_configs_init, infrastructure, start_buses
+    installed_languages, file_root_init, uci_configs_init, infrastructure
 ):
     res = infrastructure.process_message(
         {"module": "web", "action": "set_language", "kind": "request", "data": {"language": "zz"}}
@@ -153,9 +146,7 @@ def test_set_language_missing(
     }
 
 
-def test_list_languages(
-    installed_languages, file_root_init, uci_configs_init, infrastructure, start_buses
-):
+def test_list_languages(installed_languages, file_root_init, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "web", "action": "list_languages", "kind": "request"}
     )
@@ -165,7 +156,7 @@ def test_list_languages(
 
 
 def test_set_language_missing_data(
-    installed_languages, file_root_init, uci_configs_init, infrastructure, start_buses
+    installed_languages, file_root_init, uci_configs_init, infrastructure
 ):
     res = infrastructure.process_message(
         {"module": "web", "action": "set_language", "kind": "request"}
@@ -185,9 +176,7 @@ def test_set_language_missing_data(
     ],
     indirect=True,
 )
-def test_get_guide(
-    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
-):
+def test_get_guide(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
@@ -216,7 +205,7 @@ def test_get_guide(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_get_guide_openwrt(
-    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
+    file_root_init, uci_configs_init, infrastructure, device, turris_os_version
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -233,7 +222,7 @@ def test_get_guide_openwrt(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_guide_mox_variants(
-    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
+    file_root_init, uci_configs_init, infrastructure, device, turris_os_version
 ):
 
     prepare_turrishw("mox")
@@ -270,9 +259,7 @@ def test_get_guide_mox_variants(
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
-def test_update_guide(
-    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
-):
+def test_update_guide(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
@@ -308,7 +295,6 @@ def test_update_guide_openwrt(
     init_script_result,
     uci_configs_init,
     infrastructure,
-    start_buses,
     network_restart_command,
     workflow,
     device,
@@ -355,9 +341,7 @@ def test_update_guide_openwrt(
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
-def test_reset_guide(
-    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
-):
+def test_reset_guide(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
@@ -404,7 +388,7 @@ def test_reset_guide(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_reset_guide_openwrt(
-    file_root_init, uci_configs_init, infrastructure, start_buses, device, turris_os_version
+    file_root_init, uci_configs_init, infrastructure, device, turris_os_version
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -483,7 +467,6 @@ def test_walk_through_guide(
     init_script_result,
     uci_configs_init,
     infrastructure,
-    start_buses,
     network_restart_command,
     old_workflow,
     new_workflow,

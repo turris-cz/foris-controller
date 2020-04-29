@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,9 +30,6 @@ from foris_controller_testtools.fixtures import (
     turris_os_version,
     notify_api,
     UCI_CONFIG_DIR_PATH,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 from foris_controller_testtools.utils import (
@@ -47,7 +44,7 @@ from foris_controller_testtools.utils import (
 @pytest.mark.parametrize(
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
-def test_get_settings(uci_configs_init, infrastructure, start_buses, device, turris_os_version):
+def test_get_settings(uci_configs_init, infrastructure, device, turris_os_version):
 
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -66,12 +63,7 @@ def test_get_settings(uci_configs_init, infrastructure, start_buses, device, tur
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
 def test_update_settings(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -155,12 +147,7 @@ def test_update_settings(
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
 def test_update_settings_empty_wan(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -231,12 +218,7 @@ def test_update_settings_empty_wan(
 
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0")], indirect=True)
 def test_update_settings_more_wans(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -303,12 +285,7 @@ def test_update_settings_more_wans(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_missing_assign(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -376,12 +353,7 @@ def test_update_settings_missing_assign(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_unknown_assign(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -450,12 +422,7 @@ def test_update_settings_unknown_assign(
 
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0")], indirect=True)
 def test_update_settings_set_non_configurable(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -525,7 +492,6 @@ def test_update_settings_openwrt(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     network_restart_command,
     device,
     turris_os_version,
@@ -641,7 +607,7 @@ def test_update_settings_openwrt(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_openwrt_unsupported(
-    uci_configs_init, infrastructure, start_buses, device, turris_os_version
+    uci_configs_init, infrastructure, device, turris_os_version
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -666,7 +632,7 @@ def test_get_settings_openwrt_unsupported(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt_unsupported(
-    uci_configs_init, infrastructure, start_buses, device, turris_os_version
+    uci_configs_init, infrastructure, device, turris_os_version
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -691,7 +657,6 @@ def test_wifi_devices(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     network_restart_command,
     device,
     turris_os_version,
@@ -772,7 +737,7 @@ config wifi-iface 'guest_iface_0'
     assert len([e["id"] for e in res["data"]["networks"]["lan"] if e["type"] == "wifi"]) == 0
 
 
-def test_network_change_notification(uci_configs_init, infrastructure, start_buses, notify_api):
+def test_network_change_notification(uci_configs_init, infrastructure, notify_api):
     filters = [("networks", "network_change")]
 
     def check_notification(dev, network, action):

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,17 +23,14 @@ import pytest
 from foris_controller_testtools.fixtures import (
     uci_configs_init,
     infrastructure,
-    start_buses,
     file_root_init,
-    ubusd_test,
-    mosquitto_test,
 )
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_about_files")
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get(uci_configs_init, infrastructure, start_buses):
+def test_get(uci_configs_init, infrastructure):
     res = infrastructure.process_message({"module": "about", "action": "get", "kind": "request"})
     assert res.keys() == {"action", "kind", "data", "module"}
     assert res["data"].keys() == {"model", "serial", "os_version", "os_branch", "kernel"}
@@ -41,7 +38,7 @@ def test_get(uci_configs_init, infrastructure, start_buses):
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get_registration_number(infrastructure, start_buses):
+def test_get_registration_number(infrastructure):
     res = infrastructure.process_message(
         {"module": "about", "action": "get_registration_number", "kind": "request"}
     )

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ from foris_controller_testtools.fixtures import (
     only_backends,
     infrastructure,
     file_root_init,
-    mosquitto_test,
-    ubusd_test,
     FILE_ROOT_PATH,
 )
 
@@ -117,7 +115,7 @@ def query_bus(topic):
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_advertize(ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_normal):
+def test_advertize(infrastructure, file_root_init, mount_on_normal):
 
     filters = [("remote", "advertize")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -143,9 +141,7 @@ def test_advertize(ubusd_test, infrastructure, file_root_init, mosquitto_test, m
 
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.only_message_buses(["mqtt"])
-def test_advertize_netboot_booted(
-    ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_netboot
-):
+def test_advertize_netboot_booted(infrastructure, file_root_init, mount_on_netboot):
 
     filters = [("remote", "advertize")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -156,7 +152,7 @@ def test_advertize_netboot_booted(
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.only_message_buses(["mqtt"])
 def test_advertize_netboot_ready(
-    ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_netboot, netboot_configured
+    infrastructure, file_root_init, mount_on_netboot, netboot_configured
 ):
 
     filters = [("remote", "advertize")]
@@ -166,7 +162,7 @@ def test_advertize_netboot_ready(
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_modules_list(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+def test_modules_list(infrastructure, file_root_init):
     infrastructure.wait_mqtt_connected()
     topic = "foris-controller/%s/list" % MQTT_ID
     modules = query_bus(topic)
@@ -177,7 +173,7 @@ def test_modules_list(ubusd_test, infrastructure, file_root_init, mosquitto_test
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_schema(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+def test_schema(infrastructure, file_root_init):
     infrastructure.wait_mqtt_connected()
     topic = "foris-controller/%s/jsonschemas" % MQTT_ID
     schemas = query_bus(topic)
@@ -185,7 +181,7 @@ def test_schema(ubusd_test, infrastructure, file_root_init, mosquitto_test):
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_action_list(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+def test_action_list(infrastructure, file_root_init):
     infrastructure.wait_mqtt_connected()
     topic = "foris-controller/%s/list" % MQTT_ID
     modules = [e["name"] for e in query_bus(topic)]
@@ -196,14 +192,14 @@ def test_action_list(ubusd_test, infrastructure, file_root_init, mosquitto_test)
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_working_replies(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+def test_working_replies(infrastructure, file_root_init):
     infrastructure.wait_mqtt_connected()
     topic = "foris-controller/%s/working_replies" % MQTT_ID
     assert isinstance(query_bus(topic), list)
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_wrong_id(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+def test_wrong_id(infrastructure, file_root_init):
     infrastructure.wait_mqtt_connected()
 
     # timeouts
@@ -216,7 +212,7 @@ def test_wrong_id(ubusd_test, infrastructure, file_root_init, mosquitto_test):
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_wrong_module_id(ubusd_test, infrastructure, file_root_init, mosquitto_test):
+def test_wrong_module_id(infrastructure, file_root_init):
     infrastructure.wait_mqtt_connected()
     # should fail instantly
 

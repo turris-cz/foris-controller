@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,9 +26,6 @@ from foris_controller_testtools.fixtures import (
     uci_configs_init,
     infrastructure,
     notify_cmd,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 from foris_controller_testtools.utils import match_subdict
@@ -112,7 +109,7 @@ def stored_notifications():
 
 
 @pytest.mark.parametrize("language", ["en", "cs", "nb_NO", ""])
-def test_list(language, stored_notifications, uci_configs_init, infrastructure, start_buses):
+def test_list(language, stored_notifications, uci_configs_init, infrastructure):
     msg = {"module": "router_notifications", "action": "list", "kind": "request"}
     if language:
         msg["data"] = {"lang": language}
@@ -121,7 +118,7 @@ def test_list(language, stored_notifications, uci_configs_init, infrastructure, 
     assert "notifications" in res["data"].keys()
 
 
-def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructure, start_buses):
+def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructure):
     ids = ["1518776436-2598", "1518776436-2628"]
     res = infrastructure.process_message(
         {
@@ -150,7 +147,7 @@ def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructur
         assert notification["displayed"] == (notification["id"] in ids)
 
 
-def test_mark_as_displayed_notification(notify_cmd, uci_configs_init, infrastructure, start_buses):
+def test_mark_as_displayed_notification(notify_cmd, uci_configs_init, infrastructure):
     # these notifications are meant to be send by external program
     # to imitate such behavior just call cmd foris-notify
     filters = [("router_notifications", "mark_as_displayed")]
@@ -183,7 +180,7 @@ def test_mark_as_displayed_notification(notify_cmd, uci_configs_init, infrastruc
     mark_as_displayed_notification_failed({"ids": ["1518776436-2595"], "new_count": -1})
 
 
-def test_get_settings(uci_configs_init, infrastructure, start_buses):
+def test_get_settings(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "router_notifications", "action": "get_settings", "kind": "request"}
     )
@@ -192,7 +189,7 @@ def test_get_settings(uci_configs_init, infrastructure, start_buses):
     assert "reboots" in res["data"].keys()
 
 
-def test_update_settings(uci_configs_init, infrastructure, start_buses):
+def test_update_settings(uci_configs_init, infrastructure):
     filters = [("router_notifications", "update_settings")]
 
     def update(data):
@@ -301,7 +298,7 @@ def test_update_settings(uci_configs_init, infrastructure, start_buses):
     )
 
 
-def test_create(stored_notifications, uci_configs_init, infrastructure, start_buses):
+def test_create(stored_notifications, uci_configs_init, infrastructure):
     def create(message, severity, immediate):
         res = infrastructure.process_message(
             {
@@ -353,7 +350,7 @@ def test_create(stored_notifications, uci_configs_init, infrastructure, start_bu
     create("msg4", "error", False)
 
 
-def test_create_notification(notify_cmd, uci_configs_init, infrastructure, start_buses):
+def test_create_notification(notify_cmd, uci_configs_init, infrastructure):
     # these notifications are meant to be send by external program
     # to imitate such behavior just call cmd foris-notify
     filters = [("router_notifications", "create")]
@@ -374,7 +371,7 @@ def test_create_notification(notify_cmd, uci_configs_init, infrastructure, start
     create_notification({"severity": "error", "id": "1518776436-2598", "new_count": 4})
 
 
-def test_update_email_settings(uci_configs_init, infrastructure, start_buses):
+def test_update_email_settings(uci_configs_init, infrastructure):
     filters = [("router_notifications", "update_email_settings")]
 
     def update(data):
@@ -470,7 +467,7 @@ def test_update_email_settings(uci_configs_init, infrastructure, start_buses):
     )
 
 
-def test_update_reboot_settings(uci_configs_init, infrastructure, start_buses):
+def test_update_reboot_settings(uci_configs_init, infrastructure):
     filters = [("router_notifications", "update_reboot_settings")]
 
     def update(data):

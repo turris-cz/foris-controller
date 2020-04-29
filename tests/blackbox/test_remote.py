@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ from io import BytesIO
 from foris_controller_testtools.fixtures import (
     backend,
     infrastructure,
-    ubusd_test,
     only_backends,
     only_message_buses,
     uci_configs_init,
@@ -38,8 +37,6 @@ from foris_controller_testtools.fixtures import (
     file_root_init,
     network_restart_command,
     UCI_CONFIG_DIR_PATH,
-    mosquitto_test,
-    start_buses,
 )
 from foris_controller_testtools.utils import match_subdict, get_uci_module, check_service_result
 from .test_mqtt import mount_on_netboot, mount_on_normal, netboot_configured
@@ -123,7 +120,7 @@ def ready_certs():
 
 
 @pytest.mark.only_backends(["mock"])
-def test_generate_ca_mock(infrastructure, start_buses):
+def test_generate_ca_mock(infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "generate_ca", "kind": "request"}
     )
@@ -132,7 +129,7 @@ def test_generate_ca_mock(infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_generate_ca_openwrt(empty_certs, infrastructure, start_buses):
+def test_generate_ca_openwrt(empty_certs, infrastructure):
 
     filters = [("remote", "generate_ca")]
 
@@ -183,7 +180,7 @@ def test_generate_ca_openwrt(empty_certs, infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["mock"])
-def test_ca_get_status_mock(infrastructure, start_buses):
+def test_ca_get_status_mock(infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
@@ -192,7 +189,7 @@ def test_ca_get_status_mock(infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_get_status_openwrt_ready(ready_certs, infrastructure, start_buses):
+def test_get_status_openwrt_ready(ready_certs, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
@@ -212,7 +209,7 @@ def test_get_status_openwrt_ready(ready_certs, infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_get_status_openwrt_missing(empty_certs, infrastructure, start_buses):
+def test_get_status_openwrt_missing(empty_certs, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
@@ -225,7 +222,7 @@ def test_get_status_openwrt_missing(empty_certs, infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_get_status_openwrt_generating(generating_certs, infrastructure, start_buses):
+def test_get_status_openwrt_generating(generating_certs, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
@@ -238,7 +235,7 @@ def test_get_status_openwrt_generating(generating_certs, infrastructure, start_b
 
 
 @pytest.mark.only_backends(["mock"])
-def test_generate_token_mock(infrastructure, start_buses):
+def test_generate_token_mock(infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
@@ -267,7 +264,7 @@ def test_generate_token_mock(infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_generate_token_openwrt_success(ready_certs, infrastructure, start_buses):
+def test_generate_token_openwrt_success(ready_certs, infrastructure):
 
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
@@ -319,7 +316,7 @@ def test_generate_token_openwrt_success(ready_certs, infrastructure, start_buses
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_generate_token_openwrt_failed(empty_certs, infrastructure, start_buses):
+def test_generate_token_openwrt_failed(empty_certs, infrastructure):
 
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
@@ -361,7 +358,7 @@ def test_generate_token_openwrt_failed(empty_certs, infrastructure, start_buses)
     assert len(res["data"]["tokens"]) == 0
 
 
-def test_generate_token_name_failed(empty_certs, infrastructure, start_buses):
+def test_generate_token_name_failed(empty_certs, infrastructure):
     def wrong_name(name):
         res = infrastructure.process_message(
             {
@@ -379,7 +376,7 @@ def test_generate_token_name_failed(empty_certs, infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["mock"])
-def test_revoke_mock(infrastructure, start_buses):
+def test_revoke_mock(infrastructure):
 
     res = infrastructure.process_message(
         {
@@ -429,7 +426,7 @@ def test_revoke_mock(infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_revoke_openwrt_ready(ready_certs, infrastructure, start_buses):
+def test_revoke_openwrt_ready(ready_certs, infrastructure):
     filters = [("remote", "revoke")]
 
     # successful generation
@@ -466,7 +463,7 @@ def test_revoke_openwrt_ready(ready_certs, infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_revoke_openwrt_missing(empty_certs, infrastructure, start_buses):
+def test_revoke_openwrt_missing(empty_certs, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "revoke", "kind": "request", "data": {"id": "03"}}
     )
@@ -474,7 +471,7 @@ def test_revoke_openwrt_missing(empty_certs, infrastructure, start_buses):
     assert res["data"]["result"] is False
 
 
-def test_delete_ca(ready_certs, infrastructure, start_buses):
+def test_delete_ca(ready_certs, infrastructure):
     filters = [("remote", "delete_ca")]
 
     notifications = infrastructure.get_notifications(filters=filters)
@@ -499,7 +496,7 @@ def test_delete_ca(ready_certs, infrastructure, start_buses):
     assert res["data"]["status"] == "missing"
 
 
-def test_get_settings(uci_configs_init, infrastructure, start_buses):
+def test_get_settings(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_settings", "kind": "request"}
     )
@@ -507,12 +504,7 @@ def test_get_settings(uci_configs_init, infrastructure, start_buses):
 
 
 def test_update_settings(
-    uci_configs_init,
-    init_script_result,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    ready_certs,
+    uci_configs_init, init_script_result, infrastructure, network_restart_command, ready_certs,
 ):
     filters = [("remote", "update_settings")]
 
@@ -547,9 +539,7 @@ def test_update_settings(
 
 
 @pytest.mark.only_message_buses(["unix-socket", "ubus"])
-def test_update_settings_ubus_unix(
-    uci_configs_init, init_script_result, infrastructure, start_buses
-):
+def test_update_settings_ubus_unix(uci_configs_init, init_script_result, infrastructure):
     def update(new_settings):
         res = infrastructure.process_message(
             {
@@ -580,7 +570,7 @@ def test_update_settings_ubus_unix(
 @pytest.mark.only_message_buses(["mqtt"])
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt_mqtt(
-    uci_configs_init, init_script_result, infrastructure, start_buses, ready_certs
+    uci_configs_init, init_script_result, infrastructure, ready_certs
 ):
 
     uci = get_uci_module(infrastructure.name)
@@ -662,7 +652,7 @@ def test_update_settings_openwrt_mqtt(
 
 
 @pytest.mark.only_backends(["mock"])
-def test_get_token_mock(infrastructure, start_buses):
+def test_get_token_mock(infrastructure):
 
     query_data = {}
     res = infrastructure.process_message(
@@ -715,7 +705,7 @@ def test_get_token_mock(infrastructure, start_buses):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_get_token_openwrt(
-    ready_certs, uci_configs_init, init_script_result, infrastructure, start_buses, file_root_init
+    ready_certs, uci_configs_init, init_script_result, infrastructure, file_root_init
 ):
 
     query_data = {}
@@ -802,7 +792,6 @@ def test_delete_ca_when_enabled(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     network_restart_command,
     file_root_init,
     ready_certs,
@@ -827,7 +816,6 @@ def test_enable_generating(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     network_restart_command,
     file_root_init,
     generating_certs,
@@ -848,7 +836,6 @@ def test_enable_empty(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     network_restart_command,
     file_root_init,
     empty_certs,
@@ -865,9 +852,7 @@ def test_enable_empty(
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_set_netboot_configured(
-    ubusd_test, infrastructure, file_root_init, mosquitto_test, mount_on_netboot
-):
+def test_set_netboot_configured(infrastructure, file_root_init, mount_on_netboot):
     if infrastructure.name == "openwrt":
         filters = [("remote", "advertize")]
         notifications = infrastructure.get_notifications(filters=filters)

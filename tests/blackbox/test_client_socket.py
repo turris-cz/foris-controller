@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,12 +21,7 @@ import os
 import pytest
 
 
-from foris_controller_testtools.fixtures import (
-    infrastructure,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
-)
+from foris_controller_testtools.fixtures import infrastructure
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +31,7 @@ def extra_module_paths():
     return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
 
 
-def test_request(infrastructure, start_buses):
+def test_request(infrastructure):
     def request(req, reply):
         res = infrastructure.client_socket.request(req)
         assert res == reply
@@ -72,7 +67,7 @@ def test_request(infrastructure, start_buses):
     )
 
 
-def test_request_error(infrastructure, start_buses):
+def test_request_error(infrastructure):
     def request_error(req):
         with pytest.raises(Exception):
             # raises exception due to the connection is closed (socket.read(4) returns "")
@@ -117,7 +112,7 @@ def test_request_error(infrastructure, start_buses):
     request_error({"module": "echo", "action": "echo", "kind": "request"})
 
 
-def test_notification(infrastructure, start_buses):
+def test_notification(infrastructure):
     def notify(msg):
         filters = [("echo", "echo"), ("echo", "echo2")]
         notifications = infrastructure.get_notifications(filters=filters)
@@ -137,7 +132,7 @@ def test_notification(infrastructure, start_buses):
     )
 
 
-def test_notification_error(infrastructure, start_buses):
+def test_notification_error(infrastructure):
     def notify_error(msg):
         # send msg and one correct notification and make sure that only the correct
         # notification is recievd

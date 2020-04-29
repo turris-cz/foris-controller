@@ -24,9 +24,7 @@ from foris_controller_testtools.fixtures import (
     infrastructure,
     uci_configs_init,
     file_root_init,
-    ubusd_test,
     init_script_result,
-    mosquitto_test,
     only_backends,
     device,
     turris_os_version,
@@ -80,6 +78,7 @@ def _edit_forwarder_wrapper(action: str):
             {"module": "dns", "action": action, "kind": "request", "data": data}
         )
         assert res["data"]["result"] is result
+
     return _edit_forwarder_action
 
 
@@ -126,7 +125,7 @@ pin_sha256="yioEpqeR4WtDwE9YxNVnCEkTxIjx6EEIwFSQW+lJsbc="
         yield res1, res2, res3
 
 
-def test_get_settings(file_root_init, uci_configs_init, infrastructure, ubusd_test, mosquitto_test):
+def test_get_settings(file_root_init, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "dns", "action": "get_settings", "kind": "request"}
     )
@@ -140,13 +139,7 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure, ubusd_te
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    ubusd_test,
-    device,
-    turris_os_version,
-    init_script_result,
+    file_root_init, uci_configs_init, infrastructure, device, turris_os_version, init_script_result,
 ):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -214,13 +207,7 @@ def test_update_settings(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_and_get_settings(
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    ubusd_test,
-    device,
-    turris_os_version,
-    init_script_result,
+    file_root_init, uci_configs_init, infrastructure, device, turris_os_version, init_script_result,
 ):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -305,13 +292,7 @@ def test_update_and_get_settings(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_service_restart(
-    file_root_init,
-    uci_configs_init,
-    init_script_result,
-    infrastructure,
-    ubusd_test,
-    device,
-    turris_os_version,
+    file_root_init, uci_configs_init, init_script_result, infrastructure, device, turris_os_version,
 ):
     infrastructure.process_message(
         {
@@ -336,7 +317,6 @@ def test_update_settings_forwarder(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    ubusd_test,
     device,
     turris_os_version,
 ):
@@ -413,9 +393,7 @@ def test_update_settings_forwarder(
     assert uci.get_option_named(data, "resolver", "common", "forward_custom") == "99_google"
 
 
-def test_list_forwarders(
-    file_root_init, custom_forwarders, uci_configs_init, infrastructure, ubusd_test, mosquitto_test
-):
+def test_list_forwarders(file_root_init, custom_forwarders, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "dns", "action": "list_forwarders", "kind": "request"}
     )
@@ -425,9 +403,7 @@ def test_list_forwarders(
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_set_forwarder(
-    custom_forwarders, uci_configs_init, infrastructure, ubusd_test, mosquitto_test
-):
+def test_set_forwarder(custom_forwarders, uci_configs_init, infrastructure):
     # new
     data = {
         "ipaddresses": {"ipv4": ["2.2.2.2"], "ipv6": ["2001:4860:4860::2222"]},
@@ -469,9 +445,7 @@ def test_set_forwarder(
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_del_forwarder(
-    file_root_init, custom_forwarders, uci_configs_init, infrastructure, ubusd_test, mosquitto_test
-):
+def test_del_forwarder(file_root_init, custom_forwarders, uci_configs_init, infrastructure):
     filters = [("dns", "del_forwarder")]
     notifications = infrastructure.get_notifications(filters=filters)
 
@@ -505,7 +479,9 @@ def test_del_forwarder(
         "kind": "notification",
         "data": {"name": "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e"},
     }
-    assert "myforward_6842e9378ffb5c6be0b97309a48f6bc4" not in [e["name"] for e in list_forwarders(infrastructure)]
+    assert "myforward_6842e9378ffb5c6be0b97309a48f6bc4" not in [
+        e["name"] for e in list_forwarders(infrastructure)
+    ]
 
     # non-existing
     res = infrastructure.process_message(

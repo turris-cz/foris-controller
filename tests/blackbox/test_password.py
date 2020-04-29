@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,9 +31,6 @@ from foris_controller_testtools.fixtures import (
     device,
     turris_os_version,
     file_root_init,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 PASS_PATH = "/tmp/passwd_input"
@@ -58,7 +55,7 @@ def pass_file():
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_set_and_check_system(
-    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version
+    uci_configs_init, pass_file, infrastructure, device, turris_os_version
 ):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
@@ -99,7 +96,7 @@ def test_set_and_check_system(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_set_and_check_foris(
-    uci_configs_init, pass_file, infrastructure, start_buses, device, turris_os_version
+    uci_configs_init, pass_file, infrastructure, device, turris_os_version
 ):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
@@ -144,7 +141,7 @@ def test_set_and_check_foris(
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, start_buses):
+def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure):
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     res = infrastructure.process_message(
         {
@@ -168,7 +165,7 @@ def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure, start_bus
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_password_filter(uci_configs_init, pass_file, infrastructure, start_buses):
+def test_password_filter(uci_configs_init, pass_file, infrastructure):
     res = infrastructure.process_message(
         {
             "module": "password",

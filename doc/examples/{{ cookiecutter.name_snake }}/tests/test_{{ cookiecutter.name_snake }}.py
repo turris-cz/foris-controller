@@ -6,14 +6,11 @@ from foris_controller_testtools.fixtures import (
     only_message_buses,
     backend,
     infrastructure,
-    start_buses,
-    mosquitto_test,
-    ubusd_test,
     notify_api,
 )
 
 
-def test_get_slices(infrastructure, start_buses):
+def test_get_slices(infrastructure):
     res = infrastructure.process_message(
         {"module": "{{ cookiecutter.name_snake }}", "action": "get_slices", "kind": "request"}
     )
@@ -23,7 +20,7 @@ def test_get_slices(infrastructure, start_buses):
 
 
 @pytest.mark.parametrize("slices", [10, 15])
-def test_set_slices(infrastructure, start_buses, slices):
+def test_set_slices(infrastructure, slices):
     filters = [("{{ cookiecutter.name_snake }}", "set_slices")]
 
     notifications = infrastructure.get_notifications(filters=filters)
@@ -44,7 +41,7 @@ def test_set_slices(infrastructure, start_buses, slices):
 
 
 @pytest.mark.parametrize("slices", [10, 15])
-def test_reload_chart_notification(notify_api, infrastructure, start_buses, slices):
+def test_reload_chart_notification(notify_api, infrastructure, slices):
     filters = [("{{ cookiecutter.name_snake }}", "reload_chart")]
     notify = notify_api
     notifications = infrastructure.get_notifications(filters=filters)
@@ -58,13 +55,13 @@ def test_reload_chart_notification(notify_api, infrastructure, start_buses, slic
     }
 
 
-def test_list(infrastructure, start_buses):
+def test_list(infrastructure):
     res = infrastructure.process_message({"module": "{{ cookiecutter.name_snake }}", "action": "list", "kind": "request"})
     assert "records" in res["data"]
 
 
 @pytest.mark.only_message_buses(["mqtt"])
-def test_timestamp_announcements(mosquitto_test, start_buses, infrastructure):
+def test_timestamp_announcements(infrastructure):
     filters = [("{{ cookiecutter.name_snake }}", "announce_time")]
 
     notifications = infrastructure.get_notifications([], filters=filters)

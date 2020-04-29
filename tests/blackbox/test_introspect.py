@@ -23,20 +23,13 @@ import pytest
 from foris_controller_testtools.fixtures import (
     infrastructure,
     only_backends,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 
 @pytest.mark.only_backends(["mock"])
-def test_list_modules(infrastructure, start_buses):
+def test_list_modules(infrastructure):
     res = infrastructure.process_message(
-        {
-            "module": "introspect",
-            "action": "list_modules",
-            "kind": "request",
-        }
+        {"module": "introspect", "action": "list_modules", "kind": "request",}
     )
 
     assert "error" not in res

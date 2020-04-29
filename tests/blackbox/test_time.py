@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,15 +24,11 @@ import os
 from foris_controller_testtools.fixtures import (
     infrastructure,
     uci_configs_init,
-    start_buses,
     only_backends,
     init_script_result,
     device,
     turris_os_version,
     UCI_CONFIG_DIR_PATH,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 from foris_controller_testtools.utils import check_service_result, get_uci_module
 
@@ -117,7 +113,7 @@ def regulatory_domain():
         pass
 
 
-def test_get_settings(uci_configs_init, infrastructure, start_buses):
+def test_get_settings(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "time", "action": "get_settings", "kind": "request"}
     )
@@ -137,7 +133,6 @@ def test_update_settings(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
     regulatory_domain,
@@ -229,7 +224,7 @@ def test_update_settings(
     assert res["data"]["time_settings"]["how_to_set_time"] == u"manual"
 
 
-def test_get_router_time(uci_configs_init, infrastructure, start_buses):
+def test_get_router_time(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "time", "action": "get_router_time", "kind": "request"}
     )
@@ -246,7 +241,6 @@ def test_openwrt_complex(
     hwclock_mock,
     cmdline_script_root,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
     regulatory_domain,
@@ -335,7 +329,7 @@ def test_openwrt_complex(
 
 
 @pytest.mark.only_backends(["mock"])
-def test_ntpdate_trigger_mock(uci_configs_init, infrastructure, start_buses):
+def test_ntpdate_trigger_mock(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "time", "action": "ntpdate_trigger", "kind": "request"}
     )
@@ -351,7 +345,6 @@ def test_ntpdate_trigger_pass_openwrt(
     hwclock_mock,
     cmdline_script_root,
     infrastructure,
-    start_buses,
     pass_ntpdate,
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]
@@ -388,7 +381,6 @@ def test_ntpdate_trigger_fail_openwrt(
     hwclock_mock,
     cmdline_script_root,
     infrastructure,
-    start_buses,
     fail_ntpdate,
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]

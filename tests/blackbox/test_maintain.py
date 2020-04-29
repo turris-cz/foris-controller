@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,9 +27,6 @@ from foris_controller_testtools.fixtures import (
     file_root_init,
     only_backends,
     reboot_command,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 from foris_controller_testtools.utils import reboot_was_called
@@ -39,7 +36,7 @@ from .test_updater import wait_for_updater_run_finished
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_maintain_files")
 
 
-def test_reboot(uci_configs_init, infrastructure, start_buses, reboot_command):
+def test_reboot(uci_configs_init, infrastructure, reboot_command):
     res = infrastructure.process_message(
         {"module": "maintain", "action": "reboot", "kind": "request"}
     )
@@ -47,12 +44,12 @@ def test_reboot(uci_configs_init, infrastructure, start_buses, reboot_command):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_reboot_opewrt(uci_configs_init, infrastructure, start_buses, reboot_command):
+def test_reboot_opewrt(uci_configs_init, infrastructure, reboot_command):
     infrastructure.process_message({"module": "maintain", "action": "reboot", "kind": "request"})
     assert reboot_was_called([])
 
 
-def test_generate_backup(uci_configs_init, infrastructure, start_buses):
+def test_generate_backup(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "maintain", "action": "generate_backup", "kind": "request"}
     )
@@ -61,7 +58,7 @@ def test_generate_backup(uci_configs_init, infrastructure, start_buses):
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_restore_backup(file_root_init, uci_configs_init, infrastructure, start_buses):
+def test_restore_backup(file_root_init, uci_configs_init, infrastructure):
     # read backup
     with open(os.path.join("/tmp/foris_files/tmp", "backup.tar.bz2.base64")) as f:
         backup = f.read()
@@ -79,7 +76,7 @@ def test_restore_backup(file_root_init, uci_configs_init, infrastructure, start_
 
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure, start_buses):
+def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure):
     # read backup
     with open(os.path.join("/tmp/foris_files/tmp", "backup.tar.bz2.base64")) as f:
         backup = f.read()
@@ -106,7 +103,7 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
     }
 
 
-def test_generate_and_restore(uci_configs_init, infrastructure, start_buses):
+def test_generate_and_restore(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "maintain", "action": "generate_backup", "kind": "request"}
     )

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,9 +26,6 @@ import uuid
 from foris_controller_testtools.fixtures import (
     only_message_buses,
     infrastructure,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 
@@ -40,7 +37,7 @@ def extra_module_paths():
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))
-def test_long_messsages(infrastructure, start_buses, chars_len):
+def test_long_messsages(infrastructure, chars_len):
     data = {
         "random_characters": "".join(random.choice(string.ascii_letters) for _ in range(chars_len))
     }
@@ -51,7 +48,7 @@ def test_long_messsages(infrastructure, start_buses, chars_len):
 
 
 @pytest.mark.only_message_buses(["ubus"])
-def test_ubus_malformed_multipart_resend(infrastructure, start_buses):
+def test_ubus_malformed_multipart_resend(infrastructure):
     # First lets test whether the multipart is working
     request_id = str(uuid.uuid4())
     res = infrastructure.process_message_ubus_raw(
@@ -93,7 +90,7 @@ def test_ubus_malformed_multipart_resend(infrastructure, start_buses):
 
 
 @pytest.mark.only_message_buses(["ubus"])
-def test_ubus_malformed_multipart_one(infrastructure, start_buses):
+def test_ubus_malformed_multipart_one(infrastructure):
     # resend wrong json in one multipart
     request_id = str(uuid.uuid4())
     res = infrastructure.process_message_ubus_raw(
@@ -112,7 +109,7 @@ def test_ubus_malformed_multipart_one(infrastructure, start_buses):
 
 
 @pytest.mark.only_message_buses(["ubus"])
-def test_ubus_malformed_multipart_two(infrastructure, start_buses):
+def test_ubus_malformed_multipart_two(infrastructure):
     # resend wrong json in two multiparts
     request_id = str(uuid.uuid4())
     res = infrastructure.process_message_ubus_raw(

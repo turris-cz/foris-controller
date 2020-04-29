@@ -35,9 +35,6 @@ from foris_controller_testtools.fixtures import (
     updater_userlists,
     device,
     turris_os_version,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
     UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import set_approval, get_uci_module, match_subdict
@@ -75,7 +72,9 @@ def updated_match_expected(result, new_settings):
     del result["data"]["approval"]
 
     list_data = result["data"].pop("user_lists")
-    assert {e["name"] for e in new_settings["user_lists"]} == {e["name"] for e in list_data if e["enabled"]}
+    assert {e["name"] for e in new_settings["user_lists"]} == {
+        e["name"] for e in list_data if e["enabled"]
+    }
 
     lang_data = result["data"].pop("languages")
     assert set(new_settings["languages"]) == {e["code"] for e in lang_data if e["enabled"]}
@@ -96,10 +95,9 @@ def match_package_list_options(result, new_settings, defaults):
         for ulist in new_settings["package_lists"]
     }
     list_options = {
-        ulist["name"]: {
-            opt["name"] for opt in ulist.get("options", []) if opt["enabled"]
-        }
-        for ulist in list_data if ulist["enabled"]
+        ulist["name"]: {opt["name"] for opt in ulist.get("options", []) if opt["enabled"]}
+        for ulist in list_data
+        if ulist["enabled"]
     }
 
     # compare user list options minus the expected defaults
@@ -112,16 +110,9 @@ def match_package_list_options(result, new_settings, defaults):
 
 
 @pytest.mark.parametrize("lang", ["en", "cs", "de", "nb_NO", "xx"])
-def test_get_settings(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses, lang
-):
+def test_get_settings(updater_languages, updater_userlists, uci_configs_init, infrastructure, lang):
     res = infrastructure.process_message(
-        {
-            "module": "updater",
-            "action": "get_settings",
-            "kind": "request",
-            "data": {"lang": lang},
-        }
+        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": lang},}
     )
 
     assert set(res.keys()) == {"action", "kind", "data", "module"}
@@ -149,25 +140,15 @@ def test_update_settings_clear(
         "enabled": True,
         "approval_settings": {"status": "off"},
         "user_lists": [],
-        "languages": []
+        "languages": [],
     }
 
     res = infrastructure.process_message(
-        {
-            "module": "updater",
-            "action": "update_settings",
-            "kind": "request",
-            "data": settings,
-        }
+        {"module": "updater", "action": "update_settings", "kind": "request", "data": settings,}
     )
     assert "result" in res["data"] and res["data"]["result"] is True
     res = infrastructure.process_message(
-        {
-            "module": "updater",
-            "action": "get_settings",
-            "kind": "request",
-            "data": {"lang": "en"},
-        }
+        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": "en"},}
     )
 
     updated_match_expected(res, settings)
@@ -179,7 +160,6 @@ def test_update_settings_clear_and_write(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -224,7 +204,6 @@ def test_update_settings_languages(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -236,21 +215,11 @@ def test_update_settings_languages(
     }
 
     res = infrastructure.process_message(
-        {
-            "module": "updater",
-            "action": "update_settings",
-            "kind": "request",
-            "data": settings,
-        }
+        {"module": "updater", "action": "update_settings", "kind": "request", "data": settings,}
     )
     assert "result" in res["data"] and res["data"]["result"] is True
     res = infrastructure.process_message(
-        {
-            "module": "updater",
-            "action": "get_settings",
-            "kind": "request",
-            "data": {"lang": "en"},
-        }
+        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": "en"},}
     )
 
     lang_data = res["data"].pop("languages")
@@ -276,21 +245,11 @@ def test_update_settings_deprecated_user_lists(
     }
 
     res = infrastructure.process_message(
-        {
-            "module": "updater",
-            "action": "update_settings",
-            "kind": "request",
-            "data": settings,
-        }
+        {"module": "updater", "action": "update_settings", "kind": "request", "data": settings,}
     )
     assert "result" in res["data"] and res["data"]["result"] is True
     res = infrastructure.process_message(
-        {
-            "module": "updater",
-            "action": "get_settings",
-            "kind": "request",
-            "data": {"lang": "en"},
-        }
+        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": "en"},}
     )
     assert res["data"]["user_lists"] == []
 
@@ -301,7 +260,6 @@ def test_get_package_lists(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
     lang
@@ -331,7 +289,6 @@ def test_package_lists_with_defaults(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -368,7 +325,6 @@ def test_update_package_lists_override_defaults(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -407,7 +363,6 @@ def test_update_settings_disable_updater_keep_settings(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -433,7 +388,12 @@ def test_update_settings_disable_updater_keep_settings(
         updated_match_expected(res, new_settings)
 
     update_settings(
-        {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []},
+        {
+            "enabled": True,
+            "approval_settings": {"status": "off"},
+            "user_lists": [],
+            "languages": [],
+        },
     )
     update_settings(
         {"enabled": False},
@@ -453,7 +413,6 @@ def test_update_settings_openwrt(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -478,9 +437,7 @@ def test_update_settings_openwrt(
 
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.parametrize("language", ["cs", "nb_NO"])
-def test_approval(
-    language, updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
-):
+def test_approval(language, updater_languages, updater_userlists, uci_configs_init, infrastructure):
     def approval(data):
         set_approval(data)
         res = infrastructure.process_message(
@@ -543,9 +500,7 @@ def test_approval(
     )
 
 
-def test_approval_resolve(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
-):
+def test_approval_resolve(updater_languages, updater_userlists, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {
             "module": "updater",
@@ -571,7 +526,7 @@ def test_approval_resolve(
 
 @pytest.mark.only_backends(["openwrt"])
 def test_approval_resolve_openwrt(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure, start_buses
+    updater_languages, updater_userlists, uci_configs_init, infrastructure
 ):
     filters = [("updater", "run")]
 
@@ -694,7 +649,7 @@ def test_approval_resolve_openwrt(
     )
 
 
-def test_run(uci_configs_init, infrastructure, start_buses):
+def test_run(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {
             "module": "updater",
@@ -716,7 +671,7 @@ def test_run(uci_configs_init, infrastructure, start_buses):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_run_notifications(uci_configs_init, infrastructure, start_buses):
+def test_run_notifications(uci_configs_init, infrastructure):
     filters = [("updater", "run")]
     try:
         os.unlink(clean_reboot_indicator)

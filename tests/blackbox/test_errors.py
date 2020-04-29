@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,13 +22,10 @@ import pytest
 from foris_controller_testtools.fixtures import (
     only_message_buses,
     infrastructure,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
 )
 
 
-def test_wrong_input_data(infrastructure, start_buses):
+def test_wrong_input_data(infrastructure):
     res = infrastructure.process_message(
         {"module": "about", "action": "get", "kind": "request", "data": {"extra": "data"}}
     )
@@ -40,7 +37,7 @@ def test_wrong_input_data(infrastructure, start_buses):
 
 
 @pytest.mark.only_message_buses(["unix-socket", "mqtt"])
-def test_wrong_input_kind(infrastructure, start_buses):
+def test_wrong_input_kind(infrastructure):
     res = infrastructure.process_message(
         {
             "module": "about",
@@ -68,7 +65,7 @@ def test_wrong_input_kind(infrastructure, start_buses):
 
 
 @pytest.mark.only_message_buses(["unix-socket", "mqtt"])
-def test_wrong_input_action(infrastructure, start_buses):
+def test_wrong_input_action(infrastructure):
     res = infrastructure.process_message(
         {"module": "about", "action": "non-exiting", "kind": "request"}
     )
@@ -80,7 +77,7 @@ def test_wrong_input_action(infrastructure, start_buses):
 
 
 @pytest.mark.only_message_buses(["unix-socket", "mqtt"])
-def test_wrong_input_module(infrastructure, start_buses):
+def test_wrong_input_module(infrastructure):
     res = infrastructure.process_message(
         {"module": "non-exiting", "action": "get", "kind": "request"}
     )

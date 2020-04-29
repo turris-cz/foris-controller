@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,9 +30,6 @@ from foris_controller_testtools.fixtures import (
     turris_os_version,
     FILE_ROOT_PATH,
     file_root_init,
-    start_buses,
-    ubusd_test,
-    mosquitto_test,
     UCI_CONFIG_DIR_PATH,
 )
 from foris_controller_testtools.utils import (
@@ -84,7 +81,7 @@ def lan_dnsmasq_files():
         yield lease_file, conntrack_file
 
 
-def test_get_settings(uci_configs_init, infrastructure, start_buses):
+def test_get_settings(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )
@@ -117,12 +114,7 @@ def test_get_settings(uci_configs_init, infrastructure, start_buses):
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     filters = [("lan", "update_settings")]
 
@@ -256,12 +248,7 @@ def test_update_settings(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_wrong_update(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     def update(data):
         res = infrastructure.process_message(
@@ -418,7 +405,6 @@ def test_wrong_update(
 def test_dhcp_lease(
     uci_configs_init,
     infrastructure,
-    start_buses,
     network_restart_command,
     orig_backend_val,
     api_val,
@@ -462,12 +448,7 @@ def test_dhcp_lease(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -620,7 +601,6 @@ def test_update_settings_openwrt(
 def test_dhcp_clients_openwrt(
     uci_configs_init,
     infrastructure,
-    start_buses,
     network_restart_command,
     device,
     turris_os_version,
@@ -774,7 +754,6 @@ def test_interface_count(
     file_root_init,
     uci_configs_init,
     infrastructure,
-    start_buses,
     network_restart_command,
     device,
     turris_os_version,
@@ -923,12 +902,7 @@ def test_interface_count(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_dhcp_range(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     def update(ip, netmask, start, limit, result):
         res = infrastructure.process_message(
@@ -977,12 +951,7 @@ def test_update_settings_dhcp_range(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_dns_option(
-    uci_configs_init,
-    infrastructure,
-    start_buses,
-    network_restart_command,
-    device,
-    turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -1020,7 +989,7 @@ def test_get_settings_dns_option(
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_get_settings_missing_wireless(uci_configs_init, infrastructure, start_buses):
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
@@ -1033,7 +1002,6 @@ def test_dhcp_client_settings(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     network_restart_command,
     device,
     turris_os_version,
@@ -1283,7 +1251,6 @@ def test_dhcp_client_settings_openwrt(
     uci_configs_init,
     init_script_result,
     infrastructure,
-    start_buses,
     network_restart_command,
     device,
     turris_os_version,
@@ -1471,9 +1438,7 @@ def test_dhcp_client_settings_openwrt(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_ipv6_address_in_dns(
-    uci_configs_init, infrastructure, start_buses, device, turris_os_version
-):
+def test_ipv6_address_in_dns(uci_configs_init, infrastructure, device, turris_os_version):
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
