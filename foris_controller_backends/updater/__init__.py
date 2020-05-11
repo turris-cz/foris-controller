@@ -72,8 +72,7 @@ class UpdaterUci(object):
             else:
                 raise NotImplementedError()
 
-        if languages is not None:
-            svupdater_l10n.update_languages(languages)
+        Updater.update_languages(languages)
 
         # update wizard passed in foris web (best effort)
         try:
@@ -190,11 +189,19 @@ class Updater(object):
 
         return exported
 
-    def get_languages(self):
+    @staticmethod
+    def get_languages():
         logger.debug("Getting languages")
         languages = svupdater_l10n.languages()
         logger.debug("Languages obtained: %s", languages)
         return [{"code": k, "enabled": v} for k, v in languages.items()]
+
+    @staticmethod
+    def update_languages(languages):
+        if languages is not None:
+            svupdater_l10n.update_languages(languages)
+
+        return True
 
     def resolve_approval(self, approval_id, solution):
         """ Resolves approval

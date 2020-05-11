@@ -319,6 +319,69 @@
             "required": ["data"]
         },
         {
+            "description": "request to get languages list",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_languages"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to get languages list",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_languages"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "languages": {"$ref": "#/definitions/updater_languages_get"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["languages"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to update languages list",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_languages"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "languages": {"$ref": "#/definitions/updater_languages_set"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["languages"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to update update languages list",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_languages"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
             "description": "request to obtain information whether updater is enabled",
             "properties": {
                 "module": {"enum": ["updater"]},

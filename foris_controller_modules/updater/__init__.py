@@ -79,6 +79,26 @@ class UpdaterModule(BaseModule):
             "result": self.handler.update_package_lists(data["package_lists"])
         }
 
+    def action_get_languages(self, data):
+        """ Get current language list
+
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: current language lists
+        :rtype: dict
+        """
+        return {"languages": self.handler.get_languages()}
+
+    def action_update_languages(self, data):
+        """ Update current language list
+
+        :param data: data containing list of locale strings
+        :type data: dict
+        :returns: {"result": True/False}
+        :rtype: dict
+        """
+        return {"result": self.handler.update_languages(data["languages"])}
+
     def action_resolve_approval(self, data):
         """ Resolvs approval
         :param data: {"id": "...", "solution": "grant/deny"}
@@ -129,6 +149,7 @@ class UpdaterModule(BaseModule):
         "update_package_lists",
         "get_approval",
         "get_languages",
+        "update_languages",
         "resolve_approval",
         "run",
         "get_enabled",

@@ -233,9 +233,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         :rtype: bool
         """
 
-        if languages is not None:
-            for record in MockUpdaterHandler.languages:
-                record["enabled"] = record["code"] in languages
+        MockUpdaterHandler.update_languages(languages)
         if approvals_settings is not None:
             MockUpdaterHandler.approvals_delay = approvals_settings.get("delay", None)
             MockUpdaterHandler.approvals_status = approvals_settings["status"]
@@ -364,9 +362,17 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         """
         return MockUpdaterHandler.languages
 
+    @staticmethod
+    @logger_wrapper(logger)
+    def update_languages(languages):
+        if languages is not None:
+            for record in MockUpdaterHandler.languages:
+                record["enabled"] = record["code"] in languages
+        return True
+
     @logger_wrapper(logger)
     def resolve_approval(self, hash, solution):
-        """ Mocks resovling of the current approval
+        """ Mocks resolving of the current approval
         """
         return random.choice([True, False])
 

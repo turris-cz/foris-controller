@@ -807,3 +807,47 @@ def test_get_running(
         {"module": "updater", "action": "get_running", "kind": "request"}
     )
     assert isinstance(res["data"]["running"], bool)
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_get_languages(
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+):
+    res = infrastructure.process_message(
+        {"module": "updater", "action": "get_languages", "kind": "request"}
+    )
+
+    assert "languages" in res["data"].keys()
+    assert isinstance(res["data"]["languages"], list)
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_update_languages(
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+):
+    data = {"languages": ["cs", "de"]}
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "update_languages",
+            "kind": "request",
+            "data": data,
+        }
+    )
+    assert "result" in res["data"] and res["data"]["result"] is True
+    res = infrastructure.process_message(
+        {"module": "updater", "action": "get_languages", "kind": "request"}
+    )
+
+    lang_data = res["data"].pop("languages")
+    assert set(data["languages"]) == {e["code"] for e in lang_data if e["enabled"]}

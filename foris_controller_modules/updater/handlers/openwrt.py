@@ -113,6 +113,17 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         """
         return self.updater.get_languages()
 
+    def update_languages(self, languages):
+        """ Update installed languages
+
+        :param languages: languages
+        :type languages: list
+
+        :returns: True on success
+        :rtype: bool
+        """
+        return self.updater.update_languages(languages)
+
     @logger_wrapper(logger)
     def run(self, set_reboot_indicator):
         """ Start updater run
