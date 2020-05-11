@@ -111,6 +111,15 @@ class UpdaterModule(BaseModule):
         """
         return {"enabled": self.handler.get_enabled()}
 
+    def action_get_running(self, data):
+        """ Get information whether updater is running
+        :param data: supposed to be {}
+        :type data: dict
+        :returns: {"running": True/False}
+        :rtype: dict
+        """
+        return {"running": self.handler.get_running()}
+
 
 @wrap_required_functions(
     [
@@ -123,6 +132,7 @@ class UpdaterModule(BaseModule):
         "resolve_approval",
         "run",
         "get_enabled",
+        "get_running",
     ]
 )
 class Handler(object):

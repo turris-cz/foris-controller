@@ -754,7 +754,6 @@ def test_get_enabled(
     updater_userlists,
     uci_configs_init,
     infrastructure,
-    start_buses,
     device,
     turris_os_version,
 ):
@@ -793,3 +792,18 @@ def test_get_enabled(
         {"module": "updater", "action": "get_enabled", "kind": "request"}
     )
     assert res["data"]["enabled"] is False
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_get_running(
+    updater_languages,
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+):
+    res = infrastructure.process_message(
+        {"module": "updater", "action": "get_running", "kind": "request"}
+    )
+    assert isinstance(res["data"]["running"], bool)

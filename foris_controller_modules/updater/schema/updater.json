@@ -319,7 +319,7 @@
             "required": ["data"]
         },
         {
-            "description": "request to obtain information whether updater is running",
+            "description": "request to obtain information whether updater is enabled",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["request"]},
@@ -328,7 +328,7 @@
             "additionalProperties": false
         },
         {
-            "description": "reply to obtain information whether updater is running",
+            "description": "reply to obtain information whether updater is enabled",
             "properties": {
                 "module": {"enum": ["updater"]},
                 "kind": {"enum": ["reply"]},
@@ -345,6 +345,33 @@
                     },
                     "additionalProperties": false,
                     "required": ["enabled"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to obtain information whether updater is running",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_running"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to obtain information whether updater is running",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_running"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "running": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["running"]
                 }
             },
             "additionalProperties": false,

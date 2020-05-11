@@ -196,6 +196,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     ]
     approvals_delay = None
     enabled = True
+    running = True
     approvals_status = "off"
     updater_running = False
 
@@ -382,3 +383,9 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         """ Mocks get info whether updater is enabled
         """
         return self.enabled
+
+    @logger_wrapper(logger)
+    def get_running(self):
+        """ Mocks get info whether updater is running
+        """
+        return self.running

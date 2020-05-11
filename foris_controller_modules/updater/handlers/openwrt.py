@@ -128,3 +128,9 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         """ Get info whether updater is enabled
         """
         return self.uci.get_enabled()
+
+    @logger_wrapper(logger)
+    def get_running(self):
+        """ Get info whether updater is running
+        """
+        return self.updater.updater_running()
