@@ -41,7 +41,7 @@
             }
         },
         "wifi_device_hwmode": {"enum": ["11g", "11a"]},
-        "wifi_device_htmode": {"enum": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80"]},
+        "wifi_device_htmode": {"enum": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80", "VHT160"]},
         "wifi_device_htmodes": {
             "type": "array",
             "items": {"$ref": "#/definitions/wifi_device_htmode"}

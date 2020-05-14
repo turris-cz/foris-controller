@@ -17,9 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import glob
+import json
 import logging
-import os
 import re
 import typing
 
@@ -33,7 +32,6 @@ from foris_controller_backends.uci import (
 )
 
 from foris_controller_backends.cmdline import BaseCmdLine
-from foris_controller_backends.files import inject_file_root
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
 
@@ -61,111 +59,74 @@ class WifiUci(object):
             backend.set_option("wireless", section_name, "disabled", store_bool(True))
 
     @staticmethod
-    def _get_band(lines):
-        VHTMODES = ["VHT20", "VHT40", "VHT80"]
-
-        if not lines:
+    def call_ubus(ubus_object, method, data):
+        retval, stdout, stderr = BaseCmdLine._run_command(
+            "/bin/ubus", "call", ubus_object, method, json.dumps(data)
+        )
+        if retval != 0:
+            logger.warning("Failure during ubus call: %s", stderr)
             return None
 
-        htmodes = ["NOHT"]
-        channels = []
-        for line in lines:
-            if re.search(r"HT20", line) and "HT20" not in htmodes:
-                htmodes.append("HT20")
-            if re.search(r"HT40", line) and "HT40" not in htmodes:
-                htmodes.append("HT40")
-            if re.search(r"VHT Capabilities", line):
-                htmodes.extend(VHTMODES)
-            freq_match = re.match(r"^\s+\* (\d+) MHz \[(\d+)\] .*$", line)
-            if freq_match:
-                if "disabled" in line:
-                    continue
-                freq, channel = freq_match.groups()
-                freq = int(freq)
-                channel = int(channel)
-                channels.append(
-                    {"number": channel, "frequency": freq, "radar": "radar detection" in line}
-                )
-
-        # detect hwmode
-        if len(channels) == len([e for e in channels if 2400 < e["frequency"] < 2500]):
-            hwmode = "11g"
-        elif len(channels) == len([e for e in channels if 5000 < e["frequency"] < 6000]):
-            hwmode = "11a"
-        else:
+        try:
+            return json.loads(stdout.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            logger.warning("Failed to read result: %r", e)
             return None
-
-        return {"available_htmodes": htmodes, "available_channels": channels, "hwmode": hwmode}
 
     @staticmethod
-    def _get_device_bands(uci_device_path=None, uci_macaddr=None):
-        # read wifi device
-        phy_name = None
-        if uci_device_path:
-            # try to get wifi device from path
-            path1 = inject_file_root(
-                os.path.join("/", "sys", "devices", "platform", uci_device_path)
-            )
-            path2 = inject_file_root(os.path.join("/", "sys", "devices", uci_device_path))
-            phy_path = glob.glob(os.path.join(path1, "ieee80211", "*")) + glob.glob(
-                os.path.join(path2, "ieee80211", "*")
-            )
-            if len(phy_path) == 1:
-                # now we have phy device for iw command
-                phy_name = os.path.basename(phy_path[0])
+    def _get_device_bands(device_name):
+        DEFAULT_HTMODES = {"NOHT"}
+        HTMODES = {"HT20", "HT40"}
+        VHTMODES = HTMODES | {"VHT20", "VHT40", "VHT80", "VHT160"}
 
-        if not phy_name and uci_macaddr:
-            main_path = inject_file_root("/sys/class/ieee80211/*/macaddress")
-            # try to get wifi device from mac address
-            for macaddr_path in glob.glob(main_path):
-                with open(macaddr_path) as f:
-                    content = f.read()
-                if content.lower().strip() == uci_macaddr.lower():
-                    phy_name = os.path.basename(os.path.dirname(macaddr_path))
-                    break
+        MODES_MAP = {
+            "11g": "n",
+            "11a": "ac",
+        }
 
-        if not phy_name:
-            # failed to get device name
+        request_msg = {"device": device_name}
+        ht_data = WifiUci.call_ubus("iwinfo", "info", request_msg)
+        if not ht_data:
             return []
 
-        retval, stdout, _ = BaseCmdLine._run_command("/usr/sbin/iw", "phy", phy_name, "info")
-        stdout = stdout.decode("utf-8")
-        if retval != 0:
+        freq_data = WifiUci.call_ubus("iwinfo", "freqlist", request_msg)
+        if not freq_data:
             return []
 
-        # read dat from iw command
-        bands = []
-        band_lines = []
-        reached = False
-        for line in stdout.split("\n"):
+        htmodes = {}
+        channels = {"11g": [], "11a": []}
 
-            if reached:
-                band_lines.append(line)
+        for freq in freq_data["results"]:
+            channel = {
+                "number": freq["channel"],
+                "frequency": freq["mhz"],
+                "radar": False,  # iwinfo/rpcd doesn't return DFS flags; use False for compatibility
+            }
+            channels["11a" if channel["frequency"] > 2484 else "11g"].append(channel)
 
-            # Handle stored band lines
-            if re.match(r"\s*Band \d+:$", line):
-                reached = True
-                band = WifiUci._get_band(band_lines)
-                if band:
-                    bands.append(band)
-                band_lines = []
+        if "ac" in ht_data["hwmodes"]:
+            htmodes["ac"] = list(DEFAULT_HTMODES | (set(ht_data["htmodes"]) & VHTMODES))
 
-        if not reached:
-            # Band not present, something went wrong
-            return []
-        else:
-            band = WifiUci._get_band(band_lines)
-            if band:
-                bands.append(band)
+        if "n" in ht_data["hwmodes"]:
+            htmodes["n"] = list(DEFAULT_HTMODES | (set(ht_data["htmodes"]) & HTMODES))
 
-        return bands
+        return [
+            {
+                "available_channels": channels[hwmode],
+                "available_htmodes": htmodes[MODES_MAP[hwmode]],
+                "hwmode": hwmode,
+            }
+            for hwmode in ["11g", "11a"]
+            if len(channels[hwmode]) > 0
+        ]
 
     def _prepare_wifi_device(self, device, interface, guest_interface):
         # read data from uci
-        device_name = re.search(r"radio(\d+)$", device["name"])  # radioX -> X
-        if not device_name:
+        device_name = device["name"]
+        device_no = re.search(r"radio(\d+)$", device_name)  # radioX -> X
+        if not device_no:
             return None
-        device_id = int(device_name.group(1))
+        device_id = int(device_no.group(1))
         enabled = not (
             parse_bool(device["data"].get("disabled", "0"))
             or parse_bool(interface["data"].get("disabled", "0"))
@@ -188,10 +149,7 @@ class WifiUci(object):
             guest_ssid = "%s-guest" % ssid
             guest_password = ""
 
-        # first we obtain the devices (e.g. phy1, phy2, ...)
-        bands = WifiUci._get_device_bands(
-            device["data"].get("path", None), device["data"].get("macaddr", None)
-        )
+        bands = WifiUci._get_device_bands(device_name)
         if not bands:
             # unable to determine wifi device name
             return None
@@ -364,10 +322,7 @@ class WifiUci(object):
                         # find corresponding band
                         bands = [
                             e
-                            for e in WifiUci._get_device_bands(
-                                device_section["data"].get("path", None),
-                                device_section["data"].get("macaddr", None),
-                            )
+                            for e in WifiUci._get_device_bands(device_section["name"])
                             if e and e["hwmode"] == device["hwmode"]
                         ]
                         if len(bands) != 1:
