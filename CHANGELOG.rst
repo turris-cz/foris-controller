@@ -1,3 +1,18 @@
+1.0.13 (2020-05-22)
+-------------------
+
+* updater: package lists api overhaul
+
+1.0.12 (2020-04-20)
+-------------------
+
+* wifi: remove wifi detect which is deprecated
+
+1.0.11 (2020-03-13)
+-------------------
+
+* dns: allow multiple ip addresses for DNS resolver
+
 1.0.10 (2020-02-11)
 -------------------
 
