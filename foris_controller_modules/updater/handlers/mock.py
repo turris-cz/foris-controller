@@ -331,8 +331,8 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @staticmethod
     def _is_option_enabled(list_name, opt_name, opt_data):
-        if (list_name in MockUpdaterHandler.PACKAGE_LISTS and
-                opt_name in MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"]):
+        if (list_name in MockUpdaterHandler.PACKAGE_LISTS
+                and opt_name in MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"]):
             return MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"][opt_name]["enabled"]
 
         return opt_data.get("default", False)

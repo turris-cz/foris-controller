@@ -20,7 +20,7 @@
 import logging
 import os
 
-from foris_controller.updater import svupdater, svupdater_exceptions, svupdater_hook
+from foris_controller.updater import svupdater, svupdater_exceptions
 from foris_controller_backends.cmdline import BackendCommandFailed, BaseCmdLine
 
 

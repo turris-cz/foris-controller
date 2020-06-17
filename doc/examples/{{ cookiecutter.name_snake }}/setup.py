@@ -28,7 +28,7 @@ setup(
     install_requires=[
         "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller.git"
     ],
-    setup_requires=["pytest-runner"],
+    setup_requires=["pytest-runner", "flake8"],
     tests_require=["pytest", "foris-controller-testtools", "foris-client", "ubus", "paho-mqtt"],
     entry_points={
         "foris_controller_announcer": [

@@ -17,3 +17,9 @@ test_python3:
   image: registry.labs.nic.cz/turris/foris-ci/python3
   stage: test
   <<: *run_script
+
+flake8:
+  image: registry.labs.nic.cz/turris/foris-ci/python3
+  stage: test
+  run:
+    - python setup.py flake8

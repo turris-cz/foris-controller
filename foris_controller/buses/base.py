@@ -21,10 +21,10 @@ import logging
 import inspect
 import uuid
 
+from foris_controller.utils import get_module_class
+
 
 logger = logging.getLogger(__name__)
-
-from foris_controller.utils import get_modules, get_module_class
 
 
 class BaseNotificationSender(object):

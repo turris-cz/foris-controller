@@ -42,14 +42,14 @@ FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test
 def pass_file():
     try:
         os.unlink(PASS_PATH)
-    except:
+    except Exception:
         pass
 
     yield PASS_PATH
 
     try:
         os.unlink(PASS_PATH)
-    except:
+    except Exception:
         pass
 
 

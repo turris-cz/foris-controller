@@ -36,7 +36,7 @@ from jsonschema import ValidationError
 
 from foris_controller.app import app_info
 from foris_controller.message_router import Router
-from foris_controller.utils import get_modules, get_module_class, LOGGER_MAX_LEN
+from foris_controller.utils import get_modules
 
 from .base import BaseNotificationSender, BaseSocketListener, get_method_names_from_module
 

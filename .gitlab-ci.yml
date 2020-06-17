@@ -8,6 +8,11 @@ before_script:
 .base_image: &py3_common
   image: registry.labs.nic.cz/turris/foris-ci/python3
 
+flake8:
+  <<: *py3_common
+  script:
+    - python setup.py flake8
+
 unit_tests:
   <<: *py3_common
   script:

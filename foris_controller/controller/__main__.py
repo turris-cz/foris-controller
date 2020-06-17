@@ -25,8 +25,6 @@ import logging
 import multiprocessing
 import typing
 
-from logging.handlers import SysLogHandler
-
 from foris_controller import __version__
 from foris_controller.app import (
     app_info,

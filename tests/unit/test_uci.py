@@ -461,12 +461,12 @@ config import 'import1'
 
 config import
 	option ipass '0'
-"""
+"""  # noqa
 
 
 @pytest.mark.uci_config_path(CONFIG_PATH)
 def test_import_data(uci_configs_init, lock_backend):
-    config_dir, _ = uci_configs_init
+    config_dir, _ = uci_configs_init  # noqa
     uci = get_uci_module(lock_backend)
     backend_class = get_uci_module(lock_backend).UciBackend
 

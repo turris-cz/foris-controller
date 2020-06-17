@@ -26,7 +26,6 @@ from foris_controller.updater import (
     svupdater,
     svupdater_approvals,
     svupdater_exceptions,
-    svupdater_hook,
     svupdater_l10n,
     svupdater_lists,
     svupdater_autorun,

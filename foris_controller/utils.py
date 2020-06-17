@@ -25,8 +25,6 @@ import os
 import pkgutil
 import prctl
 import signal
-import socket
-import struct
 import re
 import typing
 

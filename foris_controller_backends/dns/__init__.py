@@ -114,14 +114,14 @@ class DnsFiles(BaseFile):
         )
 
     def _store_forwarder_to_file(
-            self,
-            name: str,
-            description: str,
-            ipaddresses: dict,
-            tls_type: str,
-            tls_hostname: str,
-            tls_pin: str,
-     ) -> bool:
+        self,
+        name: str,
+        description: str,
+        ipaddresses: dict,
+        tls_type: str,
+        tls_hostname: str,
+        tls_pin: str,
+    ) -> bool:
         with DnsFiles.file_lock.readlock:
             escaped_description = description.replace('"', '\\"')
             content = f"""\

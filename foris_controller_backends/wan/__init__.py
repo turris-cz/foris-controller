@@ -18,7 +18,6 @@
 #
 
 import logging
-import json
 
 from foris_controller_backends.uci import UciBackend, get_option_named, store_bool
 from foris_controller.exceptions import UciException, GenericError

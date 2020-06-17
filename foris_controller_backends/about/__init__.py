@@ -106,7 +106,7 @@ class ServerUplinkFiles(BaseFile):
         """
         try:
             res = self._read_and_parse(ServerUplinkFiles.REGNUM_PATH, r"^([a-zA-Z0-9]{16})$", (1,))
-        except:
+        except Exception:
             # failed to read file -> return False
             res = False
 

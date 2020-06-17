@@ -370,7 +370,7 @@ def test_update_settings_forwarder(
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
-    assert uci.get_option_named(data, "resolver", "common", "forward_custom", "") is ""
+    assert uci.get_option_named(data, "resolver", "common", "forward_custom", "") == ""
 
     # Update to some
     res = infrastructure.process_message(
