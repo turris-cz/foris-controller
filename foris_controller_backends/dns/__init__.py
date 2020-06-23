@@ -273,6 +273,9 @@ class DnsUciCommands(object):
                 backend.set_option(
                     "dhcp", "@dnsmasq[0]", "local", "/%s/" % dns_from_dhcp_domain.strip("/")
                 )
+                backend.set_option(
+                    "dhcp", "@dnsmasq[0]", "domain", "%s" % dns_from_dhcp_domain.strip("/")
+                )
             if forwarder is not None:
                 backend.set_option("resolver", "common", "forward_custom", forwarder)
 

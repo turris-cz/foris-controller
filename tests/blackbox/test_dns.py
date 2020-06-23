@@ -330,6 +330,39 @@ def test_update_settings_service_restart(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
+def test_update_settings_local_domain(
+    file_root_init,
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+    device,
+    turris_os_version,
+):
+    uci = get_uci_module(infrastructure.name)
+    res = infrastructure.process_message(
+        {
+            "module": "dns",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "forwarding_enabled": True,
+                "forwarder": "",
+                "dnssec_enabled": True,
+                "dns_from_dhcp_enabled": True,
+                "dns_from_dhcp_domain": "test",
+            },
+        }
+    )
+    assert res["data"]["result"] is True
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+    assert uci.get_option_anonymous(data, "dhcp", "dnsmasq", 0, "local", "") == "/test/"
+    assert uci.get_option_anonymous(data, "dhcp", "dnsmasq", 0, "domain", "") == "test"
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
 def test_update_settings_forwarder(
     file_root_init,
     custom_forwarders,
