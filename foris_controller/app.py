@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ def set_app_info(program_options):
     app_info["controller_id"] = controller_id or f"{uuid.getnode():016X}"
 
     app_info["mqtt_credentials"] = getattr(program_options, "passwd_file", None)
+    app_info["mqtt_announcer_period"] = getattr(program_options, "announcer_period", None)
 
 
 def _gen_notify(module_name):

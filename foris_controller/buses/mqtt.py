@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 
 import logging
 import json
-import os
 import uuid
 import re
 import socket
@@ -45,10 +44,7 @@ logger = logging.getLogger(__name__)
 
 bus_info = {"bus_thread": None}
 
-ANNOUNCER_PERIOD_DEFAULT = 1.0  # i in seconds
-ANNOUNCER_PERIOD = float(
-    os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", ANNOUNCER_PERIOD_DEFAULT)
-)  # in seconds
+ANNOUNCER_PERIOD_DEFAULT = 1.0  # in seconds
 CLEAR_RETAIN_PERIOD = 10.0  # in seconds
 
 
@@ -145,8 +141,8 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         announcers.append(EntryPointAnnouncer(period, callback))
 
     while bus_info["bus_thread"].is_alive():
-        time.sleep(ANNOUNCER_PERIOD or ANNOUNCER_PERIOD_DEFAULT)
-        if ANNOUNCER_PERIOD:
+        time.sleep(app_info["mqtt_announcer_period"] or ANNOUNCER_PERIOD_DEFAULT)
+        if app_info["mqtt_announcer_period"]:
             _publish_advertize(
                 client, _build_advertizement("running"), working_replies, working_replies_lock
             )
@@ -155,7 +151,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
                 if res:
                     _publish(client, res)
 
-        counter += ANNOUNCER_PERIOD
+        counter += app_info["mqtt_announcer_period"]
 
     _publish_advertize(
         client, _build_advertizement("exited"), working_replies, working_replies_lock

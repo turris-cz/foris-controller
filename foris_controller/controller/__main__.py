@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,10 +19,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import re
 import argparse
 import logging
 import multiprocessing
+import os
+import re
 import typing
 
 from foris_controller import __version__
@@ -86,6 +87,8 @@ def main():
         )
 
     if "mqtt" in available_buses:
+        from foris_controller.buses.mqtt import ANNOUNCER_PERIOD_DEFAULT
+
         mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt recieve commands")
         mqtt_parser.add_argument("--host", default="127.0.0.1")
         mqtt_parser.add_argument("--port", type=int, default=1883)
@@ -99,6 +102,13 @@ def main():
             type=lambda x: read_passwd_file(x),
             help="path to passwd file (first record will be used to authenticate)",
             default=None,
+        )
+        mqtt_parser.add_argument(
+            "--announcer-period",
+            type=float,
+            help="Configures how often will be announcement broadcasted. "
+            "(in seconds, when set to 0 no announcments will be sent)",
+            default=os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", ANNOUNCER_PERIOD_DEFAULT),
         )
 
     parser.add_argument(
