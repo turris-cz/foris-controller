@@ -21,6 +21,7 @@ import logging
 import typing
 
 from datetime import datetime
+from functools import wraps
 
 from foris_controller.updater import (
     svupdater,
@@ -33,6 +34,23 @@ from foris_controller.updater import (
 from foris_controller.exceptions import UciException
 
 logger = logging.getLogger(__name__)
+
+
+def run_updater_after(func):
+    """ Decorator to run pkgupdate after function finishes"""
+    @wraps(func)
+    def inner(*args, **kwargs):
+        res = func(*args, **kwargs)
+
+        if svupdater_autorun.enabled():
+            try:
+                svupdater.run()
+            except svupdater_exceptions.ExceptionUpdaterDisabled:
+                pass  # failed to run updater, but settings were updated
+
+        return res
+
+    return inner
 
 
 class UpdaterUci(object):
@@ -56,6 +74,7 @@ class UpdaterUci(object):
     def get_enabled(self) -> typing.Optional[bool]:
         return svupdater_autorun.enabled()
 
+    @run_updater_after
     def update_settings(self, languages, approvals_status, approvals_delay, enabled):
         svupdater_autorun.set_enabled(enabled)
 
@@ -81,14 +100,9 @@ class UpdaterUci(object):
         except UciException:
             pass
 
-        if enabled:
-            try:
-                svupdater.run()
-            except svupdater_exceptions.ExceptionUpdaterDisabled:
-                pass  # failed to run updater, but settings were updated
-
         return True
 
+    @run_updater_after
     def update_package_lists(self, package_lists):
         svupdater_lists.update_pkglists(self._jsonschema_to_svupdater(package_lists))
         return True
@@ -196,6 +210,7 @@ class Updater(object):
         return [{"code": k, "enabled": v} for k, v in languages.items()]
 
     @staticmethod
+    @run_updater_after
     def update_languages(languages):
         if languages is not None:
             svupdater_l10n.update_languages(languages)
