@@ -143,7 +143,7 @@ setup(
         ]
     },
     dependency_links=[
-        "git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller-testtools.git#egg=foris-controller-testtools",
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller-testtools.git@a2b2f057a61250f9a180808695b2297abf91f4d4#egg=foris-controller-testtools",
         "git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-client.git#egg=foris-client",
     ],
     include_package_data=True,
