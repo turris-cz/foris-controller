@@ -1,3 +1,10 @@
+1.0.14 (2020-07-01)
+-------------------
+
+* dns: save domain to 'option domain'
+* updater: run updater after update of package lists and languages from reforis
+* various fixes and improvements under the hood
+
 1.0.13 (2020-05-22)
 -------------------
 
