@@ -137,8 +137,9 @@ setup(
         'paho-mqtt',
     ],
     extras_require={
-        'ubus': ["ubus"],
-        'mqtt': ["paho-mqtt"],
+        "ubus": ["ubus"],
+        "mqtt": ["paho-mqtt"],
+        "zeroconf": ["zeroconf", "ifaddr", "paho-mqtt"],
         'client-socket': ["foris-client @ git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git"],
     },
     entry_points={

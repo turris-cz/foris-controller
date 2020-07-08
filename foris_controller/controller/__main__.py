@@ -43,6 +43,7 @@ except ImportError:
 
 
 available_buses: typing.List[str] = ["unix-socket"]
+zeroconf = False
 
 
 try:
@@ -55,6 +56,13 @@ except ModuleNotFoundError:
 try:
     __import__("paho.mqtt.client")
     available_buses.append("mqtt")
+except ModuleNotFoundError:
+    pass
+
+
+try:
+    __import__("zeroconf")
+    zeroconf = True
 except ModuleNotFoundError:
     pass
 
@@ -110,6 +118,26 @@ def main():
             "(in seconds, when set to 0 no announcments will be sent)",
             default=os.environ.get("FC_MQTT_ANNOUNCER_PERIOD", ANNOUNCER_PERIOD_DEFAULT),
         )
+        if zeroconf:
+            mqtt_parser.add_argument(
+                "--zeroconf-enabled",
+                action="store_true",
+                default=False,
+                help="if enabled zeroconf announcements will be sent",
+            )
+            mqtt_parser.add_argument(
+                "--zeroconf-devices",
+                nargs="+",
+                metavar="DEVICE_NAME",
+                help="Name of network interface which ips will be used for zeroconf (e.g. eth0). "
+                " If not set all interfaces will be used.",
+            )
+            mqtt_parser.add_argument(
+                "--zeroconf-port",
+                default=11884,
+                type=int,
+                help="Port which will be propagated using zeroconf.",
+            )
 
     parser.add_argument(
         "-b",
@@ -259,7 +287,15 @@ def main():
         process.start()
 
     logger.debug("Entering main loop.")
+    if zeroconf:
+        from foris_controller.zconf import register
+
+        zconf_instance = register()
+
     server.serve_forever()
+
+    if zeroconf and zconf_instance:
+        zconf_instance.close()
 
 
 if __name__ == "__main__":

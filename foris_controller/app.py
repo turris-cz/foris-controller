@@ -60,6 +60,10 @@ def set_app_info(program_options):
     app_info["mqtt_credentials"] = getattr(program_options, "passwd_file", None)
     app_info["mqtt_announcer_period"] = getattr(program_options, "announcer_period", None)
 
+    app_info["zeroconf_enabled"] = getattr(program_options, "zeroconf_enabled", False)
+    app_info["zeroconf_devices"] = getattr(program_options, "zeroconf_devices", [])
+    app_info["zeroconf_port"] = getattr(program_options, "zeroconf_port", 11884)
+
 
 def _gen_notify(module_name):
     """ Generator for notify function which wrapps module name inside the notify call
