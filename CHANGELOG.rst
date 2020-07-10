@@ -1,3 +1,8 @@
+1.0.15 (2020-07-10)
+-------------------
+
+* wifi: basic detection of wireless capabilities through ubus
+
 1.0.14 (2020-07-01)
 -------------------
 
