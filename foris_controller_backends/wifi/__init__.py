@@ -74,8 +74,16 @@ class WifiUci(object):
             return None
 
     @staticmethod
+    def sort_htmodes(modes):
+        """Sort HT and VHT modes in natural order"""
+        return sorted(
+            modes,
+            key=lambda l: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", l)]
+        )
+
+    @staticmethod
     def _get_device_bands(device_name):
-        DEFAULT_HTMODES = {"NOHT"}
+        DEFAULT_HTMODE = "NOHT"
         HTMODES = {"HT20", "HT40"}
         VHTMODES = HTMODES | {"VHT20", "VHT40", "VHT80", "VHT160"}
 
@@ -105,10 +113,10 @@ class WifiUci(object):
             channels["11a" if channel["frequency"] > 2484 else "11g"].append(channel)
 
         if "ac" in ht_data["hwmodes"]:
-            htmodes["ac"] = list(DEFAULT_HTMODES | (set(ht_data["htmodes"]) & VHTMODES))
+            htmodes["ac"] = [DEFAULT_HTMODE] + WifiUci.sort_htmodes(set(ht_data["htmodes"]) & VHTMODES)
 
         if "n" in ht_data["hwmodes"]:
-            htmodes["n"] = list(DEFAULT_HTMODES | (set(ht_data["htmodes"]) & HTMODES))
+            htmodes["n"] = [DEFAULT_HTMODE] + WifiUci.sort_htmodes(set(ht_data["htmodes"]) & HTMODES)
 
         return [
             {
