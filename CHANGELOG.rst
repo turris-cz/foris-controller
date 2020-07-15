@@ -1,3 +1,8 @@
+1.0.16 (2020-07-15)
+-------------------
+
+* wifi: return HT and VHT modes in natural sort order
+
 1.0.15 (2020-07-10)
 -------------------
 
