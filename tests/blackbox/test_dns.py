@@ -125,6 +125,55 @@ pin_sha256="yioEpqeR4WtDwE9YxNVnCEkTxIjx6EEIwFSQW+lJsbc="
         yield res1, res2, res3
 
 
+@pytest.fixture(scope="function")
+def custom_forwarders_missing_ips():
+    res1 = """/
+name="01_odvr-cznic.conf"
+description="CZ.NIC (TLS)"
+enable_tls="1"
+port="853"
+ipv4="193.17.47.1 185.43.135.1"
+# <-- missing ipv6 here
+ca_file="/etc/ssl/certs/ca-certificates.crt"
+hostname="odvr.nic.cz"
+"""
+
+    res2 = """/
+name="02_odvr-cznic.conf"
+description="CZ.NIC (TLS)"
+enable_tls="1"
+port="853"
+# <-- missing ipv4 here
+ipv6="2606:4700:4700::1111"
+ca_file="/etc/ssl/certs/ca-certificates.crt"
+hostname="odvr.nic.cz"
+"""
+
+    with FileFaker(
+        FILE_ROOT_PATH, "/etc/resolver/dns_servers/01_odvr-cznic.conf", False, res1
+    ) as res1, FileFaker(
+        FILE_ROOT_PATH, "/etc/resolver/dns_servers/02_odvr-cznic.conf", False, res2
+    ) as res2:
+        yield res1, res2
+
+
+@pytest.fixture(scope="function")
+def custom_forwarders_no_ip():
+    res = """/
+name="03_odvr-cznic.conf"
+description="CZ.NIC (TLS)"
+enable_tls="1"
+port="853"
+# <-- no ip
+ca_file="/etc/ssl/certs/ca-certificates.crt"
+hostname="odvr.nic.cz"
+"""
+    with FileFaker(
+        FILE_ROOT_PATH, "/etc/resolver/dns_servers/00_odvr-cznic.conf", False, res
+    ) as res:
+        yield res
+
+
 def test_get_settings(file_root_init, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "dns", "action": "get_settings", "kind": "request"}
@@ -538,3 +587,28 @@ def test_del_forwarder(file_root_init, custom_forwarders, uci_configs_init, infr
     )
     assert res["data"]["result"] is False
     assert "99_google" in [e["name"] for e in list_forwarders(infrastructure)]
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_forwarders_ipv4_or_ipv6_only(custom_forwarders_missing_ips, infrastructure):
+    res = infrastructure.process_message(
+        {"module": "dns", "action": "list_forwarders", "kind": "request"}
+    )
+
+    forwarders = sorted(res['data']['forwarders'], key=lambda x: x["name"])
+
+    assert len(forwarders[0]['ipaddresses']['ipv4']) == 2
+    assert len(forwarders[0]['ipaddresses']['ipv6']) == 0
+
+    assert len(forwarders[1]['ipaddresses']['ipv6']) == 1
+    assert len(forwarders[1]['ipaddresses']['ipv4']) == 0
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_empty_both_ip(custom_forwarders_no_ip, infrastructure):
+    res = infrastructure.process_message(
+        {"module": "dns", "action": "list_forwarders", "kind": "request"}
+    )
+
+    error = res['errors'][0]['stacktrace']
+    assert "jsonschema.exceptions.ValidationError: {'ipv4': [], 'ipv6': []} is not valid" in error

@@ -173,8 +173,10 @@ ca_file="/etc/ssl/certs/ca-certificates.crt"
                 content = BaseFile()._file_content(str(DnsFiles.RESOLVERS_DIR / f"{name}.conf"))
                 description = re.search(r'description="([^"]*)"', content, re.MULTILINE).group(1)
                 editable = re.search(r'editable="([^"]*)"', content, re.MULTILINE)
-                ipv4 = re.search(r'ipv4="([^"]*)"', content, re.MULTILINE).group(1)
-                ipv6 = re.search(r'ipv6="([^"]*)"', content, re.MULTILINE).group(1)
+                ipv4 = re.search(r'ipv4="([^"]*)"', content, re.MULTILINE)
+                ipv4_addrs = ipv4.group(1) if ipv4 else ""
+                ipv6 = re.search(r'ipv6="([^"]*)"', content, re.MULTILINE)
+                ipv6_addrs = ipv6.group(1) if ipv6 else ""
                 editable = re.search(r'editable="([^"]*)"', content, re.MULTILINE)
                 if editable and editable.group(1).lower() == "true":
                     editable = True
@@ -185,8 +187,8 @@ ca_file="/etc/ssl/certs/ca-certificates.crt"
                     "name": name,
                     "description": description,
                     "ipaddresses": {
-                        "ipv4": DnsFiles._split_ip_addresses_list(ipv4),
-                        "ipv6": DnsFiles._split_ip_addresses_list(ipv6),
+                        "ipv4": DnsFiles._split_ip_addresses_list(ipv4_addrs),
+                        "ipv6": DnsFiles._split_ip_addresses_list(ipv6_addrs),
                     },
                     "editable": editable,
                     "tls_type": "no",
