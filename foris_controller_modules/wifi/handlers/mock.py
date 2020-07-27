@@ -34,7 +34,7 @@ DEFAULT_CONFIG = [
         "SSID": "Turris",
         "hidden": False,
         "channel": 36,
-        "htmode": "VHT80",
+        "htmode": "VHT160",
         "hwmode": "11a",
         "password": "",
         "guest_wifi": {"enabled": False, "SSID": "Turris-guest", "password": ""},

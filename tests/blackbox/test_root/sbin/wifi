@@ -16,7 +16,7 @@ config wifi-device  radio0
         option country  'CZ'
         option hwmode   11a
         option macaddr  '99:88:77:66:55:44'
-        option htmode   VHT80
+        option htmode   VHT160
         # REMOVE THIS LINE TO ENABLE WIFI:
         option disabled 1
 

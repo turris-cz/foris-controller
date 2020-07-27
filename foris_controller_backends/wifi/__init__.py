@@ -121,7 +121,7 @@ class WifiUci(object):
         return [
             {
                 "available_channels": channels[hwmode],
-                "available_htmodes": htmodes[MODES_MAP[hwmode]],
+                "available_htmodes": htmodes.get(MODES_MAP[hwmode], [DEFAULT_HTMODE]),
                 "hwmode": hwmode,
             }
             for hwmode in ["11g", "11a"]
