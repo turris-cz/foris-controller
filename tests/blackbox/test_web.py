@@ -16,34 +16,36 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
-import os
-import pytest
 import base64
+import os
 import sys
 
+import pytest
+from foris_controller import profiles
+from foris_controller.exceptions import UciRecordNotFound
 from foris_controller_testtools.fixtures import (
-    uci_configs_init,
-    infrastructure,
-    file_root_init,
-    only_backends,
-    init_script_result,
     FILE_ROOT_PATH,
-    network_restart_command,
-    device,
-    turris_os_version,
     UCI_CONFIG_DIR_PATH,
+    device,
+    file_root_init,
+    infrastructure,
+    init_script_result,
+    network_restart_command,
+    only_backends,
+    turris_os_version,
+    uci_configs_init,
 )
 from foris_controller_testtools.utils import (
     FileFaker,
     get_uci_module,
-    prepare_turrishw_root,
     prepare_turrishw,
+    prepare_turrishw_root,
+    network_restart_was_called,
 )
-from foris_controller import profiles
-from foris_controller.exceptions import UciRecordNotFound
 
-
-NEW_WORKFLOWS = [e for e in profiles.WORKFLOWS if e not in profiles.WORKFLOW_OLD]
+NEW_WORKFLOWS = [
+    e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_OLD, profiles.WORKFLOW_SHIELD)
+]
 
 START_WORKFLOWS = [profiles.WORKFLOW_OLD, profiles.WORKFLOW_UNSET]
 FINISH_WORKFLOWS = [e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_UNSET)]
@@ -457,7 +459,10 @@ def test_reset_guide_openwrt(
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0")], indirect=True)
 @pytest.mark.parametrize(
     "old_workflow,new_workflow",
-    [(profiles.WORKFLOW_OLD, profiles.WORKFLOW_OLD)]
+    [
+        (profiles.WORKFLOW_OLD, profiles.WORKFLOW_OLD),
+        (profiles.WORKFLOW_SHIELD, profiles.WORKFLOW_SHIELD),
+    ]
     + [
         (profiles.WORKFLOW_UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))
     ],
@@ -669,3 +674,59 @@ def test_walk_through_guide(
         last = set(profiles.WORKFLOWS[active_workflow]) != set(passed + [step])
         MAP[step](passed + [step], active_workflow, last)
         passed.append(step)
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.parametrize("password_set,wan_configured", ((True, True), (False, False)))
+@pytest.mark.only_backends(["openwrt"])
+def test_auto_set_unconfigured_wan(
+    password_set,
+    wan_configured,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    network_restart_command,
+):
+    prepare_turrishw_root(device, turris_os_version)
+
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("network", "wan", "proto", "none")
+
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "get_settings", "kind": "request"}
+    )
+    assert res["data"]["wan_settings"]["wan_type"] == "none"
+
+    res = infrastructure.process_message(
+        {"module": "web", "action": "reset_guide", "kind": "request"}
+    )
+    assert res["data"] == {"result": True}
+
+    if password_set:
+
+        res = infrastructure.process_message(
+            {
+                "module": "password",
+                "action": "set",
+                "kind": "request",
+                "data": {"password": base64.b64encode(b"heslo").decode("utf-8"), "type": "foris"},
+            }
+        )
+        assert res["data"]["result"] is True
+
+    res = infrastructure.process_message(
+        {"module": "web", "action": "update_guide", "kind": "request", "data": {"enabled": False}}
+    )
+    assert res["data"]["result"] is True
+
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "get_settings", "kind": "request"}
+    )
+    if wan_configured:
+        assert res["data"]["wan_settings"]["wan_type"] == "dhcp"
+        assert network_restart_was_called([])
+    else:
+        assert res["data"]["wan_settings"]["wan_type"] == "none"

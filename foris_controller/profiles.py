@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ WORKFLOW_UNSET = "unset"
 WORKFLOW_OLD = "old"
 WORKFLOW_ROUTER = "router"
 WORKFLOW_MIN = "min"
+WORKFLOW_SHIELD = "shield"
 WORKFLOW_BRIDGE = "bridge"
 
 STEP_PASSWORD = "password"
@@ -48,6 +49,7 @@ WORKFLOWS = {
         STEP_FINISHED,
     ],
     WORKFLOW_MIN: [STEP_PASSWORD, STEP_PROFILE, STEP_FINISHED],
+    WORKFLOW_SHIELD: [STEP_PASSWORD, STEP_FINISHED],
     WORKFLOW_BRIDGE: [
         STEP_PASSWORD,
         STEP_PROFILE,

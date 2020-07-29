@@ -28,6 +28,7 @@ from foris_controller_testtools.fixtures import (
     device,
     turris_os_version,
     UCI_CONFIG_DIR_PATH,
+    file_root_init,
 )
 from foris_controller_testtools.utils import (
     network_restart_was_called,

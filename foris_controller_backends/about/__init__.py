@@ -18,12 +18,14 @@
 #
 
 import logging
+import typing
 
 from foris_controller.app import app_info
-from foris_controller.utils import writelock, readlock, RWLock
-from foris_controller_backends.cmdline import BaseCmdLine, i2c_lock
-from foris_controller_backends.files import server_uplink_lock, BaseFile
+from foris_controller.exceptions import FailedToParseFileContent
 from foris_controller.updater import svupdater_branch
+from foris_controller.utils import RWLock, readlock, writelock
+from foris_controller_backends.cmdline import BaseCmdLine, i2c_lock
+from foris_controller_backends.files import BaseFile, server_uplink_lock
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +56,7 @@ class SystemInfoCmds(BaseCmdLine):
 class SystemInfoFiles(BaseFile):
     OS_RELEASE_PATH = "/etc/turris-version"
     MODEL_PATH = "/tmp/sysinfo/model"
+    CMDLINE_PATH = "/proc/cmdline"
     file_lock = RWLock(app_info["lock_backend"])
 
     @readlock(file_lock, logger)
@@ -64,6 +67,20 @@ class SystemInfoFiles(BaseFile):
         :rtype: str
         """
         return self._read_and_parse(SystemInfoFiles.OS_RELEASE_PATH, r"^([0-9]+(\.[0-9]+)*)$", (1,))
+
+    @readlock(file_lock, logger)
+    def get_contract(self) -> typing.Optional[str]:
+        """ Returns the contract router is under
+
+        :returns: contract
+        :rtype: str
+        """
+        try:
+            return self._read_and_parse(
+                SystemInfoFiles.CMDLINE_PATH, r"^.*turris_lists=contracts/([^\s]+)\s.*", (1,)
+            )
+        except FailedToParseFileContent:
+            return None
 
     def get_os_branch(self):
         """ Returns turris os branch

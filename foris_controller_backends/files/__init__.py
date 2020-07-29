@@ -17,12 +17,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
-import re
-import os
 import glob
+import logging
+import os
+import re
 import shutil
-
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import FailedToParseFileContent

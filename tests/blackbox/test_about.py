@@ -18,13 +18,15 @@
 #
 
 import os
-import pytest
 
+import pytest
 from foris_controller_testtools.fixtures import (
-    uci_configs_init,
-    infrastructure,
     file_root_init,
+    infrastructure,
+    lock_backend,
+    uci_configs_init,
 )
+from foris_controller_testtools.utils import FileFaker
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_about_files")
 
@@ -44,3 +46,33 @@ def test_get_registration_number(infrastructure):
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {u"registration_number"}
+
+
+@pytest.mark.parametrize(
+    "content,output",
+    (
+        (
+            "earlyprintk console=ttyS0,115200 rootfstype=btrfs rootdelay=2 "
+            "root=b301 rootflags=subvol=@,commit=5 rw cfg80211.freg=**",
+            None,
+        ),
+        (
+            "earlyprintk console=ttyS0,115200 rootfstype=btrfs rootdelay=2 "
+            " turris_lists=contracts/shield "
+            "root=b301 rootflags=subvol=@,commit=5 rw cfg80211.freg=**",
+            "shield",
+        ),
+    ),
+    ids=["none", "shield"],
+)
+def test_get_contract(content, output, lock_backend, file_root_init):
+    os.environ["FORIS_FILE_ROOT"] = FILE_ROOT_PATH
+    from foris_controller.app import app_info
+
+    app_info["lock_backend"] = lock_backend
+    from foris_controller_backends.about import SystemInfoFiles
+
+    with FileFaker(FILE_ROOT_PATH, "/proc/cmdline", False, content):
+        assert SystemInfoFiles().get_contract() == output
+
+    del os.environ["FORIS_FILE_ROOT"]

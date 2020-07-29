@@ -1,6 +1,6 @@
 {
     "definitions": {
-        "guide_workflows": {"enum": ["unset", "min", "old", "router", "bridge"]},
+        "guide_workflows": {"enum": ["unset", "min", "shield", "old", "router", "bridge"]},
         "guide_steps": {"enum": ["password", "profile", "networks", "wan", "time", "dns", "updater", "lan", "finished"]},
         "guide": {
             "oneOf": [
@@ -261,7 +261,7 @@
                 "data": {
                     "type": "object",
                     "properties": {
-                        "new_workflow": {"enum": ["unset", "old"]}
+                        "new_workflow": {"enum": ["unset", "old", "shield"]}
                     },
                     "additionalProperties": false
                 }

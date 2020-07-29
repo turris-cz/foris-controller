@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ from foris_controller_backends.networks import NetworksCmd
 logger = logging.getLogger(__name__)
 
 
-class WanUci(object):
+class WanUci:
     def get_settings(self):
 
         with UciBackend() as backend:
@@ -292,6 +292,25 @@ class WanUci(object):
         MaintainCommands().restart_network()
 
         return True
+
+    def update_uncofigured_wan_to_default(self) -> bool:
+        """
+        Updates wan if it was not configured to get IP address via DHCP
+
+        :returns: True if wan configuration was changed
+        """
+        with UciBackend() as backend:
+            network_data = backend.read("network")
+            wan_proto = get_option_named(network_data, "network", "wan", "proto")
+
+        if wan_proto == "none":
+            self.update_settings(
+                wan_settings={"wan_type": "dhcp", "wan_dhcp": {}},
+                wan6_settings={"wan6_type": "dhcpv6", "wan6_dhcpv6": {"duid": ""}},
+                mac_settings={"custom_mac_enabled": False},
+            )
+            return True
+        return False
 
 
 class WanTestCommands(AsyncCommand):

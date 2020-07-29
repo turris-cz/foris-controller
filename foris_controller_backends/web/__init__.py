@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,21 +20,23 @@
 import logging
 import os
 import sys
-import turrishw
 
+import turrishw
 from foris_controller import profiles
+from foris_controller.exceptions import UciException, UciRecordNotFound
 from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.files import BaseMatch
 from foris_controller_backends.password import ForisPasswordUci
-from foris_controller_backends.uci import UciBackend, get_option_named, store_bool, parse_bool
-from foris_controller.exceptions import UciException, UciRecordNotFound
+from foris_controller_backends.maintain import MaintainCommands
+from foris_controller_backends.wan import WanUci
+from foris_controller_backends.uci import UciBackend, get_option_named, parse_bool, store_bool
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_LANGUAGE = "en"
 
 
-class WebUciCommands(object):
+class WebUciCommands:
     @staticmethod
     def get_language(foris_data):
         try:
@@ -69,6 +71,8 @@ class WebUciCommands(object):
         else:
             if SystemInfoFiles().get_model() == "turris":
                 return profiles.WORKFLOW_OLD
+            elif SystemInfoFiles().get_contract() == "shield":
+                return profiles.WORKFLOW_SHIELD
         return profiles.WORKFLOW_UNSET
 
     @staticmethod
@@ -95,7 +99,12 @@ class WebUciCommands(object):
                     return [
                         e
                         for e in profiles.WORKFLOWS
-                        if e not in (profiles.WORKFLOW_OLD, profiles.WORKFLOW_UNSET)
+                        if e
+                        not in (
+                            profiles.WORKFLOW_OLD,
+                            profiles.WORKFLOW_UNSET,
+                            profiles.WORKFLOW_SHIELD,
+                        )
                     ]
                 else:
                     return [profiles.WORKFLOW_MIN, profiles.WORKFLOW_BRIDGE]
@@ -133,8 +142,14 @@ class WebUciCommands(object):
             WebUciCommands.update_passed("profile")
         else:
             with UciBackend() as backend:
+                foris_data = backend.read("foris")
                 backend.add_section("foris", "config", "wizard")
                 backend.set_option("foris", "wizard", "finished", store_bool(True))
+            if profiles.STEP_PASSWORD in self.get_guide_data(foris_data)["passed"]:
+                # if a password was try to update wan if it ws not configured
+                if WanUci().update_uncofigured_wan_to_default():
+                    MaintainCommands().restart_network()
+
             WebUciCommands.update_passed("finished")
 
         return True
