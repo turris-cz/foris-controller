@@ -1,3 +1,9 @@
+1.0.18 (2020-08-26)
+-------------------
+
+* web: Add 'shield' guide profile
+* dns: more robust reading of custom DNS resolvers
+
 1.0.17 (2020-08-20)
 -------------------
 
