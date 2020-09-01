@@ -2,9 +2,6 @@ before_script:
   - pip install virtualenv
   - virtualenv -p "$(which python)" /tmp/test
 
-stages:
-  - test
-
 .run_script: &run_script
   script:
     - source /tmp/test/bin/activate
@@ -15,11 +12,9 @@ stages:
 
 test_python3:
   image: registry.labs.nic.cz/turris/foris-ci/python3
-  stage: test
   <<: *run_script
 
 flake8:
   image: registry.labs.nic.cz/turris/foris-ci/python3
-  stage: test
-  run:
+  script:
     - python setup.py flake8
