@@ -14,7 +14,7 @@ def test_get_slices(infrastructure):
     res = infrastructure.process_message(
         {"module": "{{ cookiecutter.name_snake }}", "action": "get_slices", "kind": "request"}
     )
-    assert "error" not in res
+    assert "errors" not in res
     assert "data" in res
     assert "slices" in res["data"]
 
