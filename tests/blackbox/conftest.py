@@ -63,6 +63,7 @@ def controller_modules():
         "password",
         "updater",
         "lan",
+        "system",
         "time",
         "wan",
         "router_notifications",

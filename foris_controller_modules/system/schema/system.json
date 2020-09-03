@@ -1,0 +1,73 @@
+{   "definitions":  {
+        "hostname" : {
+            "description": "allowed hostname type",
+            "type": "string",
+            "pattern": "^[A-Za-z-_0-9]{1,63}$"
+        }
+    },
+    "oneOf": [
+        {
+            "description": "request to get router hostname",
+            "properties": {
+                "module": {"enum": ["system"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_hostname"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to get router hostname",
+            "properties": {
+                "module": {"enum": ["system"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_hostname"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "hostname": { "type": "string" }
+                    },
+                    "additionalProperties": false,
+                    "required": ["hostname"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to update router hostname",
+            "properties": {
+                "module": {"enum": ["system"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["set_hostname"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "hostname": { "$ref": "#/definitions/hostname" }
+                    },
+                    "additionalProperties": false,
+                    "required": ["hostname"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to update router hostname",
+            "properties": {
+                "module": {"enum": ["system"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["set_hostname"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        }
+    ]
+}
