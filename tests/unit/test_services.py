@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017, 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ from foris_controller_testtools.utils import check_service_result, sh_was_called
 
 from foris_controller.exceptions import ServiceCmdFailed
 
+FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_services_files")
 
 @pytest.fixture(scope="function")
 def cmdline_script_root():
@@ -40,12 +41,19 @@ def custom_cmdline_root(cmdline_script_root):
 
 @pytest.fixture
 def service_class(lock_backend):
+    prev_foris_file_root = os.environ.get("FORIS_FILE_ROOT")
+    os.environ["FORIS_FILE_ROOT"] = FILE_ROOT_PATH
     from foris_controller.app import app_info
 
     app_info["lock_backend"] = lock_backend
     from foris_controller_backends import services
 
-    return services.OpenwrtServices
+    yield services.OpenwrtServices
+
+    if prev_foris_file_root:
+        os.environ["FORIS_FILE_ROOT"] = prev_foris_file_root
+    else:
+        del os.environ["FORIS_FILE_ROOT"]
 
 
 @pytest.mark.parametrize("action", ["start", "stop", "restart", "reload", "enable", "disable"])
@@ -78,3 +86,15 @@ def test_service_delayed(
     with service_class() as services:
         getattr(services, action)("pass", delay=2)
         assert sh_was_called(["/etc/init.d/pass", action])
+
+
+@pytest.mark.parametrize(
+    "service, expected_result", [
+        ("my-dummy-service", True),
+        ("non-existing", False),
+        ("nonsense", False),
+    ]
+)
+def test_service_is_enabled(service, expected_result, service_class):
+    with service_class() as services:
+        assert services.is_enabled(service) is expected_result

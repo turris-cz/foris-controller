@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017, 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import os
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import ServiceCmdFailed
+from foris_controller_backends.files import BaseMatch
 from foris_controller.utils import RWLock
 
 from foris_controller_backends.cmdline import handle_command, inject_cmdline_root, BaseCmdLine
@@ -141,3 +142,13 @@ class OpenwrtServices(object):
             self._run_service_command_in_background(service_name, "disable", delay)
         else:
             self._run_service_command(service_name, "disable", fail_on_error)
+
+    def is_enabled(self, service_name):
+        """ Check if service is enabled
+
+        Look inside /etc/rc.d/ for service startup and shutdown scripts
+        """
+        # list_files() uses glob so we can't use full regex here
+        # however this should work fine for poperly created services symlinks
+        files = BaseMatch.list_files([f"/etc/rc.d/[KS]*{service_name}"])
+        return len(files) > 0

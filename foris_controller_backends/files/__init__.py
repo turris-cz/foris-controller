@@ -146,7 +146,7 @@ class BaseFile(object):
 class BaseMatch(object):
     @staticmethod
     def list_files(file_matches):
-        """ Reads all files in which matches the requst (glob will be used for matching)
+        """ Reads all files in which matches the request (glob will be used for matching)
         :param file_matches: list of expressions to match
 
         :returns: list of files that matches
