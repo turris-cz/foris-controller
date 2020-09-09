@@ -83,7 +83,7 @@ class BaseFile(object):
         logger.debug("content: %s" % content)
         return content
 
-    def _read_and_parse(self, path, regex, groups=(1,)):
+    def _read_and_parse(self, path, regex, groups=(1,), log_error=True):
         """ Reads and parses a content of the file by regex,
             raises an exception when the output doesn't match regex
 
@@ -99,7 +99,8 @@ class BaseFile(object):
         content = self._file_content(path)
         match = re.search(regex, content, re.MULTILINE)
         if not match:
-            logger.error("Failed to parse content of the file '%s'", path)
+            if log_error:
+                logger.error("Failed to parse content of the file '%s'", path)
             raise FailedToParseFileContent(path, content)
         return match.group(*groups)
 

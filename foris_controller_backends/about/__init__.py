@@ -77,7 +77,9 @@ class SystemInfoFiles(BaseFile):
         """
         try:
             return self._read_and_parse(
-                SystemInfoFiles.CMDLINE_PATH, r"^.*turris_lists=contracts/([^\s]+)\s.*", (1,)
+                SystemInfoFiles.CMDLINE_PATH, r"^.*turris_lists=contracts/([^\s]+)\s.*",
+                (1,),
+                log_error=False,
             )
         except FailedToParseFileContent:
             return None
