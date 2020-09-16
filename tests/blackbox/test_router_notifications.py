@@ -189,6 +189,18 @@ def test_get_settings(uci_configs_init, infrastructure):
     assert "reboots" in res["data"].keys()
 
 
+def test_get_settings_empty_from_and_hostname(infrastructure, uci_configs_init):
+
+    res = infrastructure.process_message(
+        {"module": "router_notifications", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    data = res["data"]["emails"]["smtp_custom"]
+
+    assert data["from"] == ""
+    assert data["host"] == ""
+
+
 def test_update_settings(uci_configs_init, infrastructure):
     filters = [("router_notifications", "update_settings")]
 
@@ -465,6 +477,45 @@ def test_update_email_settings(uci_configs_init, infrastructure):
             },
         }
     )
+
+
+@pytest.mark.parametrize("email, host",[
+    ("invalid.email.niet", "correct-host.org"),
+    ("correct@email.com","$invalid#hostname"),
+    ("", "correct-host.cz"),
+    ("my-good@email.net","")
+]
+)
+def test_update_settings_incorrect_from_and_host(infrastructure, uci_configs_init, email, host):
+    data = {
+        "enabled": True,
+        "common": {
+            "to": ["user3@example.com", "user2@example.com"],
+            "severity_filter": 2,
+            "send_news": True,
+        },
+        "smtp_type": "custom",
+        "smtp_custom": {
+            "from": email,
+            "host": host,
+            "port": 26,
+            "security": "ssl",
+            "username": "user2",
+            "password": "pass2",
+        },
+    }
+
+    msg = {
+        "module": "router_notifications",
+        "action": "update_email_settings",
+        "kind": "request",
+        "data": data,
+    }
+
+    res = infrastructure.process_message(msg)
+
+    assert "errors" in res.keys()
+    assert "Incorrect input." in res["errors"][0]["description"]
 
 
 def test_update_reboot_settings(uci_configs_init, infrastructure):

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -119,9 +119,9 @@ class RouterNotificationsUci(object):
                 },
                 "smtp_custom": {
                     "from": get_option_named(
-                        data, "user_notify", "smtp", "from", "router@example.com"
+                        data, "user_notify", "smtp", "from", ""
                     ),
-                    "host": get_option_named(data, "user_notify", "smtp", "server", "example.com"),
+                    "host": get_option_named(data, "user_notify", "smtp", "server", ""),
                     "port": int(get_option_named(data, "user_notify", "smtp", "port", "465")),
                     "username": get_option_named(data, "user_notify", "smtp", "username", ""),
                     "password": get_option_named(data, "user_notify", "smtp", "password", ""),

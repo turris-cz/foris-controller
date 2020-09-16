@@ -47,11 +47,39 @@
             "additionalProperties": false,
             "required": ["sender_name"]
         },
-        "router_notification_settings_smtp_custom": {
+        "custom_smtp_host": {
+            "type": "string",
+            "description": "https://wiert.me/2017/08/29/regex-regular-expression-to-match-dns-hostname-or-ip-address-stack-overflow/",
+            "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]).)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$"
+        },
+        "router_notification_settings_smtp_custom_set": {
             "type": "object",
             "properties": {
                 "from": {"type": "string", "format": "email"},
-                "host": {"type": "string"},
+                "host": {"$ref": "#/definitions/custom_smtp_host"},
+                "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+                "security": {"enum": ["none", "ssl", "starttls"]},
+                "username": {"type": "string"},
+                "password": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["from", "host", "port", "security", "username", "password"]
+        },
+        "router_notification_settings_smtp_custom_get": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "oneOf": [
+                        {"type": "string", "format": "email"},
+                        {"enum": [""]}
+                    ]
+                },
+                "host": {
+                    "oneOf": [
+                        {"$ref": "#/definitions/custom_smtp_host"},
+                        {"enum": [""]}
+                    ]
+                },
                 "port": {"type": "integer", "minimum": 1, "maximum": 65535},
                 "security": {"enum": ["none", "ssl", "starttls"]},
                 "username": {"type": "string"},
@@ -67,7 +95,7 @@
                 "common": {"$ref": "#/definitions/router_notification_settings_common"},
                 "smtp_type": {"$ref": "#/definitions/router_notification_settings_smtp_type"},
                 "smtp_turris": {"$ref": "#/definitions/router_notification_settings_smtp_turris"},
-                "smtp_custom": {"$ref": "#/definitions/router_notification_settings_smtp_custom"}
+                "smtp_custom": {"$ref": "#/definitions/router_notification_settings_smtp_custom_get"}
             },
             "additionalProperties": false,
             "required": ["enabled", "common", "smtp_type"]
@@ -95,7 +123,7 @@
                         "enabled": {"enum": [true]},
                         "common": {"$ref": "#/definitions/router_notification_settings_common"},
                         "smtp_type": {"$ref": "#/definitions/router_notification_settings_smtp_type", "enum": ["custom"]},
-                        "smtp_custom": {"$ref": "#/definitions/router_notification_settings_smtp_custom"}
+                        "smtp_custom": {"$ref": "#/definitions/router_notification_settings_smtp_custom_set"}
                     },
                     "additionalProperties": false,
                     "required": ["enabled", "common", "smtp_type", "smtp_custom"]

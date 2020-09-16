@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -92,8 +92,8 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
         "smtp_type": "turris",
         "smtp_turris": {"sender_name": "turris"},
         "smtp_custom": {
-            "from": "turris@example.com",
-            "host": "example.com",
+            "from": "",
+            "host": "",
             "port": 25,
             "security": "none",
             "username": "",
