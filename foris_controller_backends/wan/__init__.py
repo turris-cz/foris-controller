@@ -33,6 +33,11 @@ logger = logging.getLogger(__name__)
 class WanUci:
     def get_settings(self):
 
+        def _parse_list(option):
+            if isinstance(option, list):
+                return option[0]
+            return option
+
         with UciBackend() as backend:
             network_data = backend.read("network")
             try:
@@ -70,7 +75,7 @@ class WanUci:
         if wan6_settings["wan6_type"] == "static":
             wan6_settings["wan6_static"] = {
                 "ip": get_option_named(network_data, "network", "wan6", "ip6addr"),
-                "network": get_option_named(network_data, "network", "wan6", "ip6prefix"),
+                "network": _parse_list(get_option_named(network_data, "network", "wan6", "ip6prefix")),
                 "gateway": get_option_named(network_data, "network", "wan6", "ip6gw"),
             }
             dns = get_option_named(network_data, "network", "wan6", "dns", [])
@@ -87,7 +92,7 @@ class WanUci:
             }
         elif wan6_settings["wan6_type"] == "6in4":
             wan6_settings["wan6_6in4"] = {
-                "ipv6_prefix": get_option_named(network_data, "network", "wan6", "ip6prefix", ""),
+                "ipv6_prefix": _parse_list(get_option_named(network_data, "network", "wan6", "ip6prefix", "")),
                 "mtu": int(get_option_named(network_data, "network", "wan6", "mtu", "1480")),
                 "server_ipv4": get_option_named(network_data, "network", "wan6", "peeraddr", ""),
             }
@@ -124,6 +129,12 @@ class WanUci:
         }
 
     def update_settings(self, wan_settings, wan6_settings, mac_settings):
+
+        def _set_list(option):
+            if not isinstance(option, list):
+                return [option]
+            return option
+
         with UciBackend() as backend:
             # WAN
             wan_type = wan_settings["wan_type"]
@@ -169,9 +180,14 @@ class WanUci:
             backend.set_option("network", "wan6", "ifname", "@wan")
             backend.set_option("network", "wan6", "proto", wan6_type)
 
+            try:
+                backend.del_option("network","wan6","ip6prefix")
+            except UciException:
+                pass
+
             # disable rule for 6in4 + cleanup
             if not wan6_type == "6in4":
-                for item in ["tunnelid", "username", "password", "peeraddr", "mtu", "ip6prefix"]:
+                for item in ["tunnelid", "username", "password", "peeraddr", "mtu"]:
                     try:
                         backend.del_option("network", "wan6", item)
                     except UciException:
@@ -181,8 +197,8 @@ class WanUci:
 
             if wan6_type == "static":
                 backend.set_option("network", "wan6", "ip6addr", wan6_settings["wan6_static"]["ip"])
-                backend.set_option(
-                    "network", "wan6", "ip6prefix", wan6_settings["wan6_static"]["network"]
+                backend.add_to_list(
+                    "network", "wan6", "ip6prefix", _set_list(wan6_settings["wan6_static"]["network"])
                 )
                 backend.set_option(
                     "network", "wan6", "ip6gw", wan6_settings["wan6_static"]["gateway"]
@@ -217,8 +233,8 @@ class WanUci:
                 backend.set_option(
                     "network", "wan6", "peeraddr", wan6_settings["wan6_6in4"]["server_ipv4"]
                 )
-                backend.set_option(
-                    "network", "wan6", "ip6prefix", wan6_settings["wan6_6in4"]["ipv6_prefix"]
+                backend.add_to_list(
+                    "network", "wan6", "ip6prefix", _set_list(wan6_settings["wan6_6in4"]["ipv6_prefix"])
                 )
                 if wan6_settings["wan6_6in4"]["dynamic_ipv4"]["enabled"]:
                     backend.set_option(

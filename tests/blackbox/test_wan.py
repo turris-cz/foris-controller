@@ -54,6 +54,37 @@ def test_get_settings(uci_configs_init, infrastructure):
     }
 
 
+@pytest.mark.only_backends(["openwrt"])
+def test_get_ipv6prefix_as_an_option(infrastructure):
+    """ Fallback test since ipv6prefix option is newly set as list, but uci still may contain plain option. """
+    data = {
+        "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+        "wan6_settings": {
+            "wan6_type": "6in4",
+            "wan6_6in4": {
+                "mtu": 1480,
+                "server_ipv4": "111.22.33.44",
+                "ipv6_prefix": "2001:470:6e:39::/64",
+                "dynamic_ipv4": {"enabled": False},
+            },
+        },
+        "mac_settings": {"custom_mac_enabled": False},
+    }
+    infrastructure.process_message(
+        {"module": "wan", "action": "update_settings", "kind": "request", "data": data}
+    )
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_option("network", "wan6", "ip6prefix")
+        # save as an option
+        backend.set_option("network", "wan6", "ip6prefix", "2001:470:6e:39::/64")
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_wan_status(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
@@ -400,6 +431,14 @@ def test_wan_openwrt_backend(
 
     uci = get_uci_module(infrastructure.name)
 
+    def _filter_possible_list(data, *args):
+        option = uci.get_option_named(data, *args)
+
+        if isinstance(option, list):
+            option = option[0]
+
+        return option
+
     def update(data):
         res = infrastructure.process_message(
             {"module": "wan", "action": "update_settings", "kind": "request", "data": data}
@@ -428,7 +467,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
@@ -445,7 +484,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == "my-nice-turris"
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
@@ -466,7 +505,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "password") == "pass1"
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
@@ -488,7 +527,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "gateway") == "10.0.0.1"
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
@@ -516,7 +555,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "gateway") == "10.0.0.1"
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.get_option_named(data, "network", "wan", "dns", []) == ["8.8.8.8", "10.0.0.1"]
@@ -539,7 +578,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "proto") == "dhcpv6"
     assert uci.get_option_named(data, "network", "wan6", "clientid") == "00030001d858d7004566"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
@@ -566,7 +605,7 @@ def test_wan_openwrt_backend(
         uci.get_option_named(data, "network", "wan6", "ip6addr")
         == "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
     )
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix") == "2001:1488:fffe:6::/60"
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix") == "2001:1488:fffe:6::/60"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw") == "2001:1488:fffe:6::1"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
@@ -595,7 +634,7 @@ def test_wan_openwrt_backend(
         uci.get_option_named(data, "network", "wan6", "ip6addr")
         == "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
     )
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix") == "2001:1488:fffe:6::/60"
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix") == "2001:1488:fffe:6::/60"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw") == "2001:1488:fffe:6::1"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "dns", []) == [
@@ -616,7 +655,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == "11:22:33:44:55:66"
 
@@ -634,7 +673,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "6to4"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ipaddr", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
@@ -655,7 +694,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "6to4"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ipaddr", "") == "1.5.7.9"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
@@ -681,7 +720,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "6in4"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == "2001:470:6a:39::/64"
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == "2001:470:6a:39::/64"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == "1.22.33.44"
     assert uci.get_option_named(data, "network", "wan6", "mtu", "") == "1470"
@@ -724,11 +763,12 @@ def test_wan_openwrt_backend(
             "mac_settings": {"custom_mac_enabled": False},
         }
     )
+
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "6in4"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == "2001:470:6c:39::/64"
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == "2001:470:6c:39::/64"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == "1.222.33.44"
     assert uci.get_option_named(data, "network", "wan6", "mtu", "") == "1290"
@@ -763,7 +803,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "none"
     assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
-    assert uci.get_option_named(data, "network", "wan6", "ip6prefix", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "mtu", "") == ""
