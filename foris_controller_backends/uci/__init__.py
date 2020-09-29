@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -63,6 +63,15 @@ def get_section(data, config, section):
         raise UciRecordNotFound(config, section=section)
 
     return res[0]  # only one section can be present (uci backend feature)
+
+
+def section_exists(data, config, section) -> bool:
+    """ Return whether named section exists as boolean"""
+    try:
+        get_section(data, config, section)
+        return True
+    except UciRecordNotFound:
+        return False
 
 
 def get_option_named(data, config, section, option, default=None):

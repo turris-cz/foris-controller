@@ -17,8 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
 import os
+import pytest
 
 from foris_controller_testtools.fixtures import (
     only_backends,
@@ -85,13 +85,14 @@ def test_get_settings(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert set(res["data"].keys()) == {
+    assert res.keys() == {"action", "kind", "data", "module"}
+    assert res["data"].keys() == {
         "mode",
         "mode_managed",
         "mode_unmanaged",
         "interface_count",
         "interface_up_count",
+        "lan_redirect"
     }
     assert res["data"]["mode"] in ["managed", "unmanaged"]
 
@@ -141,26 +142,36 @@ def test_update_settings(
         assert res["module"] == "lan"
         assert res["action"] == "get_settings"
         assert res["kind"] == "reply"
+
+        data_lan_redirect = data.pop("lan_redirect", None)
+        res_lan_redirect = res["data"].pop("lan_redirect")
+        if data_lan_redirect:
+            # we can get lan_redirect in reply data regardless of whether we updated it or not
+            # so compare it only in case of updated lan_redirect
+            assert data_lan_redirect == res_lan_redirect
+
         assert match_subdict(data, res["data"])
 
     update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"192.168.5.8",
-                u"netmask": u"255.255.255.0",
-                u"dhcp": {u"enabled": False},
+                "router_ip": "192.168.5.8",
+                "netmask": "255.255.255.0",
+                "dhcp": {"enabled": False},
             },
+            "lan_redirect": False,
         }
     )
     update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.0.0.3",
-                u"netmask": u"255.255.0.0",
-                u"dhcp": {u"enabled": False},
+                "router_ip": "10.0.0.3",
+                "netmask": "255.255.0.0",
+                "dhcp": {"enabled": False},
             },
+            "lan_redirect": True,
         }
     )
     update(
@@ -456,19 +467,21 @@ def test_update_settings_openwrt(
         res = infrastructure.process_message(
             {"module": "lan", "action": "update_settings", "kind": "request", "data": data}
         )
+        assert "errors" not in res
         assert res["data"]["result"]
 
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        return backend.read()
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            return backend.read()
 
     data = update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"192.168.5.8",
-                u"netmask": u"255.255.255.0",
-                u"dhcp": {u"enabled": False},
+                "router_ip": "192.168.5.8",
+                "netmask": "255.255.255.0",
+                "dhcp": {"enabled": False},
             },
+            "lan_redirect": False,
         }
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "managed"
@@ -476,15 +489,17 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "ipaddr") == "192.168.5.8"
     assert uci.get_option_named(data, "network", "lan", "netmask") == "255.255.255.0"
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert not uci.parse_bool(uci.get_option_named(data, "firewall", "redirect_192_168_1_1", "enabled"))
 
     data = update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.1.0.3",
-                u"netmask": u"255.252.0.0",
-                u"dhcp": {u"enabled": True, u"start": 10, u"limit": 50, u"lease_time": 0},
+                "router_ip": "10.1.0.3",
+                "netmask": "255.252.0.0",
+                "dhcp": {"enabled": True, "start": 10, "limit": 50, "lease_time": 0},
             },
+            "lan_redirect": True,
         }
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "managed"
@@ -495,6 +510,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "dhcp", "lan", "start") == "10"
     assert uci.get_option_named(data, "dhcp", "lan", "limit") == "50"
     assert uci.get_option_named(data, "dhcp", "lan", "dhcp_option") == ["6,10.1.0.3"]
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "redirect_192_168_1_1", "enabled"))
 
     data = update(
         {
@@ -1448,3 +1464,57 @@ def test_ipv6_address_in_dns(uci_configs_init, infrastructure, device, turris_os
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )
     assert "errors" not in res
+
+
+def test_get_settings_lan_redirect(uci_configs_init, infrastructure):
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["lan_redirect"]
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_lan_redirect_openwrt(uci_configs_init, infrastructure):
+    uci = get_uci_module(infrastructure.name)
+
+    # with redirect_192_168_1_1.enabled set it should return its value
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("firewall", "redirect_192_168_1_1", "enabled", 0)
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["lan_redirect"] is False
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("firewall", "redirect_192_168_1_1", "enabled", 1)
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["lan_redirect"]
+
+    # with redirect_192_168_1_1.enabled unset it should return lan_redirect == True
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_option("firewall", "redirect_192_168_1_1", "enabled")
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res.keys()
+    assert res["data"]["lan_redirect"]
+
+    # with missing section redirect_192_168_1_1 it shouldn't return lan_redirect
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_section("firewall", "redirect_192_168_1_1")
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res.keys()
+    assert "lan_redirect" not in res["data"].keys()

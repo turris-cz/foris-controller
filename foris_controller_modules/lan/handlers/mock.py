@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -70,6 +70,7 @@ class MockLanHandler(Handler, BaseMockHandler):
             "dns2": None,
         },
     }
+    lan_redirect = True
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -97,6 +98,7 @@ class MockLanHandler(Handler, BaseMockHandler):
             "interface_up_count": len(
                 [e for e in MockNetworksHandler.networks["lan"] if e["state"] == "up"]
             ),
+            "lan_redirect": MockLanHandler.lan_redirect,
         }
         return result
 
@@ -106,6 +108,9 @@ class MockLanHandler(Handler, BaseMockHandler):
         :returns: True if update passes
         :rtype: bool
         """
+
+        if "lan_redirect" in new_settings:
+            MockLanHandler.lan_redirect = new_settings["lan_redirect"]
 
         MockLanHandler.mode = new_settings["mode"]
         if new_settings["mode"] == "managed":

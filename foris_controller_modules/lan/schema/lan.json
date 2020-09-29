@@ -7,6 +7,10 @@
                 {"$ref": "#/definitions/network_settings_4_type"}
             ]
         },
+        "lan_redirect": {
+            "description": "enable/disable firewall redirect to 192.168.1.1",
+            "type": "boolean"
+        },
         "lan_unmanaged_settings_get": {
             "description": "this device doesn't manage lan network it acts as a client",
 
@@ -79,7 +83,8 @@
                     "mode_managed": {"$ref": "#/definitions/lan_managed_settings_get"},
                     "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_get"},
                     "interface_count": {"type": "integer", "minimum": 0},
-                    "interface_up_count": {"type": "integer", "minimum": 0}
+                    "interface_up_count": {"type": "integer", "minimum": 0},
+                    "lan_redirect": {"$ref": "#/definitions/lan_redirect"}
             },
             "additionalProperties": false,
             "required": ["mode", "mode_managed", "mode_unmanaged", "interface_count"]
@@ -90,7 +95,8 @@
                     "type": "object",
                     "properties": {
                         "mode": {"allOf": [{"$ref": "#/definitions/lan_mode"}, {"enum": ["managed"]}]},
-                        "mode_managed": {"$ref": "#/definitions/lan_managed_settings_set"}
+                        "mode_managed": {"$ref": "#/definitions/lan_managed_settings_set"},
+                        "lan_redirect": {"$ref": "#/definitions/lan_redirect"}
                     },
                     "additionalProperties": false,
                     "required": ["mode", "mode_managed"]
@@ -99,7 +105,8 @@
                     "type": "object",
                     "properties": {
                         "mode": {"allOf": [{"$ref": "#/definitions/lan_mode"}, {"enum": ["unmanaged"]}]},
-                        "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_set"}
+                        "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_set"},
+                        "lan_redirect": {"$ref": "#/definitions/lan_redirect"}
                     },
                     "additionalProperties": false,
                     "required": ["mode", "mode_unmanaged"]

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ from foris_controller_backends.uci import (
     parse_bool,
     store_bool,
     get_sections_by_type,
+    section_exists,
 )
 
 from foris_controller_backends.files import BaseFile, path_exists
@@ -136,6 +137,7 @@ class LanUci(object):
         with UciBackend() as backend:
             network_data = backend.read("network")
             dhcp_data = backend.read("dhcp")
+            firewall_data = backend.read("firewall")
             try:
                 wireless_data = backend.read("wireless")
             except UciException:
@@ -202,7 +204,7 @@ class LanUci(object):
 
         from foris_controller_backends.networks import NetworksUci
 
-        return {
+        result = {
             "mode": mode,
             "mode_managed": mode_managed,
             "mode_unmanaged": mode_unmanaged,
@@ -211,6 +213,16 @@ class LanUci(object):
                 network_data, wireless_data, "lan", True
             ),
         }
+
+        # quick hack for shield redirect to 192.168.1.1
+        lan_redirect_exists = section_exists(firewall_data, "firewall", "redirect_192_168_1_1")
+
+        if lan_redirect_exists:
+            result["lan_redirect"] = parse_bool(
+                get_option_named(firewall_data, "firewall", "redirect_192_168_1_1", "enabled", "1")
+            )
+
+        return result
 
     def filter_dhcp_client_records(
         self,
@@ -236,7 +248,20 @@ class LanUci(object):
                     ) and not self.in_network(record["data"]["ip"], new_router_ip, new_netmask):
                         backend.del_section("dhcp", record["name"])
 
-    def update_settings(self, mode, mode_managed=None, mode_unmanaged=None):
+    @staticmethod
+    def _store_lan_redirect(backend, enabled):
+        """ quick hack for shield redirect to 192.168.1.1
+        store only if there is section redirect_192_168_1_1
+        """
+
+        firewall_data = backend.read("firewall")
+        lan_redirect_exists = section_exists(firewall_data, "firewall", "redirect_192_168_1_1")
+
+        # store redirect only if section exists, otherwise skip and don't create section
+        if lan_redirect_exists:
+            backend.set_option("firewall", "redirect_192_168_1_1", "enabled", store_bool(enabled))
+
+    def update_settings(self, mode, mode_managed=None, mode_unmanaged=None, lan_redirect=None):
         """  Updates the lan settings in uci
 
         :param mode: lan setting mode managed/unmanaged
@@ -251,6 +276,9 @@ class LanUci(object):
 
             backend.add_section("network", "interface", "lan")
             backend.set_option("network", "lan", "_turris_mode", mode)
+
+            if lan_redirect is not None:
+                LanUci._store_lan_redirect(backend, lan_redirect)
 
             if mode == "managed":
                 network_data = backend.read("network")
@@ -300,6 +328,7 @@ class LanUci(object):
                 # disable dhcp you are not managing this network...
                 backend.add_section("dhcp", "dhcp", "lan")
                 backend.set_option("dhcp", "lan", "ignore", store_bool(True))
+
                 if mode_unmanaged["lan_type"] == "dhcp":
                     if "hostname" in mode_unmanaged["lan_dhcp"]:
                         backend.set_option(
