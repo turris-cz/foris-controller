@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,6 +41,10 @@ from foris_controller_testtools.utils import (
 )
 
 WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
+
+
+def all_equal(first, *items):
+    return all(first == item for item in items)
 
 
 @pytest.fixture(scope="function")
@@ -163,6 +167,7 @@ def test_update_settings(
             "lan_redirect": False,
         }
     )
+
     update(
         {
             "mode": "managed",
@@ -486,8 +491,7 @@ def test_update_settings_openwrt(
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "managed"
     assert uci.get_option_named(data, "network", "lan", "proto") == "static"
-    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "192.168.5.8"
-    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.255.255.0"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["192.168.5.8/24"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
     assert not uci.parse_bool(uci.get_option_named(data, "firewall", "redirect_192_168_1_1", "enabled"))
 
@@ -504,8 +508,7 @@ def test_update_settings_openwrt(
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "managed"
     assert uci.get_option_named(data, "network", "lan", "proto") == "static"
-    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.1.0.3"
-    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.252.0.0"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["10.1.0.3/14"]
     assert not uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
     assert uci.get_option_named(data, "dhcp", "lan", "start") == "10"
     assert uci.get_option_named(data, "dhcp", "lan", "limit") == "50"
@@ -555,8 +558,7 @@ def test_update_settings_openwrt(
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "static"
-    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.4.0.2"
-    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.254.0.0"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["10.4.0.2/15"]
     assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.1"
     assert uci.get_option_named(data, "network", "lan", "dns", []) == []
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
@@ -577,8 +579,7 @@ def test_update_settings_openwrt(
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "static"
-    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.5.0.2"
-    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.255.254.0"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["10.5.0.2/23"]
     assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.8"
     assert uci.get_option_named(data, "network", "lan", "dns") == ["1.1.1.1"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
@@ -600,8 +601,7 @@ def test_update_settings_openwrt(
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "static"
-    assert uci.get_option_named(data, "network", "lan", "ipaddr") == "10.4.0.2"
-    assert uci.get_option_named(data, "network", "lan", "netmask") == "255.254.0.0"
+    assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["10.4.0.2/15"]
     assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.1"
     assert uci.get_option_named(data, "network", "lan", "dns") == ["8.8.8.8", "1.1.1.2"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
@@ -1422,6 +1422,7 @@ def test_dhcp_client_settings_openwrt(
             },
         }
     )
+
     assert res == {
         "action": "update_settings",
         "data": {"result": True},
@@ -1518,3 +1519,25 @@ def test_get_settings_lan_redirect_openwrt(uci_configs_init, infrastructure):
 
     assert "errors" not in res.keys()
     assert "lan_redirect" not in res["data"].keys()
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_ip_slash_netmask(uci_configs_init, infrastructure):
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_option("network", "lan", "netmask")
+        backend.del_option("network", "lan", "ipaddr")
+        backend.set_option("network", "lan", "ipaddr", "192.168.1.1/24")
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res.keys()
+
+    mode_managed = res["data"]["mode_managed"]
+    mode_unmanaged = res["data"]["mode_unmanaged"]["lan_static"]
+
+    assert all_equal(mode_managed["router_ip"], mode_unmanaged["ip"], "192.168.1.1")
+    assert all_equal(mode_managed["netmask"], mode_unmanaged["netmask"], "255.255.255.0")

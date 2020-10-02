@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,11 +32,20 @@ from foris_controller_backends.uci import (
     section_exists,
 )
 
-from foris_controller_backends.files import BaseFile, path_exists
 
+from foris_controller.utils import parse_to_list, unwrap_list
+from foris_controller_backends.files import BaseFile, path_exists
 from foris_controller_backends.maintain import MaintainCommands
 
 logger = logging.getLogger(__name__)
+
+
+def _get_interface(ip: str, netmask: str) -> str:
+    ''' Get CIDR ipv4 address notation. '''
+    interface = ipaddress.ip_interface(
+        f"{ip}/{netmask}"
+    )
+    return str(interface)
 
 
 class LanFiles(BaseFile):
@@ -79,6 +88,51 @@ class LanUci(object):
     DEFAULT_LEASE_TIME = 12 * 60 * 60
     DEFAULT_ROUTER_IP = "192.168.1.1"
     DEFAULT_NETMASK = "255.255.255.0"
+
+    @staticmethod
+    def _get_network_combo(network_data) -> typing.Tuple[str, str, str]:
+        ''' In case CIDR ipv4 address notation is used in Uci
+        convert lan address.
+
+        return router_ip, netmask, gateway
+        '''
+        ipaddr_option = unwrap_list(
+            get_option_named(
+                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
+            )
+        )
+        gateway = get_option_named(
+            network_data, "network", "lan", "gateway", LanUci.DEFAULT_ROUTER_IP
+        )
+        if ipaddr_option.count("/") == 1:
+            ip_iface = ipaddress.ip_interface(ipaddr_option)
+            return (str(ip_iface.ip), str(ip_iface.netmask), gateway)
+        else:
+            return (
+                ipaddr_option,
+                get_option_named(
+                    network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
+                ),
+                gateway
+            )
+
+    @staticmethod
+    def _set_lan(backend, router_ip, netmask):
+        ''' Helper function to save ipv4 address to uci in CIDR format. '''
+        try:
+            backend.del_option("network", "lan", "ipaddr")
+        except UciException:
+            pass
+        try:
+            backend.del_option("network", "lan", "netmask")
+        except UciException:
+            pass
+        backend.add_to_list(
+            "network", "lan", "ipaddr",
+            parse_to_list(
+                _get_interface(router_ip, netmask)
+            )
+        )
 
     def get_client_list(self, uci_data, network, netmask):
         file_records = LanFiles().get_dhcp_clients(network, netmask)
@@ -146,12 +200,8 @@ class LanUci(object):
         mode = get_option_named(network_data, "network", "lan", "_turris_mode", "managed")
 
         mode_managed = {"dhcp": {}}
-        mode_managed["router_ip"] = get_option_named(
-            network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
-        )
-        mode_managed["netmask"] = get_option_named(
-            network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
-        )
+        router_ip, netmask, gateway = LanUci._get_network_combo(network_data)
+        mode_managed["router_ip"], mode_managed["netmask"] = router_ip, netmask
         mode_managed["dhcp"]["enabled"] = not parse_bool(
             get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0")
         )
@@ -174,23 +224,12 @@ class LanUci(object):
         mode_unmanaged = {}
         mode_unmanaged["lan_type"] = get_option_named(network_data, "network", "lan", "proto")
         hostname = get_option_named(network_data, "network", "lan", "hostname", "")
+
         mode_unmanaged["lan_dhcp"] = {"hostname": hostname} if hostname else {}
         mode_unmanaged["lan_static"] = {
-            "ip": get_option_named(
-                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
-            ),
-            "netmask": get_option_named(
-                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
-            ),
-            "gateway": get_option_named(
-                network_data,
-                "network",
-                "lan",
-                "gateway",
-                get_option_named(
-                    network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
-                ),
-            ),
+            "ip": router_ip,
+            "netmask": netmask,
+            "gateway": gateway
         }
         dns = get_option_named(network_data, "network", "lan", "dns", [])
         dns = dns if isinstance(dns, (list, tuple)) else [e for e in dns.split(" ") if e]
@@ -284,9 +323,7 @@ class LanUci(object):
                 network_data = backend.read("network")
                 dhcp_data = backend.read("dhcp")
                 backend.set_option("network", "lan", "proto", "static")
-                backend.set_option("network", "lan", "ipaddr", mode_managed["router_ip"])
-                backend.set_option("network", "lan", "netmask", mode_managed["netmask"])
-
+                LanUci._set_lan(backend, mode_managed["router_ip"], mode_managed["netmask"])
                 backend.add_section("dhcp", "dhcp", "lan")
                 dhcp = mode_managed["dhcp"]
                 backend.set_option("dhcp", "lan", "ignore", store_bool(not dhcp["enabled"]))
@@ -310,8 +347,7 @@ class LanUci(object):
 
                     # update dhcp records when changing lan ip+network or start+limit
                     # get old network
-                    old_router_ip = get_option_named(network_data, "network", "lan", "ipaddr", "")
-                    old_netmask = get_option_named(network_data, "network", "lan", "netmask", "")
+                    old_router_ip, old_netmask, _ = LanUci._get_network_combo(network_data)
                     self.filter_dhcp_client_records(
                         backend,
                         dhcp_data,
@@ -334,14 +370,8 @@ class LanUci(object):
                         backend.set_option(
                             "network", "lan", "hostname", mode_unmanaged["lan_dhcp"]["hostname"]
                         )
-
                 elif mode_unmanaged["lan_type"] == "static":
-                    backend.set_option(
-                        "network", "lan", "ipaddr", mode_unmanaged["lan_static"]["ip"]
-                    )
-                    backend.set_option(
-                        "network", "lan", "netmask", mode_unmanaged["lan_static"]["netmask"]
-                    )
+                    LanUci._set_lan(backend, mode_unmanaged["lan_static"]["ip"], mode_unmanaged["lan_static"]["netmask"])
                     backend.set_option(
                         "network", "lan", "gateway", mode_unmanaged["lan_static"]["gateway"]
                     )
@@ -388,7 +418,11 @@ class LanUci(object):
         :param limit: count of ips
         :return: True if ip is in range False otherwise
         """
-        network = ipaddress.ip_network(f"{ip_root}/{netmask}", strict=False)
+        if ip_root.count("/") == 1:
+            iface = ipaddress.ip_interface(f"{ip_root}")
+            network = ipaddress.ip_network(f"{iface.ip}/{iface.netmask}", strict=False)
+        else:
+            network = ipaddress.ip_network(f"{ip_root}/{netmask}", strict=False)
         return ipaddress.ip_address(ip) in network
 
     def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> typing.Optional[str]:
@@ -404,12 +438,8 @@ class LanUci(object):
             dhcp_data = backend.read("dhcp")
             network_data = backend.read("network")
 
-            router_ip = get_option_named(
-                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
-            )
-            netmask = get_option_named(
-                network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
-            )
+            router_ip, netmask, _ = LanUci._get_network_combo(network_data)
+
             start = int(
                 get_option_named(dhcp_data, "dhcp", "lan", "start", LanUci.DEFAULT_DHCP_START)
             )

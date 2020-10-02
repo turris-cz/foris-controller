@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017, 2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ from multiprocessing.managers import SyncManager
 
 from .module_base import BaseModule
 
+ListOrString = typing.NewType('ListOrString', typing.Union[str, typing.List[str]])
 
 LOGGER_MAX_LEN = 10000
 
@@ -293,3 +294,22 @@ def check_dynamic_ranges(router_ip: str, netmask: str, start: int, limit: int) -
         return False
 
     return True
+
+
+def unwrap_list(option: ListOrString) -> str:
+    """ Test whether passed value is list and return only string of first item
+        or original string."""
+    if not option:
+        return ""
+    if isinstance(option, list):
+        return option[0]
+    return option
+
+
+def parse_to_list(option: ListOrString) -> typing.List[str]:
+    """ Test whether passed value is already list, convert if string."""
+    if not option:
+        return [""]
+    if not isinstance(option, list):
+        return [option]
+    return option
