@@ -1,3 +1,12 @@
+1.0.19 (2020-10-02)
+-------------------
+
+* example: fix typo in example test
+* services: add openwrt service enabled state detection
+* zeroconf: opt-in registration of a service
+* system: add new core module
+* about: suppress error log for get_contract()
+
 1.0.18 (2020-08-26)
 -------------------
 
