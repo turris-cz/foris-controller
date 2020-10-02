@@ -169,7 +169,7 @@ def test_modules_list(infrastructure, file_root_init):
     assert len(modules) > 0
     assert all([set(e.keys()) == {"name", "actions"} for e in modules])
     assert all([isinstance(e["name"], str) for e in modules])
-    assert all([isinstance(e["actions"], collections.Iterable) for e in modules])
+    assert all([isinstance(e["actions"], collections.abc.Iterable) for e in modules])
 
 
 @pytest.mark.only_message_buses(["mqtt"])
