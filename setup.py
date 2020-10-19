@@ -123,7 +123,7 @@ setup(
         "pbkdf2",
         "python-slugify",
         "svupdater @ git+https://gitlab.nic.cz/turris/updater/supervisor.git#egg=supervisor",
-        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git",
+        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git#egg=turrishw",
     ],
     setup_requires=[
         'pytest-runner',

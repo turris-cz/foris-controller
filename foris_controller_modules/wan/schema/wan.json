@@ -163,7 +163,7 @@
                     "properties": {
                         "wan_settings": {"$ref": "#/definitions/wan_settings"},
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
-                        "mac_settings": {"$ref": "#/definitions/custom_mac_address"},
+                        "mac_settings": {"$ref": "#/definitions/mac_address_get"},
                         "interface_count": {"type": "integer", "minimum": 0},
                         "interface_up_count": {"type": "integer", "minimum": 0}
                     },
@@ -185,7 +185,7 @@
                     "properties": {
                         "wan_settings": {"$ref": "#/definitions/wan_settings"},
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
-                        "mac_settings": {"$ref": "#/definitions/custom_mac_address"}
+                        "mac_settings": {"$ref": "#/definitions/mac_address_set"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_settings", "wan6_settings", "mac_settings"]

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,12 +29,25 @@ from foris_controller_testtools.fixtures import (
     extra_module_paths,
     message_bus,
     backend,
+    device,
+    infrastructure,
+    UCI_CONFIG_DIR_PATH
 )
 
+from foris_controller_testtools.utils import get_uci_module
 
 DEFAULT_UCI_CONFIG_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
 )
+
+
+@pytest.fixture(scope="function")
+def fix_mox_wan(infrastructure, device):
+    """ Uci networks.wan.ifname should be eth0 on mox and eth2 on turris1x"""
+    if device.startswith("mox"):
+        uci = get_uci_module(infrastructure.name)
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            backend.set_option("network", "wan", "ifname", "eth0")
 
 
 @pytest.fixture(scope="session")

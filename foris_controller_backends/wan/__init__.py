@@ -24,7 +24,7 @@ from foris_controller.exceptions import UciException, GenericError
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.files import BaseFile
-from foris_controller_backends.networks import NetworksCmd
+from foris_controller_backends.networks import NetworksCmd, NetworksUci
 from foris_controller.utils import unwrap_list, parse_to_list
 
 logger = logging.getLogger(__name__)
@@ -103,15 +103,22 @@ class WanUci:
             else:
                 wan6_settings["wan6_6in4"]["dynamic_ipv4"]["enabled"] = False
 
-        # MAC
         custom_mac = get_option_named(network_data, "network", "wan", "macaddr", "")
-        mac_settings = (
-            {"custom_mac_enabled": True, "custom_mac": custom_mac}
-            if custom_mac
-            else {"custom_mac_enabled": False}
-        )
 
-        from foris_controller_backends.networks import NetworksUci
+        networks = NetworksUci()
+        networks_settings = networks.get_settings()
+        wan = networks_settings["networks"]["wan"]
+
+        mac_address = ""
+        try:
+            mac_address = wan[0]["macaddr"]
+        except IndexError:
+            logger.error("Device cannot detect wan interface.")
+
+        mac_settings = {"custom_mac_enabled": False, "mac_address": mac_address}
+
+        if custom_mac:
+            mac_settings.update({"custom_mac_enabled": True, "custom_mac": custom_mac})
 
         return {
             "wan_settings": wan_settings,

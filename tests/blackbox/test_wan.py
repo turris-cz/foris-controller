@@ -34,13 +34,19 @@ from foris_controller_testtools.utils import (
     network_restart_was_called,
     get_uci_module,
     match_subdict,
+    prepare_turrishw_root,
 )
 
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
 
 
-def test_get_settings(uci_configs_init, infrastructure):
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0"),("omnia", "4.0")], indirect=True)
+def test_get_settings(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
+
+    if infrastructure.backend_name in ["openwrt"]:
+        prepare_turrishw_root(device, turris_os_version)
+
     res = infrastructure.process_message(
         {"module": "wan", "action": "get_settings", "kind": "request"}
     )
@@ -52,11 +58,16 @@ def test_get_settings(uci_configs_init, infrastructure):
         "interface_count",
         "interface_up_count",
     }
+    assert "mac_address" in res["data"]["mac_settings"].keys()
 
 
+@pytest.mark.parametrize("device,turris_os_version", [("omnia","4.0"),("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_get_ipv6prefix_as_an_option(infrastructure):
+def test_get_ipv6prefix_as_an_option(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
     """ Fallback test since ipv6prefix option is newly set as list, but uci still may contain plain option. """
+
+    prepare_turrishw_root(device, turris_os_version)
+
     data = {
         "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
         "wan6_settings": {
@@ -77,7 +88,6 @@ def test_get_ipv6prefix_as_an_option(infrastructure):
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "wan6", "ip6prefix", fail_on_error=False)
-
         # save as an option
         backend.set_option("network", "wan6", "ip6prefix", "2001:470:6e:39::/64")
     res = infrastructure.process_message(
@@ -99,7 +109,311 @@ def test_get_wan_status(uci_configs_init, infrastructure):
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version,
+):
+    if infrastructure.backend_name in ["openwrt"]:
+        prepare_turrishw_root(device, turris_os_version)
+
+    filters = [("wan", "update_settings")]
+
+    def update(input_data, output_data, notification_data):
+        notifications = infrastructure.get_notifications(filters=filters)
+        res = infrastructure.process_message(
+            {"module": "wan", "action": "update_settings", "kind": "request", "data": input_data}
+        )
+        assert res == {
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "wan",
+        }
+        notifications = infrastructure.get_notifications(notifications, filters=filters)
+        assert notifications[-1]["module"] == "wan"
+        assert notifications[-1]["action"] == "update_settings"
+        assert notifications[-1]["kind"] == "notification"
+        assert notification_data == notifications[-1]["data"]
+
+        res = infrastructure.process_message(
+            {"module": "wan", "action": "get_settings", "kind": "request"}
+        )
+        assert res["module"] == "wan"
+        assert res["action"] == "get_settings"
+        assert res["kind"] == "reply"
+        assert match_subdict(output_data, res["data"])
+        mac_settings = res["data"]["mac_settings"]
+        assert "mac_address" in mac_settings.keys()
+        if mac_settings["custom_mac_enabled"]:
+            assert "custom_mac" in mac_settings.keys()
+
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {
+            "wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": False
+        },
+    )
+    # WAN
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {"hostname": "my-nice-turris4"}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {"hostname": "my-nice-turris4"}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {
+                "wan_type": "pppoe",
+                "wan_pppoe": {"username": "my_user", "password": "pass1"},
+            },
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {
+                "wan_type": "pppoe",
+                "wan_pppoe": {"username": "my_user", "password": "pass1"},
+            },
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "pppoe", "wan6_type": "none", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {
+                "wan_type": "static",
+                "wan_static": {"ip": "10.0.0.10", "netmask": "255.255.0.0", "gateway": "10.0.0.1"},
+            },
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {
+                "wan_type": "static",
+                "wan_static": {"ip": "10.0.0.10", "netmask": "255.255.0.0", "gateway": "10.0.0.1"},
+            },
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "static", "wan6_type": "none", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {
+                "wan_type": "static",
+                "wan_static": {
+                    "ip": "10.0.0.10",
+                    "netmask": "255.255.0.0",
+                    "gateway": "10.0.0.1",
+                    "dns1": "10.0.0.1",
+                    "dns2": "8.8.8.8",
+                },
+            },
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {
+                "wan_type": "static",
+                "wan_static": {
+                    "ip": "10.0.0.10",
+                    "netmask": "255.255.0.0",
+                    "gateway": "10.0.0.1",
+                    "dns1": "10.0.0.1",
+                    "dns2": "8.8.8.8",
+                },
+            },
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "static", "wan6_type": "none", "custom_mac_enabled": False},
+    )
+    # WAN6
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "dhcpv6", "wan6_dhcpv6": {"duid": ""}},
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "dhcpv6", "wan6_dhcpv6": {"duid": ""}},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "dhcp", "wan6_type": "dhcpv6", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "dhcpv6",
+                "wan6_dhcpv6": {"duid": "00030001d858d7004555"},
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "dhcpv6",
+                "wan6_dhcpv6": {"duid": "00030001d858d7004555"},
+            },
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": 'de:ad:be:ef:99:99'},
+        },
+        {"wan_type": "dhcp", "wan6_type": "dhcpv6", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "static",
+                "wan6_static": {
+                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
+                    "network": "2001:1488:fffe:6::/60",
+                    "gateway": "2001:1488:fffe:6::1",
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "static",
+                "wan6_static": {
+                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
+                    "network": "2001:1488:fffe:6::/60",
+                    "gateway": "2001:1488:fffe:6::1",
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": 'de:ad:be:ef:99:99'},
+        },
+        {"wan_type": "dhcp", "wan6_type": "static", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "static",
+                "wan6_static": {
+                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
+                    "network": "2001:1488:fffe:6::/60",
+                    "gateway": "2001:1488:fffe:6::1",
+                    "dns1": "2001:1488:fffe:6::1",
+                    "dns2": "2001:4860:4860::8888",
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "static",
+                "wan6_static": {
+                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
+                    "network": "2001:1488:fffe:6::/60",
+                    "gateway": "2001:1488:fffe:6::1",
+                    "dns1": "2001:1488:fffe:6::1",
+                    "dns2": "2001:4860:4860::8888",
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {
+            "wan_type": "dhcp", "wan6_type": "static", "custom_mac_enabled": False
+        },
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
+                    "mtu": 1480,
+                    "server_ipv4": "111.22.33.44",
+                    "ipv6_prefix": "2001:470:6e:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
+                    "dynamic_ipv4": {"enabled": False},
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
+                    "mtu": 1480,
+                    "server_ipv4": "111.22.33.44",
+                    "ipv6_prefix": "2001:470:6e:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
+                    "dynamic_ipv4": {"enabled": False},
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "dhcp", "wan6_type": "6in4", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
+                    "mtu": 1280,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "2001:470:6f:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
+                    "dynamic_ipv4": {
+                        "enabled": True,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1",
+                    },
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
+                    "mtu": 1280,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "2001:470:6f:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
+                    "dynamic_ipv4": {
+                        "enabled": True,
+                        "tunnel_id": "1122334455",
+                        "username": "user1",
+                        "password_or_key": "passphrase1",
+                    },
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "dhcp", "wan6_type": "6in4", "custom_mac_enabled": False},
+    )
+
+
+@pytest.mark.only_backends(['mock'])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_update_settings_change_mac(
+    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version,
 ):
     filters = [("wan", "update_settings")]
 
@@ -127,292 +441,10 @@ def test_update_settings(
         assert res["action"] == "get_settings"
         assert res["kind"] == "reply"
         assert match_subdict(output_data, res["data"])
-
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": False},
-    )
-    # WAN
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {"hostname": "my-nice-turris4"}},
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {"hostname": "my-nice-turris4"}},
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {
-                "wan_type": "pppoe",
-                "wan_pppoe": {"username": "my_user", "password": "pass1"},
-            },
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {
-                "wan_type": "pppoe",
-                "wan_pppoe": {"username": "my_user", "password": "pass1"},
-            },
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "pppoe", "wan6_type": "none", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {
-                "wan_type": "static",
-                "wan_static": {"ip": "10.0.0.10", "netmask": "255.255.0.0", "gateway": "10.0.0.1"},
-            },
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {
-                "wan_type": "static",
-                "wan_static": {"ip": "10.0.0.10", "netmask": "255.255.0.0", "gateway": "10.0.0.1"},
-            },
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "static", "wan6_type": "none", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {
-                "wan_type": "static",
-                "wan_static": {
-                    "ip": "10.0.0.10",
-                    "netmask": "255.255.0.0",
-                    "gateway": "10.0.0.1",
-                    "dns1": "10.0.0.1",
-                    "dns2": "8.8.8.8",
-                },
-            },
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {
-                "wan_type": "static",
-                "wan_static": {
-                    "ip": "10.0.0.10",
-                    "netmask": "255.255.0.0",
-                    "gateway": "10.0.0.1",
-                    "dns1": "10.0.0.1",
-                    "dns2": "8.8.8.8",
-                },
-            },
-            "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "static", "wan6_type": "none", "custom_mac_enabled": False},
-    )
-    # WAN6
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "dhcpv6", "wan6_dhcpv6": {"duid": ""}},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "dhcpv6", "wan6_dhcpv6": {"duid": ""}},
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "dhcpv6", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "dhcpv6",
-                "wan6_dhcpv6": {"duid": "00030001d858d7004555"},
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "dhcpv6",
-                "wan6_dhcpv6": {"duid": "00030001d858d7004555"},
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "dhcpv6", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "static",
-                "wan6_static": {
-                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
-                    "network": "2001:1488:fffe:6::/60",
-                    "gateway": "2001:1488:fffe:6::1",
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "static",
-                "wan6_static": {
-                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
-                    "network": "2001:1488:fffe:6::/60",
-                    "gateway": "2001:1488:fffe:6::1",
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "static", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "static",
-                "wan6_static": {
-                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
-                    "network": "2001:1488:fffe:6::/60",
-                    "gateway": "2001:1488:fffe:6::1",
-                    "dns1": "2001:1488:fffe:6::1",
-                    "dns2": "2001:4860:4860::8888",
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "static",
-                "wan6_static": {
-                    "ip": "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64",
-                    "network": "2001:1488:fffe:6::/60",
-                    "gateway": "2001:1488:fffe:6::1",
-                    "dns1": "2001:1488:fffe:6::1",
-                    "dns2": "2001:4860:4860::8888",
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "static", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": ""}},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": ""}},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
-        },
-        {"wan_type": "dhcp", "wan6_type": "6to4", "custom_mac_enabled": True},
-    )
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": "1.2.3.4"}},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": "1.2.3.4"}},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
-        },
-        {"wan_type": "dhcp", "wan6_type": "6to4", "custom_mac_enabled": True},
-    )
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "6in4",
-                "wan6_6in4": {
-                    "mtu": 1480,
-                    "server_ipv4": "111.22.33.44",
-                    "ipv6_prefix": "2001:470:6e:39::/64",
-                    "ipv6_address": "2001:470:6e:39::1",
-                    "dynamic_ipv4": {"enabled": False},
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "6in4",
-                "wan6_6in4": {
-                    "mtu": 1480,
-                    "server_ipv4": "111.22.33.44",
-                    "ipv6_prefix": "2001:470:6e:39::/64",
-                    "ipv6_address": "2001:470:6e:39::1",
-                    "dynamic_ipv4": {"enabled": False},
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "6in4", "custom_mac_enabled": False},
-    )
-    update(
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "6in4",
-                "wan6_6in4": {
-                    "mtu": 1280,
-                    "server_ipv4": "11.22.33.44",
-                    "ipv6_prefix": "2001:470:6f:39::/64",
-                    "ipv6_address": "2001:470:6e:39::1",
-                    "dynamic_ipv4": {
-                        "enabled": True,
-                        "tunnel_id": "1122334455",
-                        "username": "user1",
-                        "password_or_key": "passphrase1",
-                    },
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {
-            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-            "wan6_settings": {
-                "wan6_type": "6in4",
-                "wan6_6in4": {
-                    "mtu": 1280,
-                    "server_ipv4": "11.22.33.44",
-                    "ipv6_prefix": "2001:470:6f:39::/64",
-                    "ipv6_address": "2001:470:6e:39::1",
-                    "dynamic_ipv4": {
-                        "enabled": True,
-                        "tunnel_id": "1122334455",
-                        "username": "user1",
-                        "password_or_key": "passphrase1",
-                    },
-                },
-            },
-            "mac_settings": {"custom_mac_enabled": False},
-        },
-        {"wan_type": "dhcp", "wan6_type": "6in4", "custom_mac_enabled": False},
-    )
+        mac_settings = res["data"]["mac_settings"]
+        assert "mac_address" in mac_settings.keys()
+        if mac_settings["custom_mac_enabled"]:
+            assert "custom_mac" in mac_settings.keys()
     update(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
@@ -453,9 +485,35 @@ def test_update_settings(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
+            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66", "mac_address": "11:22:33:44:55:66"},
         },
         {"wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": True},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": ""}},
+            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": ""}},
+            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66", "mac_address": "11:22:33:44:55:66"},
+        },
+        {"wan_type": "dhcp", "wan6_type": "6to4", "custom_mac_enabled": True},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": "1.2.3.4"}},
+            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": "1.2.3.4"}},
+            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66", "mac_address": "11:22:33:44:55:66"},
+        },
+        {"wan_type": "dhcp", "wan6_type": "6to4", "custom_mac_enabled": True},
     )
 
 
@@ -1106,7 +1164,7 @@ def test_connection_test(uci_configs_init, infrastructure):
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_missing_wan6_openwrt(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, fix_mox_wan, device, turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1149,7 +1207,7 @@ def test_missing_wan6_openwrt(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_dns_option(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, fix_mox_wan, device, turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -1201,8 +1259,10 @@ def test_get_settings_dns_option(
     assert res["data"]["wan6_settings"]["wan6_static"]["dns2"] == "2001:4860:4860::8888"
 
 
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_get_settings_missing_wireless(uci_configs_init, infrastructure):
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
+    prepare_turrishw_root(device,turris_os_version)
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message(
         {"module": "wan", "action": "get_settings", "kind": "request"}
@@ -1210,9 +1270,11 @@ def test_get_settings_missing_wireless(uci_configs_init, infrastructure):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
 
 
+@pytest.mark.parametrize("device, turris_os_version",[("mox", "4.0"),("omnia","4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_wan6_options_can_be_empty(uci_configs_init, infrastructure):
+def test_wan6_options_can_be_empty(uci_configs_init, infrastructure, device, turris_os_version):
 
+    prepare_turrishw_root(device, turris_os_version)
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1225,3 +1287,60 @@ def test_wan6_options_can_be_empty(uci_configs_init, infrastructure):
     )
 
     assert "errors" not in res.keys()
+
+@pytest.mark.parametrize("device, turris_os_version",[("mox", "4.0"),("omnia","4.0")], indirect=True)
+def test_update_mac_address_and_disable(uci_configs_init, network_restart_command, infrastructure, device, turris_os_version):
+
+    if infrastructure.backend_name in ["openwrt"]:
+        prepare_turrishw_root(device, turris_os_version)
+
+    data = {
+        "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+        "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": ""}},
+        "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66"},
+    }
+    data_2 = {
+        "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+        "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": ""}},
+        "mac_settings": {"custom_mac_enabled": False},
+    }
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "update_settings", "kind": "request", "data": data}
+    )
+
+    assert "errors" not in res.keys()
+    assert res['data']['result']
+
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "update_settings", "kind": "request", "data": data_2}
+    )
+
+    assert "errors" not in res.keys()
+
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "custom_mac" not in res.keys()
+
+
+@pytest.mark.parametrize(
+    "device, turris_os_version, wan_mac",
+    [
+        ("mox", "4.0", "de:ad:be:ef:99:99"),
+        ("omnia", "4.0", "d8:58:d7:00:92:9e"),
+        # TODO: ("turris", "4.0", "00:00:00:00:00:00") mising data in /sys/class of mock file
+    ],
+    indirect=["device", "turris_os_version"]
+)
+@pytest.mark.only_backends(["openwrt"])
+def test_different_devices(uci_configs_init, infrastructure, device, fix_mox_wan, turris_os_version, wan_mac):
+
+    prepare_turrishw_root(device, turris_os_version)
+
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res.keys()
+    assert res["data"]["mac_settings"]["mac_address"] == wan_mac

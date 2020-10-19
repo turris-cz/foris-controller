@@ -43,9 +43,9 @@ from foris_controller_testtools.utils import (
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "5.2")], indirect=True
 )
-def test_get_settings(uci_configs_init, infrastructure, device, turris_os_version):
+def test_get_settings(uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version):
 
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -597,57 +597,6 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "proto") == "tcp"
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "src") == "wan"
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "dest_port") == "443"
-
-
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [("omnia", "3.10.7"), ("turris", "3.10.7"), ("turris", "4.0")],
-    indirect=True,
-)
-@pytest.mark.only_backends(["openwrt"])
-def test_get_settings_openwrt_unsupported(
-    uci_configs_init, infrastructure, device, turris_os_version
-):
-    if infrastructure.backend_name in ["openwrt"]:
-        prepare_turrishw_root(device, turris_os_version)
-
-    res = infrastructure.process_message(
-        {"module": "networks", "action": "get_settings", "kind": "request"}
-    )
-    # get ports
-    ports = (
-        res["data"]["networks"]["wan"]
-        + res["data"]["networks"]["lan"]
-        + res["data"]["networks"]["guest"]
-        + res["data"]["networks"]["none"]
-    )
-    assert len(ports) == 0
-
-
-@pytest.mark.parametrize(
-    "device,turris_os_version",
-    [("omnia", "3.10.7"), ("turris", "3.10.7"), ("turris", "4.0")],
-    indirect=True,
-)
-@pytest.mark.only_backends(["openwrt"])
-def test_update_settings_openwrt_unsupported(
-    uci_configs_init, infrastructure, device, turris_os_version
-):
-    if infrastructure.backend_name in ["openwrt"]:
-        prepare_turrishw_root(device, turris_os_version)
-
-    res = infrastructure.process_message(
-        {
-            "module": "networks",
-            "action": "update_settings",
-            "kind": "request",
-            "data": {
-                "firewall": {"ssh_on_wan": False, "http_on_wan": True, "https_on_wan": True},
-                "networks": {"wan": [], "lan": [], "guest": [], "none": []},
-            },
-        }
-    )
-    assert res["data"] == {"result": False}
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)

@@ -52,6 +52,12 @@
                 "additionalProperties": false
             }
         },
+        "mac_address_or_empty": {
+            "oneOf": [
+                {"enum": [""]},
+                {"type":"string", "format": "macaddress"}
+            ]
+        },
         "dhcp_settings_get": {
             "type": "object",
             "properties": {
@@ -215,7 +221,7 @@
             "required": ["mtu", "server_ipv4", "ipv6_prefix", "dynamic_ipv4"],
             "additionalProperties": false
         },
-        "custom_mac_address": {
+        "mac_address_set": {
             "oneOf": [
                 {
                     "type": "object",
@@ -233,6 +239,29 @@
                     },
                     "additionalProperties": false,
                     "required": ["custom_mac_enabled"]
+                }
+            ]
+        },
+        "mac_address_get" : {
+            "oneOf":[
+                {
+                    "type": "object",
+                    "properties": {
+                        "custom_mac_enabled": {"enum": [true]},
+                        "custom_mac": {"format": "macaddress", "type": "string"},
+                        "mac_address": {"$ref": "#/definitions/mac_address_or_empty"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["custom_mac_enabled", "custom_mac", "mac_address"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "custom_mac_enabled": {"enum": [false]},
+                        "mac_address": {"$ref": "#/definitions/mac_address_or_empty"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["custom_mac_enabled", "mac_address"]
                 }
             ]
         },

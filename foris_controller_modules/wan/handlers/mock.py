@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (https://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockWanHandler(Handler, BaseMockHandler):
+    _HARDWARE_MAC_ADDRESS = 'de:ad:be:ef:99:99'
     guide_set = BaseMockHandler._manager.Value(bool, False)
     wan_type = "none"
     wan_dhcp = {"hostname": None}
@@ -49,6 +50,7 @@ class MockWanHandler(Handler, BaseMockHandler):
     custom_mac_enabled = False
     custom_mac = None
     test_id_set = set()
+    mac_address = _HARDWARE_MAC_ADDRESS
 
     def _cleanup(self):
         self.wan_type = "dhcp"
@@ -73,6 +75,7 @@ class MockWanHandler(Handler, BaseMockHandler):
         }
         self.custom_mac_enabled = False
         self.custom_mac = None
+        self.mac_address = MockWanHandler._HARDWARE_MAC_ADDRESS
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -132,6 +135,9 @@ class MockWanHandler(Handler, BaseMockHandler):
 
         if self.custom_mac_enabled:
             res["mac_settings"]["custom_mac"] = self.custom_mac
+            self.mac_address = self.custom_mac
+
+        res["mac_settings"]["mac_address"] = self.mac_address
 
         return copy.deepcopy(res)
 
@@ -178,7 +184,7 @@ class MockWanHandler(Handler, BaseMockHandler):
             self.wan6_6in4 = copy.deepcopy(new_settings["wan6_settings"]["wan6_6in4"])
 
         self.custom_mac_enabled = new_settings["mac_settings"]["custom_mac_enabled"]
-        self.custom_mac = new_settings["mac_settings"].get("custom_mac", None)
+        self.custom_mac = new_settings["mac_settings"].get("custom_mac")
         MockWanHandler.guide_set.set(True)
 
         return True

@@ -828,7 +828,8 @@ def test_interface_count(
     network_restart_command,
     device,
     turris_os_version,
-    lan_dnsmasq_files
+    lan_dnsmasq_files,
+    fix_mox_wan
 ):
     prepare_turrishw("mox")  # plain mox without any boards
 
