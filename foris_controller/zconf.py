@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import json
 import ipaddress
 import logging
 import typing
@@ -70,6 +71,7 @@ def register() -> typing.Optional[zeroconf.Zeroconf]:
         f"{app_info['controller_id']}.foris-controller.{TYPE}",
         parsed_addresses=addresses,
         port=app_info["zeroconf_port"],
+        properties={"addresses": json.dumps(addresses)},
     )
 
     zconf = zeroconf.Zeroconf()
