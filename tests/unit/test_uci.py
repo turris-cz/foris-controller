@@ -486,13 +486,13 @@ def test_strange_chars_in_value(uci_configs_init, lock_backend):
     uci = get_uci_module(lock_backend)
 
     SPECIAL_VALUES = [
-        u"Příliš žluťoučký kůň úpěl ďábelské ódy",
-        u"Mike's place",
-        u"Nick’s place",
-        u"Kick''is ''' pl ' howgh",
-        u"Dick\\''",
-        u"Rick\\'\\'",
-        u"'Mi\\'d'dle'",
+        "Příliš žluťoučký kůň úpěl ďábelské ódy",
+        "Mike's place",
+        "Nick’s place",
+        "Kick''is ''' pl ' howgh",
+        "Dick\\''",
+        "Rick\\'\\'",
+        "'Mi\\'d'dle'",
     ]
     backend_class = get_uci_module(lock_backend).UciBackend
     with backend_class(config_dir) as backend:

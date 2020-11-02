@@ -71,7 +71,7 @@ def test_restore_backup(file_root_init, uci_configs_init, infrastructure):
             "data": {"backup": backup},
         }
     )
-    assert res["data"] == {u"result": True}
+    assert res["data"] == {"result": True}
 
 
 @pytest.mark.only_backends(["openwrt"])
@@ -91,7 +91,7 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
             "data": {"backup": backup},
         }
     )
-    assert res["data"] == {u"result": True}
+    assert res["data"] == {"result": True}
     wait_for_updater_run_finished(notifications, infrastructure)
     notifications = infrastructure.get_notifications(
         notifications, filters=[("maintain", "reboot_required")]
@@ -117,4 +117,4 @@ def test_generate_and_restore(uci_configs_init, infrastructure):
             "data": {"backup": res["data"]["backup"]},
         }
     )
-    assert res["data"] == {u"result": True}
+    assert res["data"] == {"result": True}

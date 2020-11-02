@@ -43,7 +43,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     DEFAULT_PACKAGE_LISTS = {
         "api-token": {
             "description": {
-                "en": u"A Foris plugin allowing to manage remote API access tokens"
+                "en": "A Foris plugin allowing to manage remote API access tokens"
                 " (for example for use in Spectator or Android application).",
                 "cs": "Správa tokenů pro vzdálený API přístup"
                 " (např. pro Spectator, nebo Android aplikaci) ve Forisu.",

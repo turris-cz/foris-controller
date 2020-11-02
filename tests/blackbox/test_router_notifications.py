@@ -129,10 +129,10 @@ def test_mark_as_displayed(stored_notifications, uci_configs_init, infrastructur
         }
     )
     assert res == {
-        u"module": u"router_notifications",
-        u"action": u"mark_as_displayed",
-        u"kind": u"reply",
-        u"data": {u"result": True},
+        "module": "router_notifications",
+        "action": "mark_as_displayed",
+        "kind": "reply",
+        "data": {"result": True},
     }
     res = infrastructure.process_message(
         {
@@ -203,10 +203,10 @@ def test_update_settings(uci_configs_init, infrastructure):
             }
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"router_notifications",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "router_notifications",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
@@ -320,10 +320,10 @@ def test_create(stored_notifications, uci_configs_init, infrastructure):
             }
         )
         assert res == {
-            u"module": u"router_notifications",
-            u"action": u"create",
-            u"kind": u"reply",
-            u"data": {u"result": True},
+            "module": "router_notifications",
+            "action": "create",
+            "kind": "reply",
+            "data": {"result": True},
         }
 
         res = infrastructure.process_message(
@@ -385,10 +385,10 @@ def test_update_email_settings(uci_configs_init, infrastructure):
             }
         )
         assert res == {
-            u"action": u"update_email_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"router_notifications",
+            "action": "update_email_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "router_notifications",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
@@ -481,10 +481,10 @@ def test_update_reboot_settings(uci_configs_init, infrastructure):
             }
         )
         assert res == {
-            u"action": u"update_reboot_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"router_notifications",
+            "action": "update_reboot_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "router_notifications",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"

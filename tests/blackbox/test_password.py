@@ -72,16 +72,16 @@ def test_set_and_check_system(
         }
     )
     assert res == {
-        u"action": u"set",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "set",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "password",
     }
     assert infrastructure.get_notifications(old_notifications, filters=filters)[-1] == {
-        u"module": u"password",
-        u"action": u"set",
-        u"kind": u"notification",
-        u"data": {u"type": u"system"},
+        "module": "password",
+        "action": "set",
+        "kind": "notification",
+        "data": {"type": "system"},
     }
     res = infrastructure.process_message(
         {
@@ -91,7 +91,7 @@ def test_set_and_check_system(
             "data": {"password": base64.b64encode(new_pass.encode()).decode("utf-8")},
         }
     )
-    assert res["data"]["status"] != u"good"
+    assert res["data"]["status"] != "good"
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
@@ -113,16 +113,16 @@ def test_set_and_check_foris(
         }
     )
     assert res == {
-        u"action": u"set",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "set",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "password",
     }
     assert infrastructure.get_notifications(old_notifications, filters=filters)[-1] == {
-        u"module": u"password",
-        u"action": u"set",
-        u"kind": u"notification",
-        u"data": {u"type": u"foris"},
+        "module": "password",
+        "action": "set",
+        "kind": "notification",
+        "data": {"type": "foris"},
     }
     res = infrastructure.process_message(
         {
@@ -133,10 +133,10 @@ def test_set_and_check_foris(
         }
     )
     assert res == {
-        u"action": u"check",
-        u"data": {u"status": u"good"},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "check",
+        "data": {"status": "good"},
+        "kind": "reply",
+        "module": "password",
     }
 
 
@@ -155,10 +155,10 @@ def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure):
         }
     )
     assert res == {
-        u"action": u"set",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "set",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "password",
     }
     with open(pass_file) as f:
         assert f.read() == ("%(password)s\n%(password)s\n" % dict(password=new_pass))
@@ -178,10 +178,10 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
         }
     )
     assert res == {
-        u"action": u"set",
-        u"data": {u"result": False, "list": "haas", "count": 101},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "set",
+        "data": {"result": False, "list": "haas", "count": 101},
+        "kind": "reply",
+        "module": "password",
     }
     res = infrastructure.process_message(
         {
@@ -195,10 +195,10 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
         }
     )
     assert res == {
-        u"action": u"set",
-        u"data": {u"result": False, "list": "other", "count": 666},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "set",
+        "data": {"result": False, "list": "other", "count": 666},
+        "kind": "reply",
+        "module": "password",
     }
     res = infrastructure.process_message(
         {
@@ -212,10 +212,10 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
         }
     )
     assert res == {
-        u"action": u"set",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "set",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "password",
     }
     res = infrastructure.process_message(
         {
@@ -229,8 +229,8 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
         }
     )
     assert res == {
-        u"action": u"set",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"password",
+        "action": "set",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "password",
     }

@@ -112,10 +112,10 @@ def test_update_settings(uci_configs_init, infrastructure, network_restart_comma
             {"module": "guest", "action": "update_settings", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"guest",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "guest",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "guest"
@@ -131,46 +131,46 @@ def test_update_settings(uci_configs_init, infrastructure, network_restart_comma
         assert res["kind"] == "reply"
         assert match_subdict(data, res["data"])
 
-    update({u"enabled": False})
+    update({"enabled": False})
     update(
         {
-            u"enabled": True,
-            u"ip": u"192.168.5.8",
-            u"netmask": u"255.255.255.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": False},
+            "enabled": True,
+            "ip": "192.168.5.8",
+            "netmask": "255.255.255.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": False},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.0.0.3",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": False},
+            "enabled": True,
+            "ip": "10.0.0.3",
+            "netmask": "255.255.0.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": False},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.1.0.3",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {
-                u"enabled": True,
-                u"start": 10,
-                u"limit": 50,
-                u"lease_time": 24 * 60 * 60 + 1,
+            "enabled": True,
+            "ip": "10.1.0.3",
+            "netmask": "255.255.0.0",
+            "dhcp": {
+                "enabled": True,
+                "start": 10,
+                "limit": 50,
+                "lease_time": 24 * 60 * 60 + 1,
             },
-            u"qos": {u"enabled": False},
+            "qos": {"enabled": False},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.3.0.3",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": True, u"download": 1200, u"upload": 1000},
+            "enabled": True,
+            "ip": "10.3.0.3",
+            "netmask": "255.255.0.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": True, "download": 1200, "upload": 1000},
         }
     )
 
@@ -188,10 +188,10 @@ def test_update_settings_openwrt(
             {"module": "guest", "action": "update_settings", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"guest",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "guest",
         }
         infrastructure.get_notifications(notifications, filters=filters)  # needed just for waiting
         assert network_restart_was_called([])
@@ -203,11 +203,11 @@ def test_update_settings_openwrt(
     # test guest network
     update(
         {
-            u"enabled": True,
-            u"ip": u"192.168.8.1",
-            u"netmask": u"255.255.255.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": False},
+            "enabled": True,
+            "ip": "192.168.8.1",
+            "netmask": "255.255.255.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": False},
         }
     )
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -259,11 +259,11 @@ def test_update_settings_openwrt(
     # test + qos
     update(
         {
-            u"enabled": True,
-            u"ip": u"192.168.9.1",
-            u"netmask": u"255.255.255.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": True, u"download": 1200, u"upload": 1000},
+            "enabled": True,
+            "ip": "192.168.9.1",
+            "netmask": "255.255.255.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": True, "download": 1200, "upload": 1000},
         }
     )
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -281,11 +281,11 @@ def test_update_settings_openwrt(
     # test + dhcp
     update(
         {
-            u"enabled": True,
-            u"ip": u"192.168.11.1",
-            u"netmask": u"255.255.255.0",
-            u"dhcp": {u"enabled": True, "start": 25, "limit": 100, "lease_time": 201},
-            u"qos": {u"enabled": False},
+            "enabled": True,
+            "ip": "192.168.11.1",
+            "netmask": "255.255.255.0",
+            "dhcp": {"enabled": True, "start": 25, "limit": 100, "lease_time": 201},
+            "qos": {"enabled": False},
         }
     )
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -299,7 +299,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "dhcp", "guest_turris", "dhcp_option") == ["6,192.168.11.1"]
 
     # test guest disabled
-    update({u"enabled": False})
+    update({"enabled": False})
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert not uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled"))
@@ -329,53 +329,53 @@ def test_wrong_update(uci_configs_init, infrastructure, network_restart_command)
 
     update(
         {
-            u"enabled": False,
-            u"ip": u"10.1.0.3",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {u"enabled": False},
+            "enabled": False,
+            "ip": "10.1.0.3",
+            "netmask": "255.255.0.0",
+            "dhcp": {"enabled": False},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.1.0.3",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {u"enabled": False, u"start": 10, u"limit": 50},
+            "enabled": True,
+            "ip": "10.1.0.3",
+            "netmask": "255.255.0.0",
+            "dhcp": {"enabled": False, "start": 10, "limit": 50},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.1.0.3",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {u"enabled": True, u"start": 10, u"limit": 50, u"lease_time": 119},
+            "enabled": True,
+            "ip": "10.1.0.3",
+            "netmask": "255.255.0.0",
+            "dhcp": {"enabled": True, "start": 10, "limit": 50, "lease_time": 119},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.1.0.3",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": False, u"download": 1200, u"upload": 1000},
+            "enabled": True,
+            "ip": "10.1.0.3",
+            "netmask": "255.255.0.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": False, "download": 1200, "upload": 1000},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.1.0.3",
-            u"netmask": u"255.250.0.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": False},
+            "enabled": True,
+            "ip": "10.1.0.3",
+            "netmask": "255.250.0.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": False},
         }
     )
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.1.0.256",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": False},
+            "enabled": True,
+            "ip": "10.1.0.256",
+            "netmask": "255.255.0.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": False},
         }
     )
 
@@ -446,10 +446,10 @@ def test_dhcp_clients(
             {"module": "guest", "action": "update_settings", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"guest",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "guest",
         }
         res = infrastructure.process_message(
             {"module": "guest", "action": "get_settings", "kind": "request"}
@@ -459,16 +459,16 @@ def test_dhcp_clients(
     # Return both
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.10.0.1",
-            u"netmask": u"255.255.252.0",
-            u"dhcp": {
-                u"enabled": True,
-                u"start": 10,
-                u"limit": 50,
-                u"lease_time": 24 * 60 * 60 + 1,
+            "enabled": True,
+            "ip": "10.10.0.1",
+            "netmask": "255.255.252.0",
+            "dhcp": {
+                "enabled": True,
+                "start": 10,
+                "limit": 50,
+                "lease_time": 24 * 60 * 60 + 1,
             },
-            u"qos": {u"enabled": False},
+            "qos": {"enabled": False},
         },
         [
             {
@@ -491,11 +491,11 @@ def test_dhcp_clients(
     # Return empty when disabled
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.10.0.1",
-            u"netmask": u"255.255.252.0",
-            u"dhcp": {u"enabled": False},
-            u"qos": {u"enabled": False},
+            "enabled": True,
+            "ip": "10.10.0.1",
+            "netmask": "255.255.252.0",
+            "dhcp": {"enabled": False},
+            "qos": {"enabled": False},
         },
         [],
     )
@@ -503,16 +503,16 @@ def test_dhcp_clients(
     # Return first
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.10.2.1",
-            u"netmask": u"255.255.255.0",
-            u"dhcp": {
-                u"enabled": True,
-                u"start": 10,
-                u"limit": 50,
-                u"lease_time": 24 * 60 * 60 + 1,
+            "enabled": True,
+            "ip": "10.10.2.1",
+            "netmask": "255.255.255.0",
+            "dhcp": {
+                "enabled": True,
+                "start": 10,
+                "limit": 50,
+                "lease_time": 24 * 60 * 60 + 1,
             },
-            u"qos": {u"enabled": False},
+            "qos": {"enabled": False},
         },
         [
             {
@@ -528,16 +528,16 @@ def test_dhcp_clients(
     # Return second
     update(
         {
-            u"enabled": True,
-            u"ip": u"10.10.1.1",
-            u"netmask": u"255.255.255.0",
-            u"dhcp": {
-                u"enabled": True,
-                u"start": 10,
-                u"limit": 50,
-                u"lease_time": 24 * 60 * 60 + 1,
+            "enabled": True,
+            "ip": "10.10.1.1",
+            "netmask": "255.255.255.0",
+            "dhcp": {
+                "enabled": True,
+                "start": 10,
+                "limit": 50,
+                "lease_time": 24 * 60 * 60 + 1,
             },
-            u"qos": {u"enabled": False},
+            "qos": {"enabled": False},
         },
         [
             {
@@ -553,16 +553,16 @@ def test_dhcp_clients(
     # Missed range
     update(
         {
-            u"enabled": True,
-            u"ip": u"192.168.1.1",
-            u"netmask": u"255.255.0.0",
-            u"dhcp": {
-                u"enabled": True,
-                u"start": 10,
-                u"limit": 50,
-                u"lease_time": 24 * 60 * 60 + 1,
+            "enabled": True,
+            "ip": "192.168.1.1",
+            "netmask": "255.255.0.0",
+            "dhcp": {
+                "enabled": True,
+                "start": 10,
+                "limit": 50,
+                "lease_time": 24 * 60 * 60 + 1,
             },
-            u"qos": {u"enabled": False},
+            "qos": {"enabled": False},
         },
         [],
     )
@@ -739,24 +739,24 @@ def test_update_settings_dhcp_range(uci_configs_init, infrastructure, network_re
                 "action": "update_settings",
                 "kind": "request",
                 "data": {
-                    u"enabled": True,
-                    u"ip": ip,
-                    u"netmask": netmask,
-                    u"dhcp": {
-                        u"enabled": True,
-                        u"start": start,
-                        u"limit": limit,
-                        u"lease_time": 24 * 60 * 60 + 1,
+                    "enabled": True,
+                    "ip": ip,
+                    "netmask": netmask,
+                    "dhcp": {
+                        "enabled": True,
+                        "start": start,
+                        "limit": limit,
+                        "lease_time": 24 * 60 * 60 + 1,
                     },
-                    u"qos": {u"enabled": False},
+                    "qos": {"enabled": False},
                 },
             }
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": result},
-            u"kind": u"reply",
-            u"module": u"guest",
+            "action": "update_settings",
+            "data": {"result": result},
+            "kind": "reply",
+            "module": "guest",
         }
 
     # default

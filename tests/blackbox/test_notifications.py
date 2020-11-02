@@ -43,10 +43,10 @@ def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure):
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"web",
-        u"action": u"set_language",
-        u"kind": u"notification",
-        u"data": {u"language": u"en"},
+        "module": "web",
+        "action": "set_language",
+        "kind": "notification",
+        "data": {"language": "en"},
     }
 
     retval, stdout, stderr = notify_cmd(
@@ -63,10 +63,10 @@ def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure):
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"web",
-        u"action": u"set_language",
-        u"kind": u"notification",
-        u"data": {u"language": u"en", u"invalid": True},
+        "module": "web",
+        "action": "set_language",
+        "kind": "notification",
+        "data": {"language": "en", "invalid": True},
     }
 
 
@@ -77,10 +77,10 @@ def test_notify_api(uci_configs_init, infrastructure, notify_api):
     notify("web", "set_language", {"language": "en"}, True)
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"web",
-        u"action": u"set_language",
-        u"kind": u"notification",
-        u"data": {u"language": u"en"},
+        "module": "web",
+        "action": "set_language",
+        "kind": "notification",
+        "data": {"language": "en"},
     }
 
     from jsonschema import ValidationError
@@ -92,12 +92,12 @@ def test_notify_api(uci_configs_init, infrastructure, notify_api):
     notify("web", "set_language", {"language": "en", "invalid": True}, False)
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"web",
-        u"action": u"set_language",
-        u"kind": u"notification",
-        u"data": {u"language": u"en", u"invalid": True},
+        "module": "web",
+        "action": "set_language",
+        "kind": "notification",
+        "data": {"language": "en", "invalid": True},
     }
 
     notify("echo", "echo")
     notifications = infrastructure.get_notifications(notifications, filters=filters)
-    assert notifications[-1] == {u"module": u"echo", u"action": u"echo", u"kind": u"notification"}
+    assert notifications[-1] == {"module": "echo", "action": "echo", "kind": "notification"}

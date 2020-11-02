@@ -77,10 +77,10 @@ def test_update_settings(
             {"module": "wan", "action": "update_settings", "kind": "request", "data": input_data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"wan",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "wan",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "wan"
@@ -405,10 +405,10 @@ def test_wan_openwrt_backend(
             {"module": "wan", "action": "update_settings", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"wan",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "wan",
         }
         assert network_restart_was_called([])
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -985,7 +985,7 @@ def test_connection_test(uci_configs_init, infrastructure):
         }
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert res["data"] == {u"status": u"not_found"}
+    assert res["data"] == {"status": "not_found"}
 
     res = infrastructure.process_message(
         {

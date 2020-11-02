@@ -159,25 +159,25 @@ def test_update_settings(
     assert res["data"]["result"] is True
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"time",
-        u"action": u"update_settings",
-        u"kind": u"notification",
-        u"data": {
-            u"region": u"Europe",
+        "module": "time",
+        "action": "update_settings",
+        "kind": "notification",
+        "data": {
+            "region": "Europe",
             "country": "RU",
-            u"city": u"Moscow",
-            u"timezone": u"MSK-3",
-            u"time_settings": {u"how_to_set_time": u"ntp"},
+            "city": "Moscow",
+            "timezone": "MSK-3",
+            "time_settings": {"how_to_set_time": "ntp"},
         },
     }
     res = infrastructure.process_message(
         {"module": "time", "action": "get_settings", "kind": "request"}
     )
-    assert res["data"]["region"] == u"Europe"
+    assert res["data"]["region"] == "Europe"
     assert res["data"]["country"] == "RU"
-    assert res["data"]["city"] == u"Moscow"
-    assert res["data"]["timezone"] == u"MSK-3"
-    assert res["data"]["time_settings"]["how_to_set_time"] == u"ntp"
+    assert res["data"]["city"] == "Moscow"
+    assert res["data"]["timezone"] == "MSK-3"
+    assert res["data"]["time_settings"]["how_to_set_time"] == "ntp"
 
     res = infrastructure.process_message(
         {
@@ -201,28 +201,28 @@ def test_update_settings(
     assert res["data"]["result"] is True
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"time",
-        u"action": u"update_settings",
-        u"kind": u"notification",
-        u"data": {
-            u"region": u"Europe",
+        "module": "time",
+        "action": "update_settings",
+        "kind": "notification",
+        "data": {
+            "region": "Europe",
             "country": "CZ",
-            u"city": u"Prague",
-            u"timezone": u"CET-1CEST,M3.5.0,M10.5.0/3",
-            u"time_settings": {
-                u"how_to_set_time": u"manual",
-                u"time": u"2018-01-30T15:51:30.482515",
+            "city": "Prague",
+            "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
+            "time_settings": {
+                "how_to_set_time": "manual",
+                "time": "2018-01-30T15:51:30.482515",
             },
         },
     }
     res = infrastructure.process_message(
         {"module": "time", "action": "get_settings", "kind": "request"}
     )
-    assert res["data"]["region"] == u"Europe"
+    assert res["data"]["region"] == "Europe"
     assert res["data"]["country"] == "CZ"
-    assert res["data"]["city"] == u"Prague"
-    assert res["data"]["timezone"] == u"CET-1CEST,M3.5.0,M10.5.0/3"
-    assert res["data"]["time_settings"]["how_to_set_time"] == u"manual"
+    assert res["data"]["city"] == "Prague"
+    assert res["data"]["timezone"] == "CET-1CEST,M3.5.0,M10.5.0/3"
+    assert res["data"]["time_settings"]["how_to_set_time"] == "manual"
 
 
 def test_get_router_time(uci_configs_init, infrastructure):
@@ -292,13 +292,13 @@ def test_openwrt_complex(
             "action": "update_settings",
             "kind": "request",
             "data": {
-                u"region": u"Europe",
+                "region": "Europe",
                 "country": "CZ",
-                u"city": u"Prague",
-                u"timezone": u"CET-1CEST,M3.5.0,M10.5.0/3",
-                u"time_settings": {
-                    u"how_to_set_time": u"manual",
-                    u"time": u"2018-01-30T15:51:30.482515",
+                "city": "Prague",
+                "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
+                "time_settings": {
+                    "how_to_set_time": "manual",
+                    "time": "2018-01-30T15:51:30.482515",
                 },
             },
         }
@@ -358,10 +358,10 @@ def test_ntpdate_trigger_pass_openwrt(
     # get started notification
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"time",
-        u"action": u"ntpdate_started",
-        u"kind": u"notification",
-        u"data": {u"id": async_id},
+        "module": "time",
+        "action": "ntpdate_started",
+        "kind": "notification",
+        "data": {"id": async_id},
     }
 
     # get finished notification
@@ -394,18 +394,18 @@ def test_ntpdate_trigger_fail_openwrt(
     # get started notification
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"time",
-        u"action": u"ntpdate_started",
-        u"kind": u"notification",
-        u"data": {u"id": async_id},
+        "module": "time",
+        "action": "ntpdate_started",
+        "kind": "notification",
+        "data": {"id": async_id},
     }
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"time",
-        u"action": u"ntpdate_finished",
-        u"kind": u"notification",
-        u"data": {u"id": async_id, u"result": False},
+        "module": "time",
+        "action": "ntpdate_finished",
+        "kind": "notification",
+        "data": {"id": async_id, "result": False},
     }
     assert not date_mock()
     assert not hwclock_mock()

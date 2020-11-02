@@ -124,7 +124,7 @@ def test_generate_ca_mock(infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "generate_ca", "kind": "request"}
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
 
 
@@ -139,7 +139,7 @@ def test_generate_ca_openwrt(empty_certs, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "generate_ca", "kind": "request"}
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
     task_id = res["data"]["task_id"]
 
@@ -168,7 +168,7 @@ def test_generate_ca_openwrt(empty_certs, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "generate_ca", "kind": "request"}
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
     task_id = res["data"]["task_id"]
 
@@ -184,7 +184,7 @@ def test_ca_get_status_mock(infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "status" in res["data"]
 
 
@@ -194,15 +194,15 @@ def test_get_status_openwrt_ready(ready_certs, infrastructure):
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
     assert res == {
-        u"module": u"remote",
-        u"action": u"get_status",
-        u"kind": u"reply",
-        u"data": {
-            u"status": u"ready",
-            u"tokens": [
-                {u"id": u"02", u"name": u"client1", u"status": u"revoked"},
-                {u"id": u"03", u"name": u"client2", u"status": u"valid"},
-                {u"id": u"04", u"name": u"client3", u"status": u"generating"},
+        "module": "remote",
+        "action": "get_status",
+        "kind": "reply",
+        "data": {
+            "status": "ready",
+            "tokens": [
+                {"id": "02", "name": "client1", "status": "revoked"},
+                {"id": "03", "name": "client2", "status": "valid"},
+                {"id": "04", "name": "client3", "status": "generating"},
             ],
         },
     }
@@ -214,10 +214,10 @@ def test_get_status_openwrt_missing(empty_certs, infrastructure):
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
     assert res == {
-        u"module": u"remote",
-        u"action": u"get_status",
-        u"kind": u"reply",
-        u"data": {u"status": "missing", u"tokens": []},
+        "module": "remote",
+        "action": "get_status",
+        "kind": "reply",
+        "data": {"status": "missing", "tokens": []},
     }
 
 
@@ -227,10 +227,10 @@ def test_get_status_openwrt_generating(generating_certs, infrastructure):
         {"module": "remote", "action": "get_status", "kind": "request"}
     )
     assert res == {
-        u"module": u"remote",
-        u"action": u"get_status",
-        u"kind": u"reply",
-        u"data": {u"status": u"generating", u"tokens": []},
+        "module": "remote",
+        "action": "get_status",
+        "kind": "reply",
+        "data": {"status": "generating", "tokens": []},
     }
 
 
@@ -251,7 +251,7 @@ def test_generate_token_mock(infrastructure):
             "data": {"name": "new.token_1"},
         }
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
 
     res = infrastructure.process_message(
@@ -285,7 +285,7 @@ def test_generate_token_openwrt_success(ready_certs, infrastructure):
             "data": {"name": "new.token_1"},
         }
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
     task_id = res["data"]["task_id"]
 
@@ -337,7 +337,7 @@ def test_generate_token_openwrt_failed(empty_certs, infrastructure):
             "data": {"name": "new.token_2"},
         }
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
     task_id = res["data"]["task_id"]
 
@@ -386,7 +386,7 @@ def test_revoke_mock(infrastructure):
             "data": {"name": "new.token_to_revoke"},
         }
     )
-    assert set(res.keys()) == {u"module", u"action", u"kind", u"data"}
+    assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
 
     res = infrastructure.process_message(
@@ -411,10 +411,10 @@ def test_revoke_mock(infrastructure):
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"remote",
-        u"action": u"revoke",
-        u"kind": u"notification",
-        u"data": {u"id": id_to_revoke},
+        "module": "remote",
+        "action": "revoke",
+        "kind": "notification",
+        "data": {"id": id_to_revoke},
     }
 
     # non-existing
@@ -441,10 +441,10 @@ def test_revoke_openwrt_ready(ready_certs, infrastructure):
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"remote",
-        u"action": u"revoke",
-        u"kind": u"notification",
-        u"data": {u"id": "03"},
+        "module": "remote",
+        "action": "revoke",
+        "kind": "notification",
+        "data": {"id": "03"},
     }
 
     res = infrastructure.process_message(
@@ -484,9 +484,9 @@ def test_delete_ca(ready_certs, infrastructure):
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"remote",
-        u"action": u"delete_ca",
-        u"kind": u"notification",
+        "module": "remote",
+        "action": "delete_ca",
+        "kind": "notification",
     }
 
     res = infrastructure.process_message(
@@ -500,7 +500,7 @@ def test_get_settings(uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "remote", "action": "get_settings", "kind": "request"}
     )
-    assert set(res["data"].keys()) == {u"enabled", u"wan_access", u"port"}
+    assert set(res["data"].keys()) == {"enabled", "wan_access", "port"}
 
 
 def test_update_settings(
@@ -533,7 +533,7 @@ def test_update_settings(
         )
         assert match_subdict(new_settings, res["data"])
 
-    update({u"enabled": False})
+    update({"enabled": False})
     update({"enabled": True, "wan_access": True, "port": 11885})
     update({"enabled": True, "wan_access": False, "port": 11886})
 
@@ -562,7 +562,7 @@ def test_update_settings_ubus_unix(uci_configs_init, init_script_result, infrast
             check_service_result("fosquitto", "disable", passed=True, clean=False)
             check_service_result("fosquitto", "stop", passed=True)
 
-    update({u"enabled": False})
+    update({"enabled": False})
     update({"enabled": True, "wan_access": True, "port": 11885})
     update({"enabled": True, "wan_access": False, "port": 11886})
 
@@ -580,10 +580,10 @@ def test_update_settings_openwrt_mqtt(
             {"module": "remote", "action": "update_settings", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"remote",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "remote",
         }
         check_service_result("firewall", "reload", passed=True)
         check_service_result("fosquitto", "enable", passed=True, clean=False)

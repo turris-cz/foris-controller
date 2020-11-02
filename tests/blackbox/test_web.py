@@ -96,14 +96,14 @@ def test_get_data(file_root_init, uci_configs_init, infrastructure, device, turr
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
-        u"language",
-        u"reboot_required",
-        u"notification_count",
-        u"updater_running",
-        u"guide",
-        u"password_ready",
-        u"turris_os_version",
-        u"device",
+        "language",
+        "reboot_required",
+        "notification_count",
+        "updater_running",
+        "guide",
+        "password_ready",
+        "turris_os_version",
+        "device",
     }
     assert len(res["data"]["language"]) in [2, 5]  # en, en_US
     assert res["data"]["notification_count"] >= 0
@@ -121,16 +121,16 @@ def test_set_language(installed_languages, code, file_root_init, uci_configs_ini
         {"module": "web", "action": "set_language", "kind": "request", "data": {"language": code}}
     )
     assert res == {
-        u"action": u"set_language",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"web",
+        "action": "set_language",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "web",
     }
     assert infrastructure.get_notifications(old_notifications, filters=filters)[-1] == {
-        u"module": u"web",
-        u"action": u"set_language",
-        u"kind": u"notification",
-        u"data": {u"language": code},
+        "module": "web",
+        "action": "set_language",
+        "kind": "notification",
+        "data": {"language": code},
     }
 
 
@@ -141,10 +141,10 @@ def test_set_language_missing(
         {"module": "web", "action": "set_language", "kind": "request", "data": {"language": "zz"}}
     )
     assert res == {
-        u"action": u"set_language",
-        u"data": {u"result": False},
-        u"kind": u"reply",
-        u"module": u"web",
+        "action": "set_language",
+        "data": {"result": False},
+        "kind": "reply",
+        "module": "web",
     }
 
 
@@ -153,7 +153,7 @@ def test_list_languages(installed_languages, file_root_init, uci_configs_init, i
         {"module": "web", "action": "list_languages", "kind": "request"}
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert u"languages" in res["data"].keys()
+    assert "languages" in res["data"].keys()
     assert set(res["data"]["languages"]) == {"en", "cs", "de", "nb_NO"}
 
 
@@ -188,8 +188,8 @@ def test_get_guide(file_root_init, uci_configs_init, infrastructure, device, tur
 
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
-        u"current_workflow",
-        u"available_workflows",
+        "current_workflow",
+        "available_workflows",
         "recommended_workflow",
     }
 
@@ -275,7 +275,7 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, device, 
     )
 
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert set(res["data"].keys()) == {u"result"}
+    assert set(res["data"].keys()) == {"result"}
 
 
 @pytest.mark.parametrize(
@@ -590,13 +590,13 @@ def test_walk_through_guide(
             "action": "update_settings",
             "kind": "request",
             "data": {
-                u"region": u"Europe",
+                "region": "Europe",
                 "country": "CZ",
-                u"city": u"Prague",
-                u"timezone": u"CET-1CEST,M3.5.0,M10.5.0/3",
-                u"time_settings": {
-                    u"how_to_set_time": u"manual",
-                    u"time": u"2018-01-30T15:51:30.482515",
+                "city": "Prague",
+                "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
+                "time_settings": {
+                    "how_to_set_time": "manual",
+                    "time": "2018-01-30T15:51:30.482515",
                 },
             },
         }

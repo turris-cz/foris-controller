@@ -82,10 +82,10 @@ def test_ubus_malformed_multipart_resend(infrastructure):
         final=True,
     )
     assert res == {
-        u"action": u"echo",
-        u"errors": [{u"description": u"failed to parse multipart", u"stacktrace": u""}],
-        u"kind": u"reply",
-        u"module": u"echo",
+        "action": "echo",
+        "errors": [{"description": "failed to parse multipart", "stacktrace": ""}],
+        "kind": "reply",
+        "module": "echo",
     }
 
 
@@ -101,10 +101,10 @@ def test_ubus_malformed_multipart_one(infrastructure):
         final=True,
     )
     assert res == {
-        u"action": u"echo",
-        u"errors": [{u"description": u"failed to parse multipart", u"stacktrace": u""}],
-        u"kind": u"reply",
-        u"module": u"echo",
+        "action": "echo",
+        "errors": [{"description": "failed to parse multipart", "stacktrace": ""}],
+        "kind": "reply",
+        "module": "echo",
     }
 
 
@@ -129,8 +129,8 @@ def test_ubus_malformed_multipart_two(infrastructure):
     )
 
     assert res == {
-        u"action": u"echo",
-        u"errors": [{u"description": u"failed to parse multipart", u"stacktrace": u""}],
-        u"kind": u"reply",
-        u"module": u"echo",
+        "action": "echo",
+        "errors": [{"description": "failed to parse multipart", "stacktrace": ""}],
+        "kind": "reply",
+        "module": "echo",
     }

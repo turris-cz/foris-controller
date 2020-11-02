@@ -45,7 +45,7 @@ def test_get_registration_number(infrastructure):
         {"module": "about", "action": "get_registration_number", "kind": "request"}
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert set(res["data"].keys()) == {u"registration_number"}
+    assert set(res["data"].keys()) == {"registration_number"}
 
 
 @pytest.mark.parametrize(

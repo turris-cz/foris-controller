@@ -125,10 +125,10 @@ def test_update_settings(
             {"module": "lan", "action": "update_settings", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"lan",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "lan",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "lan"
@@ -178,13 +178,13 @@ def test_update_settings(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.1.0.3",
-                u"netmask": u"255.252.0.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 1,
+                "router_ip": "10.1.0.3",
+                "netmask": "255.252.0.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 1,
                 },
             },
         }
@@ -193,9 +193,9 @@ def test_update_settings(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.2.0.3",
-                u"netmask": u"255.255.0.0",
-                u"dhcp": {u"enabled": False},
+                "router_ip": "10.2.0.3",
+                "netmask": "255.255.0.0",
+                "dhcp": {"enabled": False},
             },
         }
     )
@@ -203,21 +203,21 @@ def test_update_settings(
     update(
         {
             "mode": "unmanaged",
-            "mode_unmanaged": {u"lan_type": u"dhcp", u"lan_dhcp": {u"hostname": "bogatyr"}},
+            "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {"hostname": "bogatyr"}},
         }
     )
 
-    update({"mode": "unmanaged", "mode_unmanaged": {u"lan_type": u"dhcp", u"lan_dhcp": {}}})
+    update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {}}})
 
     update(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
                 },
             },
         }
@@ -227,12 +227,12 @@ def test_update_settings(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
-                    u"dns1": "1.1.1.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
+                    "dns1": "1.1.1.1",
                 },
             },
         }
@@ -242,19 +242,19 @@ def test_update_settings(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
-                    u"dns1": "1.1.1.2",
-                    u"dns2": "8.8.8.8",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
+                    "dns1": "1.1.1.2",
+                    "dns2": "8.8.8.8",
                 },
             },
         }
     )
 
-    update({"mode": "unmanaged", "mode_unmanaged": {u"lan_type": u"none"}})
+    update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "none"}})
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
@@ -271,13 +271,13 @@ def test_wrong_update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.1.0.3",
-                u"netmask": u"255.255.0.0",
-                u"dhcp": {
-                    u"enabled": False,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 2,
+                "router_ip": "10.1.0.3",
+                "netmask": "255.255.0.0",
+                "dhcp": {
+                    "enabled": False,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 2,
                 },
             },
         }
@@ -286,13 +286,13 @@ def test_wrong_update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.1.0.3",
-                u"netmask": u"255.250.0.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 3,
+                "router_ip": "10.1.0.3",
+                "netmask": "255.250.0.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 3,
                 },
             },
         }
@@ -301,13 +301,13 @@ def test_wrong_update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.1.0.256",
-                u"netmask": u"255.255.0.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 4,
+                "router_ip": "10.1.0.256",
+                "netmask": "255.255.0.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 4,
                 },
             },
         }
@@ -316,28 +316,28 @@ def test_wrong_update(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.1.0.1",
-                u"netmask": u"255.255.0.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 119,  # too small
+                "router_ip": "10.1.0.1",
+                "netmask": "255.255.0.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 119,  # too small
                 },
             },
         }
     )
 
-    update({"mode": "unmanaged", "mode_unmanaged": {u"lan_type": u"dhcp"}})
+    update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "dhcp"}})
     update(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.256",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.256",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
                 },
             },
         }
@@ -346,11 +346,11 @@ def test_wrong_update(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.250.0.0",
-                    u"gateway": u"10.4.0.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.250.0.0",
+                    "gateway": "10.4.0.1",
                 },
             },
         }
@@ -359,11 +359,11 @@ def test_wrong_update(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.256.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.256.1",
                 },
             },
         }
@@ -372,12 +372,12 @@ def test_wrong_update(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
-                    u"dns1": "192.168.256.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
+                    "dns1": "192.168.256.1",
                 },
             },
         }
@@ -386,17 +386,17 @@ def test_wrong_update(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
-                    u"dns2": "192.168.256.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
+                    "dns2": "192.168.256.1",
                 },
             },
         }
     )
-    update({"mode": "unmanaged", "mode_unmanaged": {u"lan_type": u"none", u"lan_none": {}}})
+    update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "none", "lan_none": {}}})
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
@@ -515,7 +515,7 @@ def test_update_settings_openwrt(
     data = update(
         {
             "mode": "unmanaged",
-            "mode_unmanaged": {u"lan_type": u"dhcp", u"lan_dhcp": {u"hostname": "bogatyr"}},
+            "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {"hostname": "bogatyr"}},
         }
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
@@ -523,7 +523,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "hostname") == "bogatyr"
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
 
-    data = update({"mode": "unmanaged", "mode_unmanaged": {u"lan_type": u"dhcp", u"lan_dhcp": {}}})
+    data = update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {}}})
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "lan", "hostname") == "bogatyr"
@@ -532,7 +532,7 @@ def test_update_settings_openwrt(
     data = update(
         {
             "mode": "unmanaged",
-            "mode_unmanaged": {u"lan_type": u"dhcp", u"lan_dhcp": {u"hostname": ""}},
+            "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {"hostname": ""}},
         }
     )
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
@@ -544,11 +544,11 @@ def test_update_settings_openwrt(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
                 },
             },
         }
@@ -565,12 +565,12 @@ def test_update_settings_openwrt(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.5.0.2",
-                    u"netmask": u"255.255.254.0",
-                    u"gateway": u"10.4.0.8",
-                    u"dns1": "1.1.1.1",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.5.0.2",
+                    "netmask": "255.255.254.0",
+                    "gateway": "10.4.0.8",
+                    "dns1": "1.1.1.1",
                 },
             },
         }
@@ -587,13 +587,13 @@ def test_update_settings_openwrt(
         {
             "mode": "unmanaged",
             "mode_unmanaged": {
-                u"lan_type": u"static",
-                u"lan_static": {
-                    u"ip": u"10.4.0.2",
-                    u"netmask": u"255.254.0.0",
-                    u"gateway": u"10.4.0.1",
-                    u"dns1": "1.1.1.2",
-                    u"dns2": "8.8.8.8",
+                "lan_type": "static",
+                "lan_static": {
+                    "ip": "10.4.0.2",
+                    "netmask": "255.254.0.0",
+                    "gateway": "10.4.0.1",
+                    "dns1": "1.1.1.2",
+                    "dns2": "8.8.8.8",
                 },
             },
         }
@@ -606,7 +606,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "dns") == ["8.8.8.8", "1.1.1.2"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
 
-    data = update({"mode": "unmanaged", "mode_unmanaged": {u"lan_type": u"none"}})
+    data = update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "none"}})
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "none"
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
@@ -627,10 +627,10 @@ def test_dhcp_clients_openwrt(
             {"module": "lan", "action": "update_settings", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"lan",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "lan",
         }
         res = infrastructure.process_message(
             {"module": "lan", "action": "get_settings", "kind": "request"}
@@ -642,13 +642,13 @@ def test_dhcp_clients_openwrt(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"192.168.1.1",
-                u"netmask": u"255.252.0.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 1,
+                "router_ip": "192.168.1.1",
+                "netmask": "255.252.0.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 1,
                 },
             },
         },
@@ -674,7 +674,7 @@ def test_dhcp_clients_openwrt(
     update(
         {
             "mode": "unmanaged",
-            "mode_unmanaged": {u"lan_type": u"dhcp", u"lan_dhcp": {u"hostname": "bogatyr"}},
+            "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {"hostname": "bogatyr"}},
         },
         [],
     )
@@ -684,9 +684,9 @@ def test_dhcp_clients_openwrt(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"192.168.1.1",
-                u"netmask": u"255.252.0.0",
-                u"dhcp": {u"enabled": False},
+                "router_ip": "192.168.1.1",
+                "netmask": "255.252.0.0",
+                "dhcp": {"enabled": False},
             },
         },
         [],
@@ -697,13 +697,13 @@ def test_dhcp_clients_openwrt(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"192.168.1.1",
-                u"netmask": u"255.255.255.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 1,
+                "router_ip": "192.168.1.1",
+                "netmask": "255.255.255.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 1,
                 },
             },
         },
@@ -723,13 +723,13 @@ def test_dhcp_clients_openwrt(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"192.168.2.1",
-                u"netmask": u"255.255.255.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 1,
+                "router_ip": "192.168.2.1",
+                "netmask": "255.255.255.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 1,
                 },
             },
         },
@@ -749,13 +749,13 @@ def test_dhcp_clients_openwrt(
         {
             "mode": "managed",
             "mode_managed": {
-                u"router_ip": u"10.1.0.3",
-                u"netmask": u"255.252.0.0",
-                u"dhcp": {
-                    u"enabled": True,
-                    u"start": 10,
-                    u"limit": 50,
-                    u"lease_time": 24 * 60 * 60 + 1,
+                "router_ip": "10.1.0.3",
+                "netmask": "255.252.0.0",
+                "dhcp": {
+                    "enabled": True,
+                    "start": 10,
+                    "limit": 50,
+                    "lease_time": 24 * 60 * 60 + 1,
                 },
             },
         },
@@ -929,23 +929,23 @@ def test_update_settings_dhcp_range(
                 "data": {
                     "mode": "managed",
                     "mode_managed": {
-                        u"router_ip": ip,
-                        u"netmask": netmask,
-                        u"dhcp": {
-                            u"enabled": True,
-                            u"start": start,
-                            u"limit": limit,
-                            u"lease_time": 24 * 60 * 60 + 1,
+                        "router_ip": ip,
+                        "netmask": netmask,
+                        "dhcp": {
+                            "enabled": True,
+                            "start": start,
+                            "limit": limit,
+                            "lease_time": 24 * 60 * 60 + 1,
                         },
                     },
                 },
             }
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": result},
-            u"kind": u"reply",
-            u"module": u"lan",
+            "action": "update_settings",
+            "data": {"result": result},
+            "kind": "reply",
+            "module": "lan",
         }
 
     # default
@@ -979,13 +979,13 @@ def test_get_settings_dns_option(
             "data": {
                 "mode": "unmanaged",
                 "mode_unmanaged": {
-                    u"lan_type": u"static",
-                    u"lan_static": {
-                        u"ip": u"10.4.0.2",
-                        u"netmask": u"255.254.0.0",
-                        u"gateway": u"10.4.0.1",
-                        u"dns1": "2.2.2.2",
-                        u"dns2": "8.8.8.8",
+                    "lan_type": "static",
+                    "lan_static": {
+                        "ip": "10.4.0.2",
+                        "netmask": "255.254.0.0",
+                        "gateway": "10.4.0.1",
+                        "dns1": "2.2.2.2",
+                        "dns2": "8.8.8.8",
                     },
                 },
             },
@@ -1032,23 +1032,23 @@ def test_dhcp_client_settings(
             "data": {
                 "mode": "managed",
                 "mode_managed": {
-                    u"router_ip": u"192.168.1.1",
-                    u"netmask": u"255.255.255.0",
-                    u"dhcp": {
-                        u"enabled": True,
-                        u"start": 10,
-                        u"limit": 50,
-                        u"lease_time": 24 * 60 * 60,
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 10,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
                     },
                 },
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
 
     def set_client(data, reason=None):
@@ -1159,23 +1159,23 @@ def test_dhcp_client_settings(
             "data": {
                 "mode": "managed",
                 "mode_managed": {
-                    u"router_ip": u"192.168.1.1",
-                    u"netmask": u"255.255.255.0",
-                    u"dhcp": {
-                        u"enabled": True,
-                        u"start": 5,
-                        u"limit": 50,
-                        u"lease_time": 24 * 60 * 60,
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 5,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
                     },
                 },
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
     client_list = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
@@ -1191,23 +1191,23 @@ def test_dhcp_client_settings(
             "data": {
                 "mode": "managed",
                 "mode_managed": {
-                    u"router_ip": u"192.168.5.1",
-                    u"netmask": u"255.255.255.0",
-                    u"dhcp": {
-                        u"enabled": True,
-                        u"start": 5,
-                        u"limit": 50,
-                        u"lease_time": 24 * 60 * 60,
+                    "router_ip": "192.168.5.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 5,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
                     },
                 },
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
     client_list = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
@@ -1225,18 +1225,18 @@ def test_dhcp_client_settings(
             "data": {
                 "mode": "managed",
                 "mode_managed": {
-                    u"router_ip": u"192.168.5.1",
-                    u"netmask": u"255.255.255.0",
-                    u"dhcp": {u"enabled": False},
+                    "router_ip": "192.168.5.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {"enabled": False},
                 },
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
     set_client({"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.5.3"}, "disabled")
 
@@ -1248,15 +1248,15 @@ def test_dhcp_client_settings(
             "kind": "request",
             "data": {
                 "mode": "unmanaged",
-                "mode_unmanaged": {u"lan_type": u"dhcp", u"lan_dhcp": {u"hostname": "gromoboj"}},
+                "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {"hostname": "gromoboj"}},
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
     set_client({"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.5.3"}, "disabled")
 
@@ -1285,10 +1285,10 @@ def test_dhcp_client_settings_openwrt(
             {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": data}
         )
         assert res == {
-            u"action": u"set_dhcp_client",
-            u"kind": u"reply",
-            u"module": u"lan",
-            u"data": {u"result": True},
+            "action": "set_dhcp_client",
+            "kind": "reply",
+            "module": "lan",
+            "data": {"result": True},
         }
 
         infrastructure.process_message(
@@ -1306,23 +1306,23 @@ def test_dhcp_client_settings_openwrt(
             "data": {
                 "mode": "managed",
                 "mode_managed": {
-                    u"router_ip": u"192.168.8.1",
-                    u"netmask": u"255.255.255.0",
-                    u"dhcp": {
-                        u"enabled": True,
-                        u"start": 10,
-                        u"limit": 50,
-                        u"lease_time": 24 * 60 * 60,
+                    "router_ip": "192.168.8.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 10,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
                     },
                 },
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
 
     # full
@@ -1377,23 +1377,23 @@ def test_dhcp_client_settings_openwrt(
             "data": {
                 "mode": "managed",
                 "mode_managed": {
-                    u"router_ip": u"192.168.8.1",
-                    u"netmask": u"255.255.255.0",
-                    u"dhcp": {
-                        u"enabled": True,
-                        u"start": 5,
-                        u"limit": 50,
-                        u"lease_time": 24 * 60 * 60,
+                    "router_ip": "192.168.8.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 5,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
                     },
                 },
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
     uci_data = get_uci_data()
     assert len(uci_data) == 3
@@ -1410,23 +1410,23 @@ def test_dhcp_client_settings_openwrt(
             "data": {
                 "mode": "managed",
                 "mode_managed": {
-                    u"router_ip": u"192.168.9.1",
-                    u"netmask": u"255.255.255.0",
-                    u"dhcp": {
-                        u"enabled": True,
-                        u"start": 5,
-                        u"limit": 50,
-                        u"lease_time": 24 * 60 * 60,
+                    "router_ip": "192.168.9.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 5,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
                     },
                 },
             },
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"lan",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
     }
     uci_data = get_uci_data()
     assert len(uci_data) == 1

@@ -29,9 +29,9 @@ def test_wrong_input_data(infrastructure):
     res = infrastructure.process_message(
         {"module": "about", "action": "get", "kind": "request", "data": {"extra": "data"}}
     )
-    assert res["action"] == u"get"
-    assert res["kind"] == u"reply"
-    assert res["module"] == u"about"
+    assert res["action"] == "get"
+    assert res["kind"] == "reply"
+    assert res["module"] == "about"
     assert "errors" in res
     assert "Incorrect input." in res["errors"][0]["description"]
 
@@ -57,7 +57,7 @@ def test_wrong_input_kind(infrastructure):
     assert res["module"] == "about"
     assert res["errors"][0][
         "description"
-    ] == u"Wrong message kind (only request are allowed)." or res["errors"][0][
+    ] == "Wrong message kind (only request are allowed)." or res["errors"][0][
         "description"
     ].startswith(
         "Incorrect input"
@@ -69,9 +69,9 @@ def test_wrong_input_action(infrastructure):
     res = infrastructure.process_message(
         {"module": "about", "action": "non-exiting", "kind": "request"}
     )
-    assert res["action"] == u"non-exiting"
-    assert res["kind"] == u"reply"
-    assert res["module"] == u"about"
+    assert res["action"] == "non-exiting"
+    assert res["kind"] == "reply"
+    assert res["module"] == "about"
     assert "errors" in res
     assert "Incorrect input." in res["errors"][0]["description"]
 
@@ -81,8 +81,8 @@ def test_wrong_input_module(infrastructure):
     res = infrastructure.process_message(
         {"module": "non-exiting", "action": "get", "kind": "request"}
     )
-    assert res["action"] == u"get"
-    assert res["kind"] == u"reply"
-    assert res["module"] == u"non-exiting"
+    assert res["action"] == "get"
+    assert res["kind"] == "reply"
+    assert res["module"] == "non-exiting"
     assert "errors" in res
     assert "Incorrect input." in res["errors"][0]["description"]

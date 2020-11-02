@@ -222,10 +222,10 @@ def test_update_settings(
             }
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": result},
-            u"kind": u"reply",
-            u"module": u"wifi",
+            "action": "update_settings",
+            "data": {"result": result},
+            "kind": "reply",
+            "module": "wifi",
         }
 
         if not result:
@@ -405,10 +405,10 @@ def test_update_settings_uci(
             }
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"wifi",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "wifi",
         }
         network_restart_was_called([])
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -845,23 +845,23 @@ def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, netwo
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"wifi",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
     }
 
     filters = [("wifi", "reset")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message({"module": "wifi", "action": "reset", "kind": "request"})
     assert res == {
-        u"action": u"reset",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"wifi",
+        "action": "reset",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
-    assert notifications[-1] == {u"module": u"wifi", u"action": u"reset", u"kind": u"notification"}
+    assert notifications[-1] == {"module": "wifi", "action": "reset", "kind": "notification"}
 
     res = infrastructure.process_message(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
@@ -900,10 +900,10 @@ def test_too_long_generated_guest_ssid(
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"wifi",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
     }
     res = infrastructure.process_message(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
@@ -945,10 +945,10 @@ def test_modify_encryption_only_if_none(
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"wifi",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
     }
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
@@ -986,10 +986,10 @@ def test_modify_encryption_only_if_none(
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"wifi",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
     }
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1013,10 +1013,10 @@ def test_get_settings_and_reset(wifi_opt, file_root_init, uci_configs_init, infr
 
     res = infrastructure.process_message({"module": "wifi", "action": "reset", "kind": "request"})
     assert res == {
-        u"action": u"reset",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"wifi",
+        "action": "reset",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
     }
 
     res = infrastructure.process_message(
@@ -1079,10 +1079,10 @@ def test_update_settings_uci_country(
             }
         )
         assert res == {
-            u"action": u"update_settings",
-            u"data": {u"result": True},
-            u"kind": u"reply",
-            u"module": u"wifi",
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "wifi",
         }
         network_restart_was_called([])
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:

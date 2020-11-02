@@ -205,20 +205,20 @@ def test_update_settings(
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"dns",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "dns",
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"dns",
-        u"action": u"update_settings",
-        u"kind": u"notification",
-        u"data": {
-            u"forwarding_enabled": False,
-            u"dnssec_enabled": False,
-            u"dns_from_dhcp_enabled": False,
+        "module": "dns",
+        "action": "update_settings",
+        "kind": "notification",
+        "data": {
+            "forwarding_enabled": False,
+            "dnssec_enabled": False,
+            "dns_from_dhcp_enabled": False,
         },
     }
     res = infrastructure.process_message(
@@ -236,21 +236,21 @@ def test_update_settings(
     )
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"dns",
-        u"action": u"update_settings",
-        u"kind": u"notification",
-        u"data": {
-            u"forwarding_enabled": False,
-            u"dnssec_enabled": False,
-            u"dns_from_dhcp_enabled": False,
-            u"dns_from_dhcp_domain": "test",
+        "module": "dns",
+        "action": "update_settings",
+        "kind": "notification",
+        "data": {
+            "forwarding_enabled": False,
+            "dnssec_enabled": False,
+            "dns_from_dhcp_enabled": False,
+            "dns_from_dhcp_domain": "test",
         },
     }
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"dns",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "dns",
     }
 
 
@@ -273,20 +273,20 @@ def test_update_and_get_settings(
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"dns",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "dns",
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"dns",
-        u"action": u"update_settings",
-        u"kind": u"notification",
-        u"data": {
-            u"forwarding_enabled": False,
-            u"dnssec_enabled": False,
-            u"dns_from_dhcp_enabled": False,
+        "module": "dns",
+        "action": "update_settings",
+        "kind": "notification",
+        "data": {
+            "forwarding_enabled": False,
+            "dnssec_enabled": False,
+            "dns_from_dhcp_enabled": False,
         },
     }
     res = infrastructure.process_message(
@@ -310,22 +310,22 @@ def test_update_and_get_settings(
         }
     )
     assert res == {
-        u"action": u"update_settings",
-        u"data": {u"result": True},
-        u"kind": u"reply",
-        u"module": u"dns",
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "dns",
     }
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": u"dns",
-        u"action": u"update_settings",
-        u"kind": u"notification",
-        u"data": {
-            u"forwarding_enabled": True,
-            u"forwarder": "",
-            u"dnssec_enabled": True,
-            u"dns_from_dhcp_enabled": True,
-            u"dns_from_dhcp_domain": u"test",
+        "module": "dns",
+        "action": "update_settings",
+        "kind": "notification",
+        "data": {
+            "forwarding_enabled": True,
+            "forwarder": "",
+            "dnssec_enabled": True,
+            "dns_from_dhcp_enabled": True,
+            "dns_from_dhcp_domain": "test",
         },
     }
     res = infrastructure.process_message(

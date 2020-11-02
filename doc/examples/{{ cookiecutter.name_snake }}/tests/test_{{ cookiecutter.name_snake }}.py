@@ -29,10 +29,10 @@ def test_set_slices(infrastructure, slices):
     )
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        u"module": "{{ cookiecutter.name_snake }}",
-        u"action": "set_slices",
-        u"kind": "notification",
-        u"data": {"slices": slices},
+        "module": "{{ cookiecutter.name_snake }}",
+        "action": "set_slices",
+        "kind": "notification",
+        "data": {"slices": slices},
     }
     res = infrastructure.process_message(
         {"module": "{{ cookiecutter.name_snake }}", "action": "get_slices", "kind": "request"}
