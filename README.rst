@@ -42,3 +42,13 @@ Running tests
 
     git submodule update --init
     tox -q -e py39
+
+
+Pre-commit configuration
+========================
+
+..  code-block::
+
+    pip install .[dev]
+    pre-commit install -t pre-push
+    pre-commit install -t pre-commit  # optional

@@ -140,6 +140,9 @@ setup(
             "ubus",
             "paho-mqtt",
         ],
+        "dev": [
+            "pre-commit",
+        ],
     },
     entry_points={
         "console_scripts": [
