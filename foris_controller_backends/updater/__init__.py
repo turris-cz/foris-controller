@@ -30,6 +30,7 @@ from foris_controller.updater import (
     svupdater_l10n,
     svupdater_lists,
     svupdater_autorun,
+    svupdater_packages,
 )
 from foris_controller.exceptions import UciException
 
@@ -201,6 +202,20 @@ class Updater(object):
             exported.append(item)
 
         return exported
+
+    @staticmethod
+    def query_installed_packages(packages: typing.List[str]) -> typing.List[str]:
+        """ Query whether packages are installed or provided by another packages """
+        ret = []
+
+        status = svupdater_packages.Status()
+        for package in packages:
+            if status.installed(package):
+                # we don't care about particular package names
+                # it just need to be installed or provided by another package
+                ret.append(package)
+
+        return sorted(ret)
 
     @staticmethod
     def get_languages():

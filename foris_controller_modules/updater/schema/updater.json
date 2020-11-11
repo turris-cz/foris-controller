@@ -644,6 +644,52 @@
             },
             "additionalProperties": false,
             "required": ["data"]
+        },
+        {
+            "description": "Request to query whether packages are installed or provided by another package",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["query_installed_packages"]},
+                "data": {
+                    "data": "object",
+                    "properties": {
+                        "packages": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "minItems": 1,
+                                "uniqueItems": true
+                            }
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["packages"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "Reply to query whether packages are installed or provided by another package",
+            "properties": {
+                "module": {"enum": ["updater"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["query_installed_packages"]},
+                "data": {
+                    "data": "object",
+                    "properties": {
+                        "installed": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["installed"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

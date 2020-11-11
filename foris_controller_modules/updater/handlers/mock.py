@@ -23,6 +23,7 @@ import copy
 import logging
 import random
 import uuid
+import typing
 
 from datetime import datetime
 
@@ -181,6 +182,11 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         }
     }
 
+    INSTALLED_PACKAGES = ["foo-alternative", "turris-version"]
+    PROVIDING_PACKAGES = {
+        "foo-alternative": "foo"
+    }
+
     languages = [
         {"code": "cs", "enabled": True},
         {"code": "de", "enabled": True},
@@ -303,6 +309,19 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"] = opts
 
         return True
+
+    @staticmethod
+    def query_installed_packages(packages: typing.List[str]) -> typing.List[str]:
+        """ Query whether packages are installed or provided by another packages """
+        ret = set()
+        for package in packages:
+            if package in MockUpdaterHandler.INSTALLED_PACKAGES:
+                ret.add(package)
+
+            if package in MockUpdaterHandler.PROVIDING_PACKAGES.values():
+                ret.add(package)
+
+        return sorted(ret)
 
     @logger_wrapper(logger)
     def get_approval(self):

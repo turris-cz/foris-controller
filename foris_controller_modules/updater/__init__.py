@@ -140,6 +140,10 @@ class UpdaterModule(BaseModule):
         """
         return {"running": self.handler.get_running()}
 
+    def action_query_installed_packages(self, data):
+        """ Query whether packages are installed or provided by another packages """
+        return {"installed": self.handler.query_installed_packages(**data)}
+
 
 @wrap_required_functions(
     [
@@ -154,6 +158,7 @@ class UpdaterModule(BaseModule):
         "run",
         "get_enabled",
         "get_running",
+        "query_installed_packages",
     ]
 )
 class Handler(object):

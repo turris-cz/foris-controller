@@ -807,3 +807,29 @@ def test_update_languages(
 
     lang_data = res["data"].pop("languages")
     assert set(data["languages"]) == {e["code"] for e in lang_data if e["enabled"]}
+
+
+@pytest.mark.parametrize(
+    "packages,expected_result",
+    [
+        (["turris-version"], ["turris-version"]),  # query just one installed
+        (["nonsense"], []),
+        (["nonsense", "turris-version"], ["turris-version"]),
+        (["foo-alternative", "turris-version"], ["foo-alternative", "turris-version"]),
+        (["foo"], ["foo"]),  # foo is not installed, but provided by foo-alernative
+    ]
+)
+def test_query_installed_packages(infrastructure, packages, expected_result):
+    """ Query installed packages for either installed or provided by another packages """
+    data = {"packages": packages}
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "query_installed_packages",
+            "kind": "request",
+            "data": data,
+        }
+    )
+
+    assert "errors" not in res.keys()
+    assert res["data"]["installed"] == expected_result

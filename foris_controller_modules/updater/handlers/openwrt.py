@@ -18,6 +18,7 @@
 #
 
 import logging
+import typing
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
@@ -123,6 +124,10 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         :rtype: bool
         """
         return self.updater.update_languages(languages)
+
+    def query_installed_packages(self, packages: typing.List[str]) -> typing.List[str]:
+        """ Query whether packages are installed or provided by another packages """
+        return self.updater.query_installed_packages(packages)
 
     @logger_wrapper(logger)
     def run(self, set_reboot_indicator):
