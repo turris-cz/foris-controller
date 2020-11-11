@@ -24,7 +24,9 @@ from foris_controller_testtools.fixtures import (
     file_root_init,
     infrastructure,
     lock_backend,
+    only_backends,
     uci_configs_init,
+    prepare_turrishw,
 )
 from foris_controller_testtools.utils import FileFaker
 
@@ -76,3 +78,34 @@ def test_get_contract(content, output, lock_backend, file_root_init):
         assert SystemInfoFiles().get_contract() == output
 
     del os.environ["FORIS_FILE_ROOT"]
+
+
+@pytest.mark.parametrize(
+    "device,expected_result",
+    [
+        ("shield", "shield"),
+        ("mox", None),
+    ]
+)
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_get_router_customization(
+    uci_configs_init,
+    infrastructure,
+    prepare_turrishw,
+    device,
+    expected_result
+):
+    prepare_turrishw(device)
+    res = infrastructure.process_message(
+        {
+            "module": "about",
+            "action": "get",
+            "kind": "request",
+        }
+    )
+
+    assert "errors" not in res.keys()
+    if expected_result:
+        assert "customization" in res["data"]
+        assert res["data"]["customization"] == expected_result

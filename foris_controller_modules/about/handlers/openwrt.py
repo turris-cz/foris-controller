@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ from foris_controller_backends.about import (
     ServerUplinkFiles,
     CryptoWrapperCmds,
 )
+from foris_controller_backends.updater import Updater
 
 from .. import Handler
 
@@ -40,6 +41,9 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
     system_info_cmds = SystemInfoCmds()
     system_info_files = SystemInfoFiles()
     server_uplink_files = ServerUplinkFiles()
+    updater = Updater()
+
+    CUSTOMIZATIONS = {"shield-support": "shield"}
 
     @logger_wrapper(logger)
     def get_device_info(self):
@@ -72,3 +76,17 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
         :rtype: dict
         """
         return {"registration_number": self.server_uplink_files.get_registration_number()}
+
+    @logger_wrapper(logger)
+    def get_customization(self):
+        """ Search for hardware-specific customization packages
+        If such package is installed, it means that this is certain custom
+        software configuration for specific hardware.
+        """
+
+        installed = self.updater.query_installed_packages(list(self.CUSTOMIZATIONS.keys()))
+
+        if "shield-support" in installed:
+            return self.CUSTOMIZATIONS["shield-support"]
+
+        return None

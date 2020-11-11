@@ -1,4 +1,10 @@
 {
+    "definitions":  {
+        "router_customization": {
+            "description": "Differentiate router configurations",
+            "enum": ["shield"]
+        }
+    },
     "oneOf": [
         {
             "description": "Get information for the about tab",
@@ -30,7 +36,8 @@
                             "additionalProperties": false,
                             "required": ["mode", "value"]
                         },
-                        "kernel": {"type": "string"}
+                        "kernel": {"type": "string"},
+                        "customization": {"$ref": "#/definitions/router_customization"}
                     },
                     "additionalProperties": false
                 }

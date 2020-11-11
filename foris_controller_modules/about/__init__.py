@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,6 +37,10 @@ class AboutModule(BaseModule):
         res = {}
         res.update(self.handler.get_device_info())
         res.update(self.handler.get_serial())
+        customization = self.handler.get_customization()
+        if customization:
+            res["customization"] = customization
+
         return res
 
     def action_get_registration_number(self, data):
