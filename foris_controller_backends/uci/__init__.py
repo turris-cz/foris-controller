@@ -182,6 +182,22 @@ class UciBackend(object):
             raise UciException(cmdline_args, stderr)
         return stdout.decode("utf-8")
 
+    def _run_reload_config(self):
+        logger.debug("Running procd uci triggers")
+
+        # note that if this fails
+        # it shouldn't be fatal
+        try:
+            retval, _, _ = handle_command("reload_config")
+        except (FileNotFoundError, OSError):
+            logger.warning("Missing `reload_config` command.")
+            return
+
+        if retval:
+            logger.warning("Failed to run procd uci triggers. (retval=%d)", retval)
+        else:
+            logger.debug("Procd uci triggers were triggered.")
+
     def add_section(self, config, section_type, section_name=None):
         """
         :param section_name: for anonymous leave
@@ -255,6 +271,10 @@ class UciBackend(object):
             self._run_uci_command("commit", config)
             # This revert should clean the changes directory
             self._run_uci_command("revert", config)
+
+        if self.affected_configs:
+            self._run_reload_config()
+
         logger.debug("Uci configs updates were commited.")
 
     def _convert_value(self, value):
