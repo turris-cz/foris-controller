@@ -288,14 +288,16 @@ def main():
 
     logger.debug("Entering main loop.")
     if zeroconf:
-        from foris_controller.zconf import register
+        from foris_controller.zconf import ZconfService
 
-        zconf_instance = register()
+        zconf_service = ZconfService()
 
-    server.serve_forever()
-
-    if zeroconf and zconf_instance:
-        zconf_instance.close()
+    try:
+        server.serve_forever()
+    finally:
+        if zeroconf:
+            # Gracefully unregisters service from zconf
+            zconf_service.close()
 
 
 if __name__ == "__main__":
