@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,10 +53,8 @@ def test_get_settings(uci_configs_init, infrastructure, device, turris_os_versio
     res = infrastructure.process_message(
         {"module": "networks", "action": "get_settings", "kind": "request"}
     )
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "device" in res["data"].keys()
-    assert "networks" in res["data"].keys()
-    assert "firewall" in res["data"].keys()
+    assert "errors" not in res.keys()
+    assert res["data"].keys() == {"device", "networks", "firewall"}
     assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
 
 

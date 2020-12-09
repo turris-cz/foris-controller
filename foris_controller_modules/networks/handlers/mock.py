@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "04:f0:21:24:11:1f"
             }
         ],
         "lan": [
@@ -55,6 +56,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "d8:58:d7:00:92:91"
             },
             {
                 "id": "lan1",
@@ -65,6 +67,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "d8:58:d7:00:92:92"
             },
             {
                 "id": "lan2",
@@ -75,6 +78,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "d8:58:d7:00:92:9c"
             },
             {
                 "id": "lan3",
@@ -85,6 +89,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "d8:58:d7:00:92:9d"
             },
             {
                 "id": "lan4",
@@ -95,6 +100,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "d8:58:d7:00:92:9f"
             },
         ],
         "guest": [
@@ -107,6 +113,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "usb",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "d8:58:d7:00:92:9d"
             }
         ],
         "none": [
@@ -119,6 +126,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "pci",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "04:f0:21:24:11:1b"
             },
             {
                 "id": "wwan1",
@@ -129,6 +137,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "pci",
                 "module_id": 0,
                 "configurable": True,
+                "macaddr": "04:f0:21:24:11:be"
             },
             {
                 "id": "wlan0",
@@ -140,6 +149,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "module_id": 0,
                 "configurable": False,
                 "ssid": "testing-ssid",
+                "macaddr": "04:f0:21:23:22:dc"
             },
         ],
     }

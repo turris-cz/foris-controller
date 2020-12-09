@@ -23,9 +23,10 @@
                         "state": {"$ref": "#/definitions/interface_state"},
                         "module_id": {"$ref": "#/definitions/interface_module_id"},
                         "link_speed": {"$ref": "#/definitions/interface_link_speed"},
-                        "configurable": {"type": "boolean"}
+                        "configurable": {"type": "boolean"},
+                        "macaddr": {"format": "macaddress", "type": "string"}
                     },
-                    "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable"],
+                    "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "macaddr"],
                     "additionalProperties": false
                 },
                 {
@@ -44,9 +45,10 @@
                         "module_id": {"$ref": "#/definitions/interface_module_id"},
                         "link_speed": {"$ref": "#/definitions/interface_link_speed"},
                         "configurable": {"type": "boolean"},
-                        "ssid": {"type": "string", "minLength": 0, "maxLength": 32}
+                        "ssid": {"type": "string", "minLength": 0, "maxLength": 32},
+                        "macaddr": {"format": "macaddress", "type": "string"}
                     },
-                    "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "ssid"],
+                    "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "ssid", "macaddr"],
                     "additionalProperties": false
                 }
             ]

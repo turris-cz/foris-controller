@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -124,13 +124,11 @@ class NetworksUci(object):
         try:
             for k, v in interfaces.items():
                 v["id"] = k
-                v["configurable"] = False if v["type"] == "wifi" else True
+                v["configurable"] = True
                 if v["type"] == "wifi":
                     v["configurable"] = False
                     res_wireless.append(v)
                 else:
-                    v["configurable"] = True
-                    del v["macaddr"]
                     res.append(v)
         except Exception:
             res = [], []  # when turrishw get fail -> return empty dict
@@ -201,7 +199,7 @@ class NetworksUci(object):
 
         for record in wifi_ifaces:
             networks_and_ssids = self._find_enabled_networks_by_ifname(wireless_data, record["id"])
-            macaddr = record.pop("macaddr")
+            macaddr = record.get("macaddr")
             if networks_and_ssids is None:
                 networks_and_ssids = self._find_enabled_networks_by_macaddr(
                     wireless_data, macaddr, record["id"]
