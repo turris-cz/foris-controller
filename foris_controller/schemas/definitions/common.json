@@ -17,6 +17,41 @@
                 {"type": "integer", "minimum": 120}
             ]
         },
+        "dhcpv4_clients": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "expires": {"type": "integer", "minimum": 0, "description": "timestamp format"},
+                    "ip": {
+                        "oneOf": [
+                            {"type": "string", "format": "ipv4"},
+                            {"enum": ["ignore"]}
+                        ]
+                    },
+                    "mac": {"type": "string", "format": "macaddress"},
+                    "hostname": {"type": "string"},
+                    "active": {"type": "boolean"}
+                },
+                "required": ["expires", "hostname", "active", "mac", "ip"],
+                "additionalProperties": false
+            }
+        },
+        "dhcpv6_clients": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "expires": {"type": "integer", "minimum": 0, "description": "timestamp format"},
+                    "ipv6": {"type": "string", "format": "ipv6"},
+                    "duid": {"$ref:": "#/definitions/duid"},
+                    "hostname": {"type": "string"},
+                    "active": {"type": "boolean"}
+                },
+                "required": ["expires", "hostname", "active", "duid", "ipv6"],
+                "additionalProperties": false
+            }
+        },
         "dhcp_settings_get": {
             "type": "object",
             "properties": {
@@ -24,26 +59,8 @@
                 "start": {"type": "integer", "minimum": 1},
                 "limit": {"type": "integer", "minimum": 1},
                 "lease_time": {"$ref": "#/definitions/dhcp_lease_time"},
-                "clients": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "expires": {"type": "integer", "minimum": 0, "description": "timestamp format"},
-                            "ip": {
-                                "oneOf": [
-                                    {"type": "string", "format": "ipv4"},
-                                    {"enum": ["ignore"]}
-                                ]
-                            },
-                            "mac": {"type": "string", "format": "macaddress"},
-                            "hostname": {"type": "string"},
-                            "active": {"type": "boolean"}
-                        },
-                        "required": ["expires", "ip", "mac", "hostname", "active"],
-                        "additionalProperties": false
-                    }
-                }
+                "clients": {"$ref": "#/definitions/dhcpv4_clients"},
+                "ipv6clients": {"$ref": "#/definitions/dhcpv6_clients"}
             },
             "required": ["enabled", "start", "limit", "lease_time", "clients"],
             "additionalProperties": false

@@ -49,14 +49,22 @@ def _get_interface(ip: str, netmask: str) -> str:
 
 
 class LanFiles(BaseFile):
+    ODHCPD_FILE = "/var/hosts/odhcpd"
     DNSMASQ_LEASE_FILE = "/tmp/dhcp.leases"
     CONNTRACK_FILE = "/proc/net/nf_conntrack"
+
+    def _bare_ip(self, iface):
+        return ipaddress.ip_interface(iface).ip
+
+    def _check_active(self, ip):
+        conntrack = self._file_content(LanFiles.CONNTRACK_FILE)
+        ip_exploded = ip.exploded
+        return f"src={ip_exploded}" in conntrack or f"dst={ip_exploded}" in conntrack
 
     def get_dhcp_clients(self, network, netmask):
         if not path_exists(LanFiles.DNSMASQ_LEASE_FILE):
             return []
         lines = self._file_content(LanFiles.DNSMASQ_LEASE_FILE).strip("\n \t").split("\n")
-        conntrack = self._file_content(LanFiles.CONNTRACK_FILE)
         res = []
         for line in lines:
             try:
@@ -64,9 +72,10 @@ class LanFiles(BaseFile):
                 timestamp = int(timestamp)
             except ValueError:
                 continue
+            address = ipaddress.ip_address(ip)
 
             # filter by network and netmask
-            if ipaddress.ip_address(ip) in ipaddress.ip_network(
+            if address in ipaddress.ip_network(
                 f"{network}/{netmask}", strict=False
             ):
                 res.append(
@@ -75,10 +84,36 @@ class LanFiles(BaseFile):
                         "mac": mac.upper().strip(),
                         "ip": ip,
                         "hostname": hostname,
-                        "active": ("src=%s " % ip) in conntrack or ("dst=%s " % ip) in conntrack,
+                        "active": self._check_active(address),
                     }
                 )
 
+        return res
+
+    def get_ipv6_dhcp_clients(self, odhcpd_file):
+        if not path_exists(odhcpd_file):
+            return []
+        leasefile = self._file_content(odhcpd_file)
+        lines = leasefile.strip().split("\n")
+
+        res = []
+        for line in lines:
+            if line.startswith("#"):
+                data = line.split(" ")
+                properties, addresses = data[:8], data[8:]
+                _, _, duid, _, hostname, timestamp, _, _ = properties
+                ipv6 = list(map(self._bare_ip, addresses))
+                timestamp = int(timestamp)
+                for address in ipv6:
+                    res.append(
+                        {
+                            "expires": timestamp,
+                            "duid": duid,
+                            "ipv6": str(address),
+                            "hostname": hostname,
+                            "active": self._check_active(address),
+                        }
+                    )
         return res
 
 
@@ -172,6 +207,13 @@ class LanUci(object):
             )
         return file_records
 
+    def get_ipv6_client_list(self, uci_data):
+        odhcpd_file = get_option_named(uci_data,"dhcp", "odhcpd", "leasefile", "")
+        if not odhcpd_file:
+            odhcpd_file = LanFiles().ODHCPD_FILE
+        records = LanFiles().get_ipv6_dhcp_clients(odhcpd_file)
+        return records
+
     @staticmethod
     def _normalize_lease(value):
         leasetime = str(value)
@@ -218,6 +260,7 @@ class LanUci(object):
             mode_managed["dhcp"]["clients"] = self.get_client_list(
                 dhcp_data, mode_managed["router_ip"], mode_managed["netmask"]
             )
+            mode_managed["dhcp"]["ipv6clients"] = self.get_ipv6_client_list(dhcp_data)
         else:
             mode_managed["dhcp"]["clients"] = []
 

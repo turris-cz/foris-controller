@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,6 +57,22 @@ class MockLanHandler(Handler, BaseMockHandler):
                     "hostname": "*",
                 },
             ],
+            "ipv6clients": [
+                {
+                    "ipv6": "fd52:ad42:a6c9::64fe",
+                    "duid": "00010003d8e63397f73ed8cd7cda",
+                    "expires": 1539350186,
+                    "active": True,
+                    "hostname": "prvni"
+                },
+                {
+                    "ipv6": "fd52:ad42:a6c9::64fa",
+                    "duid": "00020000df167896750a08ce0782",
+                    "expires": 1539350186,
+                    "active": False,
+                    "hostname": "*"
+                },
+            ]
         },
     }
     mode_unmanaged: typing.Dict[str, typing.Any] = {

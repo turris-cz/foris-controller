@@ -77,15 +77,33 @@ def lan_dnsmasq_files():
             "ipv4     2 udp      17 173 src=127.0.0.1 dst=127.0.0.1 sport=42365 dport=53 packets=2 "
             "bytes=120 src=127.0.0.1 dst=127.0.0.1 sport=53 dport=42365 packets=2 bytes=164 [ASSURED] "
             "mark=0 zone=0 use=2",
+            "ipv6     10 udp      17 41 src=fd52:ad42:910e:0000:0000:0000:0000:64fa "
+            "dst=fd21:36f9:644e:0000:0000:0000:0000:0001 sport=59532 dport=53 packets=1 bytes=102 "
+            "src=fd21:36f9:644e:0000:0000:0000:0000:0001 dst=fd52:ad42:910e:0000:0000:0000:0000:64fa "
+            "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2"
         ]
     )
-    with FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file, FileFaker(
+    odhcpd = "\n".join(
+        [
+            "fd52:ad42:a6c9::64fe\tprvni",
+            "# lan 00010003d8e63397f73ed8cd7cda d208984 prvni 1608144105 1b5 128 fd52:ad42:a6c9::64fe/128",
+            "fd52:ad42:a6c9::64fa\tdruhy",
+            "# lan 00020000df167896750a08ce0782 e2343f3e druhy 1608148949 c34 128 fd52:ad42:a6c9::64fa/128 fd52:ad42:910e::64fa/128"
+        ]
+    )
+    with FileFaker(
+        FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases
+    ) as lease_file,\
+        FileFaker(
         FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack
-    ) as conntrack_file:
-        yield lease_file, conntrack_file
+    ) as conntrack_file,\
+        FileFaker(
+        FILE_ROOT_PATH, "/tmp/hosts/odhcpd", False, odhcpd
+    ) as odhcpd_file:
+        yield lease_file, conntrack_file, odhcpd_file
 
 
-def test_get_settings(uci_configs_init, infrastructure):
+def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):
     res = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )
@@ -107,6 +125,7 @@ def test_get_settings(uci_configs_init, infrastructure):
         "limit",
         "lease_time",
         "clients",
+        "ipv6clients"
     }
 
     assert set(res["data"]["mode_unmanaged"].keys()) == {"lan_type", "lan_static", "lan_dhcp"}
@@ -119,7 +138,7 @@ def test_get_settings(uci_configs_init, infrastructure):
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version, lan_dnsmasq_files
 ):
     filters = [("lan", "update_settings")]
 
@@ -167,7 +186,6 @@ def test_update_settings(
             "lan_redirect": False,
         }
     )
-
     update(
         {
             "mode": "managed",
@@ -427,6 +445,7 @@ def test_dhcp_lease(
     new_backend_val,
     device,
     turris_os_version,
+    lan_dnsmasq_files
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -763,6 +782,23 @@ def test_dhcp_clients_openwrt(
     )
 
 
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_dhcp_clients_openwrt_ipv6leases(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+):
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["mode_managed"]["dhcp"]["ipv6clients"][2]["active"]
+    assert res["data"]["mode_managed"]["dhcp"]["ipv6clients"][2]["ipv6"] == "fd52:ad42:910e::64fa"
+
+
 @pytest.mark.file_root_path(WIFI_ROOT_PATH)
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
@@ -773,6 +809,7 @@ def test_interface_count(
     network_restart_command,
     device,
     turris_os_version,
+    lan_dnsmasq_files
 ):
     prepare_turrishw("mox")  # plain mox without any boards
 
@@ -1005,7 +1042,7 @@ def test_get_settings_dns_option(
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_get_settings_missing_wireless(uci_configs_init, infrastructure):
+def test_get_settings_missing_wireless(uci_configs_init, infrastructure, lan_dnsmasq_files):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
     res = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
@@ -1021,6 +1058,7 @@ def test_dhcp_client_settings(
     network_restart_command,
     device,
     turris_os_version,
+    lan_dnsmasq_files,
 ):
     filters = [("lan", "set_dhcp_client")]
 
@@ -1270,6 +1308,7 @@ def test_dhcp_client_settings_openwrt(
     network_restart_command,
     device,
     turris_os_version,
+    lan_dnsmasq_files,
 ):
 
     uci = get_uci_module(infrastructure.name)
@@ -1455,7 +1494,7 @@ def test_dhcp_client_settings_openwrt(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_ipv6_address_in_dns(uci_configs_init, infrastructure, device, turris_os_version):
+def test_ipv6_address_in_dns(uci_configs_init, infrastructure, device, turris_os_version, lan_dnsmasq_files):
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1467,7 +1506,7 @@ def test_ipv6_address_in_dns(uci_configs_init, infrastructure, device, turris_os
     assert "errors" not in res
 
 
-def test_get_settings_lan_redirect(uci_configs_init, infrastructure):
+def test_get_settings_lan_redirect(uci_configs_init, infrastructure, lan_dnsmasq_files):
     res = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )
@@ -1476,7 +1515,7 @@ def test_get_settings_lan_redirect(uci_configs_init, infrastructure):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_get_settings_lan_redirect_openwrt(uci_configs_init, infrastructure):
+def test_get_settings_lan_redirect_openwrt(uci_configs_init, infrastructure, lan_dnsmasq_files):
     uci = get_uci_module(infrastructure.name)
 
     # with redirect_192_168_1_1.enabled set it should return its value
