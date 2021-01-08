@@ -20,6 +20,7 @@
 import typing
 import logging
 import ipaddress
+import pkg_resources
 
 from foris_controller.exceptions import UciException
 from foris_controller_backends.services import OpenwrtServices
@@ -125,7 +126,7 @@ class LanUci(object):
     DEFAULT_NETMASK = "255.255.255.0"
 
     @staticmethod
-    def _get_network_combo(network_data) -> typing.Tuple[str, str, str]:
+    def get_network_combo(network_data) -> typing.Tuple[str, str, str]:
         ''' In case CIDR ipv4 address notation is used in Uci
         convert lan address.
 
@@ -238,7 +239,7 @@ class LanUci(object):
         mode = get_option_named(network_data, "network", "lan", "_turris_mode", "managed")
 
         mode_managed = {"dhcp": {}}
-        router_ip, netmask, gateway = LanUci._get_network_combo(network_data)
+        router_ip, netmask, gateway = LanUci.get_network_combo(network_data)
         mode_managed["router_ip"], mode_managed["netmask"] = router_ip, netmask
         mode_managed["dhcp"]["enabled"] = not parse_bool(
             get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0")
@@ -403,7 +404,7 @@ class LanUci(object):
 
                     # update dhcp records when changing lan ip+network or start+limit
                     # get old network
-                    old_router_ip, old_netmask, _ = LanUci._get_network_combo(network_data)
+                    old_router_ip, old_netmask, _ = LanUci.get_network_combo(network_data)
                     self.filter_dhcp_client_records(
                         backend,
                         dhcp_data,
@@ -468,7 +469,11 @@ class LanUci(object):
                         logger.error("Unable to create sqm record for LAN")
                         raise UciException from e
 
-        # update wizard passed in foris web (best effrt)
+        # trigger hooks in modules to perform related changes after LAN configuration was changed
+        for entry_point in pkg_resources.iter_entry_points("lan_range_changed"):
+            entry_point.load()()
+
+        # update wizard passed in foris web (best effort)
         try:
             from foris_controller_backends.web import WebUciCommands
 
@@ -522,7 +527,7 @@ class LanUci(object):
             dhcp_data = backend.read("dhcp")
             network_data = backend.read("network")
 
-            router_ip, netmask, _ = LanUci._get_network_combo(network_data)
+            router_ip, netmask, _ = LanUci.get_network_combo(network_data)
 
             start = int(
                 get_option_named(dhcp_data, "dhcp", "lan", "start", LanUci.DEFAULT_DHCP_START)
