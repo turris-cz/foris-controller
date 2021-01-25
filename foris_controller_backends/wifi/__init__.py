@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -264,7 +264,8 @@ class WifiUci(object):
             "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"])
         )
         if interface_section["data"].get("encryption", "none") == "none":
-            backend.set_option("wireless", interface_section["name"], "encryption", "psk2+ccmp")
+            backend.set_option("wireless", interface_section["name"], "encryption", "sae-mixed")
+        backend.set_option("wireless", interface_section["name"], "ieee80211w", "1")
         backend.set_option("wireless", interface_section["name"], "wpa_group_rekey", "86400")
         backend.set_option("wireless", interface_section["name"], "key", settings["password"])
 
@@ -291,7 +292,8 @@ class WifiUci(object):
             not guest_interface_section
             or guest_interface_section["data"].get("encryption", "none") == "none"
         ):
-            backend.set_option("wireless", guest_name, "encryption", "psk2+ccmp")
+            backend.set_option("wireless", guest_name, "encryption", "sae-mixed")
+        backend.set_option("wireless", guest_name, "ieee80211w", "1")
         backend.set_option("wireless", guest_name, "wpa_group_rekey", "86400")
         backend.set_option("wireless", guest_name, "key", settings["guest_wifi"]["password"])
         guest_ifname = "guest_turris_%d" % settings["id"]

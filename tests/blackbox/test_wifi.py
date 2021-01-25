@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -472,7 +472,8 @@ def test_update_settings_uci(
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
-    assert uci.get_option_named(data, "wireless", real_section, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
+    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "1"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -541,7 +542,8 @@ def test_update_settings_uci(
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
-    assert uci.get_option_named(data, "wireless", real_section, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
+    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "1"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -571,7 +573,8 @@ def test_update_settings_uci(
     )
     assert uci.get_option_named(data, "wireless", guest_section, "ssid") == "Dev22G"
     assert uci.get_option_named(data, "wireless", guest_section, "key") == "ssapssapg"
-    assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "sae-mixed"
+    assert uci.get_option_named(data, "wireless", guest_section, "ieee80211w") == "1"
     assert uci.get_option_named(data, "wireless", guest_section, "wpa_group_rekey") == "86400"
     assert uci.get_option_named(data, "wireless", guest_section, "mode") == "ap"
     assert uci.get_option_named(data, "wireless", guest_section, "network") == "guest_turris"
@@ -952,8 +955,9 @@ def test_modify_encryption_only_if_none(
     }
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
-    assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") == "psk2+ccmp"
-    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "psk2+ccmp"
+    assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") == "sae-mixed"
+    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "sae-mixed"
+    assert uci.get_option_named(data, "wireless", "guest_iface_0", "ieee80211w") == "1"
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("wireless", "@wifi-iface[0]", "encryption", "psk2+tkip+ccmp")
