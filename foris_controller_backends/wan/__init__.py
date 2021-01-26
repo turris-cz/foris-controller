@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -233,9 +233,17 @@ class WanUci:
                 backend.set_option(
                     "network", "wan6", "peeraddr", wan6_settings["wan6_6in4"]["server_ipv4"]
                 )
-                backend.add_to_list(
-                    "network", "wan6", "ip6prefix", _set_list(wan6_settings["wan6_6in4"]["ipv6_prefix"])
-                )
+
+                if wan6_settings["wan6_6in4"]["ipv6_prefix"]:
+                    backend.add_to_list(
+                        "network", "wan6", "ip6prefix", _set_list(wan6_settings["wan6_6in4"]["ipv6_prefix"])
+                    )
+                else:
+                    try:
+                        backend.del_option("network", "wan6", "ip6prefix")
+                    except UciException:
+                        pass
+
                 if wan6_settings["wan6_6in4"]["dynamic_ipv4"]["enabled"]:
                     backend.set_option(
                         "network",

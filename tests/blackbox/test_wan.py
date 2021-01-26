@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -402,6 +402,35 @@ def test_update_settings(
                         "username": "user1",
                         "password_or_key": "passphrase1",
                     },
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {"wan_type": "dhcp", "wan6_type": "6in4", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
+                    "mtu": 1280,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "",
+                    "dynamic_ipv4": {"enabled": False},
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
+                    "mtu": 1280,
+                    "server_ipv4": "11.22.33.44",
+                    "ipv6_prefix": "",
+                    "dynamic_ipv4": {"enabled": False},
                 },
             },
             "mac_settings": {"custom_mac_enabled": False},

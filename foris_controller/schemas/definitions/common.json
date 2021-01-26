@@ -144,7 +144,12 @@
             "properties": {
                 "mtu": {"$ref": "#/definitions/mtu"},
                 "server_ipv4": {"format": "ipv4", "type": "string"},
-                "ipv6_prefix": {"format": "ipv6prefix", "type": "string"},
+                "ipv6_prefix": {
+                    "oneOf": [
+                        {"format": "ipv6prefix", "type": "string"},
+                        {"enum": [""]}
+                    ]
+                },
                 "dynamic_ipv4": {
                     "oneOf": [
                         {
