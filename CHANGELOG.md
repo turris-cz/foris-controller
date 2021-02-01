@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2] - 2021-02-02
+### Added
+- networks: include MAC address of interfaces
+
+### Fixed
+- zeroconf: update zconf service when IP changes
+- wan: allow 6in4 tunnel without routed IPv6 prefix
+
 ## [1.1.0] - 2020-12-11
 ### Added
 - about: get software customization
