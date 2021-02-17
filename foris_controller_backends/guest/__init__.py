@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2019, 2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -129,6 +129,7 @@ class GuestUci(object):
             backend.set_option("network", "guest_turris", "ipaddr", guest_network["ip"])
             backend.set_option("network", "guest_turris", "netmask", guest_network["netmask"])
         backend.set_option("network", "guest_turris", "bridge_empty", store_bool(True))
+        backend.set_option("network", "guest_turris", "ip6assign", "64")
 
         # update firewall config
         backend.add_section("firewall", "zone", "guest_turris")
@@ -162,6 +163,35 @@ class GuestUci(object):
         backend.set_option("firewall", "guest_turris_dhcp_rule", "dest_port", "67-68")
         backend.set_option("firewall", "guest_turris_dhcp_rule", "target", "ACCEPT")
 
+        backend.add_section("firewall", "rule", "guest_turris_Allow_DHCPv6")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "proto", "udp")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "src_ip", "fe80::/10")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "src_port", "546-547")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "dest_ip", "fe80::/10")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "dest_port", "546-547")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "family", "ipv6")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "target", "ACCEPT")
+
+        backend.add_section("firewall", "rule", "guest_turris_Allow_MLD")
+        backend.set_option("firewall", "guest_turris_Allow_MLD", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_Allow_MLD", "proto", "icmp")
+        backend.set_option("firewall", "guest_turris_Allow_MLD", "src_ip", "fe80::/10")
+        backend.set_option("firewall", "guest_turris_Allow_MLD", "family", "ipv6")
+        backend.set_option("firewall", "guest_turris_Allow_MLD", "target", "ACCEPT")
+        backend.replace_list("firewall", "guest_turris_Allow_MLD", "icmp_type", ['130/0', '131/0', '132/0', '143/0'])
+
+        backend.add_section("firewall", "rule", "guest_turris_Allow_ICMPv6_Input")
+        backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "proto", "icmp")
+        backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "limit", "1000/sec")
+        backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "family", "ipv6")
+        backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "target", "ACCEPT")
+        backend.replace_list("firewall", "guest_turris_Allow_ICMPv6_Input", "icmp_type", [
+            'echo-request', 'echo-reply', 'destination-unreachable', 'packet-too-big', 'time-exceeded', 'bad-header',
+            'unknown-header-type', 'router-solicitation', 'neighbour-solicitation', 'router-advertisement', 'neighbour-advertisement'
+        ]
+        )
         # update dhcp config
         backend.add_section("dhcp", "dhcp", "guest_turris")
         backend.set_option("dhcp", "guest_turris", "interface", "guest_turris")
@@ -179,6 +209,9 @@ class GuestUci(object):
                     if guest_network["dhcp"]["lease_time"] == 0
                     else guest_network["dhcp"]["lease_time"],
                 )
+                # dhcpv6
+                backend.set_option("dhcp", "guest_turris", "dhcpv6", "server")
+                backend.set_option("dhcp", "guest_turris", "ra", "server")
             if guest_network.get("ip", False):
                 backend.replace_list(
                     "dhcp", "guest_turris", "dhcp_option", ["6,%s" % guest_network["ip"]]
