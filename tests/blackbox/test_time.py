@@ -157,10 +157,7 @@ def test_update_settings(
                 "region": "Europe",
                 "country": "RU",
                 "city": "Moscow",
-                "timezone": "MSK-3",
-                "time_settings": {
-                    "how_to_set_time": "ntp"
-                },
+                "time_settings": {"how_to_set_time": "ntp"},
             },
         }
     )
@@ -176,7 +173,6 @@ def test_update_settings(
             "region": "Europe",
             "country": "RU",
             "city": "Moscow",
-            "timezone": "MSK-3",
             "time_settings": {"how_to_set_time": "ntp"},
         },
     }
@@ -198,7 +194,6 @@ def test_update_settings(
                 "region": "Europe",
                 "country": "CZ",
                 "city": "Prague",
-                "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
                 "time_settings": {
                     "how_to_set_time": "manual",
                     "time": "2018-01-30T15:51:30.482515",
@@ -218,7 +213,6 @@ def test_update_settings(
             "region": "Europe",
             "country": "CZ",
             "city": "Prague",
-            "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
             "time_settings": {
                 "how_to_set_time": "manual",
                 "time": "2018-01-30T15:51:30.482515",
@@ -269,7 +263,6 @@ def test_openwrt_complex(
                 "region": "Europe",
                 "country": "RU",
                 "city": "Moscow",
-                "timezone": "MSK-3",
                 "time_settings": {"how_to_set_time": "ntp"},
             },
         }
@@ -305,7 +298,6 @@ def test_openwrt_complex(
                 "region": "Europe",
                 "country": "CZ",
                 "city": "Prague",
-                "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
                 "time_settings": {
                     "how_to_set_time": "manual",
                     "time": "2018-01-30T15:51:30.482515",

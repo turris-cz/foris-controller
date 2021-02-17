@@ -21,6 +21,8 @@ import logging
 
 from functools import reduce
 
+from turris_timezone import TZ_GNU
+
 from foris_controller.app import app_info
 from foris_controller_backends.uci import (
     UciBackend,
@@ -98,13 +100,18 @@ class TimeUciCommands(BaseFile):
             },
         }
 
-    def update_settings(self, region, country, city, timezone, how_to_set_time, ntp_extra=None, time=None):
+    def update_settings(self, region, country, city, how_to_set_time, ntp_extra=None, time=None):
         """
         :param time: Time to be set
         """
 
         with UciBackend() as backend:
-            backend.set_option("system", "@system[0]", "timezone", timezone)
+            backend.set_option(
+                "system",
+                "@system[0]",
+                "timezone",
+                TZ_GNU.get(f"{region}/{city.replace(' ', '_')}", "UTC")
+            )
             backend.set_option("system", "@system[0]", "_country", country)
             backend.set_option("system", "@system[0]", "zonename", "%s/%s" % (region, city))
             backend.set_option("system", "ntp", "enabled", store_bool(how_to_set_time == "ntp"))

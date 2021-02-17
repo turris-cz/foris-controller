@@ -124,6 +124,7 @@ setup(
         "python-slugify",
         "svupdater @ git+https://gitlab.nic.cz/turris/updater/supervisor.git#egg=supervisor",
         "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git#egg=turrishw",
+        "turris-timezone @ git+https://gitlab.nic.cz/turris/foris-controller/turris-timezone.git#egg=turris-timezone",
     ],
     setup_requires=[
         'pytest-runner',

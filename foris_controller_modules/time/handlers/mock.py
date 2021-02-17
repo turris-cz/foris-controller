@@ -23,6 +23,8 @@ import typing
 
 from datetime import datetime
 
+from turris_timezone import TZ_GNU
+
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
 
@@ -79,7 +81,6 @@ class MockTimeHandler(Handler, BaseMockHandler):
         region: str,
         country: str,
         city: str,
-        timezone: str,
         how_to_set_time: str,
         ntp_extras: typing.Optional[typing.List[str]],
         time: typing.Optional[datetime] = None,
@@ -89,7 +90,6 @@ class MockTimeHandler(Handler, BaseMockHandler):
         :param region: set the region (Europe, America, Asia, ...)
         :param country: ISO/IEC 3166 alpha2 country code (US, CZ, DE, ...)
         :param city: set the city (Prague, London, ...)
-        :param timezone: set timezone ("UTC", "CET-1CEST,M3.5.0,M10.5.0/3", ...)
         :param how_to_set_time: "ntp" or "manual"
         :param time: time to be set
         :returns: True if update passes
@@ -97,7 +97,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
         self.region = region
         self.country = country
         self.city = city
-        self.timezone = timezone
+        self.timezone = TZ_GNU.get(f"{region}/{city.replace(' ', '_')}", "UTC")
         self.how_to_set_time = how_to_set_time
         self.ntp_extras = ntp_extras or []
         if time is not None:

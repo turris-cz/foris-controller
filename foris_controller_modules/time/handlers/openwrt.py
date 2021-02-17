@@ -50,7 +50,6 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         region: str,
         country: str,
         city: str,
-        timezone: str,
         how_to_set_time: str,
         ntp_extras: typing.Optional[typing.List[str]] = None,
         time: typing.Optional[datetime] = None,
@@ -59,13 +58,12 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
 
         :param region: set the region (Europe, America, Asia, ...)
         :param city: set the city (Prague, London, ...)
-        :param timezone: set timezone ("UTC", "CET-1CEST,M3.5.0,M10.5.0/3", ...)
         :param how_to_set_time: "ntp" or "manual"
         :param time: time to be set
         :returns: True if update passes
         """
 
-        return self.uci.update_settings(region, country, city, timezone, how_to_set_time, ntp_extras, time)
+        return self.uci.update_settings(region, country, city, how_to_set_time, ntp_extras, time)
 
     @logger_wrapper(logger)
     def ntpdate_trigger(self, exit_notify_function, reset_notify_function):

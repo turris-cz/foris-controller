@@ -95,7 +95,7 @@
                         "time_settings": {"$ref": "#/definitions/time_set"}
                     },
                     "additionalProperties": false,
-                    "required": ["region", "city", "timezone", "time_settings", "country"]
+                    "required": ["region", "city", "time_settings", "country"]
                 }
             },
             "additionalProperties": false
@@ -134,7 +134,7 @@
                         "time_settings": {"$ref": "#/definitions/time_set"}
                     },
                     "additionalProperties": false,
-                    "required": ["region", "city", "timezone", "time_settings", "country"]
+                    "required": ["region", "city", "time_settings", "country"]
                 }
             },
             "additionalProperties": false

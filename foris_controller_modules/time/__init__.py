@@ -46,6 +46,15 @@ class TimeModule(BaseModule):
         :returns: result of the update {'result': '..'}
         :rtype: dict
         """
+
+        # TODO setting timezone directly from frontend is deprecated
+        # and will be ignored by the backend
+        #
+        # for now API attribute timezone is left here for compatibility reasons
+        # and should be removed in the future
+        #
+        # the same goes for `timezone` in `get_settings` call
+
         if "time" in data["time_settings"]:
             time = datetime.strptime(data["time_settings"]["time"], "%Y-%m-%dT%H:%M:%S.%f")
         else:
@@ -54,7 +63,6 @@ class TimeModule(BaseModule):
             data["region"],
             data["country"],
             data["city"],
-            data["timezone"],
             data["time_settings"]["how_to_set_time"],
             data["time_settings"].get("ntp_extras"),
             time,
