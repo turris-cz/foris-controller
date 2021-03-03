@@ -167,6 +167,12 @@
                         {"enum": [""]}
                     ]
                 },
+                "ipv6_address": {
+                    "oneOf": [
+                        {"format": "ipv6", "type": "string"},
+                        {"enum": [""]}
+                    ]
+                },
                 "dynamic_ipv4": {
                     "oneOf": [
                         {

@@ -76,7 +76,8 @@ def test_get_ipv6prefix_as_an_option(infrastructure):
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.del_option("network", "wan6", "ip6prefix")
+        backend.del_option("network", "wan6", "ip6prefix", fail_on_error=False)
+
         # save as an option
         backend.set_option("network", "wan6", "ip6prefix", "2001:470:6e:39::/64")
     res = infrastructure.process_message(
@@ -349,6 +350,7 @@ def test_update_settings(
                     "mtu": 1480,
                     "server_ipv4": "111.22.33.44",
                     "ipv6_prefix": "2001:470:6e:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
                     "dynamic_ipv4": {"enabled": False},
                 },
             },
@@ -362,6 +364,7 @@ def test_update_settings(
                     "mtu": 1480,
                     "server_ipv4": "111.22.33.44",
                     "ipv6_prefix": "2001:470:6e:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
                     "dynamic_ipv4": {"enabled": False},
                 },
             },
@@ -378,6 +381,7 @@ def test_update_settings(
                     "mtu": 1280,
                     "server_ipv4": "11.22.33.44",
                     "ipv6_prefix": "2001:470:6f:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
                     "dynamic_ipv4": {
                         "enabled": True,
                         "tunnel_id": "1122334455",
@@ -396,6 +400,7 @@ def test_update_settings(
                     "mtu": 1280,
                     "server_ipv4": "11.22.33.44",
                     "ipv6_prefix": "2001:470:6f:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
                     "dynamic_ipv4": {
                         "enabled": True,
                         "tunnel_id": "1122334455",
@@ -417,6 +422,7 @@ def test_update_settings(
                     "mtu": 1280,
                     "server_ipv4": "11.22.33.44",
                     "ipv6_prefix": "",
+                    "ipv6_address": "2001:470:6e:39::1",
                     "dynamic_ipv4": {"enabled": False},
                 },
             },
@@ -430,6 +436,7 @@ def test_update_settings(
                     "mtu": 1280,
                     "server_ipv4": "11.22.33.44",
                     "ipv6_prefix": "",
+                    "ipv6_address": "2001:470:6e:39::1",
                     "dynamic_ipv4": {"enabled": False},
                 },
             },
@@ -750,6 +757,7 @@ def test_wan_openwrt_backend(
                     "mtu": 1470,
                     "server_ipv4": "1.22.33.44",
                     "ipv6_prefix": "2001:470:6a:39::/64",
+                    "ipv6_address": "2001:470:6e:39::1",
                     "dynamic_ipv4": {"enabled": False},
                 },
             },
@@ -759,7 +767,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "6in4"
-    assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6addr", "") == "2001:470:6e:39::1"
     assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == "2001:470:6a:39::/64"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == "1.22.33.44"
@@ -793,6 +801,7 @@ def test_wan_openwrt_backend(
                     "mtu": 1290,
                     "server_ipv4": "1.222.33.44",
                     "ipv6_prefix": "2001:470:6c:39::/64",
+                    "ipv6_address": "2001:470:6c:39::2",
                     "dynamic_ipv4": {
                         "enabled": True,
                         "tunnel_id": "123456",
@@ -808,7 +817,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "6in4"
-    assert uci.get_option_named(data, "network", "wan6", "ip6addr", "") == ""
+    assert _filter_possible_list(data, "network", "wan6", "ip6addr", "") == "2001:470:6c:39::2"
     assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == "2001:470:6c:39::/64"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "peeraddr", "") == "1.222.33.44"

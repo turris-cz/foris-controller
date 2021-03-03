@@ -43,6 +43,7 @@ class MockWanHandler(Handler, BaseMockHandler):
         "mtu": 1480,
         "server_ipv4": "",
         "ipv6_prefix": "",
+        "ipv6_address": "",
         "dynamic_ipv4": {"enabled": False},
     }
     custom_mac_enabled = False

@@ -89,6 +89,7 @@ class WanUci:
                 "ipv6_prefix": unwrap_list(get_option_named(network_data, "network", "wan6", "ip6prefix", "")),
                 "mtu": int(get_option_named(network_data, "network", "wan6", "mtu", "1480")),
                 "server_ipv4": get_option_named(network_data, "network", "wan6", "peeraddr", ""),
+                "ipv6_address": unwrap_list(get_option_named(network_data, "network", "wan6", "ip6addr", ""))
             }
             tunnel_id = get_option_named(network_data, "network", "wan6", "tunnelid", "")
             username = get_option_named(network_data, "network", "wan6", "username", "")
@@ -169,7 +170,7 @@ class WanUci:
 
             # disable rule for 6in4 + cleanup
             if not wan6_type == "6in4":
-                for item in ["tunnelid", "username", "password", "peeraddr", "mtu"]:
+                for item in ["tunnelid", "username", "password", "peeraddr", "mtu", "ip6addr"]:
                     backend.del_option("network", "wan6", item, fail_on_error=False)
                 backend.add_section("firewall", "rule", "turris_wan_6in4_rule")
                 backend.set_option("firewall", "turris_wan_6in4_rule", "enabled", store_bool(False))
@@ -206,6 +207,9 @@ class WanUci:
                 backend.set_option(
                     "network", "wan6", "peeraddr", wan6_settings["wan6_6in4"]["server_ipv4"]
                 )
+                backend.replace_list("network", "wan6", "ip6addr", parse_to_list(
+                    wan6_settings["wan6_6in4"].get("ipv6_address", "")
+                ))
 
                 if wan6_settings["wan6_6in4"]["ipv6_prefix"]:
                     backend.add_to_list(
