@@ -225,8 +225,8 @@ class UciBackend(object):
         self._run_uci_command("set", "%s.%s.%s=%s" % (config, section_name, option_name, value))
         self.affected_configs.add(config)
 
-    def del_option(self, config, section_name, option_name):
-        self._run_uci_command("delete", "%s.%s.%s" % (config, section_name, option_name))
+    def del_option(self, config, section_name, option_name, fail_on_error=True):
+        self._run_uci_command("delete", "%s.%s.%s" % (config, section_name, option_name), fail_on_error=fail_on_error)
         self.affected_configs.add(config)
 
     def add_to_list(self, config, section_name, list_name, values):

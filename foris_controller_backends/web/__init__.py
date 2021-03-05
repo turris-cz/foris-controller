@@ -197,14 +197,8 @@ class WebUciCommands:
     def reset_guide(self, new_workflow=None):
         try:
             with UciBackend() as backend:
-                try:
-                    backend.del_option("foris", "wizard", "passed")
-                except (UciRecordNotFound, UciException):
-                    pass
-                try:
-                    backend.del_option("foris", "wizard", "finished")
-                except (UciRecordNotFound, UciException):
-                    pass
+                backend.del_option("foris", "wizard", "passed", fail_on_error=False)
+                backend.del_option("foris", "wizard", "finished", fail_on_error=False)
                 backend.add_section("foris", "config", "wizard")
                 workflow = new_workflow if new_workflow else WebUciCommands._detect_basic_workflow()
                 backend.set_option("foris", "wizard", "workflow", workflow)

@@ -154,14 +154,9 @@ class LanUci(object):
     @staticmethod
     def _set_lan(backend, router_ip, netmask):
         ''' Helper function to save ipv4 address to uci in CIDR format. '''
-        try:
-            backend.del_option("network", "lan", "ipaddr")
-        except UciException:
-            pass
-        try:
-            backend.del_option("network", "lan", "netmask")
-        except UciException:
-            pass
+        backend.del_option("network", "lan", "ipaddr", fail_on_error=False)
+        backend.del_option("network", "lan", "netmask", fail_on_error=False)
+
         backend.add_to_list(
             "network", "lan", "ipaddr",
             parse_to_list(

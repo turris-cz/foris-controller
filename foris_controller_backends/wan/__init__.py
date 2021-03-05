@@ -134,10 +134,7 @@ class WanUci:
                         "network", "wan", "hostname", wan_settings["wan_dhcp"]["hostname"]
                     )
                 else:
-                    try:
-                        backend.del_option("network", "wan", "hostname")
-                    except UciException:
-                        pass
+                    backend.del_option("network", "wan", "hostname", fail_on_error=False)
 
             elif wan_type == "static":
                 backend.set_option("network", "wan", "ipaddr", wan_settings["wan_static"]["ip"])
@@ -168,18 +165,12 @@ class WanUci:
             backend.set_option("network", "wan6", "ifname", "@wan")
             backend.set_option("network", "wan6", "proto", wan6_type)
 
-            try:
-                backend.del_option("network","wan6","ip6prefix")
-            except UciException:
-                pass
+            backend.del_option("network","wan6","ip6prefix", fail_on_error=False)
 
             # disable rule for 6in4 + cleanup
             if not wan6_type == "6in4":
                 for item in ["tunnelid", "username", "password", "peeraddr", "mtu"]:
-                    try:
-                        backend.del_option("network", "wan6", item)
-                    except UciException:
-                        pass
+                    backend.del_option("network", "wan6", item, fail_on_error=False)
                 backend.add_section("firewall", "rule", "turris_wan_6in4_rule")
                 backend.set_option("firewall", "turris_wan_6in4_rule", "enabled", store_bool(False))
 
@@ -202,20 +193,14 @@ class WanUci:
                 if new_duid:
                     backend.set_option("network", "wan6", "clientid", new_duid)
                 else:
-                    try:
-                        backend.del_option("network", "wan6", "clientid")
-                    except UciException:
-                        pass
+                    backend.del_option("network", "wan6", "clientid", fail_on_error=False)
             elif wan6_type == "6to4":
                 mapped_ipv4 = wan6_settings["wan6_6to4"]["ipv4_address"]
                 backend.set_option("network", "lan", "ip6assign", "60")
                 if mapped_ipv4:
                     backend.set_option("network", "wan6", "ipaddr", mapped_ipv4)
                 else:
-                    try:
-                        backend.del_option("network", "wan6", "ipaddr")
-                    except UciException:
-                        pass
+                    backend.del_option("network", "wan6", "ipaddr", fail_on_error=False)
             elif wan6_type == "6in4":
                 backend.set_option("network", "wan6", "mtu", wan6_settings["wan6_6in4"]["mtu"])
                 backend.set_option(
@@ -227,10 +212,7 @@ class WanUci:
                         "network", "wan6", "ip6prefix", parse_to_list(wan6_settings["wan6_6in4"]["ipv6_prefix"])
                     )
                 else:
-                    try:
-                        backend.del_option("network", "wan6", "ip6prefix")
-                    except UciException:
-                        pass
+                    backend.del_option("network", "wan6", "ip6prefix", fail_on_error=False)
 
                 if wan6_settings["wan6_6in4"]["dynamic_ipv4"]["enabled"]:
                     backend.set_option(
@@ -253,10 +235,7 @@ class WanUci:
                     )
                 else:
                     for item in ["tunnelid", "username", "password"]:
-                        try:
-                            backend.del_option("network", "wan6", item)
-                        except UciException:
-                            pass
+                        backend.del_option("network", "wan6", item, fail_on_error=False)
 
                 backend.add_section("firewall", "rule", "turris_wan_6in4_rule")
                 backend.set_option("firewall", "turris_wan_6in4_rule", "enabled", store_bool(True))
@@ -273,10 +252,7 @@ class WanUci:
             else:
                 # remove extra fields (otherwise it will mess with other settings)
                 for field in ["ip6prefix", "ip6addr", "ip6gw"]:
-                    try:
-                        backend.del_option("network", "wan6", field)
-                    except UciException:
-                        pass
+                    backend.del_option("network", "wan6", field, fail_on_error=False)
 
             # disable/enable ipv6 on wan interface
             if wan6_type == "none":
@@ -288,10 +264,7 @@ class WanUci:
             if mac_settings["custom_mac_enabled"]:
                 backend.set_option("network", "wan", "macaddr", mac_settings["custom_mac"])
             else:
-                try:
-                    backend.del_option("network", "wan", "macaddr")
-                except UciException:
-                    pass
+                backend.del_option("network", "wan", "macaddr", fail_on_error=False)
 
         # update wizard passed in foris web (best effort)
         try:
