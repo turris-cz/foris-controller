@@ -365,6 +365,8 @@ class LanUci(object):
                 backend.add_section("dhcp", "dhcp", "lan")
                 dhcp = mode_managed["dhcp"]
                 backend.set_option("dhcp", "lan", "ignore", store_bool(not dhcp["enabled"]))
+                backend.set_option("dhcp", "lan", "ra", "server")
+                backend.set_option("dhcp", "lan", "dhcpv6", "server")
 
                 # set dhcp part (this device acts as a server here)
                 if dhcp["enabled"]:
@@ -399,9 +401,12 @@ class LanUci(object):
 
             elif mode == "unmanaged":
                 backend.set_option("network", "lan", "proto", mode_unmanaged["lan_type"])
-                # disable dhcp you are not managing this network...
+                # disable dhcp for both protocols and ipv6 router-advertisments
+                # since you are not managing this network...
                 backend.add_section("dhcp", "dhcp", "lan")
                 backend.set_option("dhcp", "lan", "ignore", store_bool(True))
+                backend.set_option("dhcp", "lan", "ra", "disabled")
+                backend.set_option("dhcp", "lan", "dhcpv6", "disabled")
 
                 if mode_unmanaged["lan_type"] == "dhcp":
                     if "hostname" in mode_unmanaged["lan_dhcp"]:

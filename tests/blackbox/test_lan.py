@@ -513,6 +513,8 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["192.168.5.8/24"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
     assert not uci.parse_bool(uci.get_option_named(data, "firewall", "redirect_192_168_1_1", "enabled"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "server"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "server"
 
     data = update(
         {
@@ -533,6 +535,8 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "dhcp", "lan", "limit") == "50"
     assert uci.get_option_named(data, "dhcp", "lan", "dhcp_option") == ["6,10.1.0.3"]
     assert uci.parse_bool(uci.get_option_named(data, "firewall", "redirect_192_168_1_1", "enabled"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "server"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "server"
 
     data = update(
         {
@@ -544,12 +548,16 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "lan", "hostname") == "bogatyr"
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
     data = update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "dhcp", "lan_dhcp": {}}})
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "lan", "hostname") == "bogatyr"
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
     data = update(
         {
@@ -561,6 +569,8 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "lan", "hostname", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
     data = update(
         {
@@ -581,6 +591,8 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.1"
     assert uci.get_option_named(data, "network", "lan", "dns", []) == []
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
     data = update(
         {
@@ -602,6 +614,8 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.8"
     assert uci.get_option_named(data, "network", "lan", "dns") == ["1.1.1.1"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
     data = update(
         {
@@ -624,11 +638,15 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "gateway") == "10.4.0.1"
     assert uci.get_option_named(data, "network", "lan", "dns") == ["8.8.8.8", "1.1.1.2"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
     data = update({"mode": "unmanaged", "mode_unmanaged": {"lan_type": "none"}})
     assert uci.get_option_named(data, "network", "lan", "_turris_mode") == "unmanaged"
     assert uci.get_option_named(data, "network", "lan", "proto") == "none"
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
