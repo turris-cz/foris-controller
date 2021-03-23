@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,6 +32,14 @@ from foris_controller_testtools.fixtures import (
     file_root_init,
 )
 from foris_controller_testtools.utils import check_service_result, get_uci_module
+
+
+_EXTRA_SERVERS = [
+    "time.google.com",
+    "time1.google.com",
+    "time.facebook.com",
+    "time.windows.com"
+]
 
 
 NTPDATE_INDICATOR_PATH = "/tmp/foris-controller-ntp-fail"
@@ -150,7 +158,9 @@ def test_update_settings(
                 "country": "RU",
                 "city": "Moscow",
                 "timezone": "MSK-3",
-                "time_settings": {"how_to_set_time": "ntp"},
+                "time_settings": {
+                    "how_to_set_time": "ntp"
+                },
             },
         }
     )
@@ -409,3 +419,95 @@ def test_ntpdate_trigger_fail_openwrt(
     }
     assert not date_mock()
     assert not hwclock_mock()
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_ntp_servers_add_and_delete(
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+    device,
+    turris_os_version,
+    regulatory_domain,
+):
+    # get defaults
+    res = infrastructure.process_message(
+        {"module": "time", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    data = res["data"]
+
+    # if `how_to_set_time` is in `manual` mode, `time` field not required
+    if data["time_settings"]["how_to_set_time"] == "ntp":
+        data["time_settings"].pop("time")
+
+    # do not send `ntp_servers` back
+    data["time_settings"].pop("ntp_servers")
+
+    data["time_settings"]["ntp_extras"] = _EXTRA_SERVERS
+    # update with `ntp_extras`
+    res = infrastructure.process_message(
+        {
+            "module": "time",
+            "action": "update_settings",
+            "kind": "request",
+            "data": data
+        }
+    )
+    assert res["data"]["result"]
+
+    res = infrastructure.process_message(
+        {"module": "time", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert "time.google.com" not in res["data"]["time_settings"]["ntp_servers"]
+    assert "time.google.com" in res["data"]["time_settings"]["ntp_extras"]
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_add_extras_uci(
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+    device,
+    turris_os_version,
+    regulatory_domain,
+):
+    # get defaults
+    res = infrastructure.process_message(
+        {"module": "time", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    data = res["data"]
+
+    # if `how_to_set_time` is in `manual` mode, `time` field not required
+    if data["time_settings"]["how_to_set_time"] == "ntp":
+        data["time_settings"].pop("time")
+
+    # do not send `ntp_servers` back
+    _DEFAULT_SERVERS = data["time_settings"].pop("ntp_servers")
+
+    data["time_settings"]["ntp_extras"] = _EXTRA_SERVERS
+    # update with `ntp_extras`
+    res = infrastructure.process_message(
+        {
+            "module": "time",
+            "action": "update_settings",
+            "kind": "request",
+            "data": data
+        }
+    )
+    assert res["data"]["result"]
+
+    # assert that data all in uci `system.ntp.server`
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+
+    ntp_servers = uci.get_option_named(data, "system", "ntp", "server")
+
+    # in uci all data in one list
+    assert ntp_servers == _DEFAULT_SERVERS + _EXTRA_SERVERS

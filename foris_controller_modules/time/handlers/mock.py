@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
         "2.openwrt.pool.ntp.org",
         "3.openwrt.pool.ntp.org",
     ]
+    ntp_extras = []
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -66,6 +67,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
             "time_settings": {
                 "how_to_set_time": self.how_to_set_time,
                 "ntp_servers": self.ntp_servers,
+                "ntp_extras": self.ntp_extras
             },
             "timezone": self.timezone,
         }
@@ -79,6 +81,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
         city: str,
         timezone: str,
         how_to_set_time: str,
+        ntp_extras: typing.Optional[typing.List[str]],
         time: typing.Optional[datetime] = None,
     ) -> bool:
         """ Mocks updates current time settings
@@ -96,6 +99,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
         self.city = city
         self.timezone = timezone
         self.how_to_set_time = how_to_set_time
+        self.ntp_extras = ntp_extras or []
         if time is not None:
             self.time = time
         MockTimeHandler.guide_set.set(True)

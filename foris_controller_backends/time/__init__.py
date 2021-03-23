@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ from foris_controller.utils import writelock, RWLock
 from foris_controller.exceptions import UciException
 from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand
-from foris_controller_backends.files import path_exists
+from foris_controller_backends.files import path_exists, BaseFile
 from foris_controller_backends.wifi import WifiCmds, WifiUci
 
 
@@ -63,7 +63,12 @@ class SetTimeCommand(BaseCmdLine):
         self._set_hwclock()
 
 
-class TimeUciCommands(object):
+class TimeUciCommands(BaseFile):
+
+    def _get_default_servers(self):
+        servers = self._file_content("/etc/uci-defaults/ntpservers")
+        return servers.strip().split('\n')
+
     def get_settings(self):
 
         with UciBackend() as backend:
@@ -78,6 +83,8 @@ class TimeUciCommands(object):
             region, city = "", ""
         ntp = parse_bool(get_option_named(system_data, "system", "ntp", "enabled", "1"))
         ntp_servers = get_option_named(system_data, "system", "ntp", "server", [])
+        ntp_extras = list(filter(lambda x: x not in self._get_default_servers(), ntp_servers))
+        ntp_servers = self._get_default_servers()
 
         return {
             "region": region,
@@ -87,10 +94,11 @@ class TimeUciCommands(object):
             "time_settings": {
                 "how_to_set_time": "ntp" if ntp else "manual",
                 "ntp_servers": ntp_servers,
+                "ntp_extras": ntp_extras
             },
         }
 
-    def update_settings(self, region, country, city, timezone, how_to_set_time, time=None):
+    def update_settings(self, region, country, city, timezone, how_to_set_time, ntp_extra=None, time=None):
         """
         :param time: Time to be set
         """
@@ -100,6 +108,15 @@ class TimeUciCommands(object):
             backend.set_option("system", "@system[0]", "_country", country)
             backend.set_option("system", "@system[0]", "zonename", "%s/%s" % (region, city))
             backend.set_option("system", "ntp", "enabled", store_bool(how_to_set_time == "ntp"))
+            # NTP servers
+            try:
+                backend.del_from_list("system", "ntp", "server")
+            except UciException:
+                pass
+            ntp_servers = self._get_default_servers()
+            if ntp_extra:
+                ntp_servers += ntp_extra
+            backend.add_to_list("system", "ntp", "server", ntp_servers)
             # Just in case we have no WiFi and no /etc/config/wireless
             try:
                 data = backend.read("wireless")

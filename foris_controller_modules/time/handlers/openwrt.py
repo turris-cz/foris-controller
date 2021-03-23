@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         city: str,
         timezone: str,
         how_to_set_time: str,
+        ntp_extras: typing.Optional[typing.List[str]] = None,
         time: typing.Optional[datetime] = None,
     ) -> bool:
         """ Updates current time settings
@@ -64,7 +65,7 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         :returns: True if update passes
         """
 
-        return self.uci.update_settings(region, country, city, timezone, how_to_set_time, time)
+        return self.uci.update_settings(region, country, city, timezone, how_to_set_time, ntp_extras, time)
 
     @logger_wrapper(logger)
     def ntpdate_trigger(self, exit_notify_function, reset_notify_function):

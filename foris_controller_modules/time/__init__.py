@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ class TimeModule(BaseModule):
             data["city"],
             data["timezone"],
             data["time_settings"]["how_to_set_time"],
+            data["time_settings"].get("ntp_extras"),
             time,
         )
         if res:

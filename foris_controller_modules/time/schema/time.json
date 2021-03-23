@@ -1,5 +1,15 @@
 {
     "definitions": {
+        "ntp_servers": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {"type": "string", "format": "hostname"},
+                    {"type": "string", "format": "ipv4"},
+                    {"type": "string", "format": "ipv6"}
+                ]
+            }
+        },
         "country_type": {"type": "string", "pattern": "^([A-Z][A-Z]|00)$"},
         "how_to_set_time": {"enum": ["manual", "ntp"]},
         "time_get": {
@@ -7,16 +17,8 @@
             "properties": {
                 "how_to_set_time": {"$ref": "#/definitions/how_to_set_time"},
                 "time": {"type": "string", "format": "date-time", "description": "local time"},
-                "ntp_servers": {
-                    "type": "array",
-                    "items": {
-                        "anyOf": [
-                            {"type": "string", "format": "hostname"},
-                            {"type": "string", "format": "ipv4"},
-                            {"type": "string", "format": "ipv6"}
-                        ]
-                    }
-                }
+                "ntp_servers": {"$ref": "#/definitions/ntp_servers"},
+                "ntp_extras": {"$ref": "#/definitions/ntp_servers"}
             },
             "required": ["how_to_set_time", "time", "ntp_servers"],
             "additionalProperties": false
@@ -27,7 +29,8 @@
                     "type": "object",
                     "properties": {
                         "how_to_set_time": {"enum": ["manual"]},
-                        "time": {"type": "string", "format": "date-time", "description": "local time"}
+                        "time": {"type": "string", "format": "date-time", "description": "local time"},
+                        "ntp_extras": {"$ref": "#/definitions/ntp_servers"}
                     },
                     "required": ["how_to_set_time", "time"],
                     "additionalProperties": false
@@ -35,7 +38,8 @@
                 {
                     "type": "object",
                     "properties": {
-                        "how_to_set_time": {"enum": ["ntp"]}
+                        "how_to_set_time": {"enum": ["ntp"]},
+                        "ntp_extras": {"$ref": "#/definitions/ntp_servers"}
                     },
                     "required": ["how_to_set_time"],
                     "additionalProperties": false
