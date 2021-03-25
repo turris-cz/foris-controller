@@ -42,98 +42,338 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     # Enabled flag in option is there only for testing purposes
     # On real system enabled/disabled status will be written in uci config file
     DEFAULT_PACKAGE_LISTS = {
-        "api-token": {
-            "description": {
-                "en": "A Foris plugin allowing to manage remote API access tokens"
-                " (for example for use in Spectator or Android application).",
-                "cs": "Správa tokenů pro vzdálený API přístup"
-                " (např. pro Spectator, nebo Android aplikaci) ve Forisu.",
-                "de": "Ein Plugin für Foris, welcher Management von Tokens für das"
-                " Fernzugriff-API (z. B. für Anwendung in Spectator oder Android"
-                " Applikationen) erlaubt.",
-            },
-            "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
-            "enabled": False,
-        },
-        "automation": {
-            "description": {
-                "cs": "Software pro ovládání domácí automatizace, včetně Turris Gadgets.",
-                "de": "Steuerungssoftware für die Hausautomation, einschließlich Turris "
-                "Gadgets.",
-                "en": "Control software for home automation, including Turris Gadgets.",
-            },
-            "title": {"cs": "Domácí automatizace", "de": "Hausautomation", "en": "Home automation"},
-            "enabled": False,
-            "labels": ["community"],
-        },
-        "dev-detect": {
-            "description": {
-                "cs": "Software pro detekci nově připojených zařízení na lokální síti"
-                " (EXPERIMENTÁLNÍ).",
-                "de": "Software für die Erkennung neuer Geräte im lokalen Netzwerk"
-                " (EXPERIMENTELL).",
-                "en": "Software for detecting new devices on local network (EXPERIMENTAL).",
-            },
+        "3g": {
             "title": {
-                "cs": "Detekce připojených zařízení",
-                "de": "Geräterkennung",
-                "en": "Device detection",
+                "en": "Extensions of network protocols for 3G/LTE"
             },
-            "enabled": False,
-            "labels": ["experimental"],
-        },
-        "dvb": {
             "description": {
-                "cs": "Software na sdílení televizního vysílání přijímaného Turrisem."
-                " Neobsahuje ovladače pro zařízení.",
-                "de": "Software für die Weiterleitung von Fernsehsignal, welcher mittels"
-                " DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.",
-                "en": "Software for sharing television received by a DVB tuner on Turris."
-                " Does not include device drivers.",
+                "en": "Support for Turris Omnia and Turris MOX LTE pack."
             },
-            "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
-            "enabled": False,
-            "url": "https://doc.turris.cz/doc/en/howto/dvb",
-            "labels": ["community", "advanced"],
+            "url": "https://wiki.turris.cz/doc/en/howto/lte_modem_install",
+            "enabled": False
         },
-        "i_agree_honeypot": {
+        "datacollect": {
+            "title": {
+                "en": "Data Collection"
+            },
             "description": {
-                "cs": "Past na roboty zkoušející hesla na SSH.",
-                "de": "Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten"
-                " versuchen.",
-                "en": "Trap for password-guessing robots on SSH.",
+                "en": "Software for participation in data collection and distributed adaptive firewall."
             },
-            "title": {"cs": "Honeypot", "de": "Honigtopf", "en": "Honeypot"},
-            "enabled": False,
-            "options": {
-                "minipot": {
-                    "title": "Minipots",
-                    "description": "Minimal honeypots to catch attackers for various protocols.",
-                    "default": True,
-                },
-                "haas": {
-                    "title": "SSH Honeypot",
-                    "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz).",
-                }
-            },
-            "labels": ["experimental"],
-        },
-        "i_agree_datacollect": {
-            "description": {"cs": "", "de": "", "en": ""},
-            "title": {"cs": "datacollect", "de": "datacollect", "en": "datacollect"},
-            "enabled": False,
+            "url": "https://docs.turris.cz/basics/collect/",
             "options": {
                 "survey": {
                     "title": "Usage Survey",
                     "description": "Collect data about router usage (installed packages, Internet connection type and etc.).",
+                    "default": True
                 },
                 "dynfw": {
                     "title": "Dynamic Firewall",
                     "description": "Add firewall rules to block attackers detected by Turris collection network.",
-                    "default": True,
+                    "default": True
+                },
+                "nikola": {
+                    "title": "Firewall Logs",
+                    "description": "Collect logs from firewall for attempted connections.",
+                    "default": True
+                },
+                "minipot": {
+                    "title": "Minipots",
+                    "description": "Minimal honeypots to catch attackers for various protocols.",
+                    "default": True
+                },
+                "haas": {
+                    "title": "SSH Honeypot",
+                    "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz)."
                 }
             },
+            "enabled": False
         },
+        "atlas": {
+            "title": {
+                "en": "RIPE Atlas SW Probe"
+            },
+            "description": {
+                "en": "Global platform, which measures Internet connectivity and reachability."
+            },
+            "url": "https://wiki.turris.cz/doc/en/howto/atlas-probe",
+            "labels": [
+                "community"
+            ],
+            "enabled": False
+        },
+        "dvb": {
+            "title": {
+                "en": "DVB tuner"
+            },
+            "description": {
+                "en": "Software for sharing television received by a DVB tuner on Turris. Does not include device drivers."
+            },
+            "url": "https://wiki.turris.cz/doc/en/howto/dvb",
+            "labels": [
+                "community",
+                "advanced"
+            ],
+            "enabled": False
+        },
+        "hardening": {
+            "title": {
+                "en": "Hardening"
+            },
+            "description": {
+                "en": "Seccomp tools for system hardening."
+            },
+            "options": {
+                "common_passwords": {
+                    "title": "Common passwords filter",
+                    "description": "Compare new password you are about to set to access router with list of common passwords used by robots trapped in Turris honeypots.",
+                    "default": True
+                },
+                "ujail": {
+                    "title": "OpenWrt's process jail",
+                    "description": "ujail allows to limit processes by limiting syscalls and file-system access",
+                    "labels": [
+                        "community",
+                        "experimental"
+                    ]
+                },
+                "seccomp": {
+                    "title": "Secure Computing Mode (seccomp)",
+                    "description": "Optional support for seccomp allowing processes to isolate from them self",
+                    "labels": [
+                        "community",
+                        "experimental"
+                    ]
+                }
+            },
+            "enabled": False
+        },
+        "luci_controls": {
+            "title": {
+                "en": "LuCI extensions"
+            },
+            "description": {
+                "en": "Several additional tabs and controls for the advanced LuCI interface."
+            },
+            "options": {
+                "adblock": {
+                    "title": "AdBlock",
+                    "description": "Script to block ad/abuse domains."
+                },
+                "sqm": {
+                    "title": "SQM",
+                    "description": "Active Queue Management to boost performance on heavily loaded network."
+                },
+                "tinyproxy": {
+                    "title": "Tinyproxy",
+                    "description": "HTTP(S) proxy."
+                },
+                "upnp": {
+                    "title": "UPnP",
+                    "description": "Universal Plug and Play service."
+                },
+                "printserver": {
+                    "title": "Print server (p910nd)",
+                    "description": "Services allowing to connect a printer to the router and use it for remote printing."
+                },
+                "statistics": {
+                    "title": "Statistics",
+                    "description": "Gather and render diagrams for system statistics by using collectd."
+                },
+                "wireguard": {
+                    "title": "WireGuard",
+                    "description": "Alternative to OpenVPN, it provides fast, modern and secure VPN tunnel.",
+                    "url": "https://openwrt.org/docs/guide-user/services/vpn/wireguard/start",
+                    "labels": [
+                        "advanced"
+                    ]
+                }
+            },
+            "labels": [
+                "community"
+            ],
+            "enabled": False
+        },
+        "lxc": {
+            "title": {
+                "en": "LXC utilities"
+            },
+            "description": {
+                "en": "Set of utilities to manage Linux Containers (lightweight virtualization technology)."
+            },
+            "url": "https://docs.turris.cz/geek/lxc/lxc/",
+            "labels": [
+                "storage",
+                "high_memory",
+                "advanced"
+            ],
+            "enabled": False
+        },
+        "nas": {
+            "title": {
+                "en": "NAS"
+            },
+            "description": {
+                "en": "Services allowing to connect a disk to the router and use it as network data store."
+            },
+            "url": "https://wiki.turris.cz/doc/en/howto/nas",
+            "options": {
+                "samba": {
+                    "title": "Samba",
+                    "description": "Implementation of SMB network protocol."
+                },
+                "dlna": {
+                    "title": "DLNA",
+                    "description": "Digital media sharing server."
+                },
+                "transmission": {
+                    "title": "Transmission",
+                    "description": "BitTorrent client."
+                },
+                "raid": {
+                    "title": "mdadm",
+                    "description": "Software RAID storage support using mdadm.",
+                    "labels": [
+                        "advanced"
+                    ]
+                },
+                "encrypt": {
+                    "title": "Encrypted Storage",
+                    "description": "Add support to access encrypted storage devices using dm-crypt.",
+                    "labels": [
+                        "advanced"
+                    ]
+                }
+            },
+            "labels": [
+                "community"
+            ],
+            "enabled": False
+        },
+        "net_monitoring": {
+            "title": {
+                "en": "Network monitoring and parental control"
+            },
+            "description": {
+                "en": "Tools to monitor local network and users on it."
+            },
+            "options": {
+                "netmetr": {
+                    "title": "Internet connection speed measurement",
+                    "description": "Actively measures speed of Internet connection using netmetr.cz service.",
+                    "url": "https://docs.turris.cz/basics/apps/netmetr/"
+                },
+                "dev_detect": {
+                    "title": "New devices detection",
+                    "description": "Software for detecting new devices on local network.",
+                    "labels": [
+                        "experimental"
+                    ]
+                },
+                "pakon": {
+                    "title": "Pakon",
+                    "description": "Software for in depth monitoring of your traffic using Suricata.",
+                    "url": "https://docs.turris.cz/basics/apps/pakon/",
+                    "labels": [
+                        "experimental",
+                        "netload",
+                        "high_memory",
+                        "storage"
+                    ]
+                }
+            },
+            "enabled": False
+        },
+        "netboot": {
+            "title": {
+                "en": "Turris MOX network boot"
+            },
+            "description": {
+                "en": "Server-side for Turris MOX without microSD card used as Wi-Fi access point."
+            },
+            "url": "https://docs.turris.cz/basics/apps/netboot",
+            "labels": [
+                "high_storage",
+                "experimental"
+            ],
+            "enabled": False
+        },
+        "netdata": {
+            "title": {
+                "en": "Netdata"
+            },
+            "description": {
+                "en": "Real-time perfomance and health monitoring options."
+            },
+            "labels": [
+                "community",
+                "high_memory"
+            ],
+            "enabled": False
+        },
+        "nextcloud": {
+            "title": {
+                "en": "Nextcloud"
+            },
+            "description": {
+                "en": "Self-hosted files hosting and productivity platform that keeps you in control. Alternative to services such as Dropbox or Google Drive."
+            },
+            "url": "https://docs.turris.cz/geek/nextcloud/nextcloud/",
+            "labels": [
+                "experimental",
+                "storage"
+            ],
+            "enabled": False
+        },
+        "openvpn": {
+            "title": {
+                "en": "OpenVPN"
+            },
+            "description": {
+                "en": "Easy setup of the OpenVPN server from Foris."
+            },
+            "url": "https://docs.turris.cz/basics/apps/openvpn/openvpn/",
+            "enabled": False
+        },
+        "tor": {
+            "title": {
+                "en": "Tor"
+            },
+            "description": {
+                "en": "Service to increase anonymity on the Internet."
+            },
+            "labels": [
+                "advanced",
+                "community"
+            ],
+            "enabled": False
+        },
+        "drivers": {
+            "title": {
+                "en": "Alternative core drivers"
+            },
+            "description": {
+                "en": "These options allow you to use alternative drivers over those available in default installation. You can try to enable these if you encounter some problems with default ones."
+            },
+            "options": {
+                "ath10k_ct": {
+                    "title": "Candela Technologies Wi-Fi drivers for Qualcomm Atheros QCA988x",
+                    "description": "Alternative driver from Candela Technologies.",
+                    "boards": [
+                        "omnia",
+                        "turris1x"
+                    ]
+                },
+                "ath10k_ct_htt": {
+                    "title": "Candela Technologies Wi-Fi drivers for Qualcomm Atheros QCA988x with improved stability in busy networks",
+                    "description": "Alternative driver from Candela Technologies. It uses HTT TX data path for management frames, which improves stability in busy networks."
+                }
+            },
+            "labels": [
+                "advanced",
+                "community"
+            ],
+            "enabled": False
+        }
     }
 
     # actual stored user lists

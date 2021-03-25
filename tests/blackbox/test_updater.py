@@ -295,10 +295,10 @@ def test_package_lists_with_defaults(
 ):
     settings = {
         "package_lists": [
-            {"name": "i_agree_honeypot", "options": [{"name": "haas", "enabled": True}]}
+            {"name": "datacollect", "options": [{"name": "haas", "enabled": True}]}
         ]
     }
-    defaults = {"i_agree_honeypot": {"minipot"}}
+    defaults = {"datacollect": {"survey", "dynfw", "nikola","minipot"}}
 
     res = infrastructure.process_message(
         {
@@ -331,11 +331,16 @@ def test_update_package_lists_override_defaults(
 ):
     settings = {
         "package_lists": [
-            {"name": "i_agree_honeypot", "options": [{"name": "minipot", "enabled": False}]},
-            {"name": "i_agree_datacollect", "options": [{"name": "survey", "enabled": True}]},
+            {"name": "datacollect", "options": [
+                {"name": "survey", "enabled": False},
+                {"name": "dynfw", "enabled": False},
+                {"name": "nikola", "enabled": False},
+                {"name": "minipot", "enabled": False}   
+            ]},
+            {"name": "hardening", "options": [{"name": "ujail", "enabled": True}]},
         ]
     }
-    defaults = {"i_agree_datacollect": {"dynfw"}}
+    defaults = {"hardening": {"common_passwords"}}
 
     res = infrastructure.process_message(
         {
