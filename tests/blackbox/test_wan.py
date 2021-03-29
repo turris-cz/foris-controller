@@ -500,6 +500,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
 
     data = update(
         {
@@ -517,6 +518,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
 
     data = update(
         {
@@ -538,6 +540,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
 
     data = update(
         {
@@ -560,6 +563,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
 
     data = update(
         {
@@ -589,6 +593,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.get_option_named(data, "network", "wan", "dns", []) == ["8.8.8.8", "10.0.0.1"]
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
 
     # WAN6
     data = update(
@@ -611,6 +616,8 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
+
 
     data = update(
         {
@@ -638,6 +645,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "ip6gw") == "2001:1488:fffe:6::1"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
 
     data = update(
         {
@@ -671,6 +679,7 @@ def test_wan_openwrt_backend(
         "2001:1488:fffe:6::1",
     ]
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
 
     data = update(
         {
@@ -687,6 +696,7 @@ def test_wan_openwrt_backend(
     assert _filter_possible_list(data, "network", "wan6", "ip6prefix", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "ip6gw", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == "11:22:33:44:55:66"
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "lan", "ip6assign")
@@ -708,6 +718,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "lan", "ip6assign")
@@ -771,6 +782,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "proto", "") == "41"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "target", "") == "ACCEPT"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
 
     data = update(
         {
@@ -820,6 +832,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "proto", "") == "41"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "target", "") == "ACCEPT"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
 
     data = update(
         {
@@ -847,7 +860,8 @@ def test_wan_openwrt_backend(
         is False
     )
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
-
+    assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
+   
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_wrong_update(

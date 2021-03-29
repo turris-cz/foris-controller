@@ -257,8 +257,10 @@ class WanUci:
             # disable/enable ipv6 on wan interface
             if wan6_type == "none":
                 backend.set_option("network", "wan", "ipv6", store_bool(False))
+                backend.set_option("resolver", "common", "net_ipv6", store_bool(False))
             else:
                 backend.set_option("network", "wan", "ipv6", store_bool(True))
+                backend.set_option("resolver", "common", "net_ipv6", store_bool(True))
 
             # MAC
             if mac_settings["custom_mac_enabled"]:
