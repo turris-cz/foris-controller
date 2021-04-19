@@ -84,10 +84,11 @@
                     "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_get"},
                     "interface_count": {"type": "integer", "minimum": 0},
                     "interface_up_count": {"type": "integer", "minimum": 0},
-                    "lan_redirect": {"$ref": "#/definitions/lan_redirect"}
+                    "lan_redirect": {"$ref": "#/definitions/lan_redirect"},
+                    "qos": {"$ref": "#/definitions/qos_get"}
             },
             "additionalProperties": false,
-            "required": ["mode", "mode_managed", "mode_unmanaged", "interface_count"]
+            "required": ["mode", "mode_managed", "mode_unmanaged", "interface_count", "qos"]
         },
         "lan_settings_set": {
             "oneOf": [
@@ -96,7 +97,8 @@
                     "properties": {
                         "mode": {"allOf": [{"$ref": "#/definitions/lan_mode"}, {"enum": ["managed"]}]},
                         "mode_managed": {"$ref": "#/definitions/lan_managed_settings_set"},
-                        "lan_redirect": {"$ref": "#/definitions/lan_redirect"}
+                        "lan_redirect": {"$ref": "#/definitions/lan_redirect"},
+                        "qos": {"$ref": "#/definitions/qos_set"}
                     },
                     "additionalProperties": false,
                     "required": ["mode", "mode_managed"]
@@ -106,7 +108,8 @@
                     "properties": {
                         "mode": {"allOf": [{"$ref": "#/definitions/lan_mode"}, {"enum": ["unmanaged"]}]},
                         "mode_unmanaged": {"$ref": "#/definitions/lan_unmanaged_settings_set"},
-                        "lan_redirect": {"$ref": "#/definitions/lan_redirect"}
+                        "lan_redirect": {"$ref": "#/definitions/lan_redirect"},
+                        "qos": {"$ref": "#/definitions/qos_set"}
                     },
                     "additionalProperties": false,
                     "required": ["mode", "mode_unmanaged"]

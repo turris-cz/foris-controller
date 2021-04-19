@@ -227,6 +227,7 @@ class LanUci(object):
 
         with UciBackend() as backend:
             network_data = backend.read("network")
+            sqm_data = backend.read("sqm")
             dhcp_data = backend.read("dhcp")
             firewall_data = backend.read("firewall")
             try:
@@ -281,6 +282,18 @@ class LanUci(object):
 
         from foris_controller_backends.networks import NetworksUci
 
+        qos = {}
+        qos["enabled"] = parse_bool(
+            get_option_named(sqm_data, "sqm", "limit_lan_turris", "enabled", "0")
+        )
+        # upload is actually download limit nad vice versa
+        qos["upload"] = int(
+            get_option_named(sqm_data, "sqm", "limit_lan_turris", "download", 1024)
+        )
+        qos["download"] = int(
+            get_option_named(sqm_data, "sqm", "limit_lan_turris", "upload", 1024)
+        )
+
         result = {
             "mode": mode,
             "mode_managed": mode_managed,
@@ -289,6 +302,7 @@ class LanUci(object):
             "interface_up_count": NetworksUci.get_interface_count(
                 network_data, wireless_data, "lan", True
             ),
+            "qos": qos
         }
 
         # quick hack for shield redirect to 192.168.1.1
@@ -338,7 +352,7 @@ class LanUci(object):
         if lan_redirect_exists:
             backend.set_option("firewall", "redirect_192_168_1_1", "enabled", store_bool(enabled))
 
-    def update_settings(self, mode, mode_managed=None, mode_unmanaged=None, lan_redirect=None):
+    def update_settings(self, mode, mode_managed=None, mode_unmanaged=None, lan_redirect=None, qos=None):
         """  Updates the lan settings in uci
 
         :param mode: lan setting mode managed/unmanaged
@@ -347,6 +361,8 @@ class LanUci(object):
         :type mode_managed: dict
         :param mode_unmanaged: {"lan_type": "none/dhcp/static", "lan_static": {}, ...}
         :type mode_unmanaged: dict
+        :param qos: {'download': ..., 'enabled': False/True, 'upload': ...}
+        :type qos: dict
         """
 
         with UciBackend() as backend:
@@ -427,7 +443,32 @@ class LanUci(object):
                 elif mode_unmanaged["lan_type"] == "none":
                     pass  # no need to handle
 
-        # update wizard passed in foris web (best effort)
+            if qos:
+                try:
+                    backend.del_section("sqm", "limit_lan_turris")
+                except UciException:
+                    pass
+
+                if qos["enabled"]:
+                    try:
+                        backend.add_section("sqm", "queue", "limit_lan_turris")
+                        backend.set_option("sqm", "limit_lan_turris", "enabled", store_bool(qos["enabled"]))
+                        backend.set_option("sqm", "limit_lan_turris", "interface", "br-lan")
+                        backend.set_option("sqm", "limit_lan_turris", "qdisc", "fq_codel")
+                        backend.set_option("sqm", "limit_lan_turris", "script", "simple.qos")
+                        backend.set_option("sqm", "limit_lan_turris", "link_layer", "none")
+                        backend.set_option("sqm", "limit_lan_turris", "verbosity", "5")
+                        backend.set_option("sqm", "limit_lan_turris", "debug_logging", "1")
+                        # We need to swap dowload and upload
+                        # "upload" means upload to the guest network
+                        # "download" means dowload from the guest network
+                        backend.set_option("sqm", "limit_lan_turris", "upload", qos["download"])
+                        backend.set_option("sqm", "limit_lan_turris", "download", qos["upload"])
+                    except UciException as e:
+                        logger.error("Unable to create sqm record for LAN")
+                        raise UciException from e
+
+        # update wizard passed in foris web (best effrt)
         try:
             from foris_controller_backends.web import WebUciCommands
 

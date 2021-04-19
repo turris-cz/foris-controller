@@ -86,6 +86,9 @@ class MockLanHandler(Handler, BaseMockHandler):
             "dns2": None,
         },
     }
+
+    qos = {'download': 1024, 'enabled': False, 'upload': 1024}
+
     lan_redirect = True
 
     @logger_wrapper(logger)
@@ -115,6 +118,7 @@ class MockLanHandler(Handler, BaseMockHandler):
                 [e for e in MockNetworksHandler.networks["lan"] if e["state"] == "up"]
             ),
             "lan_redirect": MockLanHandler.lan_redirect,
+            "qos": MockLanHandler.qos
         }
         return result
 
@@ -127,6 +131,9 @@ class MockLanHandler(Handler, BaseMockHandler):
 
         if "lan_redirect" in new_settings:
             MockLanHandler.lan_redirect = new_settings["lan_redirect"]
+
+        if "qos" in new_settings:
+            MockLanHandler.qos = new_settings["qos"]
 
         MockLanHandler.mode = new_settings["mode"]
         if new_settings["mode"] == "managed":

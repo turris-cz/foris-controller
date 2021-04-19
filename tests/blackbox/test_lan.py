@@ -114,7 +114,8 @@ def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):
         "mode_unmanaged",
         "interface_count",
         "interface_up_count",
-        "lan_redirect"
+        "lan_redirect",
+        "qos"
     }
     assert res["data"]["mode"] in ["managed", "unmanaged"]
 
@@ -1598,3 +1599,90 @@ def test_ip_slash_netmask(uci_configs_init, infrastructure):
 
     assert all_equal(mode_managed["router_ip"], mode_unmanaged["ip"], "192.168.1.1")
     assert all_equal(mode_managed["netmask"], mode_unmanaged["netmask"], "255.255.255.0")
+
+
+@pytest.mark.parametrize('device,turris_os_version', [('mox', '4.0')], indirect=True)
+def test_qos(
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+):
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert not res["data"]["qos"]["enabled"]
+    assert res["data"]["qos"]["download"] == 1024
+    assert res["data"]["qos"]["upload"] == 1024
+
+    res = infrastructure.process_message({
+        "module": "lan", "action": "update_settings", "kind": "request", "data":{
+            "mode": "managed",
+            "mode_managed": {
+                "router_ip": "192.168.5.8",
+                "netmask": "255.255.255.0",
+                "dhcp": {"enabled": False},
+            },
+            "lan_redirect": False,
+            "qos": {
+                "download": 1200, "upload": 512, "enabled": True
+            }
+        }
+    })
+
+    assert "errors" not in res.keys()
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res.keys()
+    qos = res["data"]["qos"]
+    assert qos["enabled"]
+    assert qos["upload"] == 512
+    assert qos["download"] == 1200
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize('device,turris_os_version', [('mox', '4.0')], indirect=True)
+def test_qos_openwrt(
+    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+
+):
+    def _assert_sqm_option(uci, key, expected_value):
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            data = backend.read()
+        assert uci.get_option_named(data, "sqm", "limit_lan_turris", key) == expected_value
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert not res["data"]["qos"]["enabled"]
+    assert res["data"]["qos"]["download"] == 1024
+    assert res["data"]["qos"]["upload"] == 1024
+
+    res = infrastructure.process_message({
+        "module": "lan", "action": "update_settings", "kind": "request", "data":{
+            "mode": "managed",
+            "mode_managed": {
+                "router_ip": "192.168.5.8",
+                "netmask": "255.255.255.0",
+                "dhcp": {"enabled": False},
+            },
+            "lan_redirect": False,
+            "qos": {
+                "download": 1200, "upload": 512, "enabled": True
+            }
+        }
+    })
+
+    uci = get_uci_module(infrastructure.name)
+
+    _assert_sqm_option(uci, "download", "512")
+    _assert_sqm_option(uci, "upload", "1200")
+    _assert_sqm_option(uci, "enabled", "1")
+    _assert_sqm_option(uci, "interface", "br-lan")
+    _assert_sqm_option(uci, "qdisc", "fq_codel")
+    _assert_sqm_option(uci, "script", "simple.qos")
+    _assert_sqm_option(uci, "link_layer", "none")
+    _assert_sqm_option(uci, "verbosity", "5")
+    _assert_sqm_option(uci, "debug_logging", "1")
