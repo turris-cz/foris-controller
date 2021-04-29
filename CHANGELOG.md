@@ -3,6 +3,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2021-06-24
+### Added
+- lan: enable qos control
+- lan: provide IPv6 DHCP leases
+- wan: provide MAC address of WAN interface
+- ntp: add possibility to change NTP servers
+
+### Changed
+- uci: delete uci options gracefully
+
+### Fixed
+- computer mode: disable dhcpv6 server
+- disable IPv6 DNS when IPv6 is disabled
+- missing `ipv6_address` in 6in4 wan proto
+- guest: enable dhcpv6
+- wan: return empty strings when `wan6` uci options (`ip`, `network`, `gateway`) are not set
+
+### Removed
+- remove Manifest.in and simplify package_data
+
 ## [1.2] - 2021-02-02
 ### Added
 - networks: include MAC address of interfaces
