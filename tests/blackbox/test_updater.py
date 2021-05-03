@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -335,7 +335,7 @@ def test_update_package_lists_override_defaults(
                 {"name": "survey", "enabled": False},
                 {"name": "dynfw", "enabled": False},
                 {"name": "nikola", "enabled": False},
-                {"name": "minipot", "enabled": False}   
+                {"name": "minipot", "enabled": False}
             ]},
             {"name": "hardening", "options": [{"name": "ujail", "enabled": True}]},
         ]

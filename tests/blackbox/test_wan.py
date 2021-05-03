@@ -927,7 +927,7 @@ def test_wan_openwrt_backend(
     )
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
     assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
-   
+
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_wrong_update(
