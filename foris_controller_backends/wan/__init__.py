@@ -68,9 +68,9 @@ class WanUci:
         )
         if wan6_settings["wan6_type"] == "static":
             wan6_settings["wan6_static"] = {
-                "ip": get_option_named(network_data, "network", "wan6", "ip6addr"),
-                "network": unwrap_list(get_option_named(network_data, "network", "wan6", "ip6prefix")),
-                "gateway": get_option_named(network_data, "network", "wan6", "ip6gw"),
+                "ip": get_option_named(network_data, "network", "wan6", "ip6addr", ""),
+                "network": unwrap_list(get_option_named(network_data, "network", "wan6", "ip6prefix", "")),
+                "gateway": get_option_named(network_data, "network", "wan6", "ip6gw", ""),
             }
             dns = get_option_named(network_data, "network", "wan6", "dns", [])
             dns = dns if isinstance(dns, (list, tuple)) else [e for e in dns.split(" ") if e]

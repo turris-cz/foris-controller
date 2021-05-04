@@ -121,9 +121,24 @@
         "network_settings_6_static": {
             "type": "object",
             "properties": {
-                "ip": { "format": "ipv6prefix", "type": "string", "description": "router IPv6 address with prefix in wan network"},
-                "network": { "format": "ipv6prefix", "type": "string" },
-                "gateway": { "format": "ipv6", "type": "string" },
+                "ip": {
+                    "oneOf": [
+                        {"format": "ipv6prefix", "type": "string", "description": "router IPv6 address with prefix in wan network" },
+                        {"enum": [""]}
+                    ]
+                },
+                "network": {
+                    "OneOf": [
+                        {"format": "ipv6prefix", "type": "string"},
+                        {"enum": [""]}
+                    ]
+                },
+                "gateway": {
+                    "oneOf": [
+                        {"format": "ipv6", "type": "string"},
+                        {"enum": [""]}
+                    ]
+                },
                 "dns1": { "format": "ipv6", "type": "string", "description": "DNS server 1" },
                 "dns2": { "format": "ipv6", "type": "string", "description": "DNS server 2" }
             },

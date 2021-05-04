@@ -625,7 +625,6 @@ def test_wan_openwrt_backend(
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
     assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
 
-
     data = update(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
@@ -1209,3 +1208,20 @@ def test_get_settings_missing_wireless(uci_configs_init, infrastructure):
         {"module": "wan", "action": "get_settings", "kind": "request"}
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_wan6_options_can_be_empty(uci_configs_init, infrastructure):
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_section("network", "wan6")
+        backend.add_section("network", "interface", "wan6")
+        backend.set_option("network", "wan6", "proto", "static")
+
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res.keys()
