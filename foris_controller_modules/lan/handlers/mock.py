@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -92,6 +92,8 @@ class MockLanHandler(Handler, BaseMockHandler):
     qos = {'download': 1024, 'enabled': False, 'upload': 1024}
 
     lan_redirect = True
+
+    forwarding = []
 
     @logger_wrapper(logger)
     def get_settings(self):
@@ -349,3 +351,14 @@ class MockLanHandler(Handler, BaseMockHandler):
         clients = MockLanHandler.mode_managed["dhcp"]["clients"]
         MockLanHandler.mode_managed["dhcp"]["clients"] = [c for c in clients if c["mac"] != mac]
         return {"result": True}
+
+    def update_forwardings(self, data) -> dict:
+        # delete the updates also and replace those in next step
+        deletes = {e["name"] for e in data.get("deletions", []) + data.get("updates", [])}
+        self.forwarding = [e for e in self.forwarding if e["name"] not in deletes]
+
+        self.forwarding.extend(data.get("updates", []))
+        return {"result": True}
+
+    def get_forwardings(self):
+        return {"rules" : self.forwarding}

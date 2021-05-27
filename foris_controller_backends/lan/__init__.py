@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ import time
 import typing
 
 from importlib import metadata
+
+from copy import deepcopy
 
 from foris_controller.exceptions import UciException
 from foris_controller.utils import parse_to_list, unwrap_list
@@ -96,6 +98,7 @@ class LanUci:
     DEFAULT_LEASE_TIME = 12 * 60 * 60
     DEFAULT_ROUTER_IP = "192.168.1.1"
     DEFAULT_NETMASK = "255.255.255.0"
+    FW_ALLOWED_KEYS = ("name", "dest_ip", "src_dport", "dest_port", "enabled")
 
     @staticmethod
     def get_network_combo(network_data) -> typing.Tuple[str, str, str]:
@@ -561,12 +564,11 @@ class LanUci:
 
     @staticmethod
     def in_network(ip: str, ip_root: str, netmask: str) -> bool:
-        """ Determine whether ip is in range defined by (start_ip + start .. start_ip + start, + limit)
+        """ Determine whether ip is in network
         :param ip: ip to be compared
-        :param start_ip: ip for where is range calculated
-        :param start: start offset
-        :param limit: count of ips
-        :return: True if ip is in range False otherwise
+        :param ip_root: ip adress of router
+        :param netmask: network mask address
+        :return: True if ip is in network False otherwise
         """
         if ip_root.count("/") == 1:
             iface = ipaddress.ip_interface(f"{ip_root}")
@@ -846,3 +848,240 @@ class LanUci:
             services.restart("dnsmasq")
 
         return None  # everything went ok
+
+    def _get_user_defined_dhcp_clients(self, dhcp_data) -> typing.List[dict]:
+        """ Helper function to determine user-defined dhcp leases that are used with forwarding. """
+        hosts = get_sections_by_type(dhcp_data, "dhcp", "host")
+        return hosts
+
+    @staticmethod
+    def _convert_ports(data) -> typing.Optional[dict]:
+        """Converts dashed `-` range to dictionary
+        :param data: firewall rules for port forwarding
+
+        Replaces `src_dport` and `dest_port` of source `data` as dicts with keys:
+            ["value"] in case port is single and <int>
+            ["start","end","value"] in case port is <str> range
+        """
+
+        def unwrap(port_range):
+            """Helper function"""
+            try:
+                # it is integer anyway
+                res = {"value": int(port_range)}
+            except (ValueError, TypeError):
+                if isinstance(port_range, str) and "-" in port_range:
+                    # make the full dict
+                    res = dict(
+                        zip(
+                            ("start","end", "value"),
+                            [int(i) for i in port_range.split("-")] + [port_range]
+                        )
+                    )
+
+            return res
+
+        # target keys
+        for setting in {"src_dport", "dest_port"} & data.keys():
+            data[setting] = unwrap(data[setting])
+
+    @staticmethod
+    def _deconvert_ports(data):
+        """Reverts previous function
+        :param data: dict, forwarding data
+        """
+        for setting in {"src_dport", "dest_port"} & data.keys():
+            data[setting] = data[setting]["value"]
+
+    def _extract_range(self, port: dict[str,int]):
+        """Extracts range from port object
+        :param port: dict
+        """
+        if {"start", "end"} <= port.keys():
+            return self._make_range_set(port["start"], port["end"])
+        else:
+            return self._make_range_set(port["value"])
+
+    def _get_all_forwardings(self, fw_data) -> typing.List[dict]:
+        """ Provides all current forwardings in UCI
+        src_dport and dest_port are converted to dictionary
+        whether there is dashed `-` range or plain int
+        """
+        forwardings = deepcopy(get_sections_by_type(fw_data, "firewall", "redirect"))
+
+        for index, item in enumerate(forwardings):
+            item["data"]["index"] = index
+
+            # unwrap possible ranges
+            self._convert_ports(item["data"])
+
+        return [e["data"] for e in forwardings]
+
+    @staticmethod
+    def _make_range_set(start:int, end: typing.Optional[int] = None) -> typing.Set[int]:
+        """ Helper func. to create set of port ranges to interpolate. """
+        if end is None:
+            return {start}
+        else:
+            return set(range(start, end + 1))
+
+    def _check_port_range_not_used(self, fw_data, src_dport:dict, name: str) -> typing.Optional[typing.List[str]]:
+        """ Checks for possible port interference.
+        :retval: None or List of objects related to an error"""
+        errors = []
+
+        fwds: list[dict] = self._get_all_forwardings(fw_data)
+
+        if fwds:
+            new_range = self._extract_range(src_dport)
+
+            for item in fwds:
+                # skip forwarding with the same name
+                # it probably be changed anyway
+                if item["name"] == name:
+                    continue
+
+                if item["name"] != name and item["src"] == "wan":
+
+                    old_range = self._extract_range(item.get("src_dport"))
+
+                    intrs = old_range.intersection(new_range)
+
+                    if len(intrs) > 0:
+                        errors.extend([{
+                            "old_rule" : item['name'],
+                            "msg": "range-already-used",
+                            "range": f'{min(intrs)}-{max(intrs)}' if len(intrs) > 1 else str(intrs.pop())}])
+
+        logger.debug(f"Errors in port forwarding: {errors}")
+
+        return errors if len(errors) > 0 else None
+
+    def get_forwardings(self) -> typing.List[typing.Dict[str,str]]:
+        """ API method, gets all current forwardings. """
+        with UciBackend() as backend:
+            firewall_data = backend.read("firewall")
+        raw_fwds = self._get_all_forwardings(firewall_data)
+        res = []
+
+        for fwd in raw_fwds:
+
+            fwd["enabled"] = parse_bool(fwd.get("enabled", "true"))
+            self._deconvert_ports(fwd)
+
+            res.append({k: v for k,v in fwd.items() if k in LanUci.FW_ALLOWED_KEYS})
+        return {"rules": res}
+
+    def _update_forwarding(
+        self,
+        dhcp_clients,
+        network_data,
+        firewall_data,
+        backend,
+        name,
+        dest_ip,
+        src_dport,
+        dest_port=None,
+        enabled=True
+    ) -> typing.Union[dict, list, None]:
+        """ Creates/updates/deletes configuration of single firewall rule
+        :dhcp_clients, network_data, firewall_data, bakend: Uci parameters to set the rules
+        :name: string rule name
+        :dest_ip: ip address of traffic recipient
+        :src_dport: integer | dict
+        :dest_port: integer | dict ; destination port, leave empty in case of source port range
+        :enabled: determine if rule should be applied
+        :returns: None if update passes or list in case of range interference, error object otherwise
+        """
+        # determine if required ip address has user-defined lease
+        if dest_ip not in dhcp_clients:
+            return {"new_rule": name, "msg": "not-user-defined"}
+
+        # make sure lease is part of LAN
+        router_ip, netmask, _ = LanUci.get_network_combo(network_data)
+
+        if not self.in_network(dest_ip, router_ip, netmask):
+            return {"new_rule": name, "msg": "not-in-lan"}
+
+        # check if this new settings does not overlap with existing (firewall_data)
+        chck_range = self._check_port_range_not_used(firewall_data, src_dport, name)
+
+        if isinstance(chck_range, list):
+            for item in chck_range:
+                item["new_rule"] = name
+            return chck_range
+
+        # assert lease name is unique as it is the only identifier
+        leases = self._get_all_forwardings(firewall_data)
+
+        for item in leases:
+            #  delete it, we will change it
+            if item["name"] == name:
+                self._delete_rule(firewall_data, backend, name)
+
+        # create new in UCI, rule does not exist or is being modified (while deleted above)
+        redirect = backend.add_section("firewall", "redirect")
+        backend.set_option("firewall", redirect, "name", name)
+        backend.set_option("firewall", redirect, "target", "DNAT")
+        backend.set_option("firewall", redirect, "src", "wan")
+        backend.set_option("firewall", redirect, "dest", "lan")
+        backend.set_option("firewall", redirect, "dest_ip", dest_ip)
+        backend.set_option("firewall", redirect, "src_dport", src_dport["value"])
+
+        if dest_port:
+            backend.set_option("firewall", redirect, "dest_port", dest_port["value"])
+        backend.set_option("firewall", redirect, "enabled", store_bool(enabled))
+
+        return None  # update successful
+
+    def _delete_rule(
+        self,
+        fw_data,
+        backend,
+        name
+    ) -> None:
+        """ Delete rule based on name in list. """
+        current = self._get_all_forwardings(fw_data)
+        for item in current:
+            if item['name'] == name:
+                backend.del_section("firewall", f"@redirect[{item['index']}]")
+
+    def update_forwardings(
+        self,
+        updates=None,
+        deletions=None
+    ) -> list:
+        errors = []
+        with UciBackend() as backend:
+            fw_data = backend.read("firewall")
+            dhcp_data = backend.read("dhcp")
+            network_data = backend.read("network")
+
+            if deletions:
+                for rule_name in deletions:
+                    self._delete_rule(fw_data, backend, rule_name)
+
+            # loop throught settings and update
+            if updates:
+                # determine current client defined dhcp
+                _hosts = get_sections_by_type(dhcp_data,"dhcp", "host")
+                dhcp_clients = [e["data"]["ip"] for e in _hosts if "ip" in e["data"]]
+
+                for fwd in updates:
+                    self._convert_ports(fwd)
+
+                    if err := self._update_forwarding(
+                        dhcp_clients,
+                        network_data,
+                        fw_data,
+                        backend,
+                        **fwd,
+                    ):
+                        errors.extend(err if isinstance(err, list) else [err])
+
+        # restart the firewall
+        with OpenwrtServices() as services:
+            services.reload("firewall")
+
+        # filter errors
+        return errors

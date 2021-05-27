@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017-2019, 2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2024, 2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -85,9 +85,31 @@ class LanModule(BaseModule):
             self.notify("delete_dhcp_client", data)
         return res
 
+    def action_get_forwardings(self, data) -> dict:
+        """ Provides list of forwarding rules
+        :param data: new forwarding settings
+        :returns: list of forwaridng rules
+        """
+        return self.handler.get_forwardings()
+
+    def action_update_forwardings(self, data: dict) -> dict:
+        """ Updates lan forwarding rules
+        :param data: new forwarding settings
+        :returns: {'result': True} or {'result': False, 'reason': [...]}
+        """
+        return self.handler.update_forwardings(data)
+
 
 @wrap_required_functions(
-    ["get_settings", "update_settings", "set_dhcp_client", "update_dhcp_client", "delete_dhcp_client"]
+    [
+        "get_settings",
+        "update_settings",
+        "set_dhcp_client",
+        "update_dhcp_client",
+        "delete_dhcp_client",
+        "update_forwardings",
+        "get_forwardings"
+    ]
 )
-class Handler():
+class Handler:
     pass

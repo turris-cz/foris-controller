@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -88,3 +88,22 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
             return {"result": False, "reason": err}
 
         return {"result": True}
+
+    @logger_wrapper(logger)
+    def get_forwardings(self) -> list:
+        """ Returns all current forwardings
+        :rtype: List[dict]
+        """
+        return self.uci.get_forwardings()
+
+    @logger_wrapper(logger)
+    def update_forwardings(self, data) -> dict:
+        """ Updates lan forwarding rules
+        :param data: new forwarding settings
+        :returns: {'result': True} or {'result': False, 'reason': [...]}
+        """
+        err = self.uci.update_forwardings(**data)
+        if len(err) > 0:
+            return {"result": False, "reason": err}
+        else:
+            return {"result": True}

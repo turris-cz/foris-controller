@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -257,6 +257,67 @@ def dhcpv6_leases_junk_leasetime():
 
 def all_equal(first, *items):
     return all(first == item for item in items)
+
+
+@pytest.fixture(scope="function")
+def lan_dnsmasq_files():
+    leases = "\n".join(
+        [
+            "1539350186 11:22:33:44:55:66 192.168.1.101 prvni *",
+            "1539350188 99:88:77:66:55:44 192.168.2.1 * *",
+        ]
+    )
+    conntrack = "\n".join(
+        [
+            "ipv4     2 udp      17 30 src=10.10.2.1 dst=217.31.202.100 sport=36378 dport=123 "
+            "packets=1 bytes=76 src=217.31.202.100 dst=172.20.6.87 sport=123 dport=36378 packets=1 "
+            "bytes=76 mark=0 zone=0 use=2",
+            "ipv4     2 unknown  2 491 src=0.0.0.0 dst=224.0.0.1 packets=509 bytes=16288 [UNREPLIED] "
+            "src=224.0.0.1 dst=0.0.0.0 packets=0 bytes=0 mark=0 zone=0 use=2",
+            "ipv4     2 tcp      6 7383 ESTABLISHED src=172.20.6.100 dst=172.20.6.87 sport=48328 "
+            "dport=80 packets=282 bytes=18364 src=172.20.6.87 dst=172.20.6.100 sport=80 dport=48328 "
+            "packets=551 bytes=31002 [ASSURED] mark=0 zone=0 use=2",
+            "ipv4     2 udp      17 30 src=10.111.222.213 dst=37.157.198.150 sport=60162 dport=123 "
+            "packets=1 bytes=76 src=37.157.198.150 dst=172.20.6.87 sport=123 dport=60162 packets=1 "
+            "bytes=76 mark=0 zone=0 use=2",
+            "ipv4     2 udp      17 34 src=10.111.222.213 dst=192.168.1.101 sport=57085 dport=123 "
+            "packets=1 bytes=76 src=80.211.195.36 dst=172.20.6.87 sport=123 dport=57085 packets=1 "
+            "bytes=76 mark=0 zone=0 use=2",
+            "ipv4     2 tcp      6 7440 ESTABLISHED src=172.20.6.100 dst=172.20.6.87 sport=35774 "
+            "dport=22 packets=244 bytes=17652 src=172.20.6.87 dst=172.20.6.100 sport=22 dport=35774 "
+            "packets=190 bytes=16637 [ASSURED] mark=0 zone=0 use=2",
+            "ipv4     2 udp      17 173 src=127.0.0.1 dst=127.0.0.1 sport=42365 dport=53 packets=2 "
+            "bytes=120 src=127.0.0.1 dst=127.0.0.1 sport=53 dport=42365 packets=2 bytes=164 [ASSURED] "
+            "mark=0 zone=0 use=2",
+            "ipv6     10 udp      17 41 src=fd52:ad42:910e:0000:0000:0000:0000:64fa "
+            "dst=fd21:36f9:644e:0000:0000:0000:0000:0001 sport=59532 dport=53 packets=1 bytes=102 "
+            "src=fd21:36f9:644e:0000:0000:0000:0000:0001 dst=fd52:ad42:910e:0000:0000:0000:0000:64fa "
+            "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2"
+        ]
+    )
+    with FileFaker(
+        FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases
+    ) as lease_file,\
+        FileFaker(
+        FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack
+    ) as conntrack_file:
+        yield lease_file, conntrack_file
+
+
+@pytest.fixture()
+def static_leases(uci_configs_init, infrastructure):
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        lease1 = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", lease1, "mac", "66:55:44:33:22:11")
+        backend.set_option("dhcp", lease1, "ip", "192.168.1.94")
+        backend.set_option("dhcp", lease1, "name", "clientXYZ")
+
+        lease2 = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", lease2, "mac", "00:11:22:33:44:55")
+        backend.set_option("dhcp", lease2, "ip", "192.168.1.95")
+        backend.set_option("dhcp", lease2, "name", "clientXY")
 
 
 def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):
@@ -2787,3 +2848,378 @@ def test_qos_openwrt(
     _assert_sqm_option(uci, "link_layer", "none")
     _assert_sqm_option(uci, "verbosity", "5")
     _assert_sqm_option(uci, "debug_logging", "1")
+
+
+def test_set_get_forwarding(static_leases, uci_configs_init, init_script_result, infrastructure):
+    my_rule = {
+        "name": "my-forward-rule",
+        "dest_ip": "192.168.1.95",
+        "src_dport": '8000-8080',
+        "dest_port": 80,
+        "enabled": True
+    }
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data": {
+                "updates": [my_rule]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+    res = infrastructure.process_message({"module": "lan", "action": "get_forwardings", "kind": "request"})
+    assert "rules" in res["data"].keys()
+    assert match_subdict(my_rule, res["data"]["rules"][0])
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_not_user_defined_static_ip(uci_configs_init, init_script_result, infrastructure):
+    # test if error is returned when no user-defined static lease ip addres is used
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data": {
+                "updates": [
+                    {
+                        "name": "my-forward-rule",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": 8080,
+                        "dest_port": 80,
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["result"] is False
+    error = res["data"]["reason"][0]
+    assert error["new_rule"] == "my-forward-rule"
+    assert error["msg"] == "not-user-defined"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_src_dport_overlap(static_leases, init_script_result, infrastructure):
+    # test if src_ports overlap with existing rule and assert the message
+    infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data": {
+                "updates": [
+                    {
+                        "name": "my-forward-rule",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": "7999-8020",
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "overlaping-rule",
+                        "dest_ip": "192.168.1.94",
+                        "src_dport": "8000-8080",
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["result"] is False
+    error = res["data"]["reason"][0]
+    assert error["new_rule"] == "overlaping-rule"
+    assert error["msg"] == "range-already-used"
+    assert error["old_rule"] == "my-forward-rule"
+    assert error["range"] == "8000-8020"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_src_dport_overlap_single(static_leases, init_script_result, infrastructure):
+    # test if src_ports overlap with existing rule and assert the message
+    infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data": {
+                "updates": [
+                    {
+                        "name": "my-forward-rule",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": 8040,
+                        "dest_port": 79,
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "overlaping-rule",
+                        "dest_ip": "192.168.1.94",
+                        "src_dport": "8000-8080",
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["result"] is False
+    error = res["data"]["reason"][0]
+    assert error["new_rule"] == "overlaping-rule"
+    assert error["msg"] == "range-already-used"
+    assert error["old_rule"] == "my-forward-rule"
+    assert error["range"] == "8040"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_src_dport_overlap_different_network(static_leases, init_script_result, infrastructure):
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.add_section("network", "interface", "guest_turris")
+        backend.set_option("network", "guest_turris", "enabled", "1")
+        backend.set_option("network", "guest_turris", "proto", "static")
+        backend.add_section("network", "device", "br_guest_turris")
+        backend.set_option("network", "br_guest_turris", "name", "br-guest-turris")
+        backend.set_option("network", "br_guest_turris", "type", "bridge")
+        backend.set_option("network", "guest_turris", "device", "br-guest-turris")
+        backend.set_option("network", "guest_turris", "ipaddr", "10.111.222.1")
+        backend.set_option("network", "guest_turris", "netmask", "255.255.255.0")
+        backend.set_option("network", "br_guest_turris", "bridge_empty", "1")
+        backend.set_option("network", "guest_turris", "ip6assign", "64")
+
+        redirect = backend.add_section("firewall", "redirect")
+        backend.set_option("firewall", redirect, "name", "guest-forward")
+        backend.set_option("firewall", redirect, "target", "DNAT")
+        backend.set_option("firewall", redirect, "src", "br-guest-turris")
+        backend.set_option("firewall", redirect, "dest", "lan")
+        backend.set_option("firewall", redirect, "dest_ip", "192.168.1.95")
+        backend.set_option("firewall", redirect, "src_dport","22")
+        backend.set_option("firewall", redirect, "dest_port", "22")
+        backend.set_option("firewall", redirect, "enabled","1")
+
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data": {
+                "updates": [{
+                    "name": "forward",
+                    "dest_ip": "192.168.1.95",
+                    "src_dport": 22,
+                    "dest_port": 22,
+                    "enabled": True
+                }]
+            }
+        }
+    )
+
+    assert "errors" not in res.keys()
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read("firewall")
+
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "name") == "guest-forward"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src_dport") == "22"
+
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 1, "name") == "forward"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 1, "src_dport") == "22"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructure):
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "my-forward-rule",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": 8000,
+                        "dest_port": 80,
+                        "enabled": True
+                    }
+                ]
+            }
+
+        }
+    )
+
+    assert "errors" not in res.keys()
+
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read("firewall")
+
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "name") == "my-forward-rule"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "target") == "DNAT"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src") == "wan"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest") == "lan"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src_dport") == "8000"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest_port") == "80"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "enabled") == "1"
+
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "my-forward-rule",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": '8000-8080',
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+
+    assert "errors" not in res.keys()
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read("firewall")
+
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "name") == "my-forward-rule"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "target") == "DNAT"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src") == "wan"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest") == "lan"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src_dport") == "8000-8080"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "enabled") == "1"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_edit_forwarding(static_leases, init_script_result, infrastructure):
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "my-forward-rule",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": 8080,
+                        "dest_port": 80,
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read("firewall")
+
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "name") == "my-forward-rule"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest_ip") == "192.168.1.95"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src_dport") == "8080"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest_port") == "80"
+
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "my-forward-rule",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": 8000,
+                        "dest_port": 80,
+                        "enabled": True,
+                    }
+                ]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["result"]
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read("firewall")
+
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "name") == "my-forward-rule"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest_ip") == "192.168.1.95"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src_dport") == "8000"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest_port") == "80"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_delete_forwarding(static_leases, init_script_result, infrastructure):
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "rule-to-be-there-whatever",
+                        "dest_ip": "192.168.1.94",
+                        "src_dport": 8000,
+                        "dest_port": 80,
+                        "enabled": True
+                    }
+                ]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data":
+            {
+                "updates": [
+                    {
+                        "name": "rule-to-delete",
+                        "dest_ip": "192.168.1.95",
+                        "src_dport": 8080,
+                        "dest_port": 80,
+                        "enabled": True
+                    }
+                ]
+            }
+
+        }
+    )
+    assert "errors" not in res.keys()
+
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "data" : {
+                "deletions": ["rule-to-delete"]
+            }
+        }
+    )
+    assert "errors" not in res.keys()
+
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read("firewall")
+
+        forwards = uci.get_sections_by_type(data, "firewall", "redirect")
+        assert len(forwards) == 1  # successfully deleted
