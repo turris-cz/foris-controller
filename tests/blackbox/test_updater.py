@@ -285,6 +285,37 @@ def test_get_package_lists(
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_get_package_lists_options(
+    updater_userlists,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+):
+    """ Test that package lists options are properly formated """
+    res = infrastructure.process_message(
+        {
+            "module": "updater",
+            "action": "get_package_lists",
+            "kind": "request",
+            "data": {"lang": "en"},
+        }
+    )
+    assert "errors" not in res.keys()
+
+    package_lists = res["data"]["package_lists"]
+    for pkglist in package_lists:
+        for opt in pkglist["options"]:
+            assert "description" in opt.keys()
+            assert "enabled" in opt.keys()
+            assert "labels" in opt.keys()
+            assert "name" in opt.keys()
+            assert "title" in opt.keys()
+            if "url" in opt.keys():
+                assert isinstance(opt["url"], str)
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_package_lists_with_defaults(
     updater_languages,
     updater_userlists,

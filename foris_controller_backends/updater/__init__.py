@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -154,17 +154,22 @@ class Updater(object):
     @staticmethod
     def _get_options(lst):
         """Reformat key-value dictionary into flat structure"""
+        options = []
 
-        return [
-            {
+        for name, data in lst.get("options", {}).items():
+            item = {
                 "name": name,
                 "title": data["title"],
                 "description": data["description"],
                 "enabled": data.get("enabled", data.get("default", False)),
                 "labels": Updater._get_labels(data["labels"]),
             }
-            for name, data in lst.get("options", {}).items()
-        ]
+            if data["url"] is not None:
+                item["url"] = data["url"]
+
+            options.append(item)
+
+        return options
 
     @staticmethod
     def _get_labels(labels):

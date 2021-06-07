@@ -198,7 +198,8 @@
                     "title": {"type": "string"},
                     "description": {"type": "string"},
                     "enabled": {"type": "boolean"},
-                    "labels": {"$ref": "#/definitions/updater_package_list_labels"}
+                    "labels": {"$ref": "#/definitions/updater_package_list_labels"},
+                    "url": {"type": "string"}
                 },
                 "additionalProperties": false,
                 "required": ["name", "title", "description", "enabled", "labels"]
