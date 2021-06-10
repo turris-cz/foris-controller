@@ -33,6 +33,7 @@ from multiprocessing.managers import SyncManager
 
 from .module_base import BaseModule
 
+IPAddress = typing.TypeVar("IPAddress", ipaddress.IPv4Address, ipaddress.IPv6Address)
 ListOrString = typing.NewType('ListOrString', typing.Union[str, typing.List[str]])
 
 LOGGER_MAX_LEN = 10000
@@ -294,6 +295,13 @@ def check_dynamic_ranges(router_ip: str, netmask: str, start: int, limit: int) -
         return False
 
     return True
+
+
+def ip_network_address(ip: IPAddress, netmask: str) -> IPAddress:
+    """ Get network address of given network
+        Accepts netmask as string, e.g. 255.255.255.0
+    """
+    return ipaddress.ip_network(f"{ip}/{netmask}", strict=False).network_address
 
 
 def unwrap_list(option: ListOrString) -> str:
