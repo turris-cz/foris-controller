@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -289,7 +289,7 @@ def main():
         process.start()
 
     logger.debug("Entering main loop.")
-    if zeroconf:
+    if zeroconf and options.zeroconf_enabled:
         from foris_controller.zconf import ZconfService
 
         try:
@@ -304,7 +304,7 @@ def main():
     try:
         server.serve_forever()
     finally:
-        if zeroconf:
+        if zeroconf and options.zeroconf_enabled:
             # Gracefully unregisters service from zconf
             zconf_service.close()
 

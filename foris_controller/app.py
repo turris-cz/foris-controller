@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -60,7 +60,6 @@ def set_app_info(program_options):
     app_info["mqtt_credentials"] = getattr(program_options, "passwd_file", None)
     app_info["mqtt_announcer_period"] = getattr(program_options, "announcer_period", None)
 
-    app_info["zeroconf_enabled"] = getattr(program_options, "zeroconf_enabled", False)
     app_info["zeroconf_devices"] = getattr(program_options, "zeroconf_devices", [])
     app_info["zeroconf_port"] = getattr(program_options, "zeroconf_port", 11884)
 

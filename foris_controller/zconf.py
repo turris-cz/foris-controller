@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,11 +47,6 @@ class ZconfService:
         self.state = ZconfService.State.DISCONNECTED
         self.terminate_event = threading.Event()
         self.address_watcher = None
-
-        if not app_info["zeroconf_enabled"]:
-            logger.debug("Zeroconf is not enabled. Skipping configuration")
-            self.state = ZconfService.State.CLOSED
-            return  # ZconfService will never connect
 
         # register service
         self.register_service()
