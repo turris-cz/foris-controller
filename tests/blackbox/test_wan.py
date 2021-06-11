@@ -783,6 +783,19 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
     assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
+    assert (
+        uci.parse_bool(
+            uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")
+        )
+        is True
+    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "proto", "") == "ipv6"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src", "") == "wan"
+    assert (
+        uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src_ip", "")
+        == "192.88.99.1"
+    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "target", "") == "ACCEPT"
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "lan", "ip6assign")
@@ -804,7 +817,22 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
+    assert (
+        uci.parse_bool(
+            uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")
+        )
+        is True
+    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "proto", "") == "ipv6"
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src", "") == "wan"
+    assert (
+        uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src_ip", "")
+        == "192.88.99.1"
+    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "target", "") == "ACCEPT"
 
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_option("network", "lan", "ip6assign")
     data = update(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
@@ -922,6 +950,12 @@ def test_wan_openwrt_backend(
     assert (
         uci.parse_bool(
             uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "enabled", "0")
+        )
+        is False
+    )
+    assert (
+        uci.parse_bool(
+            uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")
         )
         is False
     )

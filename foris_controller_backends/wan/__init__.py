@@ -173,7 +173,7 @@ class WanUci:
             backend.set_option("network", "wan6", "ifname", "@wan")
             backend.set_option("network", "wan6", "proto", wan6_type)
 
-            backend.del_option("network","wan6","ip6prefix", fail_on_error=False)
+            backend.del_option("network", "wan6", "ip6prefix", fail_on_error=False)
 
             # disable rule for 6in4 + cleanup
             if not wan6_type == "6in4":
@@ -181,6 +181,11 @@ class WanUci:
                     backend.del_option("network", "wan6", item, fail_on_error=False)
                 backend.add_section("firewall", "rule", "turris_wan_6in4_rule")
                 backend.set_option("firewall", "turris_wan_6in4_rule", "enabled", store_bool(False))
+
+            # disable rule for 6to4 + cleanup
+            if not wan6_type == "6to4":
+                backend.add_section("firewall", "rule", "turris_wan_6to4_rule")
+                backend.set_option("firewall", "turris_wan_6to4_rule", "enabled", store_bool(False))
 
             if wan6_type == "static":
                 backend.set_option("network", "wan6", "ip6addr", wan6_settings["wan6_static"]["ip"])
@@ -209,6 +214,14 @@ class WanUci:
                     backend.set_option("network", "wan6", "ipaddr", mapped_ipv4)
                 else:
                     backend.del_option("network", "wan6", "ipaddr", fail_on_error=False)
+
+                backend.add_section("firewall", "rule", "turris_wan_6to4_rule")
+                backend.set_option("firewall", "turris_wan_6to4_rule", "enabled", store_bool(True))
+                backend.set_option("firewall", "turris_wan_6to4_rule", "proto", "ipv6")
+                backend.set_option("firewall", "turris_wan_6to4_rule", "src_ip", "192.88.99.1")
+                backend.set_option("firewall", "turris_wan_6to4_rule", "target", "ACCEPT")
+                backend.set_option("firewall", "turris_wan_6to4_rule", "src", "wan")
+
             elif wan6_type == "6in4":
                 backend.set_option("network", "wan6", "mtu", wan6_settings["wan6_6in4"]["mtu"])
                 backend.set_option(
