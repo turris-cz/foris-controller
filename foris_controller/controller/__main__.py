@@ -71,6 +71,8 @@ logger = logging.getLogger("foris_controller")
 
 
 def main():
+    global zeroconf
+
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-controller")
     parser.add_argument("--version", action="version", version=__version__)
@@ -290,7 +292,14 @@ def main():
     if zeroconf:
         from foris_controller.zconf import ZconfService
 
-        zconf_service = ZconfService()
+        try:
+            zconf_service = ZconfService()
+        except Exception:
+            logger.error(
+                "Zeroconf fails to start (occupied port 5353?). "
+                "Proceeding without zeroconf capabilities..."
+            )
+            zeroconf = False
 
     try:
         server.serve_forever()
