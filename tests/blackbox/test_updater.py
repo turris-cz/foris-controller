@@ -298,7 +298,7 @@ def test_package_lists_with_defaults(
             {"name": "datacollect", "options": [{"name": "haas", "enabled": True}]}
         ]
     }
-    defaults = {"datacollect": {"survey", "dynfw", "nikola","minipot"}}
+    defaults = {"datacollect": {"survey", "dynfw", "fwlogs","minipot"}}
 
     res = infrastructure.process_message(
         {
@@ -334,7 +334,7 @@ def test_update_package_lists_override_defaults(
             {"name": "datacollect", "options": [
                 {"name": "survey", "enabled": False},
                 {"name": "dynfw", "enabled": False},
-                {"name": "nikola", "enabled": False},
+                {"name": "fwlogs", "enabled": False},
                 {"name": "minipot", "enabled": False}
             ]},
             {"name": "hardening", "options": [{"name": "ujail", "enabled": True}]},

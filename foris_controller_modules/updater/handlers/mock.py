@@ -2,7 +2,7 @@
 
 #
 # foris-controller
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                     "description": "Add firewall rules to block attackers detected by Turris collection network.",
                     "default": True
                 },
-                "nikola": {
+                "fwlogs": {
                     "title": "Firewall Logs",
                     "description": "Collect logs from firewall for attempted connections.",
                     "default": True
