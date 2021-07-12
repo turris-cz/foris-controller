@@ -66,7 +66,7 @@ class SetTimeCommand(BaseCmdLine):
 class TimeUciCommands(BaseFile):
 
     def _get_default_servers(self):
-        servers = self._file_content("/etc/uci-defaults/ntpservers")
+        servers = self._file_content("/usr/share/turris-defaults/ntpservers")
         return servers.strip().split('\n')
 
     def get_settings(self):
