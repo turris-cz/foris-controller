@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -124,26 +124,29 @@ class DnsFiles(BaseFile):
     ) -> bool:
         with DnsFiles.file_lock.readlock:
             escaped_description = description.replace('"', '\\"')
+            if tls_type in ["pin", "hostname"]:
+                port = 853
+            else:
+                port = 53
+
             content = f"""\
 name="{name}.conf"
 description="{escaped_description}"
 ipv4="{" ".join(ipaddresses.get("ipv4", ""))}"
 ipv6="{" ".join(ipaddresses.get("ipv6", ""))}"
 editable="true"
+port="{port}"
 """
             if tls_type == "pin":
                 content += f"""\
 enable_tls="1"
-port="853"
 pin_sha256="{tls_pin}"
 """
             elif tls_type == "hostname":
                 content += f"""\
 enable_tls="1"
-port="853"
 hostname="{tls_hostname}"
 ca_file="/etc/ssl/certs/ca-certificates.crt"
-
 """
             self._store_to_file(str(DnsFiles.RESOLVERS_DIR / f"{name}.conf"), content)
 

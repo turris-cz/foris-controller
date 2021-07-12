@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import os
 import typing
 
 import pytest
@@ -31,7 +32,19 @@ from foris_controller_testtools.fixtures import (
     FILE_ROOT_PATH,
     UCI_CONFIG_DIR_PATH,
 )
-from foris_controller_testtools.utils import check_service_result, FileFaker, get_uci_module
+from foris_controller_testtools.utils import (
+    check_service_result,
+    FileFaker,
+    get_uci_module,
+    read_and_parse_file,
+)
+
+
+def check_dns_server_port(name: str, port: int):
+    resolver_config_path = os.path.join(FILE_ROOT_PATH, f"etc/resolver/dns_servers/{name}.conf")
+    res = read_and_parse_file(resolver_config_path, r"^port=\"(\d+)\"$", (1,))
+
+    assert res == port
 
 
 def list_forwarders(infrastructure) -> typing.List[dict]:
@@ -89,6 +102,7 @@ name="99_google.conf"
 description="Google"
 ipv4="8.8.8.8 1.1.1.1"
 ipv6="2001:4860:4860::8888 2001:148f:fffe::1"
+port="53"
 """
 
     res2 = """\
@@ -524,6 +538,37 @@ def test_set_forwarder(custom_forwarders, uci_configs_init, infrastructure):
     data["editable"] = ""
     data["tls_hostname"] = ""
     assert data not in list_forwarders(infrastructure)
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize(
+    "resolver_data,config_name,dns_port",
+    [
+        (
+            {
+                "ipaddresses": {"ipv4": ["2.2.2.2"], "ipv6": ["2001:4860:4860::2222"]},
+                "description": "Myforward",
+                "tls_type": "no",
+            },
+            "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e",
+            "53"
+        ),
+        (
+            {
+                "ipaddresses": {"ipv4": ["2.2.2.2"], "ipv6": ["2001:4860:4860::2222"]},
+                "description": "Myforward (TLS)",
+                "tls_type": "pin",
+                "tls_pin": "12345566777",
+            },
+            "myforward_tls_98c297a6ccfae349303c661132a75c9b",
+            "853"
+        ),
+    ],
+)
+def test_set_forwarder_openwrt(custom_forwarders, uci_configs_init, infrastructure, resolver_data, config_name, dns_port):
+    """Check that valid port is set for TLS and non-TLS servers"""
+    add_forwarder(infrastructure, resolver_data, True)
+    check_dns_server_port(config_name, dns_port)
 
 
 @pytest.mark.only_backends(["openwrt"])
