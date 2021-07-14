@@ -481,6 +481,38 @@ def test_dhcp_lease(
     assert uci.get_option_named(data, "dhcp", "lan", "leasetime") == new_backend_val
 
 
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox","5.0")], indirect=True)
+def test_dhcp_lease_multi_mac(uci_configs_init, infrastructure, device, turris_os_version):
+    """ In case user sets `host` with list of options or string separated by space for mac address. """
+    uci = get_uci_module(infrastructure.name)
+
+    # list
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.114")
+        backend.set_option("dhcp", section, "name", "grogu")
+        backend.add_to_list("dhcp", section, "mac", ['A4:34:D9:ED:8B:6D', '50:7B:9D:D5:A9:65'])
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    # space separated
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_section("dhcp","@host[0]")
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.114")
+        backend.set_option("dhcp", section, "name", "grogu")
+        backend.set_option("dhcp", section, "mac", 'A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65')
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(

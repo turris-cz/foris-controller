@@ -171,7 +171,10 @@ class LanUci(object):
 
         for record in uci_data:
             if "mac" in record["data"]:
-                record["data"]["mac"] = record["data"]["mac"].strip().upper()
+                # handle a simple string or a list of MAC addresses
+                if isinstance(record["data"]["mac"], str):
+                    record["data"]["mac"] = [record["data"]["mac"]]
+                record["data"]["mac"] = " ".join([e.strip().upper() for e in record["data"]["mac"]])
 
         uci_map = {
             e["data"]["mac"]: e["data"]
