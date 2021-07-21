@@ -88,7 +88,7 @@ def main():
 
     if "ubus" in available_buses:
         ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
-        ubus_parser.add_argument("--path", default="/var/run/ubus.sock")
+        ubus_parser.add_argument("--path", default="/var/run/ubus/ubus.sock")
         ubus_parser.add_argument(
             "--single",
             default=False,

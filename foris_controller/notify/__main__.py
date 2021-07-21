@@ -72,7 +72,7 @@ def main():
     unix_parser.add_argument("--path", default="/tmp/foris-controller.soc")
     if "ubus" in available_buses:
         ubus_parser = subparsers.add_parser("ubus", help="use ubus to send notifications")
-        ubus_parser.add_argument("--path", default="/var/run/ubus.sock")
+        ubus_parser.add_argument("--path", default="/var/run/ubus/ubus.sock")
 
     if "mqtt" in available_buses:
         mqtt_parser = subparsers.add_parser("mqtt", help="use mqtt to send notification")
