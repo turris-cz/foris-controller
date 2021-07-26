@@ -108,7 +108,7 @@ class LanFiles(BaseFile):
                 for address in ipv6:
                     res.append(
                         {
-                            "expires": timestamp,
+                            "expires": 0,
                             "duid": duid,
                             "ipv6": str(address),
                             "hostname": hostname,
