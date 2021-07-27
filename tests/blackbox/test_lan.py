@@ -100,26 +100,13 @@ def lan_dnsmasq_files():
             "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2"
         ]
     )
-    odhcpd = "\n".join(
-        [
-            "fd52:ad42:a6c9::64fe\tprvni",
-            "# lan 00010003d8e63397f73ed8cd7cda d208984 prvni 1608144105 1b5 128 fd52:ad42:a6c9::64fe/128",
-            "fd52:ad42:a6c9::64fa\tdruhy",
-            "# lan 00020000df167896750a08ce0782 e2343f3e druhy 1608148949 c34 128 fd52:ad42:a6c9::64fa/128 fd52:ad42:910e::64fa/128",
-            "fd52:ad42:a6c9::64ff\ttreti",
-            "# lan 00020000df167896750a08ce078c e2343f3f treti -1 c34 128 fd52:ad42:a6c9::64ff/128 fd52:ad42:910e::64ff/128"
-        ]
-    )
     with FileFaker(
         FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases
     ) as lease_file,\
         FileFaker(
         FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack
-    ) as conntrack_file,\
-        FileFaker(
-        FILE_ROOT_PATH, "/tmp/hosts/odhcpd", False, odhcpd
-    ) as odhcpd_file:
-        yield lease_file, conntrack_file, odhcpd_file
+    ) as conntrack_file:
+        yield lease_file, conntrack_file
 
 
 def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):

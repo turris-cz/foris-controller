@@ -22,9 +22,11 @@ import logging
 import typing
 
 import pkg_resources
+import json
 
 from foris_controller.exceptions import UciException
 from foris_controller.utils import parse_to_list, unwrap_list
+from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.files import BaseFile, path_exists
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.services import OpenwrtServices
@@ -49,12 +51,8 @@ def _get_interface(ip: str, netmask: str) -> str:
 
 
 class LanFiles(BaseFile):
-    ODHCPD_FILE = "/var/hosts/odhcpd"
     DNSMASQ_LEASE_FILE = "/tmp/dhcp.leases"
     CONNTRACK_FILE = "/proc/net/nf_conntrack"
-
-    def _bare_ip(self, iface):
-        return ipaddress.ip_interface(iface).ip
 
     def _check_active(self, ip):
         conntrack = self._file_content(LanFiles.CONNTRACK_FILE)
@@ -91,32 +89,6 @@ class LanFiles(BaseFile):
 
         return res
 
-    def get_ipv6_dhcp_clients(self, odhcpd_file):
-        if not path_exists(odhcpd_file):
-            return []
-        leasefile = self._file_content(odhcpd_file)
-        lines = leasefile.strip().split("\n")
-
-        res = []
-        for line in lines:
-            if line.startswith("#"):
-                data = line.split(" ")
-                properties, addresses = data[:8], data[8:]
-                _, _, duid, _, hostname, timestamp, _, _ = properties
-                ipv6 = list(map(self._bare_ip, addresses))
-                timestamp = int(timestamp)
-                for address in ipv6:
-                    res.append(
-                        {
-                            "expires": 0,
-                            "duid": duid,
-                            "ipv6": str(address),
-                            "hostname": hostname,
-                            "active": self._check_active(address),
-                        }
-                    )
-        return res
-
 
 class LanUci:
     DEFAULT_DHCP_START = 100
@@ -124,6 +96,21 @@ class LanUci:
     DEFAULT_LEASE_TIME = 12 * 60 * 60
     DEFAULT_ROUTER_IP = "192.168.1.1"
     DEFAULT_NETMASK = "255.255.255.0"
+
+    @staticmethod
+    def call_ubus(ubus_object, method):
+        retval, stdout, stderr = BaseCmdLine._run_command(
+            "/bin/ubus", "call", ubus_object, method
+        )
+        if retval != 0:
+            logger.warning("Failure during ubus call: %s", stderr)
+            return None
+
+        try:
+            return json.loads(stdout.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            logger.warning("Failed to read result: %r", e)
+            return None
 
     @staticmethod
     def get_network_combo(network_data) -> typing.Tuple[str, str, str]:
@@ -207,12 +194,23 @@ class LanUci:
             )
         return file_records
 
-    def get_ipv6_client_list(self, uci_data):
-        odhcpd_file = get_option_named(uci_data,"dhcp", "odhcpd", "leasefile", "")
-        if not odhcpd_file:
-            odhcpd_file = LanFiles().ODHCPD_FILE
-        records = LanFiles().get_ipv6_dhcp_clients(odhcpd_file)
-        return records
+    def get_ipv6_client_list(self, interface="br-lan"):
+        lease_data = LanUci.call_ubus("dhcp", "ipv6leases")
+        res = []
+        if lease_data:
+            for lease in lease_data["device"][interface]["leases"]:
+                addresses = lease["ipv6-addr"]
+                for address in addresses:
+                    res.append(
+                        {
+                            "expires": int(lease["valid"]),
+                            "duid": lease["duid"],
+                            "ipv6": address["address"],
+                            "hostname": lease["hostname"],
+                            "active": "bound" in lease["flags"],
+                        }
+                    )
+        return res
 
     @staticmethod
     def _normalize_lease(value):
@@ -261,7 +259,7 @@ class LanUci:
             mode_managed["dhcp"]["clients"] = self.get_client_list(
                 dhcp_data, mode_managed["router_ip"], mode_managed["netmask"]
             )
-            mode_managed["dhcp"]["ipv6clients"] = self.get_ipv6_client_list(dhcp_data)
+            mode_managed["dhcp"]["ipv6clients"] = self.get_ipv6_client_list()
         else:
             mode_managed["dhcp"]["clients"] = []
 

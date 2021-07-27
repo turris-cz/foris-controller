@@ -411,6 +411,56 @@ WIFI_DATA = {
     }
 }
 
+IPV6_DHCP_DATA = {
+    "device": {
+        "br-lan": {
+            "leases": [
+                {
+                    "duid": "00010003d8e63397f73ed8cd7cda",
+                    "iaid": 987654321,
+                    "hostname": "prvni",
+                    "accept-reconf": False,
+                    "assigned": 801,
+                    "flags": [
+                        "bound"
+                    ],
+                    "ipv6-addr": [
+                        {
+                            "address": "fd52:ad42:a6c9::64fe",
+                            "preferred-lifetime": -1,
+                            "valid-lifetime": -1
+                        }
+                    ],
+                    "valid": 40029
+                },
+                {
+                    "duid": "00020000df167896750a08ce0782",
+                    "iaid": 123456789,
+                    "hostname": "druhy",
+                    "accept-reconf": False,
+                    "assigned": 2033,
+                    "flags": [
+                        "bound"
+                    ],
+                    "ipv6-addr": [
+                        {
+                            "address": "fd52:ad42:a6c9::64fa",
+                            "preferred-lifetime": -1,
+                            "valid-lifetime": -1
+                        },
+                        {
+                            "address": "fd52:ad42:910e::64fa",
+                            "preferred-lifetime": -1,
+                            "valid-lifetime": -1
+                        }
+                    ],
+                    "valid": 39844
+                }
+            ]
+        }
+    }
+}
+
 
 def main():
     parser = argparse.ArgumentParser(prog="ubus")
@@ -421,20 +471,22 @@ def main():
 
     args = parser.parse_args()
 
-    if args.command != "call":
+    if args.command == "call":
+        if args.object == "iwinfo":
+            if args.method not in ["info", "freqlist"]:
+                print({})
+            else:
+                device = json.loads(args.message).get("device")
+
+                print(
+                    json.dumps(WIFI_DATA[args.method].get(device, {}), indent=2)
+                )
+        elif args.object == "dhcp":
+            print(
+                json.dumps(IPV6_DHCP_DATA, indent=2)
+            )
+    else:
         print({})
-
-    if args.object != "iwinfo":
-        print({})
-
-    if args.method not in ["info", "freqlist"]:
-        print({})
-
-    device = json.loads(args.message).get("device")
-
-    print(
-        json.dumps(WIFI_DATA[args.method].get(device, {}), indent=2)
-    )
 
 
 if __name__ == "__main__":
