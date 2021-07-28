@@ -19,7 +19,7 @@
 
 import logging
 
-from foris_controller_backends.uci import UciBackend, get_option_named, store_bool
+from foris_controller_backends.uci import UciBackend, get_option_named, parse_bool, store_bool
 from foris_controller.exceptions import UciException, GenericError
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
 from foris_controller_backends.maintain import MaintainCommands
@@ -31,9 +31,12 @@ logger = logging.getLogger(__name__)
 
 
 class WanUci:
+    _LNAME = "wan_limit_turris"
+
     def get_settings(self):
         with UciBackend() as backend:
             network_data = backend.read("network")
+            sqm_data = backend.read("sqm")
             try:
                 wireless_data = backend.read("wireless")
             except UciException:
@@ -120,6 +123,16 @@ class WanUci:
         if custom_mac:
             mac_settings.update({"custom_mac_enabled": True, "custom_mac": custom_mac})
 
+        qos = {}
+        qos["enabled"] = parse_bool(
+            get_option_named(sqm_data, "sqm", WanUci._LNAME, "enabled", "0")
+        )
+        qos["upload"] = int(
+            get_option_named(sqm_data, "sqm", WanUci._LNAME, "upload", 1024)
+        )
+        qos["download"] = int(
+            get_option_named(sqm_data, "sqm", WanUci._LNAME, "download", 1024)
+        )
         return {
             "wan_settings": wan_settings,
             "wan6_settings": wan6_settings,
@@ -128,9 +141,10 @@ class WanUci:
             "interface_up_count": NetworksUci.get_interface_count(
                 network_data, wireless_data, "wan", True
             ),
+            "qos": qos
         }
 
-    def update_settings(self, wan_settings, wan6_settings, mac_settings):
+    def update_settings(self, wan_settings, wan6_settings, mac_settings, qos=None):
         with UciBackend() as backend:
             # WAN
             wan_type = wan_settings["wan_type"]
@@ -292,6 +306,19 @@ class WanUci:
             else:
                 backend.del_option("network", "wan", "macaddr", fail_on_error=False)
 
+            if qos:
+                network_data = backend.read("network")
+                ifname = get_option_named(network_data, "network", "wan", "ifname")
+                try:
+                    if qos.get("enabled"):
+                        backend.add_section("sqm", "queue", WanUci._LNAME)
+                        backend.set_option("sqm", WanUci._LNAME, "interface", ifname)
+                        backend.set_option("sqm", WanUci._LNAME, "download", qos["download"])
+                        backend.set_option("sqm", WanUci._LNAME, "upload", qos["upload"])
+                        backend.set_option("sqm", WanUci._LNAME, "script", "piece_of_cake.qos")
+                    backend.set_option("sqm", WanUci._LNAME, "enabled", store_bool(qos["enabled"]))
+                except UciException:
+                    logger.error("Unable to create sqm record for WAN")
         # update wizard passed in foris web (best effort)
         try:
             from foris_controller_backends.web import WebUciCommands

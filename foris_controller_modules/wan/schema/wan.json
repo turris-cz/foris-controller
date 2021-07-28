@@ -165,7 +165,8 @@
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
                         "mac_settings": {"$ref": "#/definitions/mac_address_get"},
                         "interface_count": {"type": "integer", "minimum": 0},
-                        "interface_up_count": {"type": "integer", "minimum": 0}
+                        "interface_up_count": {"type": "integer", "minimum": 0},
+                        "qos": {"$ref": "#/definitions/qos_get"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_settings", "wan6_settings", "mac_settings", "interface_count"]
@@ -185,7 +186,8 @@
                     "properties": {
                         "wan_settings": {"$ref": "#/definitions/wan_settings"},
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
-                        "mac_settings": {"$ref": "#/definitions/mac_address_set"}
+                        "mac_settings": {"$ref": "#/definitions/mac_address_set"},
+                        "qos": {"$ref": "#/definitions/qos_set"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_settings", "wan6_settings", "mac_settings"]

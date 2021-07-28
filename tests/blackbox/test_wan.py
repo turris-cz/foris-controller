@@ -57,6 +57,7 @@ def test_get_settings(uci_configs_init, infrastructure, fix_mox_wan, device, tur
         "mac_settings",
         "interface_count",
         "interface_up_count",
+        "qos"
     }
     assert "mac_address" in res["data"]["mac_settings"].keys()
 
@@ -1378,3 +1379,73 @@ def test_different_devices(uci_configs_init, infrastructure, device, fix_mox_wan
 
     assert "errors" not in res.keys()
     assert res["data"]["mac_settings"]["mac_address"] == wan_mac
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_qos_openwrt(
+    infrastructure, device, fix_mox_wan, turris_os_version
+):
+    prepare_turrishw_root(device, turris_os_version)
+    uci = get_uci_module(infrastructure.name)
+
+    res = infrastructure.process_message(
+        {
+            "module": "wan", "action": "update_settings", "kind": "request",
+            "data": {
+                "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+                "wan6_settings": {"wan6_type": "none"},
+                "mac_settings": {"custom_mac_enabled": False},
+                "qos": {"enabled": True, "upload": 2048, "download": 512}
+            }
+        }
+    )
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+        assert uci.get_option_named(data, "sqm", "wan_limit_turris", "enabled") == "1"
+        assert int(uci.get_option_named(data, "sqm", "wan_limit_turris", "upload")) == 2048
+        assert int(uci.get_option_named(data, "sqm", "wan_limit_turris", "download")) == 512
+        assert uci.get_option_named(data, "sqm", "wan_limit_turris", "interface") == "eth0"
+        assert uci.get_option_named(data, "sqm", "wan_limit_turris", "script") == "piece_of_cake.qos"
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+def test_qos_settings_persistent(
+    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version,
+):
+    if infrastructure.backend_name in ["openwrt"]:
+        prepare_turrishw_root(device, turris_os_version)
+
+
+    def update(input_data):
+        res = infrastructure.process_message(
+            {"module": "wan", "action": "update_settings", "kind": "request", "data": input_data}
+        )
+        assert res == {
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "wan",
+        }
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "qos": {"enabled": True, "upload": 2048, "download": 512}
+        },
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "qos": {"enabled": False}
+        }
+    )
+    res = infrastructure.process_message(
+        {"module": "wan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["qos"] == {"enabled": False, "upload": 2048, "download": 512}

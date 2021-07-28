@@ -51,6 +51,7 @@ class MockWanHandler(Handler, BaseMockHandler):
     custom_mac = None
     test_id_set = set()
     mac_address = _HARDWARE_MAC_ADDRESS
+    qos = {'enabled': False, 'upload': 1024, 'download': 1024}
 
     def _cleanup(self):
         self.wan_type = "dhcp"
@@ -94,6 +95,7 @@ class MockWanHandler(Handler, BaseMockHandler):
             "interface_up_count": len(
                 [e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"]
             ),
+            "qos": self.qos
         }
         if self.wan_type == "dhcp":
             if self.wan_dhcp["hostname"]:
@@ -185,6 +187,11 @@ class MockWanHandler(Handler, BaseMockHandler):
 
         self.custom_mac_enabled = new_settings["mac_settings"]["custom_mac_enabled"]
         self.custom_mac = new_settings["mac_settings"].get("custom_mac")
+        if new_settings.get("qos"):
+            if not new_settings["qos"]["enabled"]:
+                self.qos["enabled"] = False
+            else:
+                self.qos = new_settings["qos"]
         MockWanHandler.guide_set.set(True)
 
         return True
