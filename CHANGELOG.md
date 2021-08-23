@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added:
+- wifi: allow setting wifi encryption mode
+
+### Changed:
+- wifi: use WPA2/WPA3 as default encryption mode
+
 ## [3.0.0] - 2021-10-22
 ### Added:
 - wan: qos limit on traffic

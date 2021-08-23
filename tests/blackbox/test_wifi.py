@@ -19,23 +19,22 @@
 
 import copy
 import os
-import pytest
 
+import pytest
 from foris_controller_testtools.fixtures import (
-    only_backends,
-    uci_configs_init,
-    infrastructure,
+    UCI_CONFIG_DIR_PATH,
     file_root_init,
+    infrastructure,
     init_script_result,
     network_restart_command,
-    UCI_CONFIG_DIR_PATH,
+    only_backends,
+    uci_configs_init,
 )
 from foris_controller_testtools.utils import (
-    match_subdict,
     get_uci_module,
+    match_subdict,
     network_restart_was_called,
 )
-
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
 
@@ -49,8 +48,14 @@ DEFAULT_CONFIG = [
         "channel": 36,
         "htmode": "VHT160",
         "hwmode": "11a",
+        "encryption": "WPA2/3",
         "password": "",
-        "guest_wifi": {"enabled": False, "SSID": "Turris-guest", "password": ""},
+        "guest_wifi": {
+            "enabled": False,
+            "SSID": "Turris-guest",
+            "password": "",
+            "encryption": "WPA2/3",  # guest-wifi is disabled and turris defaults are used
+        },
         "available_bands": [
             {
                 "hwmode": "11g",
@@ -125,7 +130,13 @@ DEFAULT_CONFIG = [
         "htmode": "HT20",
         "hwmode": "11g",
         "password": "",
-        "guest_wifi": {"enabled": False, "SSID": "Turris-guest", "password": ""},
+        "encryption": "WPA2/3",
+        "guest_wifi": {
+            "enabled": False,
+            "SSID": "Turris-guest",
+            "password": "",
+            "encryption": "WPA2/3",  # guest-wifi is disabled and turris defaults are used
+        },
         "available_bands": [
             {
                 "hwmode": "11g",
@@ -147,6 +158,39 @@ DEFAULT_CONFIG = [
                 ],
             }
         ],
+    },
+]
+
+# example data for update setting action
+DEFAULT_UPDATE_DATA = [
+    {
+        "id": 0,
+        "enabled": True,
+        "SSID": "TurrisY",
+        "hidden": True,
+        "channel": 0,
+        "htmode": "VHT20",
+        "hwmode": "11a",
+        "encryption": "WPA3",
+        "password": "passpass",
+        "guest_wifi": {"enabled": False},
+    },
+    {
+        "id": 1,
+        "enabled": True,
+        "SSID": "TurrisX",
+        "hidden": True,
+        "channel": 0,
+        "htmode": "NOHT",
+        "hwmode": "11g",
+        "encryption": "WPA2/3",
+        "password": "passpass",
+        "guest_wifi": {
+            "enabled": True,
+            "SSID": "Turris-testik",
+            "password": "ssapssap",
+            "encryption": "WPA2/3",
+        },
     },
 ]
 
@@ -183,7 +227,7 @@ def cut_out_htdata(data):
     return out
 
 
-def match_default_config(result_data):
+def match_default_openwrt_config(result_data):
     default_data = copy.deepcopy(DEFAULT_CONFIG)
 
     default_htmodes = cut_out_htdata(default_data)
@@ -198,10 +242,83 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
     )
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert res.keys() == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
-    # test initial situation (based on default omnia settings)
-    match_default_config(res["data"]["devices"])
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_custom_encryption(
+    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+):
+    """Test that detection of custom encryption configuration is correct
+    Foris-controller should handle any unexpected values of 'encryption' as 'custom'
+    """
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "psk+mixed")
+        # "none" should be considered as "custom" only if is intentionally configured that way
+        # If encryption is "none", but interface is disabled, consider this as default OpenWrt settings,
+        # i.e. not configured yet
+        backend.set_option("wireless", "@wifi-device[1]", "disabled", "0")
+        backend.set_option("wireless", "@wifi-iface[1]", "disabled", "0")
+        backend.set_option("wireless", "@wifi-iface[1]", "encryption", "none")
+
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "devices" in res["data"].keys()
+    devices = res["data"]["devices"]
+    assert devices[0]["encryption"] == "custom"
+    assert devices[1]["encryption"] == "custom"
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_initial_tos_config(
+    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+):
+    """In general Foris-controller should handle any unexpected values of 'encryption' as 'custom'
+
+    However there is special case when default settings of unconfigured wifi or settings after wifi reset
+    should return TOS default encryption mode.
+    Intention is that user should initially see our preferred encryption mode in reForis for first time setup
+    and once wifi is configured, then respect user choice and treat it as custom configuration.
+
+    * encryption none && interface disabled => WPA2/3 (TOS preferred)
+    * encryption none && interface enabled => custom (user wants it that way)
+    """
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "devices" in res["data"].keys()
+    devices = res["data"]["devices"]
+    assert devices[0]["encryption"] == "WPA2/3"
+    assert devices[1]["encryption"] == "WPA2/3"
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_without_encryption_set(
+    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+):
+    """Test that default encryption values are returned in case the option is missing"""
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        # clear the encryption options
+        backend.del_option("wireless", "@wifi-iface[0]", "encryption")
+        backend.del_option("wireless", "@wifi-iface[1]", "encryption")
+
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "devices" in res["data"].keys()
+    devices = res["data"]["devices"]
+    assert devices[0]["encryption"] == "WPA2/3"
+    assert devices[1]["encryption"] == "WPA2/3"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -263,6 +380,7 @@ def test_update_settings(
             "channel": 11,
             "htmode": "HT20",
             "hwmode": "11g",
+            "encryption": "WPA2",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -278,6 +396,7 @@ def test_update_settings(
             "channel": 40,
             "htmode": "VHT20",
             "hwmode": "11a",
+            "encryption": "WPA3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -289,8 +408,14 @@ def test_update_settings(
             "channel": 6,
             "htmode": "NOHT",
             "hwmode": "11g",
+            "encryption": "WPA2/3",
             "password": "passpass",
-            "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+            "guest_wifi": {
+                "enabled": True,
+                "SSID": "Turris-testik",
+                "password": "ssapssap",
+                "encryption": "WPA2",
+            },
         },
     )
 
@@ -305,6 +430,7 @@ def test_update_settings(
             "channel": 0,
             "htmode": "VHT20",
             "hwmode": "11a",
+            "encryption": "WPA3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -316,8 +442,14 @@ def test_update_settings(
             "channel": 0,
             "htmode": "NOHT",
             "hwmode": "11g",
+            "encryption": "WPA2/3",
             "password": "passpass",
-            "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+            "guest_wifi": {
+                "enabled": True,
+                "SSID": "Turris-testik",
+                "password": "ssapssap",
+                "encryption": "WPA2/3",
+            },
         },
     )
 
@@ -332,6 +464,7 @@ def test_update_settings(
             "channel": 11,
             "htmode": "HT20",
             "hwmode": "11g",
+            "encryption": "WPA3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -343,6 +476,7 @@ def test_update_settings(
             "channel": 11,
             "htmode": "HT20",
             "hwmode": "11g",
+            "encryption": "WPA3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -354,6 +488,7 @@ def test_update_settings(
             "channel": 11,
             "htmode": "HT20",
             "hwmode": "11g",
+            "encryption": "WPA3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -370,6 +505,7 @@ def test_update_settings(
             "channel": 40,
             "htmode": "VHT20",
             "hwmode": "11a",
+            "encryption": "WPA3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -381,10 +517,79 @@ def test_update_settings(
             "channel": 44,
             "htmode": "NOHT",
             "hwmode": "11a",
+            "encryption": "WPA3",
             "password": "passpass",
-            "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+            "guest_wifi": {
+                "enabled": True,
+                "SSID": "Turris-testik",
+                "password": "ssapssap",
+                "encryption": "WPA2/3",
+            },
         },
     )
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("wpa2_mode", ["psk2", "psk2+aes", "psk2+tkip+ccmp"])
+def test_update_and_get_wpa2_modes(
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    wpa2_mode,
+):
+    """
+    Set WPA2 encryption for both regular and guest wifi
+    Change "psk2+ccmp" to alternative psk2 mode
+    Then check compatibility with many different WPA2 mode names that are allowed in OpenWrt
+    i.e.: "psk2*" -> WPA2
+    """
+    devices = [
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Dev111",
+            "hidden": True,
+            "channel": 0,
+            "htmode": "NOHT",
+            "hwmode": "11a",
+            "encryption": "WPA2",
+            "password": "passpass",
+            "guest_wifi": {"enabled": True, "password": "passpassg", "SSID": "Dev111G", "encryption": "WPA2"},
+        },
+        {"id": 1, "enabled": False},
+    ]
+
+    res = infrastructure.process_message(
+        {
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {"devices": devices},
+        }
+    )
+
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
+    }
+
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "default_radio0", "encryption", wpa2_mode)
+        backend.set_option("wireless", "guest_iface_0", "encryption", wpa2_mode)
+
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
+
+    wifi_dev = res["data"]["devices"][0]
+    assert wifi_dev["encryption"] == "WPA2"
+    assert wifi_dev["guest_wifi"]["encryption"] == "WPA2"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -440,6 +645,7 @@ def test_update_settings_uci(
             "channel": 36,
             "htmode": "VHT80",
             "hwmode": "11a",
+            "encryption": "WPA2/3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -451,6 +657,7 @@ def test_update_settings_uci(
             "channel": 11,
             "htmode": "HT20",
             "hwmode": "11g",
+            "encryption": "WPA3",
             "password": "ssapssap",
             "guest_wifi": {"enabled": False},
         },
@@ -473,7 +680,6 @@ def test_update_settings_uci(
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
-    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "1"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -496,6 +702,8 @@ def test_update_settings_uci(
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
+    assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae"
+    assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is True
@@ -510,6 +718,7 @@ def test_update_settings_uci(
             "channel": 40,
             "htmode": "VHT40",
             "hwmode": "11a",
+            "encryption": "WPA2/3",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -521,8 +730,9 @@ def test_update_settings_uci(
             "channel": 12,
             "htmode": "HT40",
             "hwmode": "11g",
+            "encryption": "WPA3",
             "password": "ssapssap",
-            "guest_wifi": {"enabled": True, "SSID": "Dev22G", "password": "ssapssapg"},
+            "guest_wifi": {"enabled": True, "SSID": "Dev22G", "password": "ssapssapg", "encryption": "WPA2"},
         },
     )
 
@@ -543,7 +753,6 @@ def test_update_settings_uci(
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
-    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "1"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -567,14 +776,15 @@ def test_update_settings_uci(
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is True
     )
 
+    assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae"
+    assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is False
     )
     assert uci.get_option_named(data, "wireless", guest_section, "ssid") == "Dev22G"
     assert uci.get_option_named(data, "wireless", guest_section, "key") == "ssapssapg"
-    assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "sae-mixed"
-    assert uci.get_option_named(data, "wireless", guest_section, "ieee80211w") == "1"
+    assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
     assert uci.get_option_named(data, "wireless", guest_section, "wpa_group_rekey") == "86400"
     assert uci.get_option_named(data, "wireless", guest_section, "mode") == "ap"
     assert uci.get_option_named(data, "wireless", guest_section, "network") == "guest_turris"
@@ -584,6 +794,7 @@ def test_update_settings_uci(
         is True
     )
 
+    # test setting auto frequency
     data = update(
         {
             "id": 0,
@@ -593,8 +804,9 @@ def test_update_settings_uci(
             "channel": 0,
             "htmode": "NOHT",
             "hwmode": "11a",
+            "encryption": "WPA2/3",
             "password": "passpass",
-            "guest_wifi": {"enabled": True, "password": "passpassg", "SSID": "Dev111G"},
+            "guest_wifi": {"enabled": True, "password": "passpassg", "SSID": "Dev111G", "encryption": "WPA2"},
         },
         {"id": 1, "enabled": False},
     )
@@ -603,6 +815,8 @@ def test_update_settings_uci(
     assert uci.get_option_named(data, "wireless", "radio0", "hwmode") == "11a"
     assert uci.get_option_named(data, "wireless", "radio0", "htmode") == "NOHT"
     real_section, guest_section = get_sections(data, "radio0")
+    assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", guest_section, "wpa_group_rekey") == "86400"
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is True
     real_section, guest_section = get_sections(data, "radio1")
@@ -614,7 +828,7 @@ def test_update_settings_uci(
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
         is True
     )
-
+    assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
     assert (
         uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0"))
         is True
@@ -815,36 +1029,7 @@ def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, netwo
             "module": "wifi",
             "action": "update_settings",
             "kind": "request",
-            "data": {
-                "devices": [
-                    {
-                        "id": 0,
-                        "enabled": True,
-                        "SSID": "TurrisY",
-                        "hidden": True,
-                        "channel": 0,
-                        "htmode": "VHT20",
-                        "hwmode": "11a",
-                        "password": "passpass",
-                        "guest_wifi": {"enabled": False},
-                    },
-                    {
-                        "id": 1,
-                        "enabled": True,
-                        "SSID": "TurrisX",
-                        "hidden": True,
-                        "channel": 0,
-                        "htmode": "NOHT",
-                        "hwmode": "11g",
-                        "password": "passpass",
-                        "guest_wifi": {
-                            "enabled": True,
-                            "SSID": "Turris-testik",
-                            "password": "ssapssap",
-                        },
-                    },
-                ]
-            },
+            "data": {"devices": DEFAULT_UPDATE_DATA},
         }
     )
     assert res == {
@@ -871,8 +1056,54 @@ def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, netwo
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
-    # test initial situation (based on default omnia settings)
-    match_default_config(res["data"]["devices"])
+    # test initial openwrt situation (based on default omnia settings)
+    match_default_openwrt_config(res["data"]["devices"])
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_reset_openwrt(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
+    res = infrastructure.process_message(
+        {
+            "module": "wifi",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {"devices": DEFAULT_UPDATE_DATA},
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
+    }
+
+    filters = [("wifi", "reset")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    res = infrastructure.process_message({"module": "wifi", "action": "reset", "kind": "request"})
+    assert res == {
+        "action": "reset",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
+    }
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {"module": "wifi", "action": "reset", "kind": "notification"}
+
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "devices" in res["data"].keys()
+    # test initial openwrt situation (based on default omnia settings)
+    match_default_openwrt_config(res["data"]["devices"])
+
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        uci_data = backend.read()
+
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 0, "encryption") == "none"
+    assert uci.get_option_anonymous(uci_data, "wireless", "wifi-iface", 1, "encryption") == "none"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -895,6 +1126,7 @@ def test_too_long_generated_guest_ssid(
                         "channel": 10,
                         "htmode": "HT20",
                         "hwmode": "11g",
+                        "encryption": "WPA2/3",
                         "password": "passpass",
                         "guest_wifi": {"enabled": False},
                     }
@@ -912,124 +1144,6 @@ def test_too_long_generated_guest_ssid(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
     )
     assert res["data"]["devices"][0]["guest_wifi"]["SSID"] == "Turris-guest"
-
-
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
-@pytest.mark.only_backends(["openwrt"])
-def test_modify_encryption_only_if_none(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
-):
-    uci = get_uci_module(infrastructure.name)
-
-    res = infrastructure.process_message(
-        {
-            "module": "wifi",
-            "action": "update_settings",
-            "kind": "request",
-            "data": {
-                "devices": [
-                    {
-                        "id": 0,
-                        "enabled": True,
-                        "SSID": "Turris",
-                        "hidden": False,
-                        "channel": 10,
-                        "htmode": "HT20",
-                        "hwmode": "11g",
-                        "password": "passpass",
-                        "guest_wifi": {
-                            "SSID": "Turris-guest",
-                            "enabled": True,
-                            "password": "passpass",
-                        },
-                    }
-                ]
-            },
-        }
-    )
-    assert res == {
-        "action": "update_settings",
-        "data": {"result": True},
-        "kind": "reply",
-        "module": "wifi",
-    }
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        data = backend.read()
-    assert uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption") == "sae-mixed"
-    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "sae-mixed"
-    assert uci.get_option_named(data, "wireless", "guest_iface_0", "ieee80211w") == "1"
-
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "psk2+tkip+ccmp")
-        backend.set_option("wireless", "guest_iface_0", "encryption", "psk2+tkip+ccmp")
-
-    res = infrastructure.process_message(
-        {
-            "module": "wifi",
-            "action": "update_settings",
-            "kind": "request",
-            "data": {
-                "devices": [
-                    {
-                        "id": 0,
-                        "enabled": True,
-                        "SSID": "Turris",
-                        "hidden": False,
-                        "channel": 10,
-                        "htmode": "HT20",
-                        "hwmode": "11g",
-                        "password": "passpass",
-                        "guest_wifi": {
-                            "SSID": "Turris-guest",
-                            "enabled": True,
-                            "password": "passpass",
-                        },
-                    }
-                ]
-            },
-        }
-    )
-    assert res == {
-        "action": "update_settings",
-        "data": {"result": True},
-        "kind": "reply",
-        "module": "wifi",
-    }
-
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        data = backend.read()
-    assert (
-        uci.get_option_anonymous(data, "wireless", "wifi-iface", 0, "encryption")
-        == "psk2+tkip+ccmp"
-    )
-    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "psk2+tkip+ccmp"
-
-
-@pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get_settings_and_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "devices" in res["data"].keys()
-    # test initial situation (based on default omnia settings)
-    match_default_config(res["data"]["devices"])
-
-    res = infrastructure.process_message({"module": "wifi", "action": "reset", "kind": "request"})
-    assert res == {
-        "action": "reset",
-        "data": {"result": True},
-        "kind": "reply",
-        "module": "wifi",
-    }
-
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
-    assert set(res.keys()) == {"action", "kind", "data", "module"}
-    assert "devices" in res["data"].keys()
-    # test initial situation (based on default omnia settings)
-    match_default_config(res["data"]["devices"])
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -1070,11 +1184,13 @@ def test_update_settings_uci_country(
                             "channel": 0,
                             "htmode": "NOHT",
                             "hwmode": "11a",
+                            "encryption": "WPA3",
                             "password": "passpass",
                             "guest_wifi": {
                                 "enabled": True,
                                 "password": "passpassg",
                                 "SSID": "Dev111G",
+                                "encryption": "WPA3",
                             },
                         },
                         {"id": 1, "enabled": False},

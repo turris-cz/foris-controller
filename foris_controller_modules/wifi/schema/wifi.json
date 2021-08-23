@@ -46,15 +46,17 @@
             "type": "array",
             "items": {"$ref": "#/definitions/wifi_device_htmode"}
         },
+        "wifi_encryption_modes": {"enum": ["WPA2", "WPA3", "WPA2/3", "custom"]},
         "wifi_device_guest_get": {
             "type": "object",
             "properties": {
                 "enabled": {"type": "boolean"},
                 "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
-                "password": {"type": "string"}
+                "password": {"type": "string"},
+                "encryption": {"$ref": "#/definitions/wifi_encryption_modes"}
             },
             "additionalProperties": false,
-            "required": ["enabled", "SSID", "password"]
+            "required": ["enabled", "SSID", "password", "encryption"]
         },
         "wifi_device_guest_set": {
             "type": "object",
@@ -63,10 +65,11 @@
                     "properties": {
                         "enabled": {"enum": [true]},
                         "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
-                        "password": {"type": "string", "minLength": 8}
+                        "password": {"type": "string", "minLength": 8},
+                        "encryption": {"$ref": "#/definitions/wifi_encryption_modes"}
                     },
                     "additionalProperties": false,
-                    "required": ["enabled", "SSID", "password"]
+                    "required": ["enabled", "SSID", "password", "encryption"]
                 },
                 {
                     "properties": {
@@ -118,6 +121,7 @@
                 },
                 "hwmode": {"$ref": "#/definitions/wifi_device_hwmode"},
                 "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
+                "encryption": {"$ref": "#/definitions/wifi_encryption_modes"},
                 "channel": {
                     "oneOf":[
                         {"$ref": "#/definitions/wifi_device_channel_number"},
@@ -130,7 +134,7 @@
             "additionalProperties": false,
             "required": [
                 "id", "enabled", "SSID", "hidden", "htmode", "available_bands",
-                "hwmode", "password", "guest_wifi", "channel"
+                "hwmode", "encryption", "password", "guest_wifi", "channel"
             ]
         },
         "wifi_device_set": {
@@ -147,6 +151,7 @@
                             "$ref": "#/definitions/wifi_device_htmode",
                             "enum": ["NOHT", "HT20", "HT40"]
                         },
+                        "encryption": {"$ref": "#/definitions/wifi_encryption_modes"},
                         "channel": {
                             "oneOf": [
                                 {"enum": [0], "description": "zero means auto"},
@@ -161,7 +166,7 @@
                     },
                     "additionalProperties": false,
                     "required": [
-                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "password", "guest_wifi"
+                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "encryption", "password", "guest_wifi"
                     ]
                 },
                 {
@@ -172,6 +177,7 @@
                         "hidden": {"type": "boolean"},
                         "hwmode": {"enum":["11a"]},
                         "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
+                        "encryption": {"$ref": "#/definitions/wifi_encryption_modes"},
                         "channel": {
                             "oneOf": [
                                 {"enum": [0], "description": "zero means auto"},
@@ -186,7 +192,7 @@
                     },
                     "additionalProperties": false,
                     "required": [
-                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "password", "guest_wifi"
+                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "encryption", "password", "guest_wifi"
                     ]
                 },
                 {

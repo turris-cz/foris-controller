@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
 import copy
+import logging
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -27,6 +27,9 @@ from .. import Handler
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_WIFI_ENCRYPTION = "WPA2/3"
+# Note: default OpenWrt config has "encryption none" and interface disabled
+# However we treat this config as not configured wifi yet and return TOS preferred mode instead
 DEFAULT_CONFIG = [
     {
         "id": 0,
@@ -36,8 +39,14 @@ DEFAULT_CONFIG = [
         "channel": 36,
         "htmode": "VHT160",
         "hwmode": "11a",
+        "encryption": DEFAULT_WIFI_ENCRYPTION,
         "password": "",
-        "guest_wifi": {"enabled": False, "SSID": "Turris-guest", "password": ""},
+        "guest_wifi": {
+            "enabled": False,
+            "SSID": "Turris-guest",
+            "password": "",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+        },
         "available_bands": [
             {
                 "hwmode": "11g",
@@ -111,8 +120,14 @@ DEFAULT_CONFIG = [
         "channel": 11,
         "htmode": "HT20",
         "hwmode": "11g",
+        "encryption": DEFAULT_WIFI_ENCRYPTION,
         "password": "",
-        "guest_wifi": {"enabled": False, "SSID": "Turris-guest", "password": ""},
+        "guest_wifi": {
+            "enabled": False,
+            "SSID": "Turris-guest",
+            "password": "",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+        },
         "available_bands": [
             {
                 "hwmode": "11g",
@@ -160,6 +175,7 @@ class MockWifiHandler(Handler, BaseMockHandler):
         channel=None,
         htmode=None,
         hwmode=None,
+        encryption=None,
         password=None,
         guest_wifi=None,
     ):
@@ -197,6 +213,7 @@ class MockWifiHandler(Handler, BaseMockHandler):
         dev["channel"] = channel
         dev["htmode"] = htmode
         dev["hwmode"] = hwmode
+        dev["encryption"] = encryption if encryption is not None else DEFAULT_WIFI_ENCRYPTION
         dev["password"] = password
         if guest_wifi["enabled"]:
             dev["guest_wifi"] = copy.deepcopy(guest_wifi)

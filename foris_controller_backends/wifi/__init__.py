@@ -22,23 +22,35 @@ import logging
 import re
 import typing
 
-from foris_controller.exceptions import UciException, UciRecordNotFound, BackendCommandFailed
-from foris_controller_backends.uci import (
-    UciBackend,
-    get_sections_by_type,
-    store_bool,
-    parse_bool,
-    get_option_anonymous,
+from foris_controller.exceptions import (
+    BackendCommandFailed,
+    UciException,
+    UciRecordNotFound,
 )
-
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
+from foris_controller_backends.uci import (
+    UciBackend,
+    get_option_anonymous,
+    get_sections_by_type,
+    parse_bool,
+    store_bool,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class WifiUci(object):
+class WifiUci:
+    WIFI_ENC_MODES_TO_UCI = {
+        "WPA2": "psk2+ccmp",
+        "WPA3": "sae",
+        "WPA2/3": "sae-mixed",
+    }
+    # reverse lookup of json schema values and uci config values
+    WIFI_ENC_UCI_TO_MODES = {v:k for k, v in WIFI_ENC_MODES_TO_UCI.items()}
+    WIFI_UCI_DEFAULT_ENC_MODE = "sae-mixed"
+
     @staticmethod
     def get_wifi_devices(backend):
         try:
@@ -146,16 +158,36 @@ class WifiUci(object):
         htmode = device["data"].get("htmode", "NOHT")
         current_channel = device["data"].get("channel", "11" if hwmode == "11g" else "36")
         current_channel = 0 if current_channel == "auto" else int(current_channel)
+        wifi_encryption = interface["data"].get("encryption", self.WIFI_UCI_DEFAULT_ENC_MODE)
+
+        # compatibility with many different WPA2 mode names that are allowed in OpenWrt
+        # "psk2*" -> WPA2
+        if wifi_encryption.startswith("psk2"):
+            wifi_encryption = "psk2+ccmp"
+
+        # Check whether we are reading initial OpenWrt (21.02) wifi config,
+        # which means that either wifi is not configured yet or it was reset to OpenWrt defaults
+        # defaults: disabled wifi and encryption is "none"
+        if not enabled and wifi_encryption == "none":
+            # In case we have default OpenWrt config, return Turris OS prefered encryption mode,
+            # so it will be the initial choice in reForis for the first time wifi setup
+            wifi_encryption = self.WIFI_UCI_DEFAULT_ENC_MODE
 
         if guest_interface:
             derived_guest = "%s-guest" % ssid if len("%s-guest" % ssid) <= 32 else "Turris-guest"
             guest_enabled = not parse_bool(guest_interface["data"].get("disabled", "0"))
             guest_ssid = guest_interface["data"].get("ssid", derived_guest)
             guest_password = guest_interface["data"].get("key", "")
+            guest_wifi_encryption = guest_interface["data"].get("encryption", self.WIFI_UCI_DEFAULT_ENC_MODE)
+            # compatibility with many different WPA2 mode names that are allowed in OpenWrt
+            # "psk2*" -> WPA2
+            if guest_wifi_encryption.startswith("psk2"):
+                guest_wifi_encryption = "psk2+ccmp"
         else:
             guest_enabled = False
             guest_ssid = "%s-guest" % ssid
             guest_password = ""
+            guest_wifi_encryption = self.WIFI_UCI_DEFAULT_ENC_MODE
 
         bands = WifiUci._get_device_bands(device_name)
         if not bands:
@@ -170,11 +202,13 @@ class WifiUci(object):
             "hidden": hidden,
             "hwmode": hwmode,
             "htmode": htmode,
+            "encryption": self.WIFI_ENC_UCI_TO_MODES.get(wifi_encryption, "custom"),
             "password": password,
             "guest_wifi": {
                 "enabled": guest_enabled,
                 "SSID": guest_ssid,
                 "password": guest_password,
+                "encryption": self.WIFI_ENC_UCI_TO_MODES.get(guest_wifi_encryption, "custom"),
             },
             "available_bands": bands,
         }
@@ -228,12 +262,23 @@ class WifiUci(object):
         return {"devices": devices}
 
     def _update_wifi(
-        self, backend, settings, device_section, interface_section, guest_interface_section
-    ):
+        self,
+        backend: UciBackend,
+        settings,
+        device_section,
+        interface_section,
+        guest_interface_section,
+    ) -> typing.Optional[bool]:
         """
-        :returns: Name of the guest interface if guest interface is enabled otherwise None
-        :rtype: None or str
+        :param backend: instance of UciBackend
+        :param settings: requested settings
+        :param device_section: device configuration
+        :param interface_section: regular wifi (i.e. non-guest) interface configuration
+        :param guest_interface_section: guest wifi interface configuration
+        :returns: True/False if guest interface is enabled/disabled or None if wifi is disabled
+        :rtype: None or bool
         """
+        DEFAULT_WIFI_ENC_MODE = "WPA2/3"
         # sections are supposed to exist so there is no need to create them
 
         if not settings["enabled"]:
@@ -263,10 +308,9 @@ class WifiUci(object):
         backend.set_option(
             "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"])
         )
-        if interface_section["data"].get("encryption", "none") == "none":
-            backend.set_option("wireless", interface_section["name"], "encryption", "sae-mixed")
-        backend.set_option("wireless", interface_section["name"], "ieee80211w", "1")
-        backend.set_option("wireless", interface_section["name"], "wpa_group_rekey", "86400")
+        wifi_encryption = settings.get("encryption", DEFAULT_WIFI_ENC_MODE)
+        if wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
+            self._set_wifi_encryption(backend, interface_section["name"], wifi_encryption)
         backend.set_option("wireless", interface_section["name"], "key", settings["password"])
 
         # guest interface
@@ -288,19 +332,25 @@ class WifiUci(object):
         backend.set_option("wireless", guest_name, "mode", "ap")
         backend.set_option("wireless", guest_name, "ssid", settings["guest_wifi"]["SSID"])
         backend.set_option("wireless", guest_name, "network", "guest_turris")
-        if (
-            not guest_interface_section
-            or guest_interface_section["data"].get("encryption", "none") == "none"
-        ):
-            backend.set_option("wireless", guest_name, "encryption", "sae-mixed")
-        backend.set_option("wireless", guest_name, "ieee80211w", "1")
-        backend.set_option("wireless", guest_name, "wpa_group_rekey", "86400")
+        guest_wifi_encryption = settings["guest_wifi"].get("encryption", DEFAULT_WIFI_ENC_MODE)
+        if guest_wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
+            self._set_wifi_encryption(backend, guest_name, guest_wifi_encryption)
         backend.set_option("wireless", guest_name, "key", settings["guest_wifi"]["password"])
         guest_ifname = "guest_turris_%d" % settings["id"]
         backend.set_option("wireless", guest_name, "ifname", guest_ifname)
         backend.set_option("wireless", guest_name, "isolate", store_bool(True))
 
         return True
+
+    def _set_wifi_encryption(self, backend: UciBackend, if_name: str, wifi_encryption: str) -> None:
+        """Set wifi encryption mode and its related options
+        :param backend: instance of UciBackend
+        :param if_name: name of the interface (str)
+        :param wifi_encryption: wifi encryption mode (str)
+        """
+        encryption_mode = self.WIFI_ENC_MODES_TO_UCI.get(wifi_encryption, self.WIFI_UCI_DEFAULT_ENC_MODE)
+        backend.set_option("wireless", if_name, "encryption", encryption_mode)
+        backend.set_option("wireless", if_name, "wpa_group_rekey", "86400")
 
     @staticmethod
     def update_regulator_domain(data, backend, country_code):
