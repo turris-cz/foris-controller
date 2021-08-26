@@ -149,7 +149,7 @@ setup(
         ]
     },
     dependency_links=[
-        "git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.10.0#egg=foris-controller-testtools",
+        "git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.10.1#egg=foris-controller-testtools",
         "git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git#egg=foris-client",
     ],
     zip_safe=False,
