@@ -19,22 +19,22 @@
 
 import json
 import logging
-import turrishw
 import typing
 
+import turrishw
+
+from foris_controller.exceptions import UciException, UciRecordNotFound
 from foris_controller_backends.about import SystemInfoFiles
+from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.uci import (
     UciBackend,
     get_option_named,
-    store_bool,
-    parse_bool,
     get_sections_by_type,
+    parse_bool,
+    store_bool,
 )
-from foris_controller_backends.cmdline import BaseCmdLine
-
-from foris_controller.exceptions import UciException, UciRecordNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +193,12 @@ class NetworksUci(object):
                 wireless_data = {}  # wireless config missing
 
         wan_network = self._prepare_network(network_data, "wan", iface_map)
+        # Return only first interface asigned to wan to make it compatible with bridges for wan,
+        # so the json message will still pass validation.
+        # Note: remove this little workaround when multiple interfaces on wan are supported
+        if wan_network:
+            wan_network = [wan_network[0]]
+
         lan_network = self._prepare_network(network_data, "lan", iface_map)
         guest_network = self._prepare_network(network_data, "guest_turris", iface_map)
         none_network = [e for e in iface_map.values()]  # reduced in _prepare_network using pop()
