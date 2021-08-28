@@ -17,28 +17,27 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
 import os
 
+import pytest
 from foris_controller_testtools.fixtures import (
-    only_backends,
-    uci_configs_init,
+    UCI_CONFIG_DIR_PATH,
+    device,
+    file_root_init,
     infrastructure,
     init_script_result,
     network_restart_command,
-    device,
-    turris_os_version,
     notify_api,
-    UCI_CONFIG_DIR_PATH,
-    file_root_init
+    only_backends,
+    turris_os_version,
+    uci_configs_init,
 )
-
 from foris_controller_testtools.utils import (
+    TURRISHW_ROOT,
     get_uci_module,
     network_restart_was_called,
-    TURRISHW_ROOT,
-    prepare_turrishw_root,
     prepare_turrishw,
+    prepare_turrishw_root,
 )
 
 
@@ -56,6 +55,32 @@ def test_get_settings(uci_configs_init, fix_mox_wan, infrastructure, device, tur
     assert "errors" not in res.keys()
     assert res["data"].keys() == {"device", "networks", "firewall"}
     assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize(
+    "device,turris_os_version", [("mox", "5.2")], indirect=True
+)
+def test_get_settings_more_wans(
+    uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version
+):
+    """Check that even with multiple interfaces assigned to wan, only one is returned"""
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        # detach lan4 from br-lan
+        backend.replace_list("network", "lan", "ifname", ["lan1", "lan2", "lan3"])
+        # attach it to br-wan
+        backend.set_option("network", "wan", "type", "bridge")
+        backend.replace_list("network", "wan", "ifname", ["eth0", "lan4"])
+
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert res["data"].keys() == {"device", "networks", "firewall"}
+    assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
+    assert len(res["data"]["networks"]["wan"]) == 1
 
 
 @pytest.mark.parametrize(
