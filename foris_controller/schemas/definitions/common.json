@@ -190,6 +190,7 @@
                 },
                 "ipv6_address": {
                     "oneOf": [
+                        {"format": "ipv6prefix", "type": "string"},
                         {"format": "ipv6", "type": "string"},
                         {"enum": [""]}
                     ]

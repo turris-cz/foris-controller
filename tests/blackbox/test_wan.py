@@ -374,6 +374,37 @@ def test_update_settings(
             "wan6_settings": {
                 "wan6_type": "6in4",
                 "wan6_6in4": {
+                    "mtu": 1480,
+                    "server_ipv4": "222.33.44.55",
+                    "ipv6_prefix": "2002:471:6e:3a::/64",
+                    "ipv6_address": "2002:471:6e:3a::1/64",
+                    "dynamic_ipv4": {"enabled": False},
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False},
+        },
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
+                    "mtu": 1480,
+                    "server_ipv4": "222.33.44.55",
+                    "ipv6_prefix": "2002:471:6e:3a::/64",
+                    "ipv6_address": "2002:471:6e:3a::1/64",
+                    "dynamic_ipv4": {"enabled": False},
+                },
+            },
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
+        },
+        {"wan_type": "dhcp", "wan6_type": "6in4", "custom_mac_enabled": False},
+    )
+    update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {
+                "wan6_type": "6in4",
+                "wan6_6in4": {
                     "mtu": 1280,
                     "server_ipv4": "11.22.33.44",
                     "ipv6_prefix": "2001:470:6f:39::/64",
