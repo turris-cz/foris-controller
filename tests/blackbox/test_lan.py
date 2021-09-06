@@ -548,6 +548,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "proto") == "static"
     assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["192.168.5.8/24"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
+    assert uci.get_option_named(data, "network", "lan", "device") == "br-lan"
     assert not uci.parse_bool(uci.get_option_named(data, "firewall", "redirect_192_168_1_1", "enabled"))
     assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
     assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
@@ -1641,7 +1642,7 @@ def test_ip_slash_netmask(uci_configs_init, infrastructure):
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.del_option("network", "lan", "netmask")
+        backend.del_option("network", "lan", "netmask", fail_on_error=False)
         backend.del_option("network", "lan", "ipaddr")
         backend.set_option("network", "lan", "ipaddr", "192.168.1.1/24")
 

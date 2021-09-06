@@ -62,17 +62,17 @@ def test_get_settings(uci_configs_init, fix_mox_wan, infrastructure, device, tur
     "device,turris_os_version", [("mox", "5.2")], indirect=True
 )
 def test_get_settings_more_wans(
-    uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version
+    fix_mox_wan, infrastructure, device, turris_os_version
 ):
     """Check that even with multiple interfaces assigned to wan, only one is returned"""
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         # detach lan4 from br-lan
-        backend.replace_list("network", "lan", "ifname", ["lan1", "lan2", "lan3"])
+        backend.set_option("network", "lan", "ifname", "lan1 lan2 lan3")
         # attach it to br-wan
         backend.set_option("network", "wan", "type", "bridge")
-        backend.replace_list("network", "wan", "ifname", ["eth0", "lan4"])
+        backend.set_option("network", "wan", "ifname", "eth0 lan4")
 
     res = infrastructure.process_message(
         {"module": "networks", "action": "get_settings", "kind": "request"}
@@ -81,7 +81,6 @@ def test_get_settings_more_wans(
     assert res["data"].keys() == {"device", "networks", "firewall"}
     assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
     assert len(res["data"]["networks"]["wan"]) == 1
-
 
 @pytest.mark.parametrize(
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
@@ -573,15 +572,14 @@ def test_update_settings_openwrt(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
-    assert wan_port == uci.get_option_named(data, "network", "wan", "ifname")
+    assert wan_port == uci.get_option_named(data, "network", "wan", "device")
 
-    assert "bridge" == uci.get_option_named(data, "network", "lan", "type")
-    assert uci.parse_bool(uci.get_option_named(data, "network", "lan", "bridge_empty"))
-    assert lan_ports == uci.get_option_named(data, "network", "lan", "ifname", [])
+    assert "bridge" == uci.get_option_named(data, "network", "br_lan", "type")
+    assert lan_ports == uci.get_option_named(data, "network", "br_lan", "ports", [])
 
-    assert "bridge" == uci.get_option_named(data, "network", "guest_turris", "type")
-    assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "bridge_empty"))
-    assert guest_ports == uci.get_option_named(data, "network", "guest_turris", "ifname", [])
+    assert "bridge" == uci.get_option_named(data, "network", "br_guest_turris", "type")
+    assert uci.parse_bool(uci.get_option_named(data, "network", "br_guest_turris", "bridge_empty"))
+    assert guest_ports == uci.get_option_named(data, "network", "br_guest_turris", "ports", [])
 
     # test firewall rules
     assert (
@@ -732,3 +730,67 @@ def test_network_change_notification(uci_configs_init, infrastructure, notify_ap
     check_notification("eth0", "lan", "ifup")
     check_notification("", "wan", "ifdown")
     check_notification("guest_turris", "wan", "ifupdate")
+
+@pytest.mark.parametrize(
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+)
+@pytest.mark.only_backends(["openwrt"])
+def test_one_lan_does_not_break(
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
+):
+    if infrastructure.backend_name in ["openwrt"]:
+        prepare_turrishw_root(device, turris_os_version)
+
+    uci = get_uci_module(infrastructure.name)
+
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
+    # get ports
+    ports = (
+        res["data"]["networks"]["wan"]
+        + res["data"]["networks"]["lan"]
+        + res["data"]["networks"]["guest"]
+        + res["data"]["networks"]["none"]
+    )
+    networks = res["data"]["networks"]
+
+    # filter non-configurable ports
+    lan = res["data"]["networks"].pop("lan")
+    guest = [i["id"] for i in lan[1:]]
+    lan = [lan[0]["id"]]
+
+    networks["lan"] = lan
+    networks["guest"] = guest
+    if networks["wan"]:  # mox does not have wan by default
+        networks["wan"] = [networks["wan"][0]["id"]]
+    networks["none"] = [i["id"] for i in networks["none"] if i["configurable"]]
+
+    # networks = {'wan': ['eth2'], 'guest': ['lan2', 'lan3', 'lan4'], 'none': ['lan0', 'wlan0', 'wlan1'], 'lan': ['lan1']} 
+
+    res = infrastructure.process_message(
+        {
+            "module": "networks",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "firewall": {"ssh_on_wan": True, "http_on_wan": True, "https_on_wan": False},
+                "networks": networks
+            },
+        }
+    )
+    assert res["data"] == {"result": True}
+    assert network_restart_was_called([])
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+
+
+    assert uci.get_option_named(data, "network", "lan", "device") == "br-lan"
+    # assert lan has only one interface
+    assert len(uci.get_option_named(data, "network", "br_lan", "ports")) == 1

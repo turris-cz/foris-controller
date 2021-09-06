@@ -33,17 +33,59 @@ from foris_controller_backends.uci import (
     get_option_named,
     get_sections_by_type,
     parse_bool,
+    section_exists,
     store_bool,
 )
+
+from functools import wraps
 
 logger = logging.getLogger(__name__)
 
 
+def decorate_guest_net(pos):
+    """Handle guest net on position"""
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args):
+            if args[pos] == "guest":
+                args = [*args]
+                args[pos] = "guest_turris"
+            func(*args)
+        return wrapper
+    return decorate
+
+
 class NetworksUci(object):
     def _prepare_network(self, data, section, ports_map):
+        # TODO: once `ifname` not required, refactor
         interfaces = get_option_named(data, "network", section, "ifname", [])
         interfaces = interfaces if isinstance(interfaces, (tuple, list)) else interfaces.split(" ")
+        device = get_option_named(data, "network", section, "device", "")
+
+        devices = get_option_named(data,"network", device.replace("-", "_"), "ports", [])
+
+        # by default migrated "br-lan" is anonymous
+        if section == "lan" and len(devices) < 1 and not interfaces:
+            devs = get_sections_by_type(data, "network", "device")
+            lan_bridge = [
+                i for i in devs
+                if i["name"].startswith("cfg") and i["data"].get("name") == "br-lan"
+            ]
+            devices = lan_bridge[0]["data"].get("ports", [])
         res = []
+
+        # ensure ports are in port_map
+        if devices:
+            for port in devices:
+                if port in ports_map:
+                    res.append(ports_map.pop(port))
+        else:
+            try:
+                res.append(ports_map.pop(device))
+            except KeyError:
+                pass
+
+        # TODO: once old uci not supported delete, see above
         for interface in interfaces:
             if interface in ports_map:
                 res.append(ports_map.pop(interface))
@@ -56,7 +98,7 @@ class NetworksUci(object):
         iface_sections = [
             section
             for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
-            if section["data"].get("ifname") == ifname and section["data"].get("device")
+            if section["data"].get("device") == ifname and section["data"].get("device")
         ]
         if not iface_sections:
             return None
@@ -167,7 +209,14 @@ class NetworksUci(object):
                 hw_interfaces = [e for e in turrishw.get_ifaces().keys()]
         except Exception:
             hw_interfaces = []
-        config_interfaces = get_option_named(network_data, "network", network_name, "ifname", [])
+        if get_option_named(network_data, "network", network_name, "ifname", "") != "":
+            config_interfaces = get_option_named(network_data, "network", network_name, "ifname")
+        else:
+            device = get_option_named(network_data, "network", network_name, "device", "").replace("-","_")
+            if section_exists(network_data, "network", device):
+                config_interfaces = get_option_named(network_data, "network", device, "ports", [])
+            else:
+                config_interfaces = get_option_named(network_data, "network", network_name, "device", [])
         config_interfaces = (
             config_interfaces
             if isinstance(config_interfaces, (list, tuple))
@@ -277,13 +326,74 @@ class NetworksUci(object):
             # current ports doesn't match the one that are being set
             return False
 
+        @decorate_guest_net(1)
+        def _create_bridge(backend: UciBackend, net: str, ifs: typing.List[str], mac=None):
+            """Create bridge device and set its interfaces"""
+            backend.add_section("network", "device", f"br_{net}")
+            backend.set_option("network", f"br_{net}", "name", f"br-{net}")
+            backend.set_option("network", f"br_{net}", "type", "bridge")
+            backend.replace_list("network", f"br_{net}", "ports", ifs)
+            backend.set_option("network", net, "device", f"br-{net}")
+            backend.del_option("network", net, "bridge_empty", fail_on_error=False)
+            if mac:
+                backend.set_option("network", f"br_{net}", "macaddr", mac)
+
+        @decorate_guest_net(2)
+        def _del_bridge(backend: UciBackend, data, net: str, devices: typing.List[str]):
+            """Delete bridge and set the interface device to device"""
+            mac = get_option_named(data, "network", f"br_{net}", "macaddr", False)
+            if section_exists(data, "network", f"br_{net}"):
+                backend.del_section("network", f"br_{net}")
+            if devices:
+                backend.set_option("network", net, "device", devices[0])
+                if mac:
+                    backend.set_option("network", net, "macaddr", mac)
+            else:
+                backend.del_option("network", net, "device", fail_on_error=False)
+                backend.set_option("network", net, "bridge_empty", store_bool(True))
+
+        @decorate_guest_net(1)
+        def _set_bridge_ports(backend, net, ifs):
+            """Set bridge ports to provided interfaces"""
+            backend.replace_list("network", f"br_{net}", "ports", ifs)
+
         with UciBackend() as backend:
+            # enable guest
             GuestUci.enable_guest_network(backend)
-            backend.set_option("network", "wan", "ifname", "" if len(wan_ifs) == 0 else wan_ifs[0])
-            backend.set_option("network", "lan", "bridge_empty", store_bool(True))
-            backend.set_option("network", "lan", "type", "bridge")
-            backend.replace_list("network", "lan", "ifname", lan_ifs)
-            backend.replace_list("network", "guest_turris", "ifname", guest_ifs)
+            data = backend.read("network")
+            _set_bridge_ports(backend, "guest", guest_ifs)
+
+            for net, ifs in zip(("wan", "lan"), (wan_ifs, lan_ifs)):
+                # determine old config and delete it's keys and values
+                if get_option_named(data, "network", net, "ifname", "") != "":
+                    # this is old config, when "ifname" is present
+                    backend.del_option("network", net, "ifname", fail_on_error=False)
+                    if get_option_named(data, "network", net, "type", "") == "bridge":
+                        # it also is of "bridge" type, which is reserved for "device" rather than "interface"
+                        backend.del_option("network", net, "type", fail_on_error=False)
+
+                # Check for anonymous bridge device (this actually applies only to lan)
+                # this is here in case of migrated config with properly set bridge
+                # but the bridge is anonymous.
+                br_name = f"br-{net}"
+                mac = None
+                if get_option_named(data, "network", net, "device", "") == br_name:
+                    for dev_section in get_sections_by_type(data, "network", "device"):
+                        if dev_section["data"].get("name") == br_name:
+                            mac = dev_section["data"].get("macaddr")
+                            if dev_section["name"].startswith("cfg"):
+                                backend.del_section("network", dev_section["name"])
+
+                # new configuration
+                if len(ifs) > 1 or net == "lan":
+                    # more than one interface should have been used with bridge device
+                    if section_exists(data, "network", f"br_{net}"):
+                        # bridge already exists
+                        _set_bridge_ports(backend, net, ifs)
+                    else:
+                        _create_bridge(backend, net, ifs, mac)
+                else:
+                    _del_bridge(backend, data, net, ifs)
 
             def set_firewall_rule(name, enabled, port):
                 # update firewall rules

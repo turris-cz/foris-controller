@@ -123,12 +123,15 @@ class GuestUci(object):
         # update network interface list
         backend.add_section("network", "interface", "guest_turris")
         backend.set_option("network", "guest_turris", "enabled", enabled)
-        backend.set_option("network", "guest_turris", "type", "bridge")
         backend.set_option("network", "guest_turris", "proto", "static")
+        backend.add_section("network", "device", "br_guest_turris")
+        backend.set_option("network", "br_guest_turris", "name", "br-guest-turris")
+        backend.set_option("network", "br_guest_turris", "type", "bridge")
+        backend.set_option("network", "guest_turris", "device", "br-guest-turris")
         if guest_network["enabled"]:
             backend.set_option("network", "guest_turris", "ipaddr", guest_network["ip"])
             backend.set_option("network", "guest_turris", "netmask", guest_network["netmask"])
-        backend.set_option("network", "guest_turris", "bridge_empty", store_bool(True))
+        backend.set_option("network", "br_guest_turris", "bridge_empty", store_bool(True))
         backend.set_option("network", "guest_turris", "ip6assign", "64")
 
         # update firewall config

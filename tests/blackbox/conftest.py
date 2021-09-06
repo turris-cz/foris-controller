@@ -23,6 +23,7 @@ import os
 # load common fixtures
 from foris_controller_testtools.fixtures import (
     uci_config_default_path,
+    uci_configs_init,
     env_overrides,
     file_root,
     controller_modules,
@@ -52,7 +53,7 @@ def fix_mox_wan(infrastructure, device):
     if device.startswith("mox"):
         uci = get_uci_module(infrastructure.name)
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-            backend.set_option("network", "wan", "ifname", "eth0")
+            backend.set_option("network", "wan", "device", "eth0")
 
 
 @pytest.fixture(scope="session")

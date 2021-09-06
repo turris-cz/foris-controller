@@ -1267,7 +1267,7 @@ def test_missing_wan6_openwrt(
         data = backend.read()
 
     assert uci.get_option_named(data, "network", "wan6", "proto") == "dhcpv6"
-    assert uci.get_option_named(data, "network", "wan6", "ifname") == "@wan"
+    assert uci.get_option_named(data, "network", "wan6", "device") == "@wan"
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)

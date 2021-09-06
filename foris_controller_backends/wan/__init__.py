@@ -184,7 +184,7 @@ class WanUci:
             # WAN6
             wan6_type = wan6_settings["wan6_type"]
             backend.add_section("network", "interface", "wan6")
-            backend.set_option("network", "wan6", "ifname", "@wan")
+            backend.set_option("network", "wan6", "device", "@wan")
             backend.set_option("network", "wan6", "proto", wan6_type)
 
             backend.del_option("network", "wan6", "ip6prefix", fail_on_error=False)
@@ -308,11 +308,11 @@ class WanUci:
 
             if qos:
                 network_data = backend.read("network")
-                ifname = get_option_named(network_data, "network", "wan", "ifname")
+                device = get_option_named(network_data, "network", "wan", "device")
                 try:
                     if qos.get("enabled"):
                         backend.add_section("sqm", "queue", WanUci._LNAME)
-                        backend.set_option("sqm", WanUci._LNAME, "interface", ifname)
+                        backend.set_option("sqm", WanUci._LNAME, "interface", device)
                         backend.set_option("sqm", WanUci._LNAME, "download", qos["download"])
                         backend.set_option("sqm", WanUci._LNAME, "upload", qos["upload"])
                         backend.set_option("sqm", WanUci._LNAME, "script", "piece_of_cake.qos")
