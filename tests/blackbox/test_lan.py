@@ -549,8 +549,8 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "lan", "ipaddr") == ["192.168.5.8/24"]
     assert uci.parse_bool(uci.get_option_named(data, "dhcp", "lan", "ignore"))
     assert not uci.parse_bool(uci.get_option_named(data, "firewall", "redirect_192_168_1_1", "enabled"))
-    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "server"
-    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "server"
+    assert uci.get_option_named(data, "dhcp", "lan", "ra") == "disabled"
+    assert uci.get_option_named(data, "dhcp", "lan", "dhcpv6") == "disabled"
 
     data = update(
         {

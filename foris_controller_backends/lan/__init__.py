@@ -385,11 +385,11 @@ class LanUci(object):
                 backend.add_section("dhcp", "dhcp", "lan")
                 dhcp = mode_managed["dhcp"]
                 backend.set_option("dhcp", "lan", "ignore", store_bool(not dhcp["enabled"]))
-                backend.set_option("dhcp", "lan", "ra", "server")
-                backend.set_option("dhcp", "lan", "dhcpv6", "server")
 
                 # set dhcp part (this device acts as a server here)
                 if dhcp["enabled"]:
+                    backend.set_option("dhcp", "lan", "ra", "server")
+                    backend.set_option("dhcp", "lan", "dhcpv6", "server")
                     backend.set_option("dhcp", "lan", "start", dhcp["start"])
                     backend.set_option("dhcp", "lan", "limit", dhcp["limit"])
                     backend.set_option(
@@ -418,6 +418,9 @@ class LanUci(object):
                         dhcp["start"],
                         dhcp["limit"],
                     )
+                else:
+                    backend.set_option("dhcp", "lan", "ra", "disabled")
+                    backend.set_option("dhcp", "lan", "dhcpv6", "disabled")
 
             elif mode == "unmanaged":
                 backend.set_option("network", "lan", "proto", mode_unmanaged["lan_type"])
