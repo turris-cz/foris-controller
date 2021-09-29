@@ -18,29 +18,30 @@
 #
 
 import os
-import pytest
 
+import pytest
 from foris_controller_testtools.fixtures import (
-    only_backends,
-    uci_configs_init,
+    FILE_ROOT_PATH,
+    UCI_CONFIG_DIR_PATH,
+    device,
+    file_root_init,
     infrastructure,
     init_script_result,
     network_restart_command,
-    device,
+    only_backends,
     turris_os_version,
-    FILE_ROOT_PATH,
-    file_root_init,
-    UCI_CONFIG_DIR_PATH,
+    uci_configs_init,
 )
 from foris_controller_testtools.utils import (
-    match_subdict,
-    get_uci_module,
     FileFaker,
-    prepare_turrishw,
     check_service_result,
+    get_uci_module,
+    match_subdict,
+    prepare_turrishw,
 )
 
 WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
+WIFI_DEFAULT_ENCRYPTION = "WPA2/3"
 
 
 def all_equal(first, *items):
@@ -920,6 +921,7 @@ def test_interface_count(
                 "channel": 11,
                 "htmode": "HT20",
                 "hwmode": "11g",
+                "encryption": WIFI_DEFAULT_ENCRYPTION,
                 "password": "passpass",
                 "guest_wifi": {"enabled": False},
             },
@@ -939,8 +941,14 @@ def test_interface_count(
                 "channel": 11,
                 "htmode": "HT20",
                 "hwmode": "11g",
+                "encryption": WIFI_DEFAULT_ENCRYPTION,
                 "password": "passpass",
-                "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testik",
+                    "password": "ssapssap",
+                    "encryption": WIFI_DEFAULT_ENCRYPTION,
+                },
             },
         ],
         1,
@@ -958,6 +966,7 @@ def test_interface_count(
                 "channel": 11,
                 "htmode": "HT20",
                 "hwmode": "11g",
+                "encryption": WIFI_DEFAULT_ENCRYPTION,
                 "password": "passpass",
                 "guest_wifi": {"enabled": False},
             },
@@ -969,8 +978,14 @@ def test_interface_count(
                 "channel": 8,
                 "htmode": "HT20",
                 "hwmode": "11g",
+                "encryption": WIFI_DEFAULT_ENCRYPTION,
                 "password": "passpass",
-                "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testik",
+                    "password": "ssapssap",
+                    "encryption": WIFI_DEFAULT_ENCRYPTION,
+                },
             },
         ],
         2,
@@ -988,6 +1003,7 @@ def test_interface_count(
                 "channel": 11,
                 "htmode": "HT20",
                 "hwmode": "11g",
+                "encryption": WIFI_DEFAULT_ENCRYPTION,
                 "password": "passpass",
                 "guest_wifi": {"enabled": False},
             },
@@ -999,8 +1015,14 @@ def test_interface_count(
                 "channel": 8,
                 "htmode": "HT20",
                 "hwmode": "11g",
+                "encryption": WIFI_DEFAULT_ENCRYPTION,
                 "password": "passpass",
-                "guest_wifi": {"enabled": True, "SSID": "Turris-testik", "password": "ssapssap"},
+                "guest_wifi": {
+                    "enabled": True,
+                    "SSID": "Turris-testik",
+                    "password": "ssapssap",
+                    "encryption": WIFI_DEFAULT_ENCRYPTION,
+                },
             },
         ],
         3,
