@@ -21,8 +21,6 @@ import os
 import sys
 
 import pytest
-from foris_controller import profiles
-from foris_controller.exceptions import UciRecordNotFound
 from foris_controller_testtools.fixtures import (
     FILE_ROOT_PATH,
     UCI_CONFIG_DIR_PATH,
@@ -38,10 +36,13 @@ from foris_controller_testtools.fixtures import (
 from foris_controller_testtools.utils import (
     FileFaker,
     get_uci_module,
+    network_restart_was_called,
     prepare_turrishw,
     prepare_turrishw_root,
-    network_restart_was_called,
 )
+
+from foris_controller import profiles
+from foris_controller.exceptions import UciRecordNotFound
 
 NEW_WORKFLOWS = [
     e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_OLD, profiles.WORKFLOW_SHIELD)
@@ -70,13 +71,15 @@ RECOMMENDED_WORKFLOWS = {
 
 @pytest.fixture(scope="function")
 def installed_languages(request):
-    trans_dir = "/usr/lib/python%s.%s/site-packages/foris/langs/" % (
+    trans_dir = "/usr/lib/python%s.%s/site-packages/reforis/translations/" % (
         sys.version_info.major,
         sys.version_info.minor,
     )
-    with FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "cs.py"), False, "") as f1, FileFaker(
-        FILE_ROOT_PATH, os.path.join(trans_dir, "de.py"), False, ""
-    ) as f2, FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "nb_NO.py"), False, "") as f3:
+    mo_file = "LC_MESSAGES/messages.mo"
+
+    with FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "cs", mo_file), False, "") as f1, FileFaker(
+        FILE_ROOT_PATH, os.path.join(trans_dir, "de", mo_file), False, ""
+    ) as f2, FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "nb_NO", mo_file), False, "") as f3:
         yield f1, f2, f3
 
 

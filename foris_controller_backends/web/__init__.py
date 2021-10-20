@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,16 +20,23 @@
 import logging
 import os
 import sys
+import typing
 
 import turrishw
+
 from foris_controller import profiles
 from foris_controller.exceptions import UciException, UciRecordNotFound
 from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.files import BaseMatch
-from foris_controller_backends.password import ForisPasswordUci
 from foris_controller_backends.maintain import MaintainCommands
+from foris_controller_backends.password import ForisPasswordUci
+from foris_controller_backends.uci import (
+    UciBackend,
+    get_option_named,
+    parse_bool,
+    store_bool,
+)
 from foris_controller_backends.wan import WanUci
-from foris_controller_backends.uci import UciBackend, get_option_named, parse_bool, store_bool
 
 logger = logging.getLogger(__name__)
 
@@ -207,20 +214,21 @@ class WebUciCommands:
         return True
 
 
-class Languages(object):
-    LANG_DIR = "/usr/lib/python%s.%s/site-packages/foris/langs/" % (
+class Languages():
+    # reForis is the only web UI of Turris OS at the moment, so only look for reForis translations
+    LANG_DIR = "/usr/lib/python%s.%s/site-packages/reforis/translations" % (
         sys.version_info.major,
         sys.version_info.minor,
     )
-    INSTALLED_LANG_MATCHES = [os.path.join(LANG_DIR, "??.py"), os.path.join(LANG_DIR, "??_??.py")]
+    INSTALLED_LANG_MATCHES = [os.path.join(LANG_DIR, "??"), os.path.join(LANG_DIR, "??_??")]
 
     @staticmethod
-    def list_languages():
+    def list_languages() -> typing.List[str]:
         """ List installed languages
         :returns: list of installed languages
         :rtype: list of str
         """
 
-        return [DEFAULT_LANGUAGE] + [
-            os.path.basename(e)[:-3] for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCHES)
-        ]
+        return list({DEFAULT_LANGUAGE} | {
+            os.path.basename(e) for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCHES)
+        })
