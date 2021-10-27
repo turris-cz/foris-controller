@@ -40,6 +40,11 @@ DEFAULT_UCI_CONFIG_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
 )
 
+@pytest.fixture(scope="module")
+def env_overrides():
+    return {
+        "FC_DISABLE_ADV_CACHE": "1",
+    }
 
 @pytest.fixture(scope="function")
 def fix_mox_wan(infrastructure, device):

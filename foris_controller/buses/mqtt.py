@@ -20,14 +20,16 @@
 import logging
 import json
 import uuid
+import os
 import re
 import socket
 import sys
 import threading
 import time
 import typing
-
 import pkg_resources
+
+from distutils.util import strtobool
 
 from paho.mqtt import client as mqtt
 from paho.mqtt.publish import single
@@ -60,20 +62,41 @@ class EntryPointAnnouncer:
             return self.callback()
 
 
-def _build_advertizement(state: str) -> dict:
-    # Try to obtain netboot status
-    try:
-        netboot = app_info["modules"]["remote"].handler.get_netboot_status()
-    except Exception:
-        netboot = "unknown"
+class AdvertizementBase:
+    NETBOOT_FINAL = ["no", "ready"]  # "booting" should eventually become "ready"
 
-    return {
-        "state": state,
-        "id": app_info["controller_id"],
-        "hostname": socket.gethostname(),
-        "netboot": netboot,
-        "modules": [{"name": k, "version": v.version} for k, v in app_info["modules"].items()],
-    }
+    def __init__(self, state):
+        self.state = state
+        self.refresh()
+
+    def refresh(self):
+        self.id = app_info["controller_id"]
+        self.hostname = socket.gethostname()
+        self.modules = [{"name": k, "version": v.version} for k, v in app_info["modules"].items()]
+        self.netboot = "unknown"  # initial state
+        self.get_netboot()
+
+    def get_netboot(self):
+        """ Try to update obtain netboot status """
+        if self.netboot in self.NETBOOT_FINAL:
+            # netboot state will not change
+            return
+        try:
+            self.netboot = app_info["modules"]["remote"].handler.get_netboot_status()
+        except Exception:
+            pass
+
+    def build(self) -> dict:
+        if strtobool(os.environ.get("FC_DISABLE_ADV_CACHE", "0")):
+            self.refresh()
+        self.get_netboot()  # try to update netboot state
+        return {
+            "state": self.state,
+            "id": self.id,
+            "hostname": self.hostname,
+            "netboot": self.netboot,
+            "modules": self.modules,
+        }
 
 
 def _publish(client: mqtt.Client, msg: dict):
@@ -95,10 +118,11 @@ def _publish(client: mqtt.Client, msg: dict):
 
 def _publish_advertize(
     client: mqtt.Client,
-    data: dict,
+    adv_base: AdvertizementBase,
     working_replies: typing.Dict[str, typing.Tuple[threading.Thread, float]],
     working_replies_lock: threading.Lock,
 ):
+    data = adv_base.build()
 
     with working_replies_lock:
         data["working_replies"]: typing.List[str] = [e for e in working_replies.keys()]
@@ -113,7 +137,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         if rc == 0:
             logger.debug("Announcer thread connected.")
             _publish_advertize(
-                client, _build_advertizement("started"), working_replies, working_replies_lock
+                client, AdvertizementBase("started"), working_replies, working_replies_lock
             )
         else:
             logger.error("Failed to connect announcer thread!")
@@ -140,11 +164,12 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         period, callback = entry_point.load()()
         announcers.append(EntryPointAnnouncer(period, callback))
 
+    running_adv = AdvertizementBase("running")
     while bus_info["bus_thread"].is_alive():
         time.sleep(app_info["mqtt_announcer_period"] or ANNOUNCER_PERIOD_DEFAULT)
         if app_info["mqtt_announcer_period"]:
             _publish_advertize(
-                client, _build_advertizement("running"), working_replies, working_replies_lock
+                client, running_adv, working_replies, working_replies_lock
             )
             for announcer in announcers:
                 res = announcer.get_data(counter)
@@ -154,7 +179,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         counter += app_info["mqtt_announcer_period"]
 
     _publish_advertize(
-        client, _build_advertizement("exited"), working_replies, working_replies_lock
+        client, AdvertizementBase("exited"), working_replies, working_replies_lock
     )
     client.loop_stop()
 
