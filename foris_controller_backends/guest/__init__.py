@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2019, 2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2019, 2021-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,18 +19,21 @@
 
 import logging
 
-from foris_controller_backends.uci import parse_bool, get_option_named, store_bool, UciBackend
-from foris_controller.exceptions import UciRecordNotFound, UciException
-
-from foris_controller_backends.lan import LanUci, LanFiles
+from foris_controller.exceptions import UciException, UciRecordNotFound
+from foris_controller_backends.lan import LanFiles, LanUci
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.services import OpenwrtServices
-
+from foris_controller_backends.uci import (
+    UciBackend,
+    get_option_named,
+    parse_bool,
+    store_bool,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class GuestUci(object):
+class GuestUci:
     DEFAULT_GUEST_ADDRESS = "10.111.222.1"
     DEFAULT_GUEST_NETMASK = "255.255.255.0"
     DEFAULT_GUEST_DHCP_LEASE_TIME = 60 * 60
@@ -119,6 +122,8 @@ class GuestUci(object):
         """
 
         enabled = store_bool(guest_network["enabled"])
+        # On OpenWrt >=21.02 firewall zone name is limited to max 11 chars
+        guest_zone_name = "tr_guest"
 
         # update network interface list
         backend.add_section("network", "interface", "guest_turris")
@@ -137,7 +142,7 @@ class GuestUci(object):
         # update firewall config
         backend.add_section("firewall", "zone", "guest_turris")
         backend.set_option("firewall", "guest_turris", "enabled", enabled)
-        backend.set_option("firewall", "guest_turris", "name", "guest_turris")
+        backend.set_option("firewall", "guest_turris", "name", guest_zone_name)
         backend.replace_list("firewall", "guest_turris", "network", ["guest_turris"])
         backend.set_option("firewall", "guest_turris", "input", "REJECT")
         backend.set_option("firewall", "guest_turris", "forward", "REJECT")
@@ -146,13 +151,13 @@ class GuestUci(object):
         backend.add_section("firewall", "forwarding", "guest_turris_forward_wan")
         backend.set_option("firewall", "guest_turris_forward_wan", "enabled", enabled)
         backend.set_option("firewall", "guest_turris_forward_wan", "name", "guest to wan forward")
-        backend.set_option("firewall", "guest_turris_forward_wan", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_forward_wan", "src", guest_zone_name)
         backend.set_option("firewall", "guest_turris_forward_wan", "dest", "wan")
 
         backend.add_section("firewall", "rule", "guest_turris_dns_rule")
         backend.set_option("firewall", "guest_turris_dns_rule", "enabled", enabled)
         backend.set_option("firewall", "guest_turris_dns_rule", "name", "guest dns rule")
-        backend.set_option("firewall", "guest_turris_dns_rule", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_dns_rule", "src", guest_zone_name)
         backend.set_option("firewall", "guest_turris_dns_rule", "proto", "tcpudp")
         backend.set_option("firewall", "guest_turris_dns_rule", "dest_port", "53")
         backend.set_option("firewall", "guest_turris_dns_rule", "target", "ACCEPT")
@@ -160,14 +165,14 @@ class GuestUci(object):
         backend.add_section("firewall", "rule", "guest_turris_dhcp_rule")
         backend.set_option("firewall", "guest_turris_dhcp_rule", "enabled", enabled)
         backend.set_option("firewall", "guest_turris_dhcp_rule", "name", "guest dhcp rule")
-        backend.set_option("firewall", "guest_turris_dhcp_rule", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_dhcp_rule", "src", guest_zone_name)
         backend.set_option("firewall", "guest_turris_dhcp_rule", "proto", "udp")
         backend.set_option("firewall", "guest_turris_dhcp_rule", "src_port", "67-68")
         backend.set_option("firewall", "guest_turris_dhcp_rule", "dest_port", "67-68")
         backend.set_option("firewall", "guest_turris_dhcp_rule", "target", "ACCEPT")
 
         backend.add_section("firewall", "rule", "guest_turris_Allow_DHCPv6")
-        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "src", guest_zone_name)
         backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "proto", "udp")
         backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "src_ip", "fe80::/10")
         backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "src_port", "546-547")
@@ -177,7 +182,7 @@ class GuestUci(object):
         backend.set_option("firewall", "guest_turris_Allow_DHCPv6", "target", "ACCEPT")
 
         backend.add_section("firewall", "rule", "guest_turris_Allow_MLD")
-        backend.set_option("firewall", "guest_turris_Allow_MLD", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_Allow_MLD", "src", guest_zone_name)
         backend.set_option("firewall", "guest_turris_Allow_MLD", "proto", "icmp")
         backend.set_option("firewall", "guest_turris_Allow_MLD", "src_ip", "fe80::/10")
         backend.set_option("firewall", "guest_turris_Allow_MLD", "family", "ipv6")
@@ -185,7 +190,7 @@ class GuestUci(object):
         backend.replace_list("firewall", "guest_turris_Allow_MLD", "icmp_type", ['130/0', '131/0', '132/0', '143/0'])
 
         backend.add_section("firewall", "rule", "guest_turris_Allow_ICMPv6_Input")
-        backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "src", "guest_turris")
+        backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "src", guest_zone_name)
         backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "proto", "icmp")
         backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "limit", "1000/sec")
         backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "family", "ipv6")

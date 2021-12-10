@@ -229,7 +229,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "dhcp", "guest_turris", "dhcp_option") == ["6,192.168.8.1"]
 
     assert uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris", "enabled"))
-    assert uci.get_option_named(data, "firewall", "guest_turris", "name") == "guest_turris"
+    assert uci.get_option_named(data, "firewall", "guest_turris", "name") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris", "input") == "REJECT"
     assert uci.get_option_named(data, "firewall", "guest_turris", "forward") == "REJECT"
     assert uci.get_option_named(data, "firewall", "guest_turris", "output") == "ACCEPT"
@@ -237,27 +237,27 @@ def test_update_settings_openwrt(
         uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "enabled")
     )
     assert (
-        uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "src") == "guest_turris"
+        uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "src") == "tr_guest"
     )
     assert uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "dest") == "wan"
     assert uci.parse_bool(
         uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "enabled")
     )
-    assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "src") == "guest_turris"
+    assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "proto") == "tcpudp"
     assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "dest_port") == "53"
     assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "target") == "ACCEPT"
     assert uci.parse_bool(
         uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "enabled")
     )
-    assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "src") == "guest_turris"
+    assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "proto") == "udp"
     assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "src_port") == "67-68"
     assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "dest_port") == "67-68"
     assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "target") == "ACCEPT"
 
     # ipv6 dhcp
-    assert uci.get_option_named(data, "firewall", "guest_turris_Allow_DHCPv6", "src") == "guest_turris"
+    assert uci.get_option_named(data, "firewall", "guest_turris_Allow_DHCPv6", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_DHCPv6", "proto") == "udp"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_DHCPv6", "src_ip") == "fe80::/10"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_DHCPv6", "src_port") == "546-547"
@@ -266,7 +266,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_DHCPv6", "family") == "ipv6"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_DHCPv6", "target") == "ACCEPT"
 
-    assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "src") == "guest_turris"
+    assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "proto") == "icmp"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "src_ip") == "fe80::/10"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "family") == "ipv6"
@@ -275,7 +275,7 @@ def test_update_settings_openwrt(
         '130/0', '131/0', '132/0', '143/0'
     ]
 
-    assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "src") == "guest_turris"
+    assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "proto") == "icmp"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "limit") == "1000/sec"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "family") == "ipv6"
