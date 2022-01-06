@@ -98,7 +98,7 @@ class NetworksUci(object):
         iface_sections = [
             section
             for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
-            if section["data"].get("device") == ifname and section["data"].get("device")
+            if section["data"].get("ifname") == ifname and section["data"].get("device")
         ]
         if not iface_sections:
             return None
