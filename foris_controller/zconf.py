@@ -18,8 +18,8 @@
 #
 
 import ipaddress
-import json
 import logging
+import socket
 import threading
 import typing
 from enum import Enum, auto
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 class ZconfService:
-    TYPE = "_mqtt._tcp.local."
+    TYPE = "_fosquitto._tcp.local."
     POLL_TIMEOUT = 5.0  # in seconds
 
     class State(Enum):
@@ -57,11 +57,12 @@ class ZconfService:
 
     def make_info(self) -> zeroconf.ServiceInfo:
         return zeroconf.ServiceInfo(
-            ZconfService.TYPE,
-            f"{app_info['controller_id']}.foris-controller.{ZconfService.TYPE}",
+            self.TYPE,
+            f"{app_info['controller_id']}.{self.TYPE}",
             parsed_addresses=self.addresses,
             port=app_info["zeroconf_port"],
-            properties={"addresses": json.dumps(self.addresses)},
+            properties={"id": app_info["controller_id"]},
+            server=f"{socket.gethostname()}.local.",
         )
 
     def register_service(self):
@@ -111,7 +112,7 @@ class ZconfService:
 
     @staticmethod
     def get_addresses() -> typing.List[str]:
-        """ Get IPs which shall be propagated unsing zconf """
+        """Get IPs which shall be propagated unsing zconf"""
         ips: typing.Set[str] = set()
         for adapter in ifaddr.get_adapters():
             if (
@@ -124,9 +125,14 @@ class ZconfService:
                 continue
             ips |= set(e.ip for e in adapter.ips if e.is_IPv4)
 
-        private_ips = [e for e in ips if ipaddress.ip_address(e).is_private]
+        filtered_ips = [
+            e
+            for e in ips
+            if ipaddress.ip_address(e).is_private
+            and not ipaddress.ip_address(e).is_loopback
+        ]
 
-        if not private_ips:
+        if not filtered_ips:
             logger.debug("No addresses available for zeroconf")
 
-        return sorted(private_ips)
+        return sorted(filtered_ips)
