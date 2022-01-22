@@ -11,7 +11,9 @@ Requirements
 Installation
 ============
 
-	``pip install .``
+..  code-block::
+
+    pip install .
 
 Usage
 =====
@@ -32,3 +34,11 @@ You can also send notifications via contiguration backend back to listening clie
 or::
 
 	foris-notify -m web -a set_language unix-socket {"language": "en"}
+
+Running tests
+=============
+
+..  code-block::
+
+    git submodule update --init
+    tox -q -e py39

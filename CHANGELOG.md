@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - tests: Refactor helper functions into shared module.
+- tests: Use tox to run tests and linter checks instead of using deprecated
+  setuptools integration for such tasks.
+- setup.py: Drop the unnecessary egg suffix in VCS links.
+- setup.py: Remove obsolete setuptools keywords (`tests_require`,
+  `setup_requires`, `dependency_links`, ...).
+- tox: Use shared `tox.ini` for foris-controller and modules.
 
 ### Fixed
 - guest: Use correct guest network bridge name for Turris OS 6.0+, so QoS for
