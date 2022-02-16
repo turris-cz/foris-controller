@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.1] - 2022-02-16
+### Fixed
+- mDNS/zeroconf entry has invalid service type
+
+## [4.1.0] - 2022-02-04
+### Added
+- read OpenWrt 21.02 network config, while keeping compatibility with OpenWrt 19.07 config
+
+### Changed
+- mqtt: make advertizments a bit more efficient
+
+### Fixed
+- lan: Disable IPv6 server and ra when DHCP is disabled
+- networks: fix detection of wifi interfaces
+- guest: fix guest network firewall rules
+
 ## [4.0.0] - 2021-11-02
 ### Added:
 - wifi: allow setting wifi encryption modes; it is possible to set different modes for regular and guest wifi
@@ -15,10 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - wan: qos limit on traffic
 
 ### Changed:
-- web: `list_languages` now uses reForis translations instead of Foris translations to determine available localization,  
+- web: `list_languages` now uses reForis translations instead of Foris translations to determine available localization,
     since Foris is no longer present in TOS 5.3.0
 - time: timezone is now set by backend based on provided region and city
-    
+
 ### Fixed:
 - networks: fix reading multiple interfaces of wan (e.g. bridge)
 - wan: ipv6_address in 6in4 may contain prefix as well
@@ -163,7 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - networks: get_network_info fix
 - mqtt: custom announcements via python entry_points
 - example project: using cookiecutter for generating new projects
-  
+
 ## [1.0.2] - 2019-08-08
 - client_socket: use controller_id - mqtt fix
 - use ipaddress module instead of foris_controller_utils.IPv4 and remove IPv4
