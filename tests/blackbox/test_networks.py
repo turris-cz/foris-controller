@@ -82,6 +82,7 @@ def test_get_settings_more_wans(
     assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
     assert len(res["data"]["networks"]["wan"]) == 1
 
+
 @pytest.mark.parametrize(
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
@@ -731,6 +732,7 @@ def test_network_change_notification(uci_configs_init, infrastructure, notify_ap
     check_notification("", "wan", "ifdown")
     check_notification("guest_turris", "wan", "ifupdate")
 
+
 @pytest.mark.parametrize(
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
 )
@@ -751,13 +753,6 @@ def test_one_lan_does_not_break(
     res = infrastructure.process_message(
         {"module": "networks", "action": "get_settings", "kind": "request"}
     )
-    # get ports
-    ports = (
-        res["data"]["networks"]["wan"]
-        + res["data"]["networks"]["lan"]
-        + res["data"]["networks"]["guest"]
-        + res["data"]["networks"]["none"]
-    )
     networks = res["data"]["networks"]
 
     # filter non-configurable ports
@@ -770,8 +765,6 @@ def test_one_lan_does_not_break(
     if networks["wan"]:  # mox does not have wan by default
         networks["wan"] = [networks["wan"][0]["id"]]
     networks["none"] = [i["id"] for i in networks["none"] if i["configurable"]]
-
-    # networks = {'wan': ['eth2'], 'guest': ['lan2', 'lan3', 'lan4'], 'none': ['lan0', 'wlan0', 'wlan1'], 'lan': ['lan1']} 
 
     res = infrastructure.process_message(
         {
@@ -789,7 +782,6 @@ def test_one_lan_does_not_break(
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
-
 
     assert uci.get_option_named(data, "network", "lan", "device") == "br-lan"
     # assert lan has only one interface

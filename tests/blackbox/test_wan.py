@@ -18,25 +18,24 @@
 #
 
 import os
-import pytest
 
+import pytest
 from foris_controller_testtools.fixtures import (
-    only_backends,
-    uci_configs_init,
+    UCI_CONFIG_DIR_PATH,
+    device,
+    file_root_init,
     infrastructure,
     network_restart_command,
-    device,
+    only_backends,
     turris_os_version,
-    UCI_CONFIG_DIR_PATH,
-    file_root_init,
+    uci_configs_init,
 )
 from foris_controller_testtools.utils import (
-    network_restart_was_called,
     get_uci_module,
     match_subdict,
+    network_restart_was_called,
     prepare_turrishw_root,
 )
-
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
 
@@ -1354,6 +1353,7 @@ def test_wan6_options_can_be_empty(uci_configs_init, infrastructure, device, tur
 
     assert "errors" not in res.keys()
 
+
 @pytest.mark.parametrize("device, turris_os_version",[("mox", "4.0"),("omnia","4.0")], indirect=True)
 def test_update_mac_address_and_disable(uci_configs_init, network_restart_command, infrastructure, device, turris_os_version):
 
@@ -1431,6 +1431,7 @@ def test_qos_openwrt(
             }
         }
     )
+    assert "errors" not in res.keys()
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
@@ -1447,7 +1448,6 @@ def test_qos_settings_persistent(
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
-
 
     def update(input_data):
         res = infrastructure.process_message(

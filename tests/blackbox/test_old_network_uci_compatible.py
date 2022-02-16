@@ -17,34 +17,33 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import os
-import pytest
 import base64
+import os
 from pathlib import Path
+
+import pytest
+from foris_controller_testtools.fixtures import (
+    UCI_CONFIG_DIR_PATH,
+    device,
+    file_root_init,
+    infrastructure,
+    init_script_result,
+    network_restart_command,
+    only_backends,
+    turris_os_version,
+    uci_configs_init,
+)
+from foris_controller_testtools.utils import (
+    get_uci_module,
+    network_restart_was_called,
+    prepare_turrishw,
+    prepare_turrishw_root,
+)
 
 from foris_controller import profiles
 
-from foris_controller_testtools.fixtures import (
-    network_restart_command,
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    device,
-    turris_os_version,
-    UCI_CONFIG_DIR_PATH,
-    init_script_result,
-    only_backends
-)
-
-from foris_controller_testtools.utils import (
-    network_restart_was_called,
-    get_uci_module,
-    prepare_turrishw_root,
-    prepare_turrishw
-)
-
-from .test_lan import lan_dnsmasq_files
 from .test_guest import WIFI_DEFAULT_ENCRYPTION
+from .test_lan import lan_dnsmasq_files
 
 WIFI_DEFAULT_ENCRYPTION = "WPA2/3"
 WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
@@ -135,6 +134,7 @@ def inject_network(uci_configs_init, device, request):
         with open(network_path, 'w') as f:
             f.write(config.format("eth0" if device == "mox" else "eth2"))
 
+
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.parametrize(
     "inject_network,device,turris_os_version",
@@ -160,13 +160,14 @@ def test_get_settings(
 
 # guest module
 
+
 @pytest.mark.file_root_path(WIFI_ROOT_PATH)
 @pytest.mark.parametrize(
     "inject_network,device,turris_os_version",
     [
         ("_DEFAULT_OLD_CONFIG", "mox", "4.0"),
         ("_MIGRATED_CONFIG", "mox", "4.0")
-        ],
+    ],
     indirect=True
 )
 @pytest.mark.only_backends(["openwrt"])
@@ -307,6 +308,7 @@ def test_guest_interface_count(
 
 # lan module
 
+
 @pytest.mark.parametrize(
     "inject_network, device,turris_os_version",
     [
@@ -381,7 +383,7 @@ def test_lan_update_settings_openwrt_migrated_config(
 
     init_data = read_backend()
 
-    assert uci.get_option_anonymous(init_data, "network", "device", 0,  "ports") == ["lan1", "lan2", "lan3", "lan4"]
+    assert uci.get_option_anonymous(init_data, "network", "device", 0, "ports") == ["lan1", "lan2", "lan3", "lan4"]
 
     data = update(
         {
@@ -401,9 +403,11 @@ def test_lan_update_settings_openwrt_migrated_config(
 
 
 @pytest.mark.file_root_path(WIFI_ROOT_PATH)
-@pytest.mark.parametrize("inject_network,device,turris_os_version", [
-    ("_DEFAULT_OLD_CONFIG", "mox", "4.0"),
-    ("_MIGRATED_CONFIG", "mox", "4.0")
+@pytest.mark.parametrize(
+    "inject_network,device,turris_os_version",
+    [
+        ("_DEFAULT_OLD_CONFIG", "mox", "4.0"),
+        ("_MIGRATED_CONFIG", "mox", "4.0")
     ],
     indirect=True
 )
@@ -418,8 +422,6 @@ def test_lan_interface_count(
     inject_network
 ):
     prepare_turrishw("mox")  # plain mox without any boards
-
-    uci = get_uci_module(infrastructure.name)
 
     def set_and_test(networks, wifi_devices, count):
         res = infrastructure.process_message(
@@ -582,12 +584,13 @@ def test_lan_interface_count(
 
 # networks module
 
+
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.parametrize(
     "inject_network,device,turris_os_version", [
         ("_DEFAULT_OLD_CONFIG","mox", "5.2"),
         ("_MIGRATED_CONFIG","mox", "5.2")
-        ], indirect=True
+    ], indirect=True
 )
 def test_get_settings_more_wans(
     inject_network, fix_mox_wan, infrastructure, device, turris_os_version
@@ -852,7 +855,7 @@ def test_update_settings_openwrt(
     assert wan_port == uci.get_option_named(data, "network", "wan", "device")
 
     # DEBUG BEGIN
-    devices =  uci.get_sections_by_type(data, "network", "device")
+    devices = uci.get_sections_by_type(data, "network", "device")
     anonymous = [ac for ac in filter(lambda x: x['name'].startswith("cfg"), devices)]
     assert anonymous == []
     # DEBUG END;

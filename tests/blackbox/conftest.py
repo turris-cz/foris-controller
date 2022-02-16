@@ -17,35 +17,36 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
 import os
 
+import pytest
 # load common fixtures
 from foris_controller_testtools.fixtures import (
+    UCI_CONFIG_DIR_PATH,
+    backend,
+    controller_modules,
+    device,
+    env_overrides,
+    extra_module_paths,
+    file_root,
+    infrastructure,
+    message_bus,
     uci_config_default_path,
     uci_configs_init,
-    env_overrides,
-    file_root,
-    controller_modules,
-    extra_module_paths,
-    message_bus,
-    backend,
-    device,
-    infrastructure,
-    UCI_CONFIG_DIR_PATH
 )
-
 from foris_controller_testtools.utils import get_uci_module
 
 DEFAULT_UCI_CONFIG_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
 )
 
+
 @pytest.fixture(scope="module")
 def env_overrides():
     return {
         "FC_DISABLE_ADV_CACHE": "1",
     }
+
 
 @pytest.fixture(scope="function")
 def fix_mox_wan(infrastructure, device):
