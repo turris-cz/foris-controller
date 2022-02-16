@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -1415,7 +1415,7 @@ def test_different_devices(uci_configs_init, infrastructure, device, fix_mox_wan
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_qos_openwrt(
-    infrastructure, device, fix_mox_wan, turris_os_version
+    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version
 ):
     prepare_turrishw_root(device, turris_os_version)
     uci = get_uci_module(infrastructure.name)
