@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ DEFAULT_CONFIG = [
         "SSID": "Turris",
         "hidden": False,
         "channel": 36,
-        "htmode": "VHT160",
+        "htmode": "HE80",
         "hwmode": "11a",
         "encryption": DEFAULT_WIFI_ENCRYPTION,
         "password": "",
@@ -50,7 +50,7 @@ DEFAULT_CONFIG = [
         "available_bands": [
             {
                 "hwmode": "11g",
-                "available_htmodes": ["NOHT", "HT20", "HT40"],
+                "available_htmodes": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
                     {"number": 2, "frequency": 2417, "radar": False},
@@ -69,7 +69,12 @@ DEFAULT_CONFIG = [
             },
             {
                 "hwmode": "11a",
-                "available_htmodes": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80", "VHT160"],
+                "available_htmodes": [
+                    "NOHT",
+                    "HT20", "HT40",
+                    "VHT20", "VHT40", "VHT80", "VHT160",
+                    "HE20", "HE40", "HE80", "HE160",
+                ],
                 "available_channels": [
                     {"number": 36, "frequency": 5180, "radar": False},
                     {"number": 40, "frequency": 5200, "radar": False},
@@ -117,7 +122,7 @@ DEFAULT_CONFIG = [
         "enabled": False,
         "SSID": "Turris",
         "hidden": False,
-        "channel": 11,
+        "channel": 1,
         "htmode": "HT20",
         "hwmode": "11g",
         "encryption": DEFAULT_WIFI_ENCRYPTION,

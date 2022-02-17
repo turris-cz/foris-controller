@@ -3,18 +3,15 @@
 import argparse
 import json
 
-
 WIFI_DATA = {
     "info": {
         "radio0": {
             "phy": "phy0",
-            "bssid": "04:F0:21:24:1D:8D",
+            "bssid": "AA:BB:CC:DD:EE:FF",
             "country": "US",
-            "mode": "Master",
-            "channel": 0,
-            "frequency": 5000,
+            "mode": "Client",
             "frequency_offset": 0,
-            "txpower": 13,
+            "txpower": 6,
             "txpower_offset": 0,
             "quality_max": 70,
             "noise": 0,
@@ -24,22 +21,27 @@ WIFI_DATA = {
                 "VHT20",
                 "VHT40",
                 "VHT80",
-                "VHT160"
+                "VHT160",
+                "HE20",
+                "HE40",
+                "HE80",
+                "HE160"
             ],
             "hwmodes": [
                 "ac",
-                "b",
-                "g",
+                "ax",
                 "n"
             ],
+            "hwmode": "a/g",
+            "htmode": "20",
             "hardware": {
                 "id": [
-                    32902,
-                    10019,
-                    32902,
-                    132
+                    5315,
+                    30997,
+                    5315,
+                    30997
                 ],
-                "name": "Generic MAC80211"
+                "name": "MediaTek MT7915E"
             }
         },
         "radio1": {

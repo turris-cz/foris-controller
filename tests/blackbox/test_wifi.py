@@ -41,6 +41,8 @@ from foris_controller.exceptions import UciRecordNotFound
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
 
 
+# default config based on Omnia with following wifi chipsets
+# MediaTek MT7915E (2.4 & 5 GHz) + Atheros AR9287 (2.4 GHz)
 DEFAULT_CONFIG = [
     {
         "id": 0,
@@ -48,7 +50,7 @@ DEFAULT_CONFIG = [
         "SSID": "Turris",
         "hidden": False,
         "channel": 36,
-        "htmode": "VHT160",
+        "htmode": "HE80",
         "hwmode": "11a",
         "encryption": "WPA2/3",
         "password": "",
@@ -61,7 +63,7 @@ DEFAULT_CONFIG = [
         "available_bands": [
             {
                 "hwmode": "11g",
-                "available_htmodes": ["NOHT", "HT20", "HT40"],
+                "available_htmodes": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
                     {"number": 2, "frequency": 2417, "radar": False},
@@ -80,7 +82,12 @@ DEFAULT_CONFIG = [
             },
             {
                 "hwmode": "11a",
-                "available_htmodes": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80", "VHT160"],
+                "available_htmodes": [
+                    "NOHT",
+                    "HT20", "HT40",
+                    "VHT20", "VHT40", "VHT80", "VHT160",
+                    "HE20", "HE40", "HE80", "HE160",
+                ],
                 "available_channels": [
                     {"number": 36, "frequency": 5180, "radar": False},
                     {"number": 40, "frequency": 5200, "radar": False},
@@ -128,7 +135,7 @@ DEFAULT_CONFIG = [
         "enabled": False,
         "SSID": "Turris",
         "hidden": False,
-        "channel": 11,
+        "channel": 1,
         "htmode": "HT20",
         "hwmode": "11g",
         "password": "",
@@ -142,7 +149,7 @@ DEFAULT_CONFIG = [
         "available_bands": [
             {
                 "hwmode": "11g",
-                "available_htmodes": ["NOHT", "HT20", "HT40"],
+                "available_htmodes": ["NOHT", "HT20", "HT40"],  # only 802.11n wifi card
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
                     {"number": 2, "frequency": 2417, "radar": False},
@@ -1311,6 +1318,27 @@ def test_get_hwmode_fallback_openwrt(infrastructure, uci_configs_init):
     )
     assert "errors" not in res
     assert res["data"]["devices"][0]["hwmode"] == "11g"
+
+
+def test_get_80211ax_htmodes(infrastructure, uci_configs_init):
+    """Test that MT7915E chipset will return correct 802.11ax HE modes"""
+    htmodes = {
+        "2g": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
+        "5g": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80", "VHT160", "HE20", "HE40", "HE80", "HE160"],
+    }
+
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res
+    assert len(res["data"]["devices"]) >= 1
+
+    # first wifi device is usually more capable (802.11 standards wise), so test that one
+    first_device = res["data"]["devices"][0]
+    band_2g, band_5g = first_device["available_bands"]
+    assert band_2g["available_htmodes"] == htmodes["2g"]
+    assert band_5g["available_htmodes"] == htmodes["5g"]
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)

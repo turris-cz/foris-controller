@@ -86,7 +86,7 @@ class WifiUci:
             return None
 
     @staticmethod
-    def sort_htmodes(modes):
+    def _sort_htmodes(modes: typing.Set[str]) -> typing.List[str]:
         """Sort HT and VHT modes in natural order"""
         return sorted(
             modes,
@@ -94,14 +94,17 @@ class WifiUci:
         )
 
     @staticmethod
-    def _get_device_bands(device_name):
+    def _get_device_bands(device_name: str) -> list:
         DEFAULT_HTMODE = "NOHT"
-        HTMODES = {"HT20", "HT40"}
-        VHTMODES = HTMODES | {"VHT20", "VHT40", "VHT80", "VHT160"}
 
-        MODES_MAP = {
-            "11g": "n",
-            "11a": "ac",
+        # map bands to compatible hwmodes values for reforis
+        BANDS_MAP = {
+            "2g": "11g",
+            "5g": "11a",
+        }
+        BANDS_TO_MODES_MAP = {
+            "2g": ("n", "ax"),
+            "5g": ("n", "ac", "ax"),
         }
 
         request_msg = {"device": device_name}
@@ -113,8 +116,34 @@ class WifiUci:
         if not freq_data:
             return []
 
-        htmodes = {}
-        channels = {"11g": [], "11a": []}
+        channels = WifiUci._get_frequencies(freq_data, device_name)
+        htmodes = WifiUci._get_htmodes(ht_data["htmodes"])
+
+        # return frequencies and htmodes for each frequency band in separate objects
+        res = []
+        for band in ["2g", "5g"]:
+            if len(channels[band]) > 0:
+                record = {
+                    "available_channels": channels[band],
+                    "hwmode": BANDS_MAP[band],
+                }
+                band_htmodes = [DEFAULT_HTMODE]
+                for htmode in BANDS_TO_MODES_MAP[band]:
+                    # filter htmodes and keep them in order by BANDS_TO_MODES_MAP
+                    if htmode in ht_data["hwmodes"]:
+                        band_htmodes += htmodes.get(htmode, [])
+
+                record["available_htmodes"] = band_htmodes
+                res.append(record)
+        return res
+
+    @staticmethod
+    def _get_frequencies(freq_data, device_name: str) -> typing.Dict[str, list]:
+        """Get available frequencies sorted into frequency bands
+
+        Return frequencies for both 2.4 GHz and 5 GHz.
+        """
+        channels = {"2g": [], "5g": []}
 
         for freq in freq_data["results"]:
             channel = {
@@ -122,23 +151,45 @@ class WifiUci:
                 "frequency": freq["mhz"],
                 "radar": False,  # iwinfo/rpcd doesn't return DFS flags; use False for compatibility
             }
-            channels["11a" if channel["frequency"] > 2484 else "11g"].append(channel)
 
-        if "ac" in ht_data["hwmodes"]:
-            htmodes["ac"] = [DEFAULT_HTMODE] + WifiUci.sort_htmodes(set(ht_data["htmodes"]) & VHTMODES)
+            ch_freq = channel["frequency"]
+            if 2412 <= ch_freq <= 2484:
+                band = "2g"
+            elif 5160 <= ch_freq <= 5980:
+                band = "5g"
+            else:
+                logger.warning(
+                    "%s: Frequency '%d MHz' does not fit supported bands (2.4 & 5 GHz)",
+                    device_name, ch_freq
+                )
+                continue
 
-        if "n" in ht_data["hwmodes"]:
-            htmodes["n"] = [DEFAULT_HTMODE] + WifiUci.sort_htmodes(set(ht_data["htmodes"]) & HTMODES)
+            channels[band].append(channel)
 
-        return [
-            {
-                "available_channels": channels[hwmode],
-                "available_htmodes": htmodes.get(MODES_MAP[hwmode], [DEFAULT_HTMODE]),
-                "hwmode": hwmode,
-            }
-            for hwmode in ["11g", "11a"]
-            if len(channels[hwmode]) > 0
-        ]
+        return channels
+
+    @staticmethod
+    def _get_htmodes(device_htmodes: typing.List[str]) -> typing.Dict[str, typing.List[str]]:
+        """Get HT modes based on 802.11 standard (n, ac, ax, ...)
+
+        Get intersection of valid HT modes by standard with modes advertised by device.
+        Return list of HT modes sorted in natural order.
+        """
+        HWMODE_TO_HT = {
+            "n": {"HT20", "HT40"},
+            "ac": {"VHT20", "VHT40", "VHT80", "VHT160"},
+            "ax": {"HE20", "HE40", "HE80", "HE160"},
+        }
+
+        device_htmodes_set = set(device_htmodes)
+        res = {
+            hwmode: WifiUci._sort_htmodes(device_htmodes_set & htmodes)
+            for hwmode, htmodes in HWMODE_TO_HT.items()
+        }
+
+        # Skip empty lists, for example:
+        # Do not return {"ac": []}, when device does not support any of "ac" htmodes
+        return {hwmode: htmodes for hwmode, htmodes in res.items() if htmodes}
 
     def _prepare_wifi_device(self, device, interface, guest_interface):
         # read data from uci
