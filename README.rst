@@ -32,3 +32,5 @@ You can also send notifications via contiguration backend back to listening clie
 or::
 
 	foris-notify -m web -a set_language unix-socket {"language": "en"}
+
+Lorem ipsum...
