@@ -3,13 +3,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- wifi: read and write OpenWrt 21.02 config syntax, while being able to read OpenWrt 19.07 config syntax
+
 ## [4.1.1] - 2022-02-16
 ### Fixed
 - mDNS/zeroconf entry has invalid service type
 
 ## [4.1.0] - 2022-02-04
 ### Added
-- read OpenWrt 21.02 network config, while keeping compatibility with OpenWrt 19.07 config
+- read and write OpenWrt 21.02 network config, while being able to read OpenWrt 19.07 config
 
 ### Changed
 - mqtt: make advertizments a bit more efficient

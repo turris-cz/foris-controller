@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -154,7 +154,7 @@ class WifiUci:
         ssid = interface["data"].get("ssid", "Turris")
         hidden = parse_bool(interface["data"].get("hidden", "0"))
         password = interface["data"].get("key", "")
-        hwmode = device["data"].get("hwmode", "11g")
+        hwmode = WifiUci._get_hwmode(device)
         htmode = device["data"].get("htmode", "NOHT")
         current_channel = device["data"].get("channel", "11" if hwmode == "11g" else "36")
         current_channel = 0 if current_channel == "auto" else int(current_channel)
@@ -212,6 +212,29 @@ class WifiUci:
             },
             "available_bands": bands,
         }
+
+    @staticmethod
+    def _get_hwmode(device) -> typing.Literal["11g", "11a"]:
+        """Get device hwmode in compatible manner with OpenWrt 19.07
+
+        OpenWrt 19.07 use `option hwmode` for setting frequency band
+        OpenWrt 21.02 use `option band` instead
+
+        Return either "11g" (2.4 GHz) or "11a" (5 Ghz)
+        """
+        BAND_HWMODE = {
+            "2g": "11g",
+            "5g": "11a",
+        }
+        FALLBACK_HWMODE = "11g"
+
+        band = device["data"].get("band")
+        if not band:
+            hwmode = device["data"].get("hwmode", FALLBACK_HWMODE)
+        else:
+            hwmode = BAND_HWMODE.get(band, FALLBACK_HWMODE)
+
+        return hwmode
 
     def _get_device_sections(self, data):
         return [
@@ -279,6 +302,10 @@ class WifiUci:
         :rtype: None or bool
         """
         DEFAULT_WIFI_ENC_MODE = "WPA2/3"
+        HWMODE_BAND = {
+            "11g": "2g",
+            "11a": "5g",
+        }
         # sections are supposed to exist so there is no need to create them
 
         if not settings["enabled"]:
@@ -295,10 +322,12 @@ class WifiUci:
             backend.set_option("wireless", interface_section["name"], "disabled", store_bool(False))
             # guest wifi is enabled elsewhere
 
+        WifiUci._delete_old_config(backend, device_section["name"])
+
         # device
         channel = "auto" if settings["channel"] == 0 else int(settings["channel"])
         backend.set_option("wireless", device_section["name"], "channel", channel)
-        backend.set_option("wireless", device_section["name"], "hwmode", settings["hwmode"])
+        backend.set_option("wireless", device_section["name"], "band", HWMODE_BAND[settings["hwmode"]])
         backend.set_option("wireless", device_section["name"], "htmode", settings["htmode"])
 
         # interface
@@ -341,6 +370,12 @@ class WifiUci:
         backend.set_option("wireless", guest_name, "isolate", store_bool(True))
 
         return True
+
+    @staticmethod
+    def _delete_old_config(backend: UciBackend, device: str):
+        """Delete OpenWrt 19.07 config options which are no longer used"""
+        # OpenWrt 21.02 uses `option band` instead of `option hwmode`
+        backend.del_option("wireless", device, "hwmode", fail_on_error=False)
 
     def _set_wifi_encryption(self, backend: UciBackend, if_name: str, wifi_encryption: str) -> None:
         """Set wifi encryption mode and its related options
