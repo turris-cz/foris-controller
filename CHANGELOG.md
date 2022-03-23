@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- wifi: wifi: backport fixes for reading HT modes; it is now possible to save
+    wifi settings on Turris 1.x router or any router with DNXA-H1 wireless card
+
 ## [2.1.1] - 2021-09-14
 ### Fixed:
 - networks: fix reading multiple interfaces of wan (e.g. bridge)
@@ -143,7 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - networks: get_network_info fix
 - mqtt: custom announcements via python entry_points
 - example project: using cookiecutter for generating new projects
-  
+
 ## [1.0.2] - 2019-08-08
 - client_socket: use controller_id - mqtt fix
 - use ipaddress module instead of foris_controller_utils.IPv4 and remove IPv4
