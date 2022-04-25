@@ -42,7 +42,7 @@ from foris_controller_testtools.utils import (
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "5.2")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 def test_get_settings(uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version):
 
@@ -183,7 +183,7 @@ def test_get_settings_interfaces_in_order_mixed_ifaces(uci_configs_init, fix_mox
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 def test_update_settings(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
@@ -267,7 +267,7 @@ def test_update_settings(
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 def test_update_settings_empty_wan(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
@@ -339,7 +339,7 @@ def test_update_settings_empty_wan(
     }
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0"), ("turris", "6.0")], indirect=True)
 def test_update_settings_more_wans(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
@@ -474,7 +474,7 @@ def test_update_settings_missing_assign(
     assert res["data"]["firewall"] == orig_firewall
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0"), ("turris", "6.0")], indirect=True)
 def test_update_settings_unknown_assign(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
@@ -608,7 +608,7 @@ def test_update_settings_set_non_configurable(
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
@@ -833,7 +833,7 @@ def test_network_change_notification(uci_configs_init, infrastructure, notify_ap
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_one_lan_does_not_break(

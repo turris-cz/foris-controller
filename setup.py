@@ -124,7 +124,7 @@ setup(
         "pbkdf2",
         "python-slugify",
         "svupdater @ git+https://gitlab.nic.cz/turris/updater/supervisor.git#egg=supervisor",
-        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git@v0.7.0#egg=turrishw",
+        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git@v0.8.0#egg=turrishw",
         "turris-timezone @ git+https://gitlab.nic.cz/turris/foris-controller/turris-timezone.git#egg=turris-timezone",
     ],
     setup_requires=[
@@ -151,7 +151,7 @@ setup(
         ]
     },
     dependency_links=[
-        "git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.10.1#egg=foris-controller-testtools",
+        "git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.11.0#egg=foris-controller-testtools",
         "git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git#egg=foris-client",
     ],
     zip_safe=False,

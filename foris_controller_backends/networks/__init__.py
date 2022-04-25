@@ -340,9 +340,6 @@ class NetworksUci():
     def update_settings(self, firewall, networks):
         system_files = SystemInfoFiles()
 
-        if system_files.get_model() == "turris":
-            return False  # Networks module can't be set for old turris
-
         if int(system_files.get_os_version().split(".", 1)[0]) < 4:
             return False  # Networks module can't be set for older versions
 
