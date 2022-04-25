@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ def test_get_settings_more_wans(
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "5.2")], indirect=True
 )
 def test_update_settings(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
@@ -168,7 +168,7 @@ def test_update_settings(
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "5.2")], indirect=True
 )
 def test_update_settings_empty_wan(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
@@ -240,7 +240,7 @@ def test_update_settings_empty_wan(
     }
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0"), ("turris", "5.2")], indirect=True)
 def test_update_settings_more_wans(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
@@ -375,7 +375,7 @@ def test_update_settings_missing_assign(
     assert res["data"]["firewall"] == orig_firewall
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0"), ("turris", "5.2")], indirect=True)
 def test_update_settings_unknown_assign(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
 ):
@@ -509,7 +509,7 @@ def test_update_settings_set_non_configurable(
 
 
 @pytest.mark.parametrize(
-    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True
+    "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "5.2")], indirect=True
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(

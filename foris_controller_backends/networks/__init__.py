@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -258,9 +258,6 @@ class NetworksUci(object):
 
     def update_settings(self, firewall, networks):
         system_files = SystemInfoFiles()
-
-        if system_files.get_model() == "turris":
-            return False  # Networks module can't be set for old turris
 
         if int(system_files.get_os_version().split(".", 1)[0]) < 4:
             return False  # Networks module can't be set for older versions
