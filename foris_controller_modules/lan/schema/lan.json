@@ -161,7 +161,8 @@
                 "action": {"enum": ["update_settings"]},
                 "data": {"$ref": "#/definitions/lan_settings_set"}
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "reply to update lan settings",
@@ -189,7 +190,8 @@
                 "action": {"enum": ["update_settings"]},
                 "data": {"$ref": "#/definitions/lan_settings_set"}
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "request to set dhcp client",

@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- lan: make message data mandatory for update_settings
+
 ## [4.2.0] - 2022-03-04
 ### Added
 - wifi: 802.11ax HE modes (20, 40, 80 and 160); 80+80 is not supported yet
