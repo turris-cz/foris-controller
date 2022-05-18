@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2019, 2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
 #
 
 import logging
+import typing
 
-from foris_controller.utils import check_dynamic_ranges
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
+from foris_controller.utils import check_dynamic_ranges
 
 
 class LanModule(BaseModule):
@@ -57,7 +58,7 @@ class LanModule(BaseModule):
         return {"result": res}
 
     def action_set_dhcp_client(self, data: dict) -> dict:
-        """ Updates configuration of a single dhcp client
+        """ Set configuration of a single dhcp client
         :param: data: client data to be set
         :returns: result of the update {'result': True/False}
         """
@@ -66,7 +67,27 @@ class LanModule(BaseModule):
             self.notify("set_dhcp_client", data)
         return res
 
+    def action_update_dhcp_client(self, data: dict) -> dict:
+        """Update configuration of a single dhcp client
 
-@wrap_required_functions(["get_settings", "update_settings", "set_dhcp_client"])
-class Handler(object):
+        :param: data: client data to be updated
+        :returns: result of the update {'result': True/False}
+        """
+        res = self.handler.update_dhcp_client(**data)
+        if res["result"]:
+            self.notify("update_dhcp_client", data)
+        return res
+
+    def action_delete_dhcp_client(self, data: dict) -> typing.Dict[str, bool]:
+        """Delete configuration of a single dhcp client"""
+        res = self.handler.delete_dhcp_client(**data)
+        if res["result"]:
+            self.notify("delete_dhcp_client", data)
+        return res
+
+
+@wrap_required_functions(
+    ["get_settings", "update_settings", "set_dhcp_client", "update_dhcp_client", "delete_dhcp_client"]
+)
+class Handler():
     pass

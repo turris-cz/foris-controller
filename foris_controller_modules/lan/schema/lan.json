@@ -1,5 +1,10 @@
 {
     "definitions": {
+        "hostname": {
+            "type": "string", "minLength": 1,
+            "description": "Keep separate definition of hostname for now and unify it across foris-controller later"
+        },
+        "mac_address": {"type": "string", "format": "macaddress"},
         "lan_mode": {"enum": ["managed", "unmanaged"]},
         "lan_type": {
             "allOf": [
@@ -119,17 +124,112 @@
         "dhcp_client_set": {
             "type": "object",
             "properties": {
-                "mac": {"type": "string", "format": "macaddress"},
+                "mac": {"$ref": "#/definitions/mac_address"},
                 "ip": {
                     "oneOf": [
                         {"type": "string", "format": "ipv4"},
                         {"enum": ["ignore"]}
                     ]
                 },
-                "hostname": {"type": "string"}
+                "hostname": {"$ref": "#definitions/hostname"}
             },
             "additionalProperties": false,
             "required": ["ip", "mac", "hostname"]
+        },
+        "dhcp_client_update": {
+            "type": "object",
+            "properties": {
+                "mac": {"$ref": "#/definitions/mac_address"},
+                "old_mac": {"$ref": "#/definitions/mac_address"},
+                "ip": {
+                    "oneOf": [
+                        {"type": "string", "format": "ipv4"},
+                        {"enum": ["ignore"]}
+                    ]
+                },
+                "hostname": {"$ref": "#definitions/hostname"}
+            },
+            "additionalProperties": false,
+            "required": ["ip", "old_mac", "mac", "hostname"]
+        },
+        "dhcp_client_set_reply": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [true]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [false]},
+                        "reason": {"enum": [
+                            "out-of-network",
+                            "disabled",
+                            "ip-exists",
+                            "mac-exists",
+                            "hostname-exists"
+                        ]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result", "reason"]
+                }
+            ]
+        },
+        "dhcp_client_update_reply": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [true]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [false]},
+                        "reason": {"enum": [
+                            "out-of-network",
+                            "disabled",
+                            "ip-exists",
+                            "mac-exists",
+                            "mac-not-exists",
+                            "hostname-exists"
+                        ]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result", "reason"]
+                }
+            ]
+        },
+        "dhcp_client_delete_reply": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [true]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [false]},
+                        "reason": {"enum": [
+                            "disabled",
+                            "mac-not-exists"
+                        ]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result", "reason"]
+                }
+            ]
         }
     },
     "oneOf": [
@@ -201,7 +301,8 @@
                 "action": {"enum": ["set_dhcp_client"]},
                 "data": {"$ref": "#/definitions/dhcp_client_set"}
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
         },
         {
             "description": "reply to set dhcp client",
@@ -209,27 +310,7 @@
                 "module": {"enum": ["lan"]},
                 "kind": {"enum": ["reply"]},
                 "action": {"enum": ["set_dhcp_client"]},
-                "data": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "result": {"enum": [true]}
-                            },
-                            "additionalProperties": false,
-                            "required": ["result"]
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "result": {"enum": [false]},
-                                "reason": {"enum": ["out-of-network", "in-dynamic", "disabled"]}
-                            },
-                            "additionalProperties": false,
-                            "required": ["result", "reason"]
-                        }
-                    ]
-                }
+                "data": {"$ref": "#/definitions/dhcp_client_set_reply"}
             },
             "additionalProperties": false,
             "required": ["data"]
@@ -242,7 +323,88 @@
                 "action": {"enum": ["set_dhcp_client"]},
                 "data": {"$ref": "#/definitions/dhcp_client_set"}
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to update dhcp client",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["update_dhcp_client"]},
+                "data": {"$ref": "#/definitions/dhcp_client_update"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to update dhcp client",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["update_dhcp_client"]},
+                "data": {"$ref": "#/definitions/dhcp_client_update_reply"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that dhcp client was updated",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["update_dhcp_client"]},
+                "data": {"$ref": "#/definitions/dhcp_client_update"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to delete dhcp client",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["delete_dhcp_client"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "mac": {"$ref": "#/definitions/mac_address"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["mac"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to delete dhcp client",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["delete_dhcp_client"]},
+                "data": {"$ref": "#/definitions/dhcp_client_delete_reply"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that dhcp client was deleted",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["delete_dhcp_client"]},
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "mac": {"$ref": "#/definitions/mac_address"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["mac"]
+                }
+            },
+            "additionalProperties": false,
+            "required": ["data"]
         }
     ]
 }

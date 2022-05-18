@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 #
 
 import os
+import typing
 
 import pytest
 from foris_controller_testtools.fixtures import (
@@ -48,11 +49,26 @@ def all_equal(first, *items):
     return all(first == item for item in items)
 
 
+def query_infrastructure(infrastructure, message: dict, expect_success: bool = True) -> dict:
+    """Send message through infrastructure and check for errors based on expected result (success, failure).
+
+    Succesful query should not contain errors, while failure should contain errors.
+    Return whole response (dict), if assertions passes.
+    """
+    res = infrastructure.process_message(message)
+    if not expect_success:
+        assert "errors" in res.keys()
+    else:
+        assert "errors" not in res.keys()
+
+    return res
+
+
 @pytest.fixture(scope="function")
 def lan_dnsmasq_files():
     leases = "\n".join(
         [
-            "1539350186 11:22:33:44:55:66 192.168.1.1 prvni *",
+            "1539350186 11:22:33:44:55:66 192.168.1.101 prvni *",
             "1539350188 99:88:77:66:55:44 192.168.2.1 * *",
         ]
     )
@@ -69,7 +85,7 @@ def lan_dnsmasq_files():
             "ipv4     2 udp      17 30 src=10.111.222.213 dst=37.157.198.150 sport=60162 dport=123 "
             "packets=1 bytes=76 src=37.157.198.150 dst=172.20.6.87 sport=123 dport=60162 packets=1 "
             "bytes=76 mark=0 zone=0 use=2",
-            "ipv4     2 udp      17 34 src=10.111.222.213 dst=192.168.1.1 sport=57085 dport=123 "
+            "ipv4     2 udp      17 34 src=10.111.222.213 dst=192.168.1.101 sport=57085 dport=123 "
             "packets=1 bytes=76 src=80.211.195.36 dst=172.20.6.87 sport=123 dport=57085 packets=1 "
             "bytes=76 mark=0 zone=0 use=2",
             "ipv4     2 tcp      6 7440 ESTABLISHED src=172.20.6.100 dst=172.20.6.87 sport=35774 "
@@ -516,6 +532,30 @@ def test_dhcp_lease_multi_mac(uci_configs_init, infrastructure, device, turris_o
     assert "errors" not in res.keys()
 
 
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox","5.0")], indirect=True)
+def test_dhcp_lease_static_attr(uci_configs_init, infrastructure, device, turris_os_version, lan_dnsmasq_files):
+    """Test whether static lease which is at the same time in dhcp.leases file is considered as 'static'
+    I.e. Check that dynamic and static info of host gets merged into one static record
+    """
+    # prepare static record
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.101")
+        backend.set_option("dhcp", section, "name", "prvni")
+        backend.set_option("dhcp", section, "mac", "11:22:33:44:55:66")
+
+    res = query_infrastructure(infrastructure, {"module": "lan", "action": "get_settings", "kind": "request"})
+
+    clients = res["data"]["mode_managed"]["dhcp"]["clients"]
+    assert len(clients) == 1
+    assert clients[0]["ip"] == "192.168.1.101"
+    assert clients[0]["hostname"] == "prvni"
+    assert clients[0]["static"] is True
+
+
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
@@ -728,11 +768,12 @@ def test_dhcp_clients_openwrt(
         },
         [
             {
-                "ip": "192.168.1.1",
+                "ip": "192.168.1.101",
                 "mac": "11:22:33:44:55:66",
                 "expires": 1539350186,
                 "active": True,
                 "hostname": "prvni",
+                "static": False,
             },
             {
                 "ip": "192.168.2.1",
@@ -740,6 +781,7 @@ def test_dhcp_clients_openwrt(
                 "expires": 1539350188,
                 "active": False,
                 "hostname": "*",
+                "static": False,
             },
         ],
     )
@@ -783,11 +825,12 @@ def test_dhcp_clients_openwrt(
         },
         [
             {
-                "ip": "192.168.1.1",
+                "ip": "192.168.1.101",
                 "mac": "11:22:33:44:55:66",
                 "expires": 1539350186,
                 "active": True,
                 "hostname": "prvni",
+                "static": False,
             }
         ],
     )
@@ -814,6 +857,7 @@ def test_dhcp_clients_openwrt(
                 "expires": 1539350188,
                 "active": False,
                 "hostname": "*",
+                "static": False,
             }
         ],
     )
@@ -835,6 +879,320 @@ def test_dhcp_clients_openwrt(
         },
         [],
     )
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_dhcp_clients_case_insensitive_mac_addreses(
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+):
+    """Test whether foris-controller can handle case insensitive MAC adresses lookup"""
+
+    # make sure that dhcp is enabled
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 20,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
+                    },
+                },
+            },
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
+    }
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.128")
+        backend.set_option("dhcp", section, "name", "myhost")
+        backend.set_option("dhcp", section, "mac", "1a:2b:3c:4d:5e:6f")
+
+    case_sensitive_data = {
+        "hostname": "newhostname",
+        "ip": "192.168.1.150",
+        "mac": "1a:2b:3c:4d:5e:6f",
+    }
+
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": case_sensitive_data},
+    )
+    assert res["data"]["reason"] == "mac-exists"
+
+    # upper case MAC lookup
+    case_sensitive_data["mac"] = "1A:2B:3C:4D:5E:6F"
+    query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": case_sensitive_data},
+    )
+    assert res["data"]["reason"] == "mac-exists"
+
+    # mixed case MAC lookup
+    case_sensitive_data["mac"] = "1a:2b:3c:4D:5E:6F"
+    query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": case_sensitive_data},
+    )
+    assert res["data"]["reason"] == "mac-exists"
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_dhcp_clients_multimac_openwrt(
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+    init_script_result,
+):
+    """Test static leases management with multiple macs set on dhcp hosts
+
+    1) Getting client list should return only first mac address from record with multiple mac addresses.
+    1a) MAC addresses as uci `option` with space separated MACs
+    1b) MAC addresses as uci `list`
+    2) Set/Update allow only single mac address.
+    3) Create new record should check for duplicity of mac address in multimac records,
+        i.e. don't check "if new_mac == record_mac", but check "if new_mac in record_mac" instead.
+    3a) MAC addresses as uci `list`
+    3b) MAC addresses as uci `option` with space separated MACs
+    4) Update of record with multiple mac addresses should delete the original record
+        and create new with just one mac address (requested in update) to avoid collisions of ip/hostname
+    5) Delete of record with multiple mac addresses
+    5a) Deleting record with multiple mac addresses should only delete the specific mac address
+         and keep the rest of original record intact.
+    5b) Deleting single mac from multiple mac addresses (>2) should keep remaining macs (>=2)
+    """
+    def host_in_result(clients: typing.List[dict], ip: str, mac: str, hostname: str, present: bool = True):
+        assert (
+            len(
+                [
+                    e
+                    for e in clients
+                    if e["ip"] == ip
+                    and e["mac"] == mac
+                    and e["hostname"] == hostname
+                ]
+            )
+            == (1 if present else 0)
+        )
+
+    def get_dhcpv4_clients() -> typing.List[dict]:
+        """Get dhcpv4 clients records from backend."""
+        message = {"module": "lan", "action": "get_settings", "kind": "request"}
+        reply = query_infrastructure(infrastructure, message)
+
+        return reply["data"]["mode_managed"]["dhcp"]["clients"]
+
+    # make sure that dhcp is enabled
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 20,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
+                    },
+                },
+            },
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
+    }
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.126")
+        backend.set_option("dhcp", section, "name", "multimac1")
+        backend.set_option("dhcp", section, "mac", "11:22:33:11:22:33 33:22:11:11:22:33")
+
+    # (1a)
+    clients_list = get_dhcpv4_clients()
+    clients_count = len(clients_list)
+
+    host_in_result(clients_list, "192.168.1.126", "11:22:33:11:22:33", "multimac1", present=True)
+
+    # (1b)
+    # list of macs
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_option("dhcp", section, "mac")
+        backend.add_to_list("dhcp", section, "mac", ["11:22:33:11:22:33", "33:22:11:11:22:33"])
+
+    clients_list = get_dhcpv4_clients()
+    clients_count = len(clients_list)
+
+    host_in_result(clients_list, "192.168.1.126", "11:22:33:11:22:33", "multimac1", present=True)
+
+    # (2)
+    multimac_data = {
+        "mac": "44:55:66:66:55:44 55:66:77:77:66:55",
+        "ip": "192.168.1.120",
+        "hostname": "multimac2",
+    }
+
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": multimac_data},
+        expect_success=False
+    )
+    assert "ValidationError" in res["errors"][0]["stacktrace"]
+
+    clients_list = get_dhcpv4_clients()
+
+    assert len(clients_list) == clients_count
+    host_in_result(clients_list, "129.168.1.120", "44:55:66:66:55:44 55:66:77:77:66:55", "multimac2", present=False)
+
+    single_mac_data = {
+        "mac": "44:55:66:66:55:44",
+        "ip": "192.168.1.120",
+        "hostname": "singlemac",
+    }
+
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": single_mac_data}
+    )
+
+    clients_list = get_dhcpv4_clients()
+    clients_count += 1
+
+    assert len(clients_list) == clients_count
+    host_in_result(clients_list, "192.168.1.120", "44:55:66:66:55:44", "singlemac", present=True)
+
+    # (3a)
+    mac_already_in_multimac_data = {
+        "mac": "33:22:11:11:22:33",
+        "ip": "192.168.1.121",
+        "hostname": "newclient",
+    }
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": mac_already_in_multimac_data}
+    )
+
+    clients_list = get_dhcpv4_clients()
+
+    assert len(clients_list) == clients_count
+    host_in_result(clients_list, "192.168.1.121", "33:22:11:11:22:33", "newclient", present=False)
+
+    # (3b)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_from_list("dhcp", section, "mac")
+        backend.set_option("dhcp", section, "mac", "11:22:33:11:22:33 33:22:11:11:22:33")
+
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": mac_already_in_multimac_data}
+    )
+
+    clients_list = get_dhcpv4_clients()
+
+    assert len(clients_list) == clients_count
+    host_in_result(clients_list, "192.168.1.121", "33:22:11:11:22:33", "newclient", present=False)
+
+    # (4)
+    part_of_multimac_data_update = {
+        "old_mac": "33:22:11:11:22:33",
+        "mac": "33:22:11:11:22:33",
+        "ip": "192.168.1.121",
+        "hostname": "newsplit",
+    }
+
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "update_dhcp_client", "kind": "request", "data": part_of_multimac_data_update}
+    )
+
+    clients_list = get_dhcpv4_clients()
+    assert len(clients_list) == clients_count
+
+    host_in_result(clients_list, "192.168.1.126", "11:22:33:11:22:33", "multimac1", present=False)
+    host_in_result(clients_list, "192.168.1.121", "33:22:11:11:22:33", "newsplit", present=True)
+
+    # (5a)
+    # prepare another multimac record first
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.128")
+        backend.set_option("dhcp", section, "name", "multimac2")
+        backend.set_option("dhcp", section, "mac", "44:55:66:44:55:66 77:88:99:99:88:77")
+
+    clients_list = get_dhcpv4_clients()
+    clients_count += 1
+
+    assert len(clients_list) == clients_count
+    host_in_result(clients_list, "192.168.1.128", "44:55:66:44:55:66", "multimac2", present=True)
+
+    cut_single_mac_out_data = {"mac": "44:55:66:44:55:66"}
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": cut_single_mac_out_data}
+    )
+
+    clients_list = get_dhcpv4_clients()
+
+    assert len(clients_list) == clients_count
+    host_in_result(clients_list, "192.168.1.128", "77:88:99:99:88:77", "multimac2", present=True)
+    host_in_result(clients_list, "192.168.1.128", "44:55:66:44:55:66", "multimac2", present=False)
+
+    # (5b)
+    # prepare another multimac record first
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.del_section("dhcp","@host[-1]")
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.128")
+        backend.set_option("dhcp", section, "name", "multimac3")
+        backend.set_option("dhcp", section, "mac", "44:55:66:44:55:66 77:88:99:99:88:77 AA:BB:CC:DD:EE:FF")
+
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": cut_single_mac_out_data}
+    )
+
+    clients_list = get_dhcpv4_clients()
+    assert len(clients_list) == clients_count
+    host_in_result(clients_list, "192.168.1.128", "77:88:99:99:88:77", "multimac3", present=True)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+    assert uci.get_option_anonymous(data, "dhcp", "host", -1, "mac") == "77:88:99:99:88:77 AA:BB:CC:DD:EE:FF"
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
@@ -1171,6 +1529,7 @@ def test_dhcp_client_settings(
         res = infrastructure.process_message(
             {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": data}
         )
+
         assert res["data"]["result"] is True or res["data"]["reason"] == reason
         if not reason:
             notifications = infrastructure.get_notifications(notifications, filters=filters)
@@ -1180,6 +1539,16 @@ def test_dhcp_client_settings(
                 "kind": "notification",
                 "data": data,
             }
+
+        return infrastructure.process_message(
+            {"module": "lan", "action": "get_settings", "kind": "request"}
+        )["data"]["mode_managed"]["dhcp"]["clients"]
+
+    def update_client(data, reason=None):
+        res = infrastructure.process_message(
+            {"module": "lan", "action": "update_dhcp_client", "kind": "request", "data": data}
+        )
+        assert res["data"]["result"] is True or res["data"]["reason"] == reason
 
         return infrastructure.process_message(
             {"module": "lan", "action": "get_settings", "kind": "request"}
@@ -1202,36 +1571,21 @@ def test_dhcp_client_settings(
         == 1
     )
 
-    # unset hostname
-    client_list = set_client({"mac": "81:22:33:44:55:66", "hostname": "", "ip": "192.168.1.5"})
-    assert (
-        len(
-            [
-                e
-                for e in client_list
-                if e["ip"] == "192.168.1.5"
-                and e["mac"] == "81:22:33:44:55:66"
-                and e["hostname"] == ""
-            ]
-        )
-        == 1
-    )
-
     # ignore -> don't assign ip
-    client_list = set_client({"mac": "84:22:33:44:55:66", "hostname": "", "ip": "ignore"})
+    client_list = set_client({"mac": "84:22:33:44:55:66", "hostname": "static2", "ip": "ignore"})
     assert (
         len(
             [
                 e
                 for e in client_list
-                if e["ip"] == "ignore" and e["mac"] == "84:22:33:44:55:66" and e["hostname"] == ""
+                if e["ip"] == "ignore" and e["mac"] == "84:22:33:44:55:66" and e["hostname"] == "static2"
             ]
         )
         == 1
     )
 
     # test uppercase conversion
-    client_list = set_client({"mac": "aa:bb:cc:dd:55:66", "hostname": "", "ip": "192.168.1.7"})
+    client_list = set_client({"mac": "aa:bb:cc:dd:55:66", "hostname": "static3", "ip": "192.168.1.7"})
     assert (
         len(
             [
@@ -1239,29 +1593,26 @@ def test_dhcp_client_settings(
                 for e in client_list
                 if e["ip"] == "192.168.1.7"
                 and e["mac"] == "AA:BB:CC:DD:55:66"
-                and e["hostname"] == ""
+                and e["hostname"] == "static3"
             ]
         )
         == 1
     )
 
-    # it is possible to set same ip for two macs
-    set_client({"mac": "81:22:33:44:55:66", "hostname": "", "ip": "192.168.1.3"})
-    set_client({"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.1.3"})
+    # do not allow set the same IP for two macs
+    update_client(
+        {"old_mac": "81:22:33:44:55:66", "mac": "81:22:33:44:55:66", "hostname": "static-client1", "ip": "192.168.1.3"}
+    )
+    set_client({"mac": "82:22:33:44:55:66", "hostname": "static4", "ip": "192.168.1.3"}, "ip-exists")
 
-    client_list = set_client({"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.1.9"})
+    client_list = set_client({"mac": "82:22:33:44:55:66", "hostname": "static4", "ip": "192.168.1.9"})
 
     orig_client_list = client_list
 
     # out of lan
-    client_list = set_client(
-        {"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.2.3"}, "out-of-network"
-    )
-    assert orig_client_list == client_list
-
-    # set in dynamic range
-    client_list = set_client(
-        {"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.1.11"}, "in-dynamic"
+    client_list = update_client(
+        {"old_mac": "82:22:33:44:55:66", "mac": "82:22:33:44:55:66", "hostname": "static4", "ip": "192.168.2.3"},
+        "out-of-network"
     )
     assert orig_client_list == client_list
 
@@ -1353,7 +1704,7 @@ def test_dhcp_client_settings(
         "kind": "reply",
         "module": "lan",
     }
-    set_client({"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.5.3"}, "disabled")
+    set_client({"mac": "82:22:33:44:55:66", "hostname": "static4", "ip": "192.168.5.3"}, "disabled")
 
     # unmanaged mode
     res = infrastructure.process_message(
@@ -1373,19 +1724,401 @@ def test_dhcp_client_settings(
         "kind": "reply",
         "module": "lan",
     }
-    set_client({"mac": "82:22:33:44:55:66", "hostname": "", "ip": "192.168.5.3"}, "disabled")
+    set_client({"mac": "82:22:33:44:55:66", "hostname": "static4", "ip": "192.168.5.3"}, "disabled")
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
+def test_dhcp_update_non_existing_client(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    network_restart_command,
+):
+    """Test that we cannot update non-existing dhcp client settings"""
+    data = {
+        "old_mac": "DE:AD:BE:EF:12:34",
+        "mac": "DE:AD:BE:EF:12:34",
+        "hostname": "static-client1",
+        "ip": "192.168.1.10",
+    }
+
+    # make sure that dhcp is enabled
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 20,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
+                    },
+                },
+            },
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
+    }
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "update_dhcp_client", "kind": "request", "data": data}
+    )
+    assert "errors" not in res.keys()
+    assert res["data"]["result"] is False
+    assert "reason" in res["data"]
+    assert res["data"]["reason"] == "mac-not-exists"
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
+def test_dhcp_update_multi_mac_client(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    network_restart_command,
+):
+    """Test that we cannot update client with multiple macs set
+
+    NOTE: is this test still needed?
+    """
+    # make sure that dhcp is enabled
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 20,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
+                    },
+                },
+            },
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
+    }
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.123")
+        backend.set_option("dhcp", section, "name", "multimac")
+        backend.set_option("dhcp", section, "mac", 'A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65')
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    client_list = res["data"]["mode_managed"]["dhcp"]["clients"]
+    assert len(client_list) == 1
+    assert client_list[0]["mac"] == "A4:34:D9:ED:8B:6D"
+
+    data = {
+        "old_mac": "A4:34:D9:ED:8B:6D",
+        "mac": "A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65",
+        "ip": "192.168.1.456",
+        "name": "multimac",
+    }
+
+    # this update should fail
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "update_dhcp_client", "kind": "request", "data": data}
+    )
+    assert "errors" in res.keys()
+    assert "Incorrect input" in res["errors"][0]["description"]
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
+def test_dhcp_set_client(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    network_restart_command,
+    lan_dnsmasq_files,
+    init_script_result,
+):
+    """Test that setting new client cannot overwrite existing record with the same MAC address"""
+    data = {
+        "mac": "DE:AD:BE:EF:12:34",
+        "hostname": "static-client1",
+        "ip": "192.168.1.10",
+    }
+
+    # make sure that dhcp is enabled
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 20,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
+                    },
+                },
+            },
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
+    }
+
+    # set dhcp lease first
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": data}
+    )
+    assert "errors" not in res.keys()
+    assert "result" in res["data"]
+    assert res["data"]["result"] is True
+
+    newdata = {
+        "mac": "DE:AD:BE:EF:12:34",
+        "hostname": "static-client2",
+        "ip": "192.168.1.20",
+    }
+
+    # try to set new lease with the same mac
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": newdata}
+    )
+
+    assert "errors" not in res.keys()
+    assert "result" in res["data"]
+    assert res["data"]["result"] is False
+    assert "reason" in res["data"]
+    assert res["data"]["reason"] == "mac-exists"
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
+def test_dhcp_delete_client(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    network_restart_command,
+    lan_dnsmasq_files,
+    init_script_result,
+):
+    data = {
+        "mac": "DE:AD:BE:EF:56:78",
+        "hostname": "static1",
+        "ip": "192.168.1.11",
+    }
+
+    # make sure that dhcp is enabled
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 20,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
+                    },
+                },
+            },
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
+    }
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": data}
+    )
+    assert "errors" not in res.keys()
+    assert "result" in res["data"]
+    assert res["data"]["result"] is True
+    assert "reason" not in res["data"]  # setting dhcp client succeeded
+
+    client_list = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )["data"]["mode_managed"]["dhcp"]["clients"]
+
+    assert (
+        len(
+            [
+                e
+                for e in client_list
+                if e["ip"] == "192.168.1.11"
+                and e["mac"] == "DE:AD:BE:EF:56:78"
+                and e["hostname"] == "static1"
+            ]
+        )
+        == 1
+    )
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": {"mac": "DE:AD:BE:EF:56:78"}}
+    )
+    assert "errors" not in res.keys()
+
+    client_list = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )["data"]["mode_managed"]["dhcp"]["clients"]
+
+    assert (
+        len(
+            [
+                e
+                for e in client_list
+                if e["ip"] == "192.168.1.11"
+                and e["mac"] == "DE:AD:BE:EF:56:78"
+                and e["hostname"] == "static-client1"
+            ]
+        )
+        == 0
+    )
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
+def test_dhcp_delete_client_openwrt(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    network_restart_command,
+    lan_dnsmasq_files,
+    init_script_result,
+):
+    # make sure that dhcp is enabled
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.1.1",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {
+                        "enabled": True,
+                        "start": 20,
+                        "limit": 50,
+                        "lease_time": 24 * 60 * 60,
+                    },
+                },
+            },
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "lan",
+    }
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        section = backend.add_section("dhcp", "host")
+        backend.set_option("dhcp", section, "ip", "192.168.1.123")
+        backend.set_option("dhcp", section, "name", "multimac")
+        backend.set_option("dhcp", section, "mac", 'A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65')
+
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": {"mac": "A4:34:D9:ED:8B:6D"}}
+    )
+    assert "errors" not in res.keys()
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+
+    dhcp_hosts_uci = [dict(e["data"]) for e in uci.get_sections_by_type(data, "dhcp", "host")]
+    assert len(dhcp_hosts_uci) == 1
+
+    first_record = dhcp_hosts_uci[0]
+    assert first_record["mac"] == "50:7B:9D:D5:A9:65"
+
+    client_list = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )["data"]["mode_managed"]["dhcp"]["clients"]
+
+    # make sure that we accidentally didn't deleted wrong mac
+    # this should not exists anymore
+    assert (
+        len(
+            [
+                e
+                for e in client_list
+                if e["ip"] == "192.168.1.123"
+                and e["mac"] == "A4:34:D9:ED:8B:6D"
+                and e["hostname"] == "multimac"
+            ]
+        )
+        == 0
+    )
+    # but second mac should still exists
+    assert (
+        len(
+            [
+                e
+                for e in client_list
+                if e["ip"] == "192.168.1.123"
+                and e["mac"] == "50:7B:9D:D5:A9:65"
+                and e["hostname"] == "multimac"
+            ]
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_dhcp_client_settings_openwrt(
     uci_configs_init,
-    init_script_result,
     infrastructure,
     network_restart_command,
     device,
     turris_os_version,
     lan_dnsmasq_files,
+    init_script_result,
 ):
 
     uci = get_uci_module(infrastructure.name)
@@ -1411,6 +2144,24 @@ def test_dhcp_client_settings_openwrt(
             {"module": "lan", "action": "get_settings", "kind": "request"}
         )
         check_service_result("dnsmasq", "restart", True)
+
+        return get_uci_data()
+
+    def update_client(data):
+        res = infrastructure.process_message(
+            {"module": "lan", "action": "update_dhcp_client", "kind": "request", "data": data}
+        )
+        assert res == {
+            "action": "update_dhcp_client",
+            "kind": "reply",
+            "module": "lan",
+            "data": {"result": True},
+        }
+
+        infrastructure.process_message(
+            {"module": "lan", "action": "get_settings", "kind": "request"}
+        )
+        check_service_result("dnsmasq", "restart", passed=True)
 
         return get_uci_data()
 
@@ -1445,22 +2196,26 @@ def test_dhcp_client_settings_openwrt(
     data = set_client(
         {"mac": "AA:22:33:44:55:66", "hostname": "my-second-hostname", "ip": "192.168.8.4"}
     )
-    assert {"ip": "192.168.8.4", "name": "my-second-hostname", "mac": "AA:22:33:44:55:66"} in data
-
-    # without hostname
-    data = set_client({"mac": "BB:22:33:44:55:66", "hostname": "", "ip": "192.168.8.8"})
-    assert {"ip": "192.168.8.8", "mac": "BB:22:33:44:55:66"} in data
+    assert {
+        "ip": "192.168.8.4",
+        "name": "my-second-hostname",
+        "mac": "AA:22:33:44:55:66",
+        "leasetime": "infinite",
+        "dns": "1",
+    } in data
 
     # ignored
-    data = set_client({"mac": "CC:22:33:44:55:66", "hostname": "", "ip": "ignore"})
-    assert {"ip": "ignore", "mac": "CC:22:33:44:55:66"} in data
+    data = set_client({"mac": "CC:22:33:44:55:66", "hostname": "ignored", "ip": "ignore"})
+    assert {
+        "ip": "ignore", "mac": "CC:22:33:44:55:66", "name": "ignored", "leasetime": "infinite", "dns": "1"
+    } in data
 
     # multiple macs
     res = infrastructure.process_message(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )["data"]["mode_managed"]["dhcp"]["clients"]
 
-    assert len(res) == 3  # full, without hostname, ignore
+    assert len(res) == 2  # full, ignore
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("dhcp", "@host[0]", "mac", "DD:22:33:44:55:66 EE:22:33:44:55:66")
@@ -1469,22 +2224,17 @@ def test_dhcp_client_settings_openwrt(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )["data"]["mode_managed"]["dhcp"]["clients"]
 
-    assert len(res) == 2  # full, without hostname, ignore
-    assert "DD:22:33:44:55:66" not in [e["mac"] for e in res]
-    assert "EE:22:33:44:55:66" not in [e["mac"] for e in res]
+    assert len(res) == 2  # multimac, but only first mac is returned
+    assert "DD:22:33:44:55:66" in [e["mac"] for e in res]
 
-    # split records on save
-    uci_data = get_uci_data()
-    assert len(uci_data) == 3
-    assert "DD:22:33:44:55:66 EE:22:33:44:55:66" in [e["mac"] for e in uci_data]
-
-    uci_data = set_client({"mac": "EE:22:33:44:55:66", "hostname": "splitted", "ip": "192.168.8.2"})
-    assert len(uci_data) == 4
-    assert "DD:22:33:44:55:66" in [e["mac"] for e in uci_data]
+    # split records on save - delete original and create new one with single mac address
+    uci_data = update_client({"old_mac": "EE:22:33:44:55:66", "mac": "EE:22:33:44:55:66", "hostname": "splitted", "ip": "192.168.8.2"})
+    assert len(uci_data) == 2
+    assert "DD:22:33:44:55:66" not in [e["mac"] for e in uci_data]
     assert "EE:22:33:44:55:66" in [e["mac"] for e in uci_data]
 
     # delete record if dynamic overlaps
-    assert "192.168.8.8" in [e["ip"] for e in uci_data]
+    set_client({"mac": "BB:22:33:44:55:66", "hostname": "out-of-network", "ip": "192.168.8.8"})
     res = infrastructure.process_message(
         {
             "module": "lan",
@@ -1512,12 +2262,11 @@ def test_dhcp_client_settings_openwrt(
         "module": "lan",
     }
     uci_data = get_uci_data()
-    assert len(uci_data) == 3
+    assert len(uci_data) == 2
     assert "192.168.8.8" not in [e["ip"] for e in uci_data]
 
     # delete record if it doesn't fit in network range
     assert "192.168.8.2" in [e["ip"] for e in uci_data]
-    assert "192.168.8.4" in [e["ip"] for e in uci_data]
     res = infrastructure.process_message(
         {
             "module": "lan",

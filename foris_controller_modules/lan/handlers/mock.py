@@ -18,9 +18,9 @@
 #
 
 import copy
+import ipaddress
 import logging
 import typing
-import ipaddress
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -107,7 +107,9 @@ class MockLanHandler(Handler, BaseMockHandler):
         if not mode_unmanaged["lan_static"]["dns2"]:
             del mode_unmanaged["lan_static"]["dns2"]
 
-        from foris_controller_modules.networks.handlers.mock import MockNetworksHandler
+        from foris_controller_modules.networks.handlers.mock import (
+            MockNetworksHandler,
+        )
 
         result = {
             "mode": MockLanHandler.mode,
@@ -203,48 +205,144 @@ class MockLanHandler(Handler, BaseMockHandler):
         network = ipaddress.ip_network(f"{ip_root}/{netmask}", strict=False)
         return ipaddress.ip_address(ip) in network
 
+    @staticmethod
+    def client_exists(mac: str) -> bool:
+        """Check whether MAC address is not already used"""
+        for client in MockLanHandler.mode_managed["dhcp"]["clients"]:
+            if client["mac"] == mac:
+                return True
+
+        return False
+
+    @staticmethod
+    def is_dhcp_managed() -> bool:
+        """Check whether dhcp is managed and enabled"""
+        if MockLanHandler.mode != "managed" or not MockLanHandler.mode_managed["dhcp"]["enabled"]:
+            return False
+
+        return True
+
+    @staticmethod
+    def is_hostname_unique(hostname: str) -> bool:
+        """Check whether hostname is unique among DHCP hosts"""
+        for client in MockLanHandler.mode_managed["dhcp"]["clients"]:
+            if client["hostname"] == hostname:
+                return False
+
+        return True
+
+    @staticmethod
+    def validate_dhcp_host_ip(ip: str) -> typing.Optional[str]:
+        """Validate DHCP host IP address
+
+        Check whether it fits the target network or doesn't overlap with DHCP pool range
+
+        :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
+        :returns: error message (disabled, out-of-network, ...) on error, None otherwise
+        """
+        if not MockLanHandler.is_dhcp_managed():
+            return "disabled"
+
+        if ip != "ignore":
+            # does not fit into network range
+            if not MockLanHandler.in_network(
+                ip, MockLanHandler.mode_managed["router_ip"], MockLanHandler.mode_managed["netmask"]
+            ):
+                return "out-of-network"
+
+            # ip address is already taken by another host
+            for client in MockLanHandler.mode_managed["dhcp"]["clients"]:
+                if client["ip"] == ip:
+                    return "ip-exists"
+
+        return None  # data looks OK
+
     @logger_wrapper(logger)
     def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> dict:
-        """ Mocks updating configuration of a single dhcp client
+        """ Mocks setting configuration of a single dhcp client
+
+        It shouldn't allow overwriting existing configuration
+
         :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
         :param mac: mac address of the client
         :param hostname: hostname of the client (can be empty)
         :returns: {"result": True} if update passes {"result": False, "reason": "..."} otherwise
         """
-        if MockLanHandler.mode != "managed" or not MockLanHandler.mode_managed["dhcp"]["enabled"]:
-            return {"result": False, "reason": "disabled"}
-
         # convert to upper case
         mac = mac.upper()
+        if MockLanHandler.client_exists(mac):
+            return {"result": False, "reason": "mac-exists"}
 
-        if ip != "ignore":
+        err = MockLanHandler.validate_dhcp_host_ip(ip)
+        if err:
+            return {"result": False, "reason": err}
 
-            # not match into network
-            if not MockLanHandler.in_network(
-                ip, MockLanHandler.mode_managed["router_ip"], MockLanHandler.mode_managed["netmask"]
-            ):
-                return {"result": False, "reason": "out-of-network"}
+        if not MockLanHandler.is_hostname_unique(hostname):
+            return {"result": False, "reason": "hostname-exists"}
 
-            # in dynamic range
-            if MockLanHandler.in_range(
-                ip,
-                MockLanHandler.mode_managed["router_ip"],
-                MockLanHandler.mode_managed["dhcp"]["start"],
-                MockLanHandler.mode_managed["dhcp"]["limit"],
-            ):
-                return {"result": False, "reason": "in-dynamic"}
+        record = {
+            "ip": ip,
+            "mac": mac,
+            "expires": 0,
+            "active": False,
+            "hostname": hostname,
+        }
 
-        # modify or add ip
-        mac_to_client_map = {e["mac"]: e for e in MockLanHandler.mode_managed["dhcp"]["clients"]}
-        record = mac_to_client_map.get(
-            mac, {"ip": "", "mac": "", "expires": 0, "active": False, "hostname": ""}
-        )
-        record["ip"] = ip
-        record["mac"] = mac
-        record["hostname"] = hostname
+        MockLanHandler.mode_managed["dhcp"]["clients"].append(record)
 
-        # add new record if not present
-        if mac not in mac_to_client_map:
-            MockLanHandler.mode_managed["dhcp"]["clients"].append(record)
+        return {"result": True}
 
+    @logger_wrapper(logger)
+    def update_dhcp_client(self, ip: str, old_mac: str, mac: str, hostname: str) -> dict:
+        """ Mocks updating configuration of a single dhcp client
+
+        :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
+        :param old_mac: previous mac address of the client
+        :param new_mac: new mac address of the client
+        :param hostname: hostname of the client (can be empty)
+        :returns: {"result": True} if update passes {"result": False, "reason": "..."} otherwise
+        """
+        # convert to upper case
+        old_mac = old_mac.upper()
+        new_mac = mac.upper()
+
+        if not MockLanHandler.client_exists(old_mac):
+            # cannot update non-existing host
+            return {"result": False, "reason": "mac-not-exists"}
+
+        clients = MockLanHandler.mode_managed["dhcp"]["clients"]
+        for cl in clients:
+            if cl["mac"] == old_mac:
+                current_client_config = cl
+
+        if MockLanHandler.client_exists(new_mac) and current_client_config["mac"] != new_mac:
+            return {"result": False, "reason": "mac-exists"}
+
+        # ip is unique or the same on the same host
+        err = MockLanHandler.validate_dhcp_host_ip(ip)
+        if err == "ip-exists" and current_client_config["ip"] != ip:
+            return {"result": False, "reason": err}
+        elif err is not None:
+            return {"result": False, "reason": err}
+
+        unique_hostname = MockLanHandler.is_hostname_unique(hostname)
+        if not unique_hostname and current_client_config["hostname"] != hostname:
+            return {"result": False, "reason": "hostname-exists"}
+
+        current_client_config["ip"] = ip
+        current_client_config["mac"] = new_mac
+        current_client_config["hostname"] = hostname
+
+        return {"result": True}
+
+    @logger_wrapper(logger)
+    def delete_dhcp_client(self, mac: str) -> dict:
+        if not MockLanHandler.is_dhcp_managed():
+            return {"result": False, "reason": "disabled"}
+
+        if not MockLanHandler.client_exists(mac):
+            return {"result": False, "reason": "mac-not-exists"}
+
+        clients = MockLanHandler.mode_managed["dhcp"]["clients"]
+        MockLanHandler.mode_managed["dhcp"]["clients"] = [c for c in clients if c["mac"] != mac]
         return {"result": True}

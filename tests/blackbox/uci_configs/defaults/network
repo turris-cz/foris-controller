@@ -17,7 +17,7 @@ config interface 'lan'
     option _turris_mode 'managed'
     option ip6assign '60'
     option bridge_empty '1'
-    list ipaddr '172.16.1.1/24'
+    list ipaddr '192.168.1.1/24'
     option device 'br-lan'
 
 config interface 'guest_turris'

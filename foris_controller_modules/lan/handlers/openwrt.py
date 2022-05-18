@@ -63,5 +63,28 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
         err = self.uci.set_dhcp_client(ip, mac, hostname)
         if err:
             return {"result": False, "reason": err}
-        else:
-            return {"result": True}
+
+        return {"result": True}
+
+    @logger_wrapper(logger)
+    def update_dhcp_client(self, ip: str, old_mac: str, mac: str, hostname: str) -> dict:
+        """Update configuration of a single dhcp client
+        :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
+        :param mac: mac address of the client
+        :param hostname: hostname of the client (can be empty)
+        :returns: {"result": True} if update passes {"result": False, "reason": "..."} otherwise
+        """
+        err = self.uci.update_dhcp_client(ip, old_mac, mac, hostname)
+        if err:
+            return {"result": False, "reason": err}
+
+        return {"result": True}
+
+    @logger_wrapper(logger)
+    def delete_dhcp_client(self, mac: str) -> dict:
+        """Delete configuration of a single dhcp client """
+        err = self.uci.delete_dhcp_client(mac)
+        if err:
+            return {"result": False, "reason": err}
+
+        return {"result": True}
