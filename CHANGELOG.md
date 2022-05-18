@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - lan: make message data mandatory for update_settings
+- lan: add static boolean flag to dhcpv4 clients list
 
 ## [4.2.0] - 2022-03-04
 ### Added

@@ -31,9 +31,10 @@
                     },
                     "mac": {"type": "string", "format": "macaddress"},
                     "hostname": {"type": "string"},
-                    "active": {"type": "boolean"}
+                    "active": {"type": "boolean"},
+                    "static": {"type": "boolean"}
                 },
-                "required": ["expires", "hostname", "active", "mac", "ip"],
+                "required": ["expires", "hostname", "active", "mac", "ip", "static"],
                 "additionalProperties": false
             }
         },

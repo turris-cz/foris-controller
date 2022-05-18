@@ -1194,6 +1194,8 @@ def test_dhcp_clients_multimac_openwrt(
         data = backend.read()
     assert uci.get_option_anonymous(data, "dhcp", "host", -1, "mac") == "77:88:99:99:88:77 AA:BB:CC:DD:EE:FF"
 
+# TODO: add test that check whether static lease which is at the same time in dhcp.leases file is considered as "static"
+
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])

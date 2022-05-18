@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -512,6 +512,7 @@ def test_dhcp_clients(
                 "expires": 1539350286,
                 "active": True,
                 "hostname": "first",
+                "static": False,
             },
             {
                 "ip": "10.10.1.1",
@@ -519,6 +520,7 @@ def test_dhcp_clients(
                 "expires": 1539350388,
                 "active": False,
                 "hostname": "*",
+                "static": False,
             },
         ],
     )
@@ -556,6 +558,7 @@ def test_dhcp_clients(
                 "expires": 1539350286,
                 "active": True,
                 "hostname": "first",
+                "static": False,
             }
         ],
     )
@@ -581,6 +584,7 @@ def test_dhcp_clients(
                 "expires": 1539350388,
                 "active": False,
                 "hostname": "*",
+                "static": False,
             }
         ],
     )

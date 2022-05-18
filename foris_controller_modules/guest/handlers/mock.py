@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2019, 2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ class MockGuestHandler(Handler, BaseMockHandler):
                 "expires": 1539350286,
                 "active": True,
                 "hostname": "first",
+                "static": False,
             },
             {
                 "ip": "10.10.1.1",
@@ -50,6 +51,7 @@ class MockGuestHandler(Handler, BaseMockHandler):
                 "expires": 1539350388,
                 "active": False,
                 "hostname": "",
+                "static": False,
             },
         ],
     }

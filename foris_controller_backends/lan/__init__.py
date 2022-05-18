@@ -85,6 +85,7 @@ class LanFiles(BaseFile):
                         "ip": ip,
                         "hostname": hostname,
                         "active": self._check_active(address),
+                        "static": False,
                     }
                 )
 
@@ -166,16 +167,17 @@ class LanUci:
 
     def get_client_list(self, uci_data: dict, router_ip: str, netmask: str) -> typing.List[dict]:
         file_records = LanFiles().get_dhcp_clients(router_ip, netmask)
+
         static_uci_data = get_sections_by_type(uci_data, "dhcp", "host")
 
-        for record in uci_data:
+        for record in static_uci_data:
             if "mac" in record["data"]:
                 # Use only first mac and ignore the rest in case multiple MACs are detected
                 record["data"]["mac"] = LanUci._process_uci_mac_addresses(record["data"]["mac"])[0]
 
-        uci_map = {
+        static_leases_map = {
             e["data"]["mac"]: e["data"]
-            for e in uci_data
+            for e in static_uci_data
             if "mac" in e["data"]
             and "ip" in e["data"]  # `mac` and `ip` are mandatory for dhcp host, so ignore incomplete hosts
             and (
@@ -184,10 +186,10 @@ class LanUci:
             )
         }
         for record in file_records:
-            if record["mac"] in uci_map:
+            if record["mac"] in static_leases_map:
                 # override actual ip by the one which is supposed to be set
-                record["ip"] = uci_map[record["mac"]]["ip"]
-                hostname = uci_map[record["mac"]].get("name", "")
+                record["ip"] = static_leases_map[record["mac"]]["ip"]
+                hostname = static_leases_map[record["mac"]].get("name", "")
                 record["hostname"] = hostname if hostname else record["hostname"]
                 record["static"] = True
                 del static_leases_map[record["mac"]]
@@ -200,6 +202,7 @@ class LanUci:
                     "mac": record["mac"],
                     "active": False,
                     "expires": 0,
+                    "static": True,
                 }
             )
         return file_records

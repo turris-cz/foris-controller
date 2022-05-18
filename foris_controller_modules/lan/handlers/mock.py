@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ class MockLanHandler(Handler, BaseMockHandler):
                     "expires": 1539350186,
                     "active": True,
                     "hostname": "prvni",
+                    "static": False,
                 },
                 {
                     "ip": "192.168.2.1",
@@ -55,6 +56,7 @@ class MockLanHandler(Handler, BaseMockHandler):
                     "expires": 1539350188,
                     "active": False,
                     "hostname": "*",
+                    "static": True,
                 },
             ],
             "ipv6clients": [
@@ -286,6 +288,7 @@ class MockLanHandler(Handler, BaseMockHandler):
             "expires": 0,
             "active": False,
             "hostname": hostname,
+            "static": True,
         }
 
         MockLanHandler.mode_managed["dhcp"]["clients"].append(record)
