@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -81,6 +81,105 @@ def test_get_settings_more_wans(
     assert res["data"].keys() == {"device", "networks", "firewall"}
     assert set(res["data"]["firewall"]) == {"ssh_on_wan", "http_on_wan", "https_on_wan"}
     assert len(res["data"]["networks"]["wan"]) == 1
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
+def test_get_settings_interfaces_in_order(uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version):
+    """Test that interfaces defined in uci config are returned in natural sort order.
+
+    For example:
+        config device
+            option name 'br-lan'
+            list ports 'lan4'
+            list ports 'lan1'
+            list ports 'lan11'
+            list ports 'lan7'
+            list ports 'lan2'
+
+    Should return interfaces data in order 'lan1', 'lan2', 'lan4', 'lan7', 'lan11'.
+    """
+    # Config for Mox AEEC => lan1..20
+    ifaces_in_config = {
+        "lan": ["lan4", "lan1", "lan11", "lan7", "lan2"],
+        "guest": ["lan5", "lan6", "lan10", "lan20", "lan8", "lan15", "lan9"],
+    }
+    ifaces_sorted = {
+        "lan": ["lan1", "lan2", "lan4", "lan7", "lan11"],
+        "guest": ["lan5", "lan6", "lan8", "lan9", "lan10", "lan15", "lan20"],
+        "none": ["lan3", "lan12", "lan13", "lan14", "lan16", "lan17", "lan18", "lan19"],
+    }
+
+    # Note: Only one wan interface is supported at the moment, so don't check sorting on wan
+
+    prepare_turrishw_root(device, turris_os_version)
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        # lan bridge
+        backend.replace_list("network", "@device[0]", "ports", ifaces_in_config["lan"])
+        # guest bridge
+        backend.replace_list("network", "@device[1]", "ports", ifaces_in_config["guest"])
+
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert "networks" in res["data"]
+
+    # check lan net ports sorting
+    assert "lan" in res["data"]["networks"]
+    lan_ports = res["data"]["networks"]["lan"]
+    lan_ports_ids = [e["id"] for e in lan_ports]
+    assert ifaces_sorted["lan"] == lan_ports_ids
+
+    # check guest net ports sorting
+    assert "guest" in res["data"]["networks"]
+    guest_ports = res["data"]["networks"]["guest"]
+    guest_ports_ids = [e["id"] for e in guest_ports]
+    assert ifaces_sorted["guest"] == guest_ports_ids
+
+    # check none interfaces ports sorting
+    assert "none" in res["data"]["networks"]
+    none_ports = res["data"]["networks"]["none"]
+    none_ports_ids = [e["id"] for e in none_ports]
+    assert ifaces_sorted["none"] == none_ports_ids
+
+
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
+def test_get_settings_interfaces_in_order_mixed_ifaces(uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version):
+    """Test mixed interfaces names, not just lans, to further check natural order sorting.
+
+    For example:
+        config device
+            option name 'br-lan'
+            list ports 'lan1'
+            list ports 'sfp'
+            list ports 'lan2'
+
+    Should return interfaces data in order 'lan1', 'lan2', 'sfp'.
+    """
+    # TODO: refactor testtools hw mocks and use prepare_turrishw_root() instead
+    prepare_turrishw("mox+ALL")
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        # set lan ports
+        backend.replace_list("network", "@device[0]", "ports", ["lan1", "sfp", "lan2"])
+
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    assert "networks" in res["data"]
+
+    # check lan net ports sorting
+    assert "lan" in res["data"]["networks"]
+    lan_ports = res["data"]["networks"]["lan"]
+    lan_ports_ids = [e["id"] for e in lan_ports]
+    assert ["lan1", "lan2", "sfp"] == lan_ports_ids
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,10 +20,12 @@
 import json
 import logging
 import typing
+from functools import wraps
 
 import turrishw
 
 from foris_controller.exceptions import UciException, UciRecordNotFound
+from foris_controller.utils import sort_by_natural_order
 from foris_controller_backends.about import SystemInfoFiles
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.guest import GuestUci
@@ -36,8 +38,6 @@ from foris_controller_backends.uci import (
     section_exists,
     store_bool,
 )
-
-from functools import wraps
 
 logger = logging.getLogger(__name__)
 
@@ -55,28 +55,38 @@ def decorate_guest_net(pos):
     return decorate
 
 
-class NetworksUci(object):
-    def _prepare_network(self, data, section, ports_map):
+class NetworksUci():
+    def _prepare_network(self, data: dict, section: str, ports_map: typing.Dict[str, dict]) -> typing.List[dict]:
+        """Map detected interfaces to interfaces found in uci config file.
+
+        Return only those that exist in uci configuration and ignore the rest.
+
+        Sort interfaces by natural order by the port names
+
+        For example with following config:
+            list ports 'lan2'
+            list ports 'lan11'
+            list ports 'lan1'
+
+        resulting interfaces should be return in order lan1, lan2, lan11.
+        """
         # TODO: once `ifname` not required, refactor
         interfaces = get_option_named(data, "network", section, "ifname", [])
         interfaces = interfaces if isinstance(interfaces, (tuple, list)) else interfaces.split(" ")
         device = get_option_named(data, "network", section, "device", "")
 
-        devices = get_option_named(data,"network", device.replace("-", "_"), "ports", [])
+        ports = get_option_named(data,"network", device.replace("-", "_"), "ports", [])
 
-        # by default migrated "br-lan" is anonymous
-        if section == "lan" and len(devices) < 1 and not interfaces:
-            devs = get_sections_by_type(data, "network", "device")
-            lan_bridge = [
-                i for i in devs
-                if i["name"].startswith("cfg") and i["data"].get("name") == "br-lan"
-            ]
-            devices = lan_bridge[0]["data"].get("ports", [])
+        # by default migrated "br-lan" and "br-guest_turris" is anonymous
+        if section in ("lan", "guest_turris") and not ports and not interfaces:
+            ports = NetworksUci._get_anonymous_bridge_ports(data, section)
+
         res = []
 
         # ensure ports are in port_map
-        if devices:
-            for port in devices:
+        if ports:
+            ports = sort_by_natural_order(ports)
+            for port in ports:
                 if port in ports_map:
                     res.append(ports_map.pop(port))
         else:
@@ -85,11 +95,32 @@ class NetworksUci(object):
             except KeyError:
                 pass
 
+        interfaces = sort_by_natural_order(interfaces)
+
         # TODO: once old uci not supported delete, see above
         for interface in interfaces:
             if interface in ports_map:
                 res.append(ports_map.pop(interface))
         return res
+
+    @staticmethod
+    def _get_anonymous_bridge_ports(uci_data: dict, section: str) -> typing.List[str]:
+        """Get network bridges (lan, guest, ...) ports names of anonymous bridge config section.
+
+        These config sections might exist after network config migration in TOS 6.x,
+        or just be there from default configuration.
+        """
+        devs = get_sections_by_type(uci_data, "network", "device")
+        bridge = [
+            dev for dev in devs
+            if dev["name"].startswith("cfg") and dev["data"].get("name") == f"br-{section}"
+        ]
+
+        if not bridge:
+            logger.warning("No anonymous section 'br-%s' found among network devices.", section)
+            return []
+
+        return bridge[0]["data"].get("ports", [])
 
     def _find_enabled_networks_by_ifname(self, wireless_data, ifname):
         """
@@ -174,7 +205,7 @@ class NetworksUci(object):
                     res.append(v)
         except Exception:
             res = [], []  # when turrishw get fail -> return empty dict
-        return sorted(res, key=lambda x: x["id"]), sorted(res_wireless, key=lambda x: x["id"])
+        return res, res_wireless
 
     @staticmethod
     def get_interface_count(network_data, wireless_data, network_name, up_only=False):
@@ -250,7 +281,8 @@ class NetworksUci(object):
 
         lan_network = self._prepare_network(network_data, "lan", iface_map)
         guest_network = self._prepare_network(network_data, "guest_turris", iface_map)
-        none_network = [e for e in iface_map.values()]  # reduced in _prepare_network using pop()
+        none_network = list(iface_map.values())  # reduced in _prepare_network using pop()
+        # Note: none_network interfaces should be already sorted from turrishw
 
         for record in wifi_ifaces:
             networks_and_ssids = self._find_enabled_networks_by_ifname(wireless_data, record["id"])

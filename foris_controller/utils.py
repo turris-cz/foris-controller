@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017, 2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017, 2021-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,13 +23,13 @@ import inspect
 import ipaddress
 import os
 import pkgutil
-import prctl
-import signal
 import re
+import signal
 import typing
-
 from functools import wraps
 from multiprocessing.managers import SyncManager
+
+import prctl
 
 from .module_base import BaseModule
 
@@ -321,3 +321,11 @@ def parse_to_list(option: ListOrString) -> typing.List[str]:
     if not isinstance(option, list):
         return [option]
     return option
+
+
+def sort_by_natural_order(items: typing.List[str]) -> typing.List[str]:
+    """Sort strings in collection by natural order"""
+    return sorted(
+        items,
+        key=lambda l: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", l)]
+    )
