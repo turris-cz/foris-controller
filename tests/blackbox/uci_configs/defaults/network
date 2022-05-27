@@ -22,12 +22,11 @@ config interface 'lan'
 
 config interface 'guest_turris'
     option enabled '1'
-    option type 'bridge'
     option proto 'static'
     option ipaddr '10.111.222.1'
     option netmask '255.255.255.0'
-    option bridge_empty '1'
     option ip6assign '64'
+    option device 'br-guest_turris'
 
 config interface 'wan6'
     option proto 'dhcpv6'
@@ -41,3 +40,8 @@ config device
     option type 'bridge'
     option name 'br-lan'
     option macaddr '00:11:ff:cc:ee:bb'
+
+config device
+    option name 'br-guest_turris'
+    option bridge_empty '1'
+    option type 'bridge'
