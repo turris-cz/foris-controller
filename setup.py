@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (https://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -124,7 +124,7 @@ setup(
         "pbkdf2",
         "python-slugify",
         "svupdater @ git+https://gitlab.nic.cz/turris/updater/supervisor.git#egg=supervisor",
-        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git#egg=turrishw",
+        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git@v0.7.0#egg=turrishw",
         "turris-timezone @ git+https://gitlab.nic.cz/turris/foris-controller/turris-timezone.git#egg=turris-timezone",
     ],
     setup_requires=[
