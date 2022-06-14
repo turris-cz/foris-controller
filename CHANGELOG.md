@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - networks: Sort interfaces by port names and disregard order in uci config
 
+### Changed
+- wifi: refactor sorting of htmodes
+
 ## [5.0.0] - 2022-05-18
 ### Added
 - lan: allow managing of DHCPv4 static leases (create, update, delete)

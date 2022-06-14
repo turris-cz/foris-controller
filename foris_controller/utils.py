@@ -323,7 +323,7 @@ def parse_to_list(option: ListOrString) -> typing.List[str]:
     return option
 
 
-def sort_by_natural_order(items: typing.List[str]) -> typing.List[str]:
+def sort_by_natural_order(items: typing.Union[typing.List[str], typing.Set[str]]) -> typing.List[str]:
     """Sort strings in collection by natural order"""
     return sorted(
         items,

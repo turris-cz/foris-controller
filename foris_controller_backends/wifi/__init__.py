@@ -27,6 +27,7 @@ from foris_controller.exceptions import (
     UciException,
     UciRecordNotFound,
 )
+from foris_controller.utils import sort_by_natural_order
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
@@ -87,11 +88,8 @@ class WifiUci:
 
     @staticmethod
     def _sort_htmodes(modes: typing.Set[str]) -> typing.List[str]:
-        """Sort HT and VHT modes in natural order"""
-        return sorted(
-            modes,
-            key=lambda l: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", l)]
-        )
+        """Sort HT (HT, VHT, HE, ...) modes in natural order"""
+        return sort_by_natural_order(modes)
 
     @staticmethod
     def _get_device_bands(device_name: str) -> list:
