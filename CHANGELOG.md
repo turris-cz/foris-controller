@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - networks: allow managing of interfaces on Turris 1.x (previously disabled)
+- setup.py: update turrishw dependency to 0.9.0, so we can tell which ethernet port
+    belongs to which Mox module again on TOS 6.0.
 
 ### Fixed
 - networks: Sort interfaces by port names and disregard order in uci config
