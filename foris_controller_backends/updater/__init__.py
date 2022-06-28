@@ -19,20 +19,19 @@
 
 import logging
 import typing
-
 from datetime import datetime
 from functools import wraps
 
+from foris_controller.exceptions import UciException
 from foris_controller.updater import (
     svupdater,
     svupdater_approvals,
+    svupdater_autorun,
     svupdater_exceptions,
     svupdater_l10n,
     svupdater_lists,
-    svupdater_autorun,
     svupdater_packages,
 )
-from foris_controller.exceptions import UciException
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +116,7 @@ class UpdaterUci(object):
         return res
 
 
-class Updater(object):
+class Updater:
     def updater_running(self):
         """ Returns indicator whether the updater is running
         :returns: True if updater is running False otherwise
@@ -139,6 +138,7 @@ class Updater(object):
         if approval:
             approval["present"] = True
             approval["time"] = datetime.fromtimestamp(approval["time"]).isoformat()
+            approval["reboot"] = bool(approval["reboot"])
 
             # remove cur_ver: None and new_ver: None
             for record in approval["plan"]:

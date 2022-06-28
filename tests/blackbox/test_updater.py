@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,27 +18,30 @@
 #
 
 import os
-import pytest
-import uuid
 import time
-
+import uuid
 from datetime import datetime
 
-from foris_controller.exceptions import UciRecordNotFound
-
+import pytest
 from foris_controller_testtools.fixtures import (
-    only_backends,
-    uci_configs_init,
-    infrastructure,
+    UCI_CONFIG_DIR_PATH,
     clean_reboot_indicator,
+    device,
+    file_root_init,
+    infrastructure,
+    only_backends,
+    turris_os_version,
+    uci_configs_init,
     updater_languages,
     updater_userlists,
-    device,
-    turris_os_version,
-    UCI_CONFIG_DIR_PATH,
-    file_root_init,
 )
-from foris_controller_testtools.utils import set_approval, get_uci_module, match_subdict
+from foris_controller_testtools.utils import (
+    get_uci_module,
+    match_subdict,
+    set_approval,
+)
+
+from foris_controller.exceptions import UciRecordNotFound
 
 
 def wait_for_updater_run_finished(notifications, infrastructure):
@@ -489,6 +492,8 @@ def test_approval(language, updater_languages, updater_userlists, uci_configs_in
         if data:
             data["present"] = True
             data["time"] = datetime.fromtimestamp(data["time"]).isoformat()
+            data["reboot"] = data["reboot"] in ("delayed", "finished")
+            # valid reboot states (i.e. reboot = True) are defined in updater-supervisor
             for record in data["plan"]:
                 if record["new_ver"] is None:
                     del record["new_ver"]
@@ -499,13 +504,15 @@ def test_approval(language, updater_languages, updater_userlists, uci_configs_in
             assert approval == {"present": False}
 
     approval(None)
+    # Note: Updater-supervisor now returns str or None for reboot state,
+    # boolean value from these states is determined in foris-controller backend.
     approval(
         {
             "hash": str(uuid.uuid4()),
             "status": "asked",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": "delayed",
         }
     )
     approval(
@@ -517,7 +524,7 @@ def test_approval(language, updater_languages, updater_userlists, uci_configs_in
                 {"name": "package1", "op": "install", "cur_ver": None, "new_ver": "1.0"},
                 {"name": "package2", "op": "remove", "cur_ver": "2.0", "new_ver": None},
             ],
-            "reboot": True,
+            "reboot": "finished",
         }
     )
     approval(
@@ -532,7 +539,7 @@ def test_approval(language, updater_languages, updater_userlists, uci_configs_in
                 {"name": "package6", "op": "upgrade", "cur_ver": None, "new_ver": "1.1"},
                 {"name": "package7", "op": "downgrade", "cur_ver": None, "new_ver": "2.0"},
             ],
-            "reboot": True,
+            "reboot": None,  # None == no reboot required
         }
     )
 
@@ -607,7 +614,7 @@ def test_approval_resolve_openwrt(
             "status": "asked",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": None,
         },
         {"hash": str(uuid.uuid4()), "solution": "grant"},
         False,
@@ -618,7 +625,7 @@ def test_approval_resolve_openwrt(
             "status": "asked",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": None,
         },
         {"hash": str(uuid.uuid4()), "solution": "deny"},
         False,
@@ -632,7 +639,7 @@ def test_approval_resolve_openwrt(
             "status": "granted",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": None,
         },
         {"hash": approval_id, "solution": "grant"},
         False,
@@ -643,7 +650,7 @@ def test_approval_resolve_openwrt(
             "status": "denied",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": None,
         },
         {"hash": approval_id, "solution": "deny"},
         False,
@@ -657,7 +664,7 @@ def test_approval_resolve_openwrt(
             "status": "asked",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": None,
         },
         {"hash": approval_id, "solution": "grant"},
         True,
@@ -668,7 +675,7 @@ def test_approval_resolve_openwrt(
             "status": "asked",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": None,
         },
         {"hash": approval_id, "solution": "deny"},
         True,
@@ -679,7 +686,7 @@ def test_approval_resolve_openwrt(
             "status": "denied",
             "time": int(time.time()),
             "plan": [],
-            "reboot": False,
+            "reboot": None,
         },
         {"hash": approval_id, "solution": "grant"},
         True,
