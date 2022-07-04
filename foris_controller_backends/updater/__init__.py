@@ -32,6 +32,7 @@ from foris_controller.updater import (
     svupdater_lists,
     svupdater_packages,
 )
+from foris_controller_modules.updater.datatypes import ApprovalNotPresent
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ class Updater:
         logger.debug("opkg_lock() -> %s", res)
         return res
 
-    def get_approval(self):
+    def get_approval(self) -> typing.Union[svupdater_approvals.ApprovalRequest, ApprovalNotPresent]:
         """ Returns current approval
         :returns: approval
         :rtype: dict

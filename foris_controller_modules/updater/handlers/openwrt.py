@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2017-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2017-2020, 2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,10 +21,12 @@ import logging
 import typing
 
 from foris_controller.handler_base import BaseOpenwrtHandler
+from foris_controller.updater import svupdater_approvals
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.updater import UpdaterUci, Updater
+from foris_controller_backends.updater import Updater, UpdaterUci
 
 from .. import Handler
+from ..datatypes import ApprovalNotPresent
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +87,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         return OpenwrtUpdaterHandler.uci.update_package_lists(package_lists)
 
     @logger_wrapper(logger)
-    def get_approval(self):
+    def get_approval(self) -> typing.Union[svupdater_approvals.ApprovalRequest, ApprovalNotPresent]:
         """ Returns current approval
         :returns: current approval or {"present": False}
         :rtype: dict
