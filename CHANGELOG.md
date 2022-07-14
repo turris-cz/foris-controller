@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - updater: handling of "reboot is required" from updater supervisor;
     it is now possible to approve update request in reForis
 
+### Changed
+- setup.py: bump foris-controller-testtools version to 0.12.0
+
 ## [5.1.0] - 2022-06-27
 ### Fixed
 - networks: Sort interfaces by port names and disregard order in uci config
