@@ -16,7 +16,6 @@ config interface 'lan'
     option proto 'static'
     option _turris_mode 'managed'
     option ip6assign '60'
-    option bridge_empty '1'
     list ipaddr '192.168.1.1/24'
     option device 'br-lan'
 
@@ -32,7 +31,7 @@ config interface 'wan6'
     option proto 'dhcpv6'
     option device '@wan'
 
-config device
+config device 'br_lan'
     list ports 'lan1'
     list ports 'lan2'
     list ports 'lan3'
@@ -41,7 +40,7 @@ config device
     option name 'br-lan'
     option macaddr '00:11:ff:cc:ee:bb'
 
-config device
+config device 'br_guest_turris'
     option name 'br-guest_turris'
     option bridge_empty '1'
     option type 'bridge'
