@@ -462,6 +462,24 @@ IPV6_DHCP_DATA = {
 }
 
 
+def handle_dhcp(args):
+    print(json.dumps(IPV6_DHCP_DATA, indent=2))
+
+
+def handle_iwinfo(args):
+    if args.method not in ["info", "freqlist"]:
+        print({})
+    else:
+        device = json.loads(args.message).get("device")
+        print(json.dumps(WIFI_DATA[args.method].get(device, {}), indent=2))
+
+
+UBUS_OBJECT_MAP = {
+    "dhcp": handle_dhcp,
+    "iwinfo": handle_iwinfo,
+}
+
+
 def main():
     parser = argparse.ArgumentParser(prog="ubus")
     parser.add_argument("command")
@@ -472,19 +490,10 @@ def main():
     args = parser.parse_args()
 
     if args.command == "call":
-        if args.object == "iwinfo":
-            if args.method not in ["info", "freqlist"]:
-                print({})
-            else:
-                device = json.loads(args.message).get("device")
-
-                print(
-                    json.dumps(WIFI_DATA[args.method].get(device, {}), indent=2)
-                )
-        elif args.object == "dhcp":
-            print(
-                json.dumps(IPV6_DHCP_DATA, indent=2)
-            )
+        if args.object in UBUS_OBJECT_MAP:
+            UBUS_OBJECT_MAP[args.object](args)
+        else:
+            print({})
     else:
         print({})
 
