@@ -53,6 +53,7 @@ DEFAULT_CONFIG = [
         "htmode": "HE80",
         "hwmode": "11a",
         "encryption": "WPA2/3",
+        "ieee80211w_disabled": False,
         "password": "",
         "guest_wifi": {
             "enabled": False,
@@ -140,6 +141,7 @@ DEFAULT_CONFIG = [
         "hwmode": "11g",
         "password": "",
         "encryption": "WPA2/3",
+        "ieee80211w_disabled": False,
         "guest_wifi": {
             "enabled": False,
             "SSID": "Turris-guest",
@@ -181,6 +183,7 @@ DEFAULT_UPDATE_DATA = [
         "htmode": "VHT20",
         "hwmode": "11a",
         "encryption": "WPA3",
+        "ieee80211w_disabled": False,
         "password": "passpass",
         "guest_wifi": {"enabled": False},
     },
@@ -193,6 +196,7 @@ DEFAULT_UPDATE_DATA = [
         "htmode": "NOHT",
         "hwmode": "11g",
         "encryption": "WPA2/3",
+        "ieee80211w_disabled": False,
         "password": "passpass",
         "guest_wifi": {
             "enabled": True,
@@ -257,9 +261,7 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure):
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
-def test_get_settings_custom_encryption(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
-):
+def test_get_settings_custom_encryption_openwrt(file_root_init, uci_configs_init, infrastructure):
     """Test that detection of custom encryption configuration is correct
     Foris-controller should handle any unexpected values of 'encryption' as 'custom'
     """
@@ -281,6 +283,134 @@ def test_get_settings_custom_encryption(
     devices = res["data"]["devices"]
     assert devices[0]["encryption"] == "custom"
     assert devices[1]["encryption"] == "custom"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_custom_encryption_ieee80211w_openwrt(file_root_init, uci_configs_init, infrastructure):
+    """Test that ieee80211w_disabled is returned False in case of custom encryption settings."""
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "wpa3-mixed")  # WPA3/WPA3-enterprise
+        backend.set_option("wireless", "@wifi-device[0]", "disabled", "0")
+
+    res = infrastructure.process_message(
+        {"module": "wifi", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "devices" in res["data"].keys()
+    devices = res["data"]["devices"]
+    assert devices[0]["encryption"] == "custom"
+    assert devices[0]["ieee80211w_disabled"] is False
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_update_settings_custom_encryption_openwrt(
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command
+):
+    """Test that setting custom encryption will keep the `encryption` + `ieee80211w` settings intact.
+
+    That it is possible to change SSID, password, channel, frequency band, etc., but not the encryption settings.
+    """
+    def update(*devices):
+        res = infrastructure.process_message(
+            {
+                "module": "wifi",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {"devices": devices},
+            }
+        )
+        assert res == {
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "wifi",
+        }
+
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            data = backend.read()
+        return data
+
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "wpa3-mixed")  # WPA3/WPA3-enterprise
+        backend.set_option("wireless", "@wifi-device[0]", "disabled", "0")
+
+    data = update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris-custom-2G",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": "custom",
+            "password": "2gcustompass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+    assert uci.get_option_named(data, "wireless", "default_radio0", "ssid") == "Turris-custom-2G"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "key") == "2gcustompass"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "encryption") == "wpa3-mixed"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "ieee80211w", "") == ""
+
+    assert uci.get_option_named(data, "wireless", "radio0", "band", "") == "2g"
+    assert uci.get_option_named(data, "wireless", "radio0", "channel", "") == "11"
+    assert uci.get_option_named(data, "wireless", "radio0", "htmode", "") == "HT20"
+
+    data = update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris-custom-5G",
+            "hidden": False,
+            "channel": 36,
+            "htmode": "VHT80",
+            "hwmode": "11a",
+            "encryption": "custom",
+            "password": "5gcustompass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+    assert uci.get_option_named(data, "wireless", "default_radio0", "ssid") == "Turris-custom-5G"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "key") == "5gcustompass"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "encryption") == "wpa3-mixed"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "ieee80211w", "") == ""
+
+    assert uci.get_option_named(data, "wireless", "radio0", "band", "") == "5g"
+    assert uci.get_option_named(data, "wireless", "radio0", "channel", "") == "36"
+    assert uci.get_option_named(data, "wireless", "radio0", "htmode", "") == "VHT80"
+
+    # ieee80211w is already set, do not overwrite it
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "default_radio0", "ieee80211w", "2")
+
+    data = update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris-custom-5G",
+            "hidden": False,
+            "channel": 36,
+            "htmode": "VHT80",
+            "hwmode": "11a",
+            "encryption": "custom",
+            "password": "5gcustompass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+    assert uci.get_option_named(data, "wireless", "default_radio0", "ssid") == "Turris-custom-5G"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "key") == "5gcustompass"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "encryption") == "wpa3-mixed"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "ieee80211w", "") == "2"
+
+    assert uci.get_option_named(data, "wireless", "radio0", "band", "") == "5g"
+    assert uci.get_option_named(data, "wireless", "radio0", "channel", "") == "36"
+    assert uci.get_option_named(data, "wireless", "radio0", "htmode", "") == "VHT80"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -406,6 +536,7 @@ def test_update_settings(
             "htmode": "VHT20",
             "hwmode": "11a",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -418,6 +549,7 @@ def test_update_settings(
             "htmode": "NOHT",
             "hwmode": "11g",
             "encryption": "WPA2/3",
+            "ieee80211w_disabled": False,
             "password": "passpass",
             "guest_wifi": {
                 "enabled": True,
@@ -440,6 +572,7 @@ def test_update_settings(
             "htmode": "VHT20",
             "hwmode": "11a",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -452,6 +585,7 @@ def test_update_settings(
             "htmode": "NOHT",
             "hwmode": "11g",
             "encryption": "WPA2/3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {
                 "enabled": True,
@@ -474,6 +608,7 @@ def test_update_settings(
             "htmode": "HT20",
             "hwmode": "11g",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -486,6 +621,7 @@ def test_update_settings(
             "htmode": "HT20",
             "hwmode": "11g",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -498,6 +634,7 @@ def test_update_settings(
             "htmode": "HT20",
             "hwmode": "11g",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -515,6 +652,7 @@ def test_update_settings(
             "htmode": "VHT20",
             "hwmode": "11a",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -527,6 +665,7 @@ def test_update_settings(
             "htmode": "NOHT",
             "hwmode": "11a",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {
                 "enabled": True,
@@ -655,6 +794,7 @@ def test_update_settings_uci(
             "htmode": "VHT80",
             "hwmode": "11a",
             "encryption": "WPA2/3",
+            "ieee80211w_disabled": True,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -667,6 +807,7 @@ def test_update_settings_uci(
             "htmode": "HT20",
             "hwmode": "11g",
             "encryption": "WPA3",
+            "ieee80211w_disabled": True,
             "password": "ssapssap",
             "guest_wifi": {"enabled": False},
         },
@@ -689,6 +830,7 @@ def test_update_settings_uci(
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
+    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "0"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -712,6 +854,7 @@ def test_update_settings_uci(
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae"
+    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "0"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -728,6 +871,7 @@ def test_update_settings_uci(
             "htmode": "VHT40",
             "hwmode": "11a",
             "encryption": "WPA2/3",
+            "ieee80211w_disabled": False,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -740,6 +884,7 @@ def test_update_settings_uci(
             "htmode": "HT40",
             "hwmode": "11g",
             "encryption": "WPA3",
+            "ieee80211w_disabled": False,
             "password": "ssapssap",
             "guest_wifi": {"enabled": True, "SSID": "Dev22G", "password": "ssapssapg", "encryption": "WPA2"},
         },
@@ -762,6 +907,7 @@ def test_update_settings_uci(
         uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     )
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
+    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w", "") == ""
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -786,6 +932,7 @@ def test_update_settings_uci(
     )
 
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae"
+    assert uci.get_option_named(data, "wireless", real_section, "ieee80211w", "") == ""
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
     assert (
         uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
@@ -794,6 +941,7 @@ def test_update_settings_uci(
     assert uci.get_option_named(data, "wireless", guest_section, "ssid") == "Dev22G"
     assert uci.get_option_named(data, "wireless", guest_section, "key") == "ssapssapg"
     assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", guest_section, "ieee80211w", "") == ""
     assert uci.get_option_named(data, "wireless", guest_section, "wpa_group_rekey") == "86400"
     assert uci.get_option_named(data, "wireless", guest_section, "mode") == "ap"
     assert uci.get_option_named(data, "wireless", guest_section, "network") == "guest_turris"
@@ -814,6 +962,7 @@ def test_update_settings_uci(
             "htmode": "NOHT",
             "hwmode": "11a",
             "encryption": "WPA2/3",
+            "ieee80211w_disabled": False,
             "password": "passpass",
             "guest_wifi": {"enabled": True, "password": "passpassg", "SSID": "Dev111G", "encryption": "WPA2"},
         },
@@ -825,6 +974,7 @@ def test_update_settings_uci(
     assert uci.get_option_named(data, "wireless", "radio0", "htmode") == "NOHT"
     real_section, guest_section = get_sections(data, "radio0")
     assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", guest_section, "ieee80211w", "") == ""
     assert uci.get_option_named(data, "wireless", guest_section, "wpa_group_rekey") == "86400"
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is True
@@ -838,6 +988,7 @@ def test_update_settings_uci(
         is True
     )
     assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
+    assert uci.get_option_named(data, "wireless", guest_section, "ieee80211w", "") == ""
     assert (
         uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0"))
         is True
@@ -912,6 +1063,7 @@ def test_update_settings_migrate_old_syntax_uci(
             "htmode": "VHT80",
             "hwmode": "11a",
             "encryption": "WPA2/3",
+            "ieee80211w_disabled": False,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         },
@@ -944,6 +1096,7 @@ def test_update_settings_migrate_old_syntax_uci(
             "htmode": "HT40",
             "hwmode": "11g",
             "encryption": "WPA2/3",
+            "ieee80211w_disabled": False,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
         }
@@ -959,7 +1112,7 @@ def test_update_settings_migrate_old_syntax_uci(
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_wrong_update(file_root_init, uci_configs_init, infrastructure):
+def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_restart_command):
     def update(*devices):
         res = infrastructure.process_message(
             {
@@ -970,154 +1123,249 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure):
             }
         )
         assert "errors" in res
+        # Make sure it fails for the right reason, not just that it fails.
+        # To differentiate it from, for example: "[<something>] is not of type 'object'"
+        assert "not valid under any of the given schemas" in res["errors"][0]["stacktrace"]
+
+    DEFAULT_WIFI_ENCRYPTION = "WPA2/3"
 
     # enabled false
     update(
-        [
-            {
-                "id": 1,
+        {
+            "id": 1,
+            "enabled": False,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+
+    # enabled guest wifi false
+    update(
+        {
+            "id": 1,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {
                 "enabled": False,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 11,
-                "htmode": "HT20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False},
+                "SSID": "Turris-guest",
+                "encryption": DEFAULT_WIFI_ENCRYPTION,
+                "password": "passpass"
             }
-        ]
+        }
     )
 
-    # enabled wifi false
+    # wrong HT modes
+    # nonsense HT mode on 2.4 GHz band
     update(
-        [
-            {
-                "id": 1,
-                "enabled": True,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 11,
-                "htmode": "HT20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False, "SSID": "Turris-guest", "password": "passpass"},
-            }
-        ]
+        {
+            "id": 1,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "TH20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
     )
-
-    # wrong ht mode
+    # nonsense HT mode on 5 GHz band
     update(
-        [
-            {
-                "id": 1,
-                "enabled": True,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 11,
-                "htmode": "VTH20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False},
-            }
-        ]
+        {
+            "id": 1,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 36,
+            "htmode": "VTH80",
+            "hwmode": "11a",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
     )
+    # 5 GHz HT mode on 2.4 GHz
     update(
-        [
-            {
-                "id": 1,
-                "enabled": True,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 11,
-                "htmode": "VTH40",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False},
-            }
-        ]
-    )
-    update(
-        [
-            {
-                "id": 1,
-                "enabled": True,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 11,
-                "htmode": "VTH80",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False},
-            }
-        ]
+        {
+            "id": 1,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "VHT40",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
     )
 
     # mismatching frequences
     update(
-        [
-            {
-                "id": 0,
-                "enabled": False,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 40,
-                "htmode": "HT20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False},
-            }
-        ]
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 40,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
     )
     update(
-        [
-            {
-                "id": 0,
-                "enabled": False,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 10,
-                "htmode": "HT20",
-                "hwmode": "11a",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False},
-            }
-        ]
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 10,
+            "htmode": "HT20",
+            "hwmode": "11a",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+
+    # mismatch frequencies with custom encryption
+    update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 40,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": "custom",
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+    update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 10,
+            "htmode": "VHT80",
+            "hwmode": "11a",
+            "encryption": "custom",
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
     )
 
     # too long SSID
     update(
-        [
-            {
-                "id": 0,
-                "enabled": False,
-                "SSID": "This SSID has more than 32 charac",
-                "hidden": False,
-                "channel": 10,
-                "htmode": "HT20",
-                "hwmode": "11g",
-                "password": "passpass",
-                "guest_wifi": {"enabled": False},
-            }
-        ]
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "This SSID has more than 32 charac",
+            "hidden": False,
+            "channel": 10,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
     )
     update(
-        [
-            {
-                "id": 0,
-                "enabled": False,
-                "SSID": "Turris",
-                "hidden": False,
-                "channel": 40,
-                "htmode": "HT20",
-                "hwmode": "11g",
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "Turris",
+            "hidden": False,
+            "channel": 10,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {
+                "enabled": True,
+                "SSID": "This SSID has more than 32 charac",
+                "encryption": DEFAULT_WIFI_ENCRYPTION,
                 "password": "passpass",
-                "guest_wifi": {
-                    "enabled": True,
-                    "SSID": "This SSID has more than 32 charac",
-                    "password": "passpass",
-                },
+            },
+        }
+    )
+
+    # omitting encryption or ieee80211w_disabled (with WPA3) should fail
+    update(
+        {
+            "id": 1,
+            "enabled": True,
+            "SSID": "NoEncryptionSent",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+    update(
+        {
+            "id": 1,
+            "enabled": True,
+            "SSID": "NoIEEE80211Sent",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
+
+    # guest wifi no encryption selected
+    update(
+        {
+            "id": 1,
+            "enabled": True,
+            "SSID": "NoGuestEncryptionSent",
+            "hidden": False,
+            "channel": 11,
+            "htmode": "HT20",
+            "hwmode": "11g",
+            "encryption": DEFAULT_WIFI_ENCRYPTION,
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {
+                "enabled": True,
+                "SSID": "Turris-guest",
+                "password": "passpass"
             }
-        ]
+        }
     )
 
 
@@ -1226,6 +1474,7 @@ def test_too_long_generated_guest_ssid(
                         "htmode": "HT20",
                         "hwmode": "11g",
                         "encryption": "WPA2/3",
+                        "ieee80211w_disabled": False,
                         "password": "passpass",
                         "guest_wifi": {"enabled": False},
                     }
@@ -1370,6 +1619,7 @@ def test_update_settings_uci_country(
                             "htmode": "NOHT",
                             "hwmode": "11a",
                             "encryption": "WPA3",
+                            "ieee80211w_disabled": False,
                             "password": "passpass",
                             "guest_wifi": {
                                 "enabled": True,
@@ -1413,3 +1663,119 @@ def test_update_settings_uci_country(
     uci_data = update()
     assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 0, "country") == "00"
     assert uci.get_option_anonymous(uci_data, "wireless", "wifi-device", 1, "country") == "00"
+
+
+@pytest.mark.parametrize("ieee80211w_value,is_disabled", [("1", False), ("2", False), ("0", True), (None, False)])
+@pytest.mark.only_backends(["openwrt"])
+def test_get_80211w_settings_openwrt(uci_configs_init, infrastructure, ieee80211w_value, is_disabled):
+    """Test getting IEEE 802.11w setting with WPA3.
+
+    Check following settings:
+    * ieee80211w '1' => ieee80211w_disabled=False
+    * ieee80211w '2' => ieee80211w_disabled=False
+    * ieee80211w '0' => ieee80211w_disabled=True
+    * ieee80211w unset => ieee80211w_disabled=False
+    """
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "default_radio0", "encryption", "sae")  # pure WPA3
+        if ieee80211w_value is not None:
+            backend.set_option("wireless", "default_radio0", "ieee80211w", ieee80211w_value)
+
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
+    assert "errors" not in res.keys()
+
+    assert len(res["data"]["devices"]) == 2
+
+    first_wifi_device = res["data"]["devices"][0]
+    assert "ieee80211w_disabled" in first_wifi_device.keys()
+    assert first_wifi_device["ieee80211w_disabled"] is is_disabled
+    assert first_wifi_device["encryption"] == "WPA3"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart_command):
+    """Test setting WPA3 with or without IEEE 802.11w enabled."""
+    def update(device):
+        """Currently update just one device, which should be enough for this particular tests."""
+        request_data = {"devices": [device]}
+        res = infrastructure.process_message(
+            {"module": "wifi", "action": "update_settings", "kind": "request", "data": request_data}
+        )
+
+        assert "errors" not in res.keys()
+
+        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            data = backend.read()
+        return data
+
+    uci = get_uci_module(infrastructure.name)
+
+    uci_data = update({
+        "id": 0,
+        "enabled": True,
+        "SSID": "DevWPA3",
+        "hidden": False,
+        "channel": 40,
+        "htmode": "VHT40",
+        "hwmode": "11a",
+        "encryption": "WPA3",
+        "ieee80211w_disabled": False,
+        "password": "passpass",
+        "guest_wifi": {"enabled": False},
+    })
+
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae"
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == ""
+
+    uci_data = update({
+        "id": 0,
+        "enabled": True,
+        "SSID": "DevWPA3",
+        "hidden": False,
+        "channel": 40,
+        "htmode": "VHT40",
+        "hwmode": "11a",
+        "encryption": "WPA3",
+        "ieee80211w_disabled": True,
+        "password": "passpass",
+        "guest_wifi": {"enabled": False},
+    })
+
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae"
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == "0"
+
+    uci_data = update({
+        "id": 0,
+        "enabled": True,
+        "SSID": "DevWPA23",
+        "hidden": False,
+        "channel": 40,
+        "htmode": "VHT40",
+        "hwmode": "11a",
+        "encryption": "WPA2/3",
+        "ieee80211w_disabled": False,
+        "password": "passpass",
+        "guest_wifi": {"enabled": False},
+    })
+
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae-mixed"
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == ""
+
+    uci_data = update({
+        "id": 0,
+        "enabled": True,
+        "SSID": "DevWPA23",
+        "hidden": False,
+        "channel": 40,
+        "htmode": "VHT40",
+        "hwmode": "11a",
+        "encryption": "WPA2/3",
+        "ieee80211w_disabled": True,
+        "password": "passpass",
+        "guest_wifi": {"enabled": False},
+    })
+
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae-mixed"
+    assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == "0"

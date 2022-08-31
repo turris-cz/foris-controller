@@ -1268,6 +1268,7 @@ def test_interface_count(
                 "htmode": "HT20",
                 "hwmode": "11g",
                 "encryption": WIFI_DEFAULT_ENCRYPTION,
+                "ieee80211w_disabled": False,
                 "password": "passpass",
                 "guest_wifi": {"enabled": False},
             },
@@ -1288,6 +1289,7 @@ def test_interface_count(
                 "htmode": "HT20",
                 "hwmode": "11g",
                 "encryption": WIFI_DEFAULT_ENCRYPTION,
+                "ieee80211w_disabled": False,
                 "password": "passpass",
                 "guest_wifi": {
                     "enabled": True,
@@ -1313,6 +1315,7 @@ def test_interface_count(
                 "htmode": "HT20",
                 "hwmode": "11g",
                 "encryption": WIFI_DEFAULT_ENCRYPTION,
+                "ieee80211w_disabled": False,
                 "password": "passpass",
                 "guest_wifi": {"enabled": False},
             },
@@ -1325,6 +1328,7 @@ def test_interface_count(
                 "htmode": "HT20",
                 "hwmode": "11g",
                 "encryption": WIFI_DEFAULT_ENCRYPTION,
+                "ieee80211w_disabled": False,
                 "password": "passpass",
                 "guest_wifi": {
                     "enabled": True,
@@ -1350,6 +1354,7 @@ def test_interface_count(
                 "htmode": "HT20",
                 "hwmode": "11g",
                 "encryption": WIFI_DEFAULT_ENCRYPTION,
+                "ieee80211w_disabled": False,
                 "password": "passpass",
                 "guest_wifi": {"enabled": False},
             },
@@ -1362,6 +1367,7 @@ def test_interface_count(
                 "htmode": "HT20",
                 "hwmode": "11g",
                 "encryption": WIFI_DEFAULT_ENCRYPTION,
+                "ieee80211w_disabled": False,
                 "password": "passpass",
                 "guest_wifi": {
                     "enabled": True,

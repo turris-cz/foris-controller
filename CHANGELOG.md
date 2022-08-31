@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- wifi: Allow disabling Management Frame Protection (IEEE 802.11w) for WPA3
+  encryption modes (WPA2/3 and WPA3). It might help when wifi clients are
+  having trouble connecting to the wifi Access Point.
 - wan: Allow setting VLAN ID for WAN interface
 
 ## [5.3.0] - 2022-11-22

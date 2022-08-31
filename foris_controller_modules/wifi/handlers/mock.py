@@ -40,6 +40,7 @@ DEFAULT_CONFIG = [
         "htmode": "HE80",
         "hwmode": "11a",
         "encryption": DEFAULT_WIFI_ENCRYPTION,
+        "ieee80211w_disabled": False,
         "password": "",
         "guest_wifi": {
             "enabled": False,
@@ -126,6 +127,7 @@ DEFAULT_CONFIG = [
         "htmode": "HT20",
         "hwmode": "11g",
         "encryption": DEFAULT_WIFI_ENCRYPTION,
+        "ieee80211w_disabled": False,
         "password": "",
         "guest_wifi": {
             "enabled": False,
@@ -181,6 +183,7 @@ class MockWifiHandler(Handler, BaseMockHandler):
         htmode=None,
         hwmode=None,
         encryption=None,
+        ieee80211w_disabled=None,
         password=None,
         guest_wifi=None,
     ):
@@ -219,6 +222,15 @@ class MockWifiHandler(Handler, BaseMockHandler):
         dev["htmode"] = htmode
         dev["hwmode"] = hwmode
         dev["encryption"] = encryption if encryption is not None else DEFAULT_WIFI_ENCRYPTION
+
+        # handle optional ieee80211w based on encryption type
+        if encryption in ("WPA2/3", "WPA3"):
+            dev["ieee80211w_disabled"] = ieee80211w_disabled
+        elif encryption == "WPA2":
+            dev["ieee80211w_disabled"] = False  # ignore ieee80211w value for WPA2
+        else:
+            return False
+
         dev["password"] = password
         if guest_wifi["enabled"]:
             dev["guest_wifi"] = copy.deepcopy(guest_wifi)

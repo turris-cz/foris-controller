@@ -208,6 +208,8 @@ class WifiUci:
         current_channel = device["data"].get("channel", "11" if hwmode == "11g" else "36")
         current_channel = 0 if current_channel == "auto" else int(current_channel)
         wifi_encryption = interface["data"].get("encryption", self.WIFI_UCI_DEFAULT_ENC_MODE)
+        ieee80211w = interface["data"].get("ieee80211w")
+        ieee80211w_disabled = ieee80211w == "0"  # "1", "2" or unset means that ieee80211w will be enabled in some way
 
         # compatibility with many different WPA2 mode names that are allowed in OpenWrt
         # "psk2*" -> WPA2
@@ -243,7 +245,7 @@ class WifiUci:
             # unable to determine wifi device name
             return None
 
-        return {
+        res = {
             "id": device_id,
             "enabled": enabled,
             "SSID": ssid,
@@ -252,6 +254,7 @@ class WifiUci:
             "hwmode": hwmode,
             "htmode": htmode,
             "encryption": self.WIFI_ENC_UCI_TO_MODES.get(wifi_encryption, "custom"),
+            "ieee80211w_disabled": False,
             "password": password,
             "guest_wifi": {
                 "enabled": guest_enabled,
@@ -261,6 +264,11 @@ class WifiUci:
             },
             "available_bands": bands,
         }
+
+        if res["encryption"] in ("WPA2/3", "WPA3"):  # we don't care about 802.11w outside of WPA3
+            res["ieee80211w_disabled"] = ieee80211w_disabled
+
+        return res
 
     @staticmethod
     def _get_hwmode(device) -> typing.Literal["11g", "11a"]:
@@ -387,8 +395,9 @@ class WifiUci:
             "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"])
         )
         wifi_encryption = settings.get("encryption", DEFAULT_WIFI_ENC_MODE)
+        ieee80211w_disabled = settings.get("ieee80211w_disabled", False)
         if wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
-            self._set_wifi_encryption(backend, interface_section["name"], wifi_encryption)
+            self._set_wifi_encryption(backend, interface_section["name"], wifi_encryption, ieee80211w_disabled)
         backend.set_option("wireless", interface_section["name"], "key", settings["password"])
 
         # guest interface
@@ -412,7 +421,8 @@ class WifiUci:
         backend.set_option("wireless", guest_name, "network", "guest_turris")
         guest_wifi_encryption = settings["guest_wifi"].get("encryption", DEFAULT_WIFI_ENC_MODE)
         if guest_wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
-            self._set_wifi_encryption(backend, guest_name, guest_wifi_encryption)
+            # apply the same encryption settings as main SSID to guest SSID
+            self._set_wifi_encryption(backend, guest_name, guest_wifi_encryption, ieee80211w_disabled)
         backend.set_option("wireless", guest_name, "key", settings["guest_wifi"]["password"])
         guest_ifname = "guest_turris_%d" % settings["id"]
         backend.set_option("wireless", guest_name, "ifname", guest_ifname)
@@ -426,7 +436,13 @@ class WifiUci:
         # OpenWrt 21.02 uses `option band` instead of `option hwmode`
         backend.del_option("wireless", device, "hwmode", fail_on_error=False)
 
-    def _set_wifi_encryption(self, backend: UciBackend, if_name: str, wifi_encryption: str) -> None:
+    def _set_wifi_encryption(
+        self,
+        backend: UciBackend,
+        if_name: str,
+        wifi_encryption: str,
+        ieee80211w_disabled: bool
+    ) -> None:
         """Set wifi encryption mode and its related options
         :param backend: instance of UciBackend
         :param if_name: name of the interface (str)
@@ -435,6 +451,12 @@ class WifiUci:
         encryption_mode = self.WIFI_ENC_MODES_TO_UCI.get(wifi_encryption, self.WIFI_UCI_DEFAULT_ENC_MODE)
         backend.set_option("wireless", if_name, "encryption", encryption_mode)
         backend.set_option("wireless", if_name, "wpa_group_rekey", "86400")
+
+        if encryption_mode in ("sae", "sae-mixed") and ieee80211w_disabled:
+            # set ieee80211w only if WPA3 is used and ieee80211w is explicitly disabled
+            backend.set_option("wireless", if_name, "ieee80211w", "0")
+        else:
+            backend.del_option("wireless", if_name, "ieee80211w", fail_on_error=False)
 
     @staticmethod
     def update_regulator_domain(data, backend, country_code):

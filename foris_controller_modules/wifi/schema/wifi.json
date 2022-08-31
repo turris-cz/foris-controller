@@ -1,6 +1,9 @@
 {
     "definitions": {
+        "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
         "wifi_device_channel_number": {"type": "integer", "minimum": 1},
+        "wifi_device_channel_11g_number": {"type": "integer", "minimum": 1, "maximum": 14},
+        "wifi_device_channel_11a_number": {"type": "integer", "minimum": 34, "maximum": 173},
         "wifi_device_channel_frequency": {"type": "integer", "minimum": 1},
         "wifi_device_channel": {
             "type": "object",
@@ -48,14 +51,15 @@
                 "VHT20", "VHT40", "VHT80", "VHT160",
                 "HE20", "HE40", "HE80", "HE160"
         ]},
+        "wifi_device_htmode_11g": {
+           "allOf": [
+               {"$ref": "#/definitions/wifi_device_htmode"},
+               {"enum": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]}
+            ]
+        },
         "wifi_device_htmodes_11g": {
             "type": "array",
-            "items": {
-                "allOf": [
-                    {"$ref": "#/definitions/wifi_device_htmode"},
-                    {"enum": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]}
-                ]
-            }
+            "items": {"$ref": "#/definitions/wifi_device_htmode_11g"}
         },
         "wifi_device_htmodes_11a": {
             "type": "array",
@@ -63,11 +67,23 @@
             "description": "All HTMODES are supported on 5 GHz band"
         },
         "wifi_encryption_modes": {"enum": ["WPA2", "WPA3", "WPA2/3", "custom"]},
+        "wifi_wpa2_encryption": {
+            "allOf": [
+                {"$ref": "#/definitions/wifi_encryption_modes"},
+                {"enum": ["WPA2"]}
+            ]
+        },
+        "wifi_wpa3_encryption": {
+            "allOf": [
+                {"$ref": "#/definitions/wifi_encryption_modes"},
+                {"enum": ["WPA2/3", "WPA3"]}
+            ]
+        },
         "wifi_device_guest_get": {
             "type": "object",
             "properties": {
                 "enabled": {"type": "boolean"},
-                "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
+                "SSID": {"$ref": "#/definitions/SSID"},
                 "password": {"type": "string"},
                 "encryption": {"$ref": "#/definitions/wifi_encryption_modes"}
             },
@@ -80,7 +96,7 @@
                 {
                     "properties": {
                         "enabled": {"enum": [true]},
-                        "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
+                        "SSID": {"$ref": "#/definitions/SSID"},
                         "password": {"type": "string", "minLength": 8},
                         "encryption": {"$ref": "#/definitions/wifi_encryption_modes"}
                     },
@@ -126,55 +142,121 @@
         },
         "wifi_device_get": {
             "type": "object",
-            "properties": {
-                "id": {"type": "integer", "minimum": 0},
-                "enabled": {"type": "boolean"},
-                "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
-                "hidden": {"type": "boolean"},
-                "available_bands": {
-                    "type": "array",
-                    "items": {"$ref": "#/definitions/wifi_device_band"}
-                },
-                "hwmode": {"$ref": "#/definitions/wifi_device_hwmode"},
-                "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
-                "encryption": {"$ref": "#/definitions/wifi_encryption_modes"},
-                "channel": {
-                    "oneOf":[
-                        {"$ref": "#/definitions/wifi_device_channel_number"},
-                        {"enum": [0], "description": "zero means auto"}
+            "oneOf": [
+                {
+                    "description": "Settings for just WPA2",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 0},
+                        "enabled": {"type": "boolean"},
+                        "SSID": {"$ref": "#/definitions/SSID"},
+                        "hidden": {"type": "boolean"},
+                        "available_bands": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/wifi_device_band"}
+                        },
+                        "hwmode": {"$ref": "#/definitions/wifi_device_hwmode"},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode_11g"},
+                        "encryption": {"$ref": "#/definitions/wifi_wpa2_encryption"},
+                        "channel": {
+                            "oneOf":[
+                                {"$ref": "#/definitions/wifi_device_channel_number"},
+                                {"enum": [0], "description": "zero means auto"}
+                            ]
+                        },
+                        "password": {"type": "string"},
+                        "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_get"},
+                        "ieee80211w_disabled": {"enum": [false]}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "id", "enabled", "SSID", "hidden", "htmode", "available_bands",
+                        "hwmode", "encryption", "password", "guest_wifi", "channel", "ieee80211w_disabled"
                     ]
                 },
-                "password": {"type": "string"},
-                "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_get"}
-            },
-            "additionalProperties": false,
-            "required": [
-                "id", "enabled", "SSID", "hidden", "htmode", "available_bands",
-                "hwmode", "encryption", "password", "guest_wifi", "channel"
+                {
+                    "description": "Settings for WPA3, which may optionally use 802.11w",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 0},
+                        "enabled": {"type": "boolean"},
+                        "SSID": {"$ref": "#/definitions/SSID"},
+                        "hidden": {"type": "boolean"},
+                        "available_bands": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/wifi_device_band"}
+                        },
+                        "hwmode": {"$ref": "#/definitions/wifi_device_hwmode"},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
+                        "encryption": {"$ref": "#/definitions/wifi_wpa3_encryption"},
+                        "channel": {
+                            "oneOf":[
+                                {"$ref": "#/definitions/wifi_device_channel_number"},
+                                {"enum": [0], "description": "zero means auto"}
+                            ]
+                        },
+                        "password": {"type": "string"},
+                        "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_get"},
+                        "ieee80211w_disabled": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "id", "enabled", "SSID", "hidden", "htmode", "available_bands",
+                        "hwmode", "encryption", "password", "guest_wifi", "channel", "ieee80211w_disabled"
+                    ]
+                },
+                {
+                    "description": "Settings with custom encryption",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 0},
+                        "enabled": {"type": "boolean"},
+                        "SSID": {"$ref": "#/definitions/SSID"},
+                        "hidden": {"type": "boolean"},
+                        "available_bands": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/wifi_device_band"}
+                        },
+                        "hwmode": {"$ref": "#/definitions/wifi_device_hwmode"},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
+                        "encryption": {
+                            "allOf": [
+                                {"$ref": "#/definitions/wifi_encryption_modes"},
+                                {"enum": ["custom"]}
+                            ]
+                        },
+                        "channel": {
+                            "oneOf":[
+                                {"$ref": "#/definitions/wifi_device_channel_number"},
+                                {"enum": [0], "description": "zero means auto"}
+                            ]
+                        },
+                        "password": {"type": "string"},
+                        "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_get"},
+                        "ieee80211w_disabled": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "id", "enabled", "SSID", "hidden", "htmode", "available_bands",
+                        "hwmode", "encryption", "password", "guest_wifi", "channel", "ieee80211w_disabled"
+                    ]
+                }
             ]
         },
         "wifi_device_set": {
             "type": "object",
             "oneOf": [
-               {
+                {
+                    "description": "Set WPA2 on 2.4 GHz band",
                     "properties": {
                         "id": {"type": "integer", "minimum": 0},
                         "enabled": {"enum": [true]},
-                        "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
+                        "SSID": {"$ref": "#/definitions/SSID"},
                         "hidden": {"type": "boolean"},
                         "hwmode": {"enum":["11g"]},
-                        "htmode": {
-                            "$ref": "#/definitions/wifi_device_htmode",
-                            "enum": ["NOHT", "HT20", "HT40"]
-                        },
-                        "encryption": {"$ref": "#/definitions/wifi_encryption_modes"},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode_11g"},
+                        "encryption": {"$ref": "#/definitions/wifi_wpa2_encryption"},
                         "channel": {
                             "oneOf": [
                                 {"enum": [0], "description": "zero means auto"},
-                                {
-                                    "$ref": "#/definitions/wifi_device_channel_number",
-                                    "type": "integer", "minimum": 1, "maximum": 14
-                                }
+                                {"$ref": "#/definitions/wifi_device_channel_11g_number"}
                             ]
                         },
                         "password": {"type": "string", "minLength": 8},
@@ -186,21 +268,45 @@
                     ]
                 },
                 {
+                    "description": "Set WPA3 on 2.4 GHz band",
                     "properties": {
                         "id": {"type": "integer", "minimum": 0},
                         "enabled": {"enum": [true]},
-                        "SSID": {"type": "string", "minLength": 1, "maxLength": 32},
+                        "SSID": {"$ref": "#/definitions/SSID"},
+                        "hidden": {"type": "boolean"},
+                        "hwmode": {"enum":["11g"]},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode_11g"},
+                        "encryption": {"$ref": "#/definitions/wifi_wpa3_encryption"},
+                        "channel": {
+                            "oneOf": [
+                                {"enum": [0], "description": "zero means auto"},
+                                {"$ref": "#/definitions/wifi_device_channel_11g_number"}
+                            ]
+                        },
+                        "password": {"type": "string", "minLength": 8},
+                        "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_set"},
+                        "ieee80211w_disabled": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "encryption", "password", "guest_wifi",
+                        "ieee80211w_disabled"
+                    ]
+                },
+                {
+                    "description": "Set WPA2 on 5 GHz band",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 0},
+                        "enabled": {"enum": [true]},
+                        "SSID": {"$ref": "#/definitions/SSID"},
                         "hidden": {"type": "boolean"},
                         "hwmode": {"enum":["11a"]},
                         "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
-                        "encryption": {"$ref": "#/definitions/wifi_encryption_modes"},
+                        "encryption": {"$ref": "#/definitions/wifi_wpa2_encryption"},
                         "channel": {
                             "oneOf": [
                                 {"enum": [0], "description": "zero means auto"},
-                                {
-                                    "$ref": "#/definitions/wifi_device_channel_number",
-                                    "type": "integer", "minimum": 34, "maximum": 173
-                                }
+                                {"$ref": "#/definitions/wifi_device_channel_11a_number"}
                             ]
                         },
                         "password": {"type": "string", "minLength": 8},
@@ -212,6 +318,91 @@
                     ]
                 },
                 {
+                    "description": "Set WPA3 on 5 GHz band",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 0},
+                        "enabled": {"enum": [true]},
+                        "SSID": {"$ref": "#/definitions/SSID"},
+                        "hidden": {"type": "boolean"},
+                        "hwmode": {"enum":["11a"]},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
+                        "encryption": {"$ref": "#/definitions/wifi_wpa3_encryption"},
+                        "channel": {
+                            "oneOf": [
+                                {"enum": [0], "description": "zero means auto"},
+                                {"$ref": "#/definitions/wifi_device_channel_11a_number"}
+                            ]
+                        },
+                        "password": {"type": "string", "minLength": 8},
+                        "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_set"},
+                        "ieee80211w_disabled": {"type": "boolean"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "encryption", "password", "guest_wifi",
+                        "ieee80211w_disabled"
+                    ]
+                },
+                {
+                    "description": "Set 2.4 GHz band with custom encryption - don't update encryption settings.",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 0},
+                        "enabled": {"enum": [true]},
+                        "SSID": {"$ref": "#/definitions/SSID"},
+                        "hidden": {"type": "boolean"},
+                        "hwmode": {"enum":["11g"]},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
+                        "encryption": {
+                            "allOf": [
+                                {"$ref": "#/definitions/wifi_encryption_modes"},
+                                {"enum": ["custom"]}
+                            ]
+                        },
+                        "channel": {
+                            "oneOf": [
+                                {"enum": [0], "description": "zero means auto"},
+                                {"$ref": "#/definitions/wifi_device_channel_11g_number"}
+                            ]
+                        },
+                        "password": {"type": "string", "minLength": 8},
+                        "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_set"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "encryption", "password", "guest_wifi"
+                    ]
+                },
+                {
+                    "description": "Set 5 GHz band with custom encryption - don't update encryption settings.",
+                    "properties": {
+                        "id": {"type": "integer", "minimum": 0},
+                        "enabled": {"enum": [true]},
+                        "SSID": {"$ref": "#/definitions/SSID"},
+                        "hidden": {"type": "boolean"},
+                        "hwmode": {"enum":["11a"]},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
+                        "encryption": {
+                            "allOf": [
+                                {"$ref": "#/definitions/wifi_encryption_modes"},
+                                {"enum": ["custom"]}
+                            ]
+                        },
+                        "channel": {
+                            "oneOf": [
+                                {"enum": [0], "description": "zero means auto"},
+                                {"$ref": "#/definitions/wifi_device_channel_11a_number"}
+                            ]
+                        },
+                        "password": {"type": "string", "minLength": 8},
+                        "guest_wifi": {"$ref": "#/definitions/wifi_device_guest_set"}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "id", "enabled", "SSID", "hidden", "htmode", "hwmode", "encryption", "password", "guest_wifi"
+                    ]
+                },
+                {
+                    "description": "Set wireless interface as disabled",
                     "properties": {
                         "id": {"type": "integer", "minimum": 0},
                         "enabled": {"enum": [false]}
