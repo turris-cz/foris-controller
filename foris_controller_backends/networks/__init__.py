@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,6 +40,8 @@ from foris_controller_backends.uci import (
 )
 
 logger = logging.getLogger(__name__)
+
+NetworkAndSSIDs = typing.List[typing.Tuple[str, str]]
 
 
 def decorate_guest_net(pos):
@@ -122,7 +124,7 @@ class NetworksUci():
 
         return bridge[0]["data"].get("ports", [])
 
-    def _find_enabled_networks_by_ifname(self, wireless_data, ifname):
+    def _find_enabled_networks_by_ifname(self, wireless_data, ifname: str) -> typing.Optional[NetworkAndSSIDs]:
         """
         :returns: None if no valid iterface section found, or list of (network, ssid) (can be empty)
         """
@@ -156,10 +158,13 @@ class NetworksUci():
 
         return result
 
-    def _find_enabled_networks_by_macaddr(self, wireless_data, macaddr, ifname):
+    def _find_enabled_networks_by_macaddr(self, wireless_data, macaddr: typing.Optional[str], ifname: str) -> typing.Optional[NetworkAndSSIDs]:
         """
         :returns: None if no valid device section found, or list of (network, ssid) (can be empty)
         """
+        if macaddr is None:
+            return None
+
         device_sections = [
             section
             for section in get_sections_by_type(wireless_data, "wireless", "wifi-device")
@@ -183,6 +188,55 @@ class NetworksUci():
             for interface_section in interface_sections:
                 network = interface_section["data"].get("network", None)
                 if network:
+                    result.append((network, interface_section["data"].get("ssid", "")))
+
+        return result
+
+    def _find_enabled_networks_by_path(
+        self,
+        wireless_data,
+        slot_path: typing.Optional[str],
+        ifname: str
+    ) -> typing.Optional[NetworkAndSSIDs]:
+        """
+        Return list of tuples with (network, ssid).
+        Return None if no valid interface section is found.
+        """
+        if slot_path is None:
+            return None
+
+        device_sections = [
+            section
+            for section in get_sections_by_type(wireless_data, "wireless", "wifi-device")
+            # Do not try to match the whole path, because `slot_path` value from turrishw might differ
+            # from config value.
+            # Substring match should be sufficient.
+            if section["data"].get("path", "") in slot_path
+        ]
+        # For example:
+        #     turrishw: "slot_path": "soc/d0070000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/net/wlan0"
+        #     uci config: option path 'soc/d0070000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0'
+
+        if not device_sections:
+            return None
+
+        result = []
+        for device_section in device_sections:
+            if parse_bool(device_section["data"].get("disabled", "0")):
+                continue
+
+            interface_sections = [
+                section
+                for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
+                if section["data"].get("device") == device_section["name"]
+                and not parse_bool(section["data"].get("disabled", "0"))
+                and (
+                    section["data"].get("ifname") == ifname or section["data"].get("ifname") is None
+                )
+            ]
+
+            for interface_section in interface_sections:
+                if network := interface_section["data"].get("network", None):
                     result.append((network, interface_section["data"].get("ssid", "")))
 
         return result
@@ -255,6 +309,33 @@ class NetworksUci():
         )
         return len(set(hw_interfaces).intersection(config_interfaces)) + wifi_iface_count
 
+    def _find_enabled_wireless_networks(self, wireless_data: dict, record: dict) -> NetworkAndSSIDs:
+        """Try to find configured wireless interfaces by different means.
+
+        * by pci slot path
+        * by macaddr
+        * by ifname
+
+
+        Return list of tuples (network, SSID) or empty list if nothing is found.
+        """
+        ifname = record["id"]
+
+        # try to find it by pci slot path first
+        slot_path = record.get("slot_path")
+        if ssids := self._find_enabled_networks_by_path(wireless_data, slot_path, ifname):
+            return ssids
+
+        # try the macaddr as second choice
+        macaddr = record.get("macaddr")
+        if ssids := self._find_enabled_networks_by_macaddr(wireless_data, macaddr, ifname):
+            return ssids
+
+        if ssids := self._find_enabled_networks_by_ifname(wireless_data, ifname):
+            return ssids
+
+        return []  # None found
+
     def get_settings(self):
         """ Get current wifi settings
         :returns: {"device": {}, "networks": [{...},]}
@@ -272,6 +353,7 @@ class NetworksUci():
             except UciException:
                 wireless_data = {}  # wireless config missing
 
+        # prepare wired intefaces...
         wan_network = self._prepare_network(network_data, "wan", iface_map)
         # Return only first interface asigned to wan to make it compatible with bridges for wan,
         # so the json message will still pass validation.
@@ -284,29 +366,24 @@ class NetworksUci():
         none_network = list(iface_map.values())  # reduced in _prepare_network using pop()
         # Note: none_network interfaces should be already sorted from turrishw
 
+        network_groups_map = {
+            "wan": wan_network,
+            "lan": lan_network,
+            "guest_turris": guest_network
+        }
+
+        # prepare wifi interfaces... something along this:
+        # self._prepare_wireless_network(lan_network, guest_network, none_network)
+        # hide code below to separate function?
         for record in wifi_ifaces:
-            networks_and_ssids = self._find_enabled_networks_by_ifname(wireless_data, record["id"])
-            macaddr = record.get("macaddr")
-            if networks_and_ssids is None:
-                networks_and_ssids = self._find_enabled_networks_by_macaddr(
-                    wireless_data, macaddr, record["id"]
-                )
-
-            # always set undefined
-            networks_and_ssids = [] if networks_and_ssids is None else networks_and_ssids
-
-            for network, ssid in networks_and_ssids:
-                record["ssid"] = ssid
-                if network == "lan":
-                    lan_network.append(record)
-                elif network == "guest_turris":
-                    guest_network.append(record)
-                elif network == "wan":
-                    wan_network.append(record)
-
-            if len(networks_and_ssids) == 0:
+            networks_and_ssids = self._find_enabled_wireless_networks(wireless_data, record)
+            if not networks_and_ssids:
                 record["ssid"] = ""
                 none_network.append(record)
+
+            for network_group, ssid in networks_and_ssids:
+                record["ssid"] = ssid
+                network_groups_map.get(network_group, none_network).append(record)
 
         # parse firewall options
         ssh_on_wan = parse_bool(

@@ -47,9 +47,16 @@
                         "link_speed": {"$ref": "#/definitions/interface_link_speed"},
                         "configurable": {"type": "boolean"},
                         "ssid": {"type": "string", "minLength": 0, "maxLength": 32},
-                        "macaddr": {"format": "macaddress", "type": "string"}
+                        "macaddr": {"format": "macaddress", "type": "string"},
+                        "slot_path": {
+                            "type": "string",
+                            "description": "This should be optional to maintain compatibility with pre-TOS 6.0 config"
+                        }
                     },
-                    "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "ssid", "macaddr"],
+                    "required": [
+                        "id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "ssid",
+                        "macaddr"
+                    ],
                     "additionalProperties": false
                 }
             ]

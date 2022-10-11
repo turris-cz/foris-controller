@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2021, 2023 CZ.NIC, z.s.p.o. (https://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
 import copy
+import logging
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -149,7 +149,8 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "module_id": 0,
                 "configurable": False,
                 "ssid": "testing-ssid",
-                "macaddr": "04:f0:21:23:22:dc"
+                "macaddr": "04:f0:21:23:22:dc",
+                "slot_path": "soc/soc:pcie/pci0000:00/0000:00:02.0/0000:01:00.0"
             },
         ],
     }
