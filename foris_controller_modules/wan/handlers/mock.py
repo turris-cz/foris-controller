@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (https://www.nic.cz/)
+# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (https://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,9 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
 import copy
-
+import logging
 import random
 
 from foris_controller.handler_base import BaseMockHandler
@@ -52,6 +51,7 @@ class MockWanHandler(Handler, BaseMockHandler):
     test_id_set = set()
     mac_address = _HARDWARE_MAC_ADDRESS
     qos = {'enabled': False, 'upload': 1024, 'download': 1024}
+    vlan = {"enabled": False}
 
     def _cleanup(self):
         self.wan_type = "dhcp"
@@ -85,7 +85,9 @@ class MockWanHandler(Handler, BaseMockHandler):
         :returns: current wan settiongs
         :rtype: str
         """
-        from foris_controller_modules.networks.handlers.mock import MockNetworksHandler
+        from foris_controller_modules.networks.handlers.mock import (
+            MockNetworksHandler,
+        )
 
         res = {
             "wan_settings": {"wan_type": self.wan_type},
@@ -95,7 +97,8 @@ class MockWanHandler(Handler, BaseMockHandler):
             "interface_up_count": len(
                 [e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"]
             ),
-            "qos": self.qos
+            "qos": self.qos,
+            "vlan": self.vlan
         }
         if self.wan_type == "dhcp":
             if self.wan_dhcp["hostname"]:
@@ -192,6 +195,16 @@ class MockWanHandler(Handler, BaseMockHandler):
                 self.qos["enabled"] = False
             else:
                 self.qos = new_settings["qos"]
+
+        vlan_settings = new_settings.get("vlan")
+        if vlan_settings:
+            if vlan_settings["enabled"]:
+                self.vlan["enabled"] = True
+                self.vlan["vlan_id"] = vlan_settings["vlan_id"]
+            else:
+                self.vlan["enabled"] = False
+                del self.vlan["vlan_id"]
+
         MockWanHandler.guide_set.set(True)
 
         return True

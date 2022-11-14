@@ -15,6 +15,30 @@
             },
             "additionalProperties": false
         },
+        "vlan_settings": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [true]},
+                        "vlan_id": {
+                            "type": "integer", "minimum": 1, "maximum": 4094,
+                            "description": "Disregard the reserved VLAN ids 0 and 4095."
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["enabled", "vlan_id"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"enum": [false]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["enabled"]
+                }
+            ]
+        },
         "wan_type": {
             "allOf": [
                 {"enum": ["dhcp", "static", "pppoe", "none"]},
@@ -166,7 +190,8 @@
                         "mac_settings": {"$ref": "#/definitions/mac_address_get"},
                         "interface_count": {"type": "integer", "minimum": 0},
                         "interface_up_count": {"type": "integer", "minimum": 0},
-                        "qos": {"$ref": "#/definitions/qos_get"}
+                        "qos": {"$ref": "#/definitions/qos_get"},
+                        "vlan": {"$ref": "#/definitions/vlan_settings"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_settings", "wan6_settings", "mac_settings", "interface_count"]
@@ -187,7 +212,8 @@
                         "wan_settings": {"$ref": "#/definitions/wan_settings"},
                         "wan6_settings": {"$ref": "#/definitions/wan6_settings"},
                         "mac_settings": {"$ref": "#/definitions/mac_address_set"},
-                        "qos": {"$ref": "#/definitions/qos_set"}
+                        "qos": {"$ref": "#/definitions/qos_set"},
+                        "vlan": {"$ref": "#/definitions/vlan_settings"}
                     },
                     "additionalProperties": false,
                     "required": ["wan_settings", "wan6_settings", "mac_settings"]

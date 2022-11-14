@@ -66,7 +66,7 @@ def query_infrastructure(infrastructure, message: dict, expect_success: bool = T
     return res
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0"),("omnia", "4.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0"),("omnia", "6.0")], indirect=True)
 def test_get_settings(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
 
     if infrastructure.backend_name in ["openwrt"]:
@@ -82,7 +82,8 @@ def test_get_settings(uci_configs_init, infrastructure, fix_mox_wan, device, tur
         "mac_settings",
         "interface_count",
         "interface_up_count",
-        "qos"
+        "qos",
+        "vlan",
     }
     assert "mac_address" in res["data"]["mac_settings"].keys()
 
@@ -1793,3 +1794,186 @@ def test_qos_settings_persistent(
     )
     assert "errors" not in res.keys()
     assert res["data"]["qos"] == {"enabled": False, "upload": 2048, "download": 512}
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_vlan_openwrt(infrastructure, network_restart_command, device, turris_os_version):
+    """Test fetching VLAN ID.
+
+    VLAN settings should be 'enabled' only when VLAN ID is set.
+    VLAN settings should be 'disabled' without VLAN ID set.
+    """
+    prepare_turrishw_root(device, turris_os_version)
+    uci = get_uci_module(infrastructure.name)
+
+    # (1) no vlan id set
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "wan", "action": "get_settings", "kind": "request"},
+    )
+    assert "vlan" in res["data"]
+    assert res["data"]["vlan"] == {"enabled": False}
+
+    # (2) read vlan id
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("network", "wan", "device", "eth2.200")
+
+    res = query_infrastructure(
+        infrastructure,
+        {"module": "wan", "action": "get_settings", "kind": "request"},
+    )
+    assert "vlan" in res["data"]
+    assert res["data"]["vlan"] == {"enabled": True, "vlan_id": 200}
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
+def test_update_settings_vlan(
+    infrastructure, network_restart_command, device, turris_os_version
+):
+    """Test update of VLAN ID for WAN interface.
+
+    Test following scenarios:
+    * (1) Set VLAN ID
+    * (2) Unset/reset VLAN ID
+    * (3) Setting VLAN ID outside of the defined range (1<, >4094) should fail
+    """
+    def update(data, expect_success=True):
+        query_infrastructure(
+            infrastructure,
+            {"module": "wan", "action": "update_settings", "kind": "request", "data": data},
+            expect_success
+        )
+
+        # `get_settings` should always succeed
+        res = query_infrastructure(
+            infrastructure,
+            {"module": "wan", "action": "get_settings", "kind": "request"},
+        )
+
+        return res
+
+    # (1)
+    res = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": True, "vlan_id": 100}
+        }
+    )
+    assert res["data"]["vlan"]["enabled"] is True
+    assert res["data"]["vlan"]["vlan_id"] == 100
+
+    # (2)
+    res = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": False}
+        }
+    )
+    assert res["data"]["vlan"]["enabled"] is False
+    assert "vlan_id" not in res["data"]["vlan"]
+
+    # (3) test VLAN ID range edge cases (2<, >4094)
+    res = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": True, "vlan_id": 4095}
+        },
+        expect_success=False
+    )
+    assert res["data"]["vlan"]["enabled"] is False
+    assert "vlan_id" not in res["data"]["vlan"]
+
+    res = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": True, "vlan_id": 0}
+        },
+        expect_success=False
+    )
+    assert res["data"]["vlan"]["enabled"] is False
+    assert "vlan_id" not in res["data"]["vlan"]
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_update_settings_vlan_openwrt(
+    infrastructure, network_restart_command, device, turris_os_version
+):
+    """Test update of VLAN ID for WAN interface.
+
+    Test following scenarios:
+    * (1) Set VLAN ID
+    * (2) Unset/reset VLAN ID
+    * (3) Setting VLAN ID outside of the defined range (1<, >4094) should fail
+    """
+    uci = get_uci_module(infrastructure.name)
+
+    def update(data, expect_success=True):
+        query_infrastructure(
+            infrastructure,
+            {"module": "wan", "action": "update_settings", "kind": "request", "data": data},
+            expect_success
+        )
+
+        if expect_success:
+            assert network_restart_was_called([])
+
+        return get_uci_backend_data(uci)
+
+    # (1)
+    data = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": True, "vlan_id": 100}
+        }
+    )
+    assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2.100"
+    assert uci.get_option_named(data, "network", "dev_wan", "name", "") == "eth2.100"
+
+    # (2)
+    data = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": False}
+        }
+    )
+    assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2"
+    assert uci.get_option_named(data, "network", "dev_wan", "name", "") == "eth2"
+
+    # (3) test VLAN ID range edge cases (2<, >4094)
+    data = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": True, "vlan_id": 4095}
+        },
+        expect_success=False
+    )
+    assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2"
+    assert uci.get_option_named(data, "network", "dev_wan", "name", "") == "eth2"
+
+    data = update(
+        {
+            "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
+            "wan6_settings": {"wan6_type": "none"},
+            "mac_settings": {"custom_mac_enabled": False},
+            "vlan": {"enabled": True, "vlan_id": 0}
+        },
+        expect_success=False
+    )
+    assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2"
+    assert uci.get_option_named(data, "network", "dev_wan", "name", "") == "eth2"

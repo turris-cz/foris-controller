@@ -129,6 +129,25 @@ class WanUci:
         if custom_mac:
             mac_settings.update({"custom_mac_enabled": True, "custom_mac": custom_mac})
 
+        # Try to get VLAN ID of wan device.
+        # Note: use this little workaround to get wan interface device without the need of changing turrishw
+        # to be able to detect devices with VLAN ID set (e.g. eth0.100).
+        # Fetch the device directly from uci config - for now.
+        wan_device = get_option_named(network_data, "network", "wan", "device", "")
+
+        # TODO: Let the `turrishw` fetch the wan device (regardless of presence of VLAN ID) and use that.
+
+        vlan = {}
+        vlan_id = None
+        if "." in wan_device:
+            vlan_id = wan_device.rsplit(".")[-1]
+
+        if vlan_id is not None:
+            vlan["enabled"] = True
+            vlan["vlan_id"] = int(vlan_id)
+        else:
+            vlan["enabled"] = False
+
         qos = {}
         qos["enabled"] = parse_bool(
             get_option_named(sqm_data, "sqm", WanUci._LNAME, "enabled", "0")
@@ -147,7 +166,8 @@ class WanUci:
             "interface_up_count": NetworksUci.get_interface_count(
                 network_data, wireless_data, "wan", True
             ),
-            "qos": qos
+            "qos": qos,
+            "vlan": vlan,
         }
 
     @staticmethod
@@ -162,7 +182,7 @@ class WanUci:
         # try to fallback on `interface 'wan'`, i.e. OpenWrt 19.07 style config syntax
         return get_option_named(network_data, "network", "wan", "macaddr", "")
 
-    def update_settings(self, wan_settings, wan6_settings, mac_settings, qos=None):
+    def update_settings(self, wan_settings, wan6_settings, mac_settings, qos=None, vlan=None):
         with UciBackend() as backend:
             # Try to migrate OpenWrt 19.07 style config to new style
             WanUci._migrate_old_config(backend)
@@ -333,6 +353,10 @@ class WanUci:
             else:
                 backend.del_option("network", "dev_wan", "macaddr", fail_on_error=False)
 
+            # handle VLAN ID
+            if vlan:
+                WanUci._update_vlan_id(backend, wan_device, vlan)
+
             if qos:
                 try:
                     if qos.get("enabled"):
@@ -355,6 +379,25 @@ class WanUci:
         MaintainCommands().restart_network()
 
         return True
+
+    @staticmethod
+    def _update_vlan_id(backend: UciBackend, wan_device: str, vlan_settings: dict) -> None:
+        """Update VLAN ID of WAN interface."""
+        # Strip the vlan id from device and reuse only the base device
+        # E.g.: eth0.100 => eth0
+        base_wan_device = wan_device.split(".", maxsplit=1)[0]
+
+        try:
+            if vlan_settings.get("enabled"):
+                wan_dev_with_vlan_id = f"{base_wan_device}.{vlan_settings['vlan_id']}"
+                backend.set_option("network", "wan", "device", wan_dev_with_vlan_id)
+                backend.set_option("network", "dev_wan", "name", wan_dev_with_vlan_id)
+            else:
+                # clear the vlan id
+                backend.set_option("network", "wan", "device", base_wan_device)
+                backend.set_option("network", "dev_wan", "name", base_wan_device)
+        except UciException:
+            logger.error("Failed to change VLAN ID for WAN device '%s'.", base_wan_device)
 
     @staticmethod
     def _migrate_old_config(backend: UciBackend) -> None:
