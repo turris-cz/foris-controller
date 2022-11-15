@@ -48,6 +48,7 @@ setup(
         'foris_controller_backends.remote',
         'foris_controller_backends.router_notifications',
         'foris_controller_backends.services',
+        'foris_controller_backends.ubus',
         'foris_controller_backends.uci',
         'foris_controller_backends.system',
         'foris_controller_backends.time',

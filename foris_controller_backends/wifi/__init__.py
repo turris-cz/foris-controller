@@ -17,7 +17,6 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import json
 import logging
 import re
 import typing
@@ -31,6 +30,7 @@ from foris_controller.utils import sort_by_natural_order
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
+from foris_controller_backends.ubus import UbusBackend
 from foris_controller_backends.uci import (
     UciBackend,
     get_option_anonymous,
@@ -72,21 +72,6 @@ class WifiUci:
             backend.set_option("wireless", section_name, "disabled", store_bool(True))
 
     @staticmethod
-    def call_ubus(ubus_object, method, data):
-        retval, stdout, stderr = BaseCmdLine._run_command(
-            "/bin/ubus", "call", ubus_object, method, json.dumps(data)
-        )
-        if retval != 0:
-            logger.warning("Failure during ubus call: %s", stderr)
-            return None
-
-        try:
-            return json.loads(stdout.decode("utf-8"))
-        except json.JSONDecodeError as e:
-            logger.warning("Failed to read result: %r", e)
-            return None
-
-    @staticmethod
     def _sort_htmodes(modes: typing.Set[str]) -> typing.List[str]:
         """Sort HT (HT, VHT, HE, ...) modes in natural order"""
         return sort_by_natural_order(modes)
@@ -106,11 +91,11 @@ class WifiUci:
         }
 
         request_msg = {"device": device_name}
-        ht_data = WifiUci.call_ubus("iwinfo", "info", request_msg)
+        ht_data = UbusBackend.call_ubus("iwinfo", "info", request_msg)
         if not ht_data:
             return []
 
-        freq_data = WifiUci.call_ubus("iwinfo", "freqlist", request_msg)
+        freq_data = UbusBackend.call_ubus("iwinfo", "freqlist", request_msg)
         if not freq_data:
             return []
 

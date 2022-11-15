@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright 2022, CZ.NIC z.s.p.o. (https://www.nic.cz/)
+
 import argparse
 import json
+import sys
 
 WIFI_DATA = {
     "info": {
@@ -466,6 +470,11 @@ def handle_dhcp(args):
     print(json.dumps(IPV6_DHCP_DATA, indent=2))
 
 
+def handle_dummy_noreturn(args) -> None:
+    # dummy service that does not return data (for instance: `ubus call umdns reload`)
+    return None
+
+
 def handle_iwinfo(args):
     if args.method not in ["info", "freqlist"]:
         print({})
@@ -476,6 +485,7 @@ def handle_iwinfo(args):
 
 UBUS_OBJECT_MAP = {
     "dhcp": handle_dhcp,
+    "dummy_noreturn": handle_dummy_noreturn,
     "iwinfo": handle_iwinfo,
 }
 
@@ -493,9 +503,9 @@ def main():
         if args.object in UBUS_OBJECT_MAP:
             UBUS_OBJECT_MAP[args.object](args)
         else:
-            print({})
+            sys.exit(1)  # querying nonexisting ubus object should return non-zero exit code to signalize failure
     else:
-        print({})
+        sys.exit(1)
 
 
 if __name__ == "__main__":

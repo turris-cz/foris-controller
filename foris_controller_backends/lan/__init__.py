@@ -22,14 +22,13 @@ import logging
 import typing
 
 import pkg_resources
-import json
 
 from foris_controller.exceptions import UciException
 from foris_controller.utils import parse_to_list, unwrap_list
-from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.files import BaseFile, path_exists
 from foris_controller_backends.maintain import MaintainCommands
 from foris_controller_backends.services import OpenwrtServices
+from foris_controller_backends.ubus import UbusBackend
 from foris_controller_backends.uci import (
     UciBackend,
     get_option_named,
@@ -96,21 +95,6 @@ class LanUci:
     DEFAULT_LEASE_TIME = 12 * 60 * 60
     DEFAULT_ROUTER_IP = "192.168.1.1"
     DEFAULT_NETMASK = "255.255.255.0"
-
-    @staticmethod
-    def call_ubus(ubus_object, method):
-        retval, stdout, stderr = BaseCmdLine._run_command(
-            "/bin/ubus", "call", ubus_object, method
-        )
-        if retval != 0:
-            logger.warning("Failure during ubus call: %s", stderr)
-            return None
-
-        try:
-            return json.loads(stdout.decode("utf-8"))
-        except json.JSONDecodeError as e:
-            logger.warning("Failed to read result: %r", e)
-            return None
 
     @staticmethod
     def get_network_combo(network_data) -> typing.Tuple[str, str, str]:
@@ -195,7 +179,7 @@ class LanUci:
         return file_records
 
     def get_ipv6_client_list(self, interface="br-lan"):
-        lease_data = LanUci.call_ubus("dhcp", "ipv6leases")
+        lease_data = UbusBackend.call_ubus("dhcp", "ipv6leases")
         res = []
         if lease_data:
             for lease in lease_data["device"][interface]["leases"]:
