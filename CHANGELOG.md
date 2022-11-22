@@ -3,8 +3,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [5.3.0] - 2022-11-22
 ### Changed
+- wan: store wan interface L2 options in separate device section
 - lan: use ubus call instead of parsing odhcpd files to get DHCPv6 leases
 
 ## [5.2.0] - 2022-07-15
