@@ -51,7 +51,7 @@ class MockWanHandler(Handler, BaseMockHandler):
     test_id_set = set()
     mac_address = _HARDWARE_MAC_ADDRESS
     qos = {'enabled': False, 'upload': 1024, 'download': 1024}
-    vlan = {"enabled": False}
+    vlan_settings = {"enabled": False}
 
     def _cleanup(self):
         self.wan_type = "dhcp"
@@ -98,7 +98,7 @@ class MockWanHandler(Handler, BaseMockHandler):
                 [e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"]
             ),
             "qos": self.qos,
-            "vlan": self.vlan
+            "vlan_settings": self.vlan_settings
         }
         if self.wan_type == "dhcp":
             if self.wan_dhcp["hostname"]:
@@ -196,14 +196,14 @@ class MockWanHandler(Handler, BaseMockHandler):
             else:
                 self.qos = new_settings["qos"]
 
-        vlan_settings = new_settings.get("vlan")
+        vlan_settings = new_settings.get("vlan_settings")
         if vlan_settings:
             if vlan_settings["enabled"]:
-                self.vlan["enabled"] = True
-                self.vlan["vlan_id"] = vlan_settings["vlan_id"]
+                self.vlan_settings["enabled"] = True
+                self.vlan_settings["vlan_id"] = vlan_settings["vlan_id"]
             else:
-                self.vlan["enabled"] = False
-                del self.vlan["vlan_id"]
+                self.vlan_settings["enabled"] = False
+                del self.vlan_settings["vlan_id"]
 
         MockWanHandler.guide_set.set(True)
 

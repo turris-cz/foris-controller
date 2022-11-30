@@ -137,16 +137,16 @@ class WanUci:
 
         # TODO: Let the `turrishw` fetch the wan device (regardless of presence of VLAN ID) and use that.
 
-        vlan = {}
+        vlan_settings = {}
         vlan_id = None
         if "." in wan_device:
             vlan_id = wan_device.rsplit(".")[-1]
 
         if vlan_id is not None:
-            vlan["enabled"] = True
-            vlan["vlan_id"] = int(vlan_id)
+            vlan_settings["enabled"] = True
+            vlan_settings["vlan_id"] = int(vlan_id)
         else:
-            vlan["enabled"] = False
+            vlan_settings["enabled"] = False
 
         qos = {}
         qos["enabled"] = parse_bool(
@@ -167,7 +167,7 @@ class WanUci:
                 network_data, wireless_data, "wan", True
             ),
             "qos": qos,
-            "vlan": vlan,
+            "vlan_settings": vlan_settings,
         }
 
     @staticmethod
@@ -182,7 +182,7 @@ class WanUci:
         # try to fallback on `interface 'wan'`, i.e. OpenWrt 19.07 style config syntax
         return get_option_named(network_data, "network", "wan", "macaddr", "")
 
-    def update_settings(self, wan_settings, wan6_settings, mac_settings, qos=None, vlan=None):
+    def update_settings(self, wan_settings, wan6_settings, mac_settings, qos=None, vlan_settings=None):
         with UciBackend() as backend:
             # Try to migrate OpenWrt 19.07 style config to new style
             WanUci._migrate_old_config(backend)
@@ -354,8 +354,8 @@ class WanUci:
                 backend.del_option("network", "dev_wan", "macaddr", fail_on_error=False)
 
             # handle VLAN ID
-            if vlan:
-                WanUci._update_vlan_id(backend, wan_device, vlan)
+            if vlan_settings:
+                WanUci._update_vlan_id(backend, wan_device, vlan_settings)
 
             if qos:
                 try:
