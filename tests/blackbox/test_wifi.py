@@ -261,9 +261,139 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure):
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
+def test_get_settings_wpa2_openwrt(file_root_init, uci_configs_init, infrastructure):
+    """Test getting wifi settings with WPA2 encryption mode.
+
+    There are separate objects in json schema representing multiple replies of `get_settings` (WPA2, WPA3 and custom),
+    so test each reply separately.
+    """
+    def get(infrastructure):
+        res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
+        assert "errors" not in res.keys()
+
+        return res
+
+    uci = get_uci_module(infrastructure.name)
+
+    # 2.4 GHz
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "psk2+ccmp")
+        backend.set_option("wireless", "@wifi-device[0]", "disabled", "0")
+        backend.set_option("wireless", "@wifi-device[0]", "band", "2g")
+        backend.set_option("wireless", "@wifi-device[0]", "channel", "1")
+        backend.set_option("wireless", "@wifi-device[0]", "htmode", "HT40")
+
+    res = get(infrastructure)
+    first_wifi_device = res["data"]["devices"][0]
+    assert first_wifi_device["encryption"] == "WPA2"
+    assert first_wifi_device["hwmode"] == "11g"
+    assert first_wifi_device["htmode"] == "HT40"
+    assert first_wifi_device["channel"] == 1
+    # In case of WPA2, we return "ieee80211w_disabled" only for compatibility, but it should be always False
+    assert first_wifi_device["ieee80211w_disabled"] is False
+
+    # 5 GHz
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-device[0]", "band", "5g")
+        backend.set_option("wireless", "@wifi-device[0]", "channel", "36")
+        backend.set_option("wireless", "@wifi-device[0]", "htmode", "VHT40")
+
+    res = get(infrastructure)
+    first_wifi_device = res["data"]["devices"][0]
+    assert first_wifi_device["encryption"] == "WPA2"
+    assert first_wifi_device["hwmode"] == "11a"
+    assert first_wifi_device["htmode"] == "VHT40"
+    assert first_wifi_device["channel"] == 36
+    assert first_wifi_device["ieee80211w_disabled"] is False
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_wpa3_openwrt(file_root_init, uci_configs_init, infrastructure):
+    """Test getting wifi settings with WPA3 encryption modes (WPA3, WPA2/3).
+
+    There are separate objects in json schema representing multiple replies of `get_settings` (WPA2, WPA3 and custom),
+    so test each reply separately.
+    """
+    def get(infrastructure):
+        res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
+        assert "errors" not in res.keys()
+
+        return res
+
+    uci = get_uci_module(infrastructure.name)
+
+    # 2.4 GHz + WPA3
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "sae")
+        backend.set_option("wireless", "@wifi-device[0]", "disabled", "0")
+        backend.set_option("wireless", "@wifi-device[0]", "band", "2g")
+        backend.set_option("wireless", "@wifi-device[0]", "channel", "1")
+        backend.set_option("wireless", "@wifi-device[0]", "htmode", "HT40")
+
+    res = get(infrastructure)
+    first_wifi_device = res["data"]["devices"][0]
+    assert first_wifi_device["encryption"] == "WPA3"
+    assert first_wifi_device["hwmode"] == "11g"
+    assert first_wifi_device["htmode"] == "HT40"
+    assert first_wifi_device["channel"] == 1
+    assert first_wifi_device["ieee80211w_disabled"] is False
+
+    # 5 GHz + WPA3
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-device[0]", "band", "5g")
+        backend.set_option("wireless", "@wifi-device[0]", "channel", "36")
+        backend.set_option("wireless", "@wifi-device[0]", "htmode", "VHT40")
+        backend.set_option("wireless", "@wifi-iface[0]", "ieee80211w", "0")
+
+    res = get(infrastructure)
+    first_wifi_device = res["data"]["devices"][0]
+    assert first_wifi_device["encryption"] == "WPA3"
+    assert first_wifi_device["hwmode"] == "11a"
+    assert first_wifi_device["htmode"] == "VHT40"
+    assert first_wifi_device["channel"] == 36
+    assert first_wifi_device["ieee80211w_disabled"] is True
+
+    # 2.4 GHz + WPA2/3
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-iface[0]", "encryption", "sae-mixed")
+        backend.set_option("wireless", "@wifi-device[0]", "disabled", "0")
+        backend.set_option("wireless", "@wifi-device[0]", "band", "2g")
+        backend.set_option("wireless", "@wifi-device[0]", "channel", "1")
+        backend.set_option("wireless", "@wifi-device[0]", "htmode", "HT40")
+
+    res = get(infrastructure)
+    first_wifi_device = res["data"]["devices"][0]
+    assert first_wifi_device["encryption"] == "WPA2/3"
+    assert first_wifi_device["hwmode"] == "11g"
+    assert first_wifi_device["htmode"] == "HT40"
+    assert first_wifi_device["channel"] == 1
+    assert first_wifi_device["ieee80211w_disabled"] is True
+
+    # 5 GHz + WPA2/3
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "@wifi-device[0]", "band", "5g")
+        backend.set_option("wireless", "@wifi-device[0]", "channel", "36")
+        backend.set_option("wireless", "@wifi-device[0]", "htmode", "VHT40")
+        backend.del_option("wireless", "@wifi-iface[0]", "ieee80211w")
+
+    res = get(infrastructure)
+    first_wifi_device = res["data"]["devices"][0]
+    assert first_wifi_device["encryption"] == "WPA2/3"
+    assert first_wifi_device["hwmode"] == "11a"
+    assert first_wifi_device["htmode"] == "VHT40"
+    assert first_wifi_device["channel"] == 36
+    assert first_wifi_device["ieee80211w_disabled"] is False
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
 def test_get_settings_custom_encryption_openwrt(file_root_init, uci_configs_init, infrastructure):
     """Test that detection of custom encryption configuration is correct
     Foris-controller should handle any unexpected values of 'encryption' as 'custom'
+
+    There are separate objects in json schema representing multiple replies of `get_settings` (WPA2, WPA3 and custom),
+    so test each reply separately.
     """
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:

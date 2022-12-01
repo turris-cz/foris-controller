@@ -155,7 +155,7 @@
                             "items": {"$ref": "#/definitions/wifi_device_band"}
                         },
                         "hwmode": {"$ref": "#/definitions/wifi_device_hwmode"},
-                        "htmode": {"$ref": "#/definitions/wifi_device_htmode_11g"},
+                        "htmode": {"$ref": "#/definitions/wifi_device_htmode"},
                         "encryption": {"$ref": "#/definitions/wifi_wpa2_encryption"},
                         "channel": {
                             "oneOf":[
