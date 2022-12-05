@@ -21,10 +21,7 @@
                     "type": "object",
                     "properties": {
                         "enabled": {"enum": [true]},
-                        "vlan_id": {
-                            "type": "integer", "minimum": 1, "maximum": 4094,
-                            "description": "Disregard the reserved VLAN ids 0 and 4095."
-                        }
+                        "vlan_id": {"$ref": "#/definitions/vlan_id"}
                     },
                     "additionalProperties": false,
                     "required": ["enabled", "vlan_id"]

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - setup: bump turrishw version to 0.10.0
+- wan: Reuse shared 'vlan_id' definition in the json schema
 
 ## [5.3.0] - 2022-11-22
 ### Changed
