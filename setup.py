@@ -124,7 +124,7 @@ setup(
         "pbkdf2",
         "python-slugify",
         "svupdater @ git+https://gitlab.nic.cz/turris/updater/supervisor.git#egg=supervisor",
-        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git@v0.9.0#egg=turrishw",
+        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git@v0.10.0#egg=turrishw",
         "turris-timezone @ git+https://gitlab.nic.cz/turris/foris-controller/turris-timezone.git#egg=turris-timezone",
     ],
     setup_requires=[

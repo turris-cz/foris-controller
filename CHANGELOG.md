@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   encryption modes (WPA2/3 and WPA3). It might help when wifi clients are
   having trouble connecting to the wifi Access Point.
 - wan: Allow setting VLAN ID for WAN interface
+- networks: Add optional VLAN ID of interface to the json schema
+
+### Changed
+- setup: bump turrishw version to 0.10.0
 
 ## [5.3.0] - 2022-11-22
 ### Changed
