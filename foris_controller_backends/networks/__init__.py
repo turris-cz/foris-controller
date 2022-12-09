@@ -117,7 +117,7 @@ class NetworksUci():
         ]
 
         if not bridge:
-            logger.warning("No anonymous section 'br-%s' found among network devices.", section)
+            logger.debug("No anonymous section 'br-%s' found among network devices.", section)
             return []
 
         return bridge[0]["data"].get("ports", [])

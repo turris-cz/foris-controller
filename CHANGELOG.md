@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - lan+wan: refactor querying ubus from lan & wan backends.
+- networks: Change severity of log message during detection of network bridges
+  from "warning" to "debug". It will no longer spam system log during normal operation
+  of foris-controller with message
+  "WARNING:foris_controller_backends.networks:No anonymous section 'br-<bridge_name>' found among network devices.".
 
 ## [5.4.0] - 2022-12-15
 ### Added
