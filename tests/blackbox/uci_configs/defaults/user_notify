@@ -12,6 +12,11 @@ config smtp smtp
 	#option security 'ssl' # or 'starttls' or 'none'
 	#list to 'user@example.com'
 
+config ntfy ntfy
+	option enable 0
+	option url ""
+	option priority "high"
+
 config notifications notifications
 	# 1: restarts
 	# 2: restarts and errors

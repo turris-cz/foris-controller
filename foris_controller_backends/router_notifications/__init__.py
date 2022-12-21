@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -133,6 +133,11 @@ class RouterNotificationsUci(object):
                     "security": get_option_named(data, "user_notify", "smtp", "security", "ssl"),
                 },
             },
+            "ntfy": {
+                "enabled": parse_bool(get_option_named(data, "user_notify", "ntfy", "enable", "0")),
+                "url": get_option_named(data, "user_notify", "ntfy", "url", ""),
+                "priority": get_option_named(data, "user_notify", "ntfy", "priority", "high"),
+            },
             "reboots": {
                 "time": get_option_named(data, "user_notify", "reboot", "time"),
                 "delay": int(get_option_named(data, "user_notify", "reboot", "delay")),
@@ -209,9 +214,26 @@ class RouterNotificationsUci(object):
         backend.set_option("user_notify", "reboot", "time", reboots_settings["time"])
         backend.set_option("user_notify", "reboot", "delay", str(reboots_settings["delay"]))
 
-    def update_settings(
-        self, emails_settings: typing.Optional[dict] = None, reboots_settings: typing.Optional[dict] = None
+    def update_ntfy_settings(
+        self, backend: UciBackend, ntfy_settings: dict
     ):
+        backend.add_section("user_notify", "ntfy", "ntfy")
+        if ntfy_settings["enabled"]:
+            backend.set_option("user_notify", "ntfy", "enable", store_bool(True))
+            backend.set_option("user_notify", "ntfy", "url", ntfy_settings["url"])
+            backend.set_option("user_notify", "ntfy", "priority", ntfy_settings.get("priority", "high"))
+        else:
+            backend.set_option("user_notify", "ntfy", "enable", store_bool(False))
+
+    def update_settings(
+        self,
+        emails_settings: typing.Optional[dict] = None,
+        ntfy_settings: typing.Optional[dict] = None,
+        reboots_settings: typing.Optional[dict] = None,
+    ):
+        if not (emails_settings or ntfy_settings or reboots_settings):
+            return False  # nothing to update
+
         with UciBackend() as backend:
             # set emails
             if emails_settings:
@@ -219,5 +241,8 @@ class RouterNotificationsUci(object):
             # Set reboots
             if reboots_settings:
                 self.update_reboots_settings(backend, reboots_settings)
+            # set ntfy
+            if ntfy_settings:
+                self.update_ntfy_settings(backend, ntfy_settings)
 
         return True

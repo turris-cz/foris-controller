@@ -99,6 +99,12 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
         },
     }
 
+    ntfy_settings = {
+        "enabled": True,
+        "url": "ntfy.sh/test",
+        "priority": "high",
+    }
+
     @logger_wrapper(logger)
     def list(self, lang):
         res = []
@@ -135,12 +141,14 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        return {"emails": self.emails_settings, "reboots": self.reboots_settings}
+        return {"emails": self.emails_settings, "ntfy": self.ntfy_settings, "reboots": self.reboots_settings}
 
     @logger_wrapper(logger)
-    def update_settings(self, emails_settings=None, reboots_settings=None):
+    def update_settings(self, emails=None, ntfy=None, reboots=None):
+        if not (emails or ntfy or reboots):
+            return False
 
-        if emails_settings:
+        if emails:
             # update values
             def update_dict(d, u):
                 for k, v in u.items():
@@ -149,10 +157,13 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
                     else:
                         d[k] = v
 
-            update_dict(self.emails_settings, emails_settings)
+            update_dict(self.emails_settings, emails)
 
-        if reboots_settings:
-            self.reboots_settings = reboots_settings
+        if ntfy:
+            self.ntfy_settings.update(ntfy)
+
+        if reboots:
+            self.reboots_settings = reboots
 
         return True
 

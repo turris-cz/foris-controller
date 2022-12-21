@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,19 +65,16 @@ class RouterNotificationsModule(BaseModule):
         :returns: result of the update {'result': True/False}
         :rtype: dict
         """
-        res = self.handler.update_settings(
-            emails_settings=data["emails"], reboots_settings=data["reboots"]
-        )
+        res = self.handler.update_settings(**data)
+
+        # remove details such as passwords and others from email notification
+        if "emails" in data and data["emails"]["enabled"]:
+            data["emails"] = {
+                "enabled": True,
+                "smtp_type": data["emails"]["smtp_type"]
+            }
         if res:
-            self.notify(
-                "update_settings",
-                {
-                    "reboots": data["reboots"],
-                    "emails": {"enabled": True, "smtp_type": data["emails"]["smtp_type"]}
-                    if data["emails"]["enabled"]
-                    else {"enabled": False},
-                },
-            )
+            self.notify("update_settings", data)
         return {"result": res}
 
     def action_create(self, data):
@@ -90,35 +87,6 @@ class RouterNotificationsModule(BaseModule):
         """
         # Note that notifications to message bus should be created in the backend command
         return {"result": self.handler.create(**data)}
-
-    def action_update_email_settings(self, data):
-        """ Updates notification email settings
-        :param data: new notification settings
-        :type data: dict
-        :returns: result of the update {'result': True/False}
-        :rtype: dict
-        """
-        res = self.handler.update_settings(emails_settings=data)
-        if res:
-            self.notify(
-                "update_email_settings",
-                {"enabled": True, "smtp_type": data["smtp_type"]}
-                if data["enabled"]
-                else {"enabled": False},
-            )
-        return {"result": res}
-
-    def action_update_reboot_settings(self, data):
-        """ Updates notification settings
-        :param data: new notification settings
-        :type data: dict
-        :returns: result of the update {'result': True/False}
-        :rtype: dict
-        """
-        res = self.handler.update_settings(reboots_settings=data)
-        if res:
-            self.notify("update_reboot_settings", data)
-        return {"result": res}
 
 
 @wrap_required_functions(["list", "mark_as_displayed", "get_settings", "update_settings", "create"])

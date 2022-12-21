@@ -130,6 +130,37 @@
                 }
             ]
         },
+        "router_notification_settings_ntfy_url": {"type": "string"},
+        "router_notification_settings_ntfy_priority": {"enum": ["max", "urgent", "high", "default", "low", "min"]},
+        "router_notification_settings_ntfy_get": {
+            "type": "object",
+            "properties": {
+                "enabled": {"type": "boolean"},
+                "url": {"$ref": "#/definitions/router_notification_settings_ntfy_url"},
+                "priority": {"$ref": "#/definitions/router_notification_settings_ntfy_priority"}
+            },
+            "additionalProperties": false,
+            "required": ["enabled", "url", "priority"]
+        },
+        "router_notification_settings_ntfy_set": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "properties": {"enabled": {"enum": [false]}},
+                    "additionalProperties": false,
+                    "required": ["enabled"]
+                },
+                {
+                    "properties": {
+                        "enabled": {"enum": [true]},
+                        "url": {"$ref": "#/definitions/router_notification_settings_ntfy_url"},
+                        "priority": {"$ref": "#/definitions/router_notification_settings_ntfy_priority"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["enabled", "url"]
+                }
+            ]
+        },
         "router_notification_settings_emails_notification": {
             "type": "object",
             "oneOf": [
@@ -270,10 +301,11 @@
                     "type": "object",
                     "properties": {
                         "emails": {"$ref": "#/definitions/router_notification_settings_emails_get"},
+                        "ntfy": {"$ref": "#/definitions/router_notification_settings_ntfy_get"},
                         "reboots": {"$ref": "#/definitions/router_notification_settings_reboots"}
                     },
                     "additionalProperties": false,
-                    "required": ["emails", "reboots"]
+                    "required": ["emails", "ntfy", "reboots"]
                 }
             },
             "additionalProperties": false,
@@ -289,10 +321,11 @@
                     "type": "object",
                     "properties": {
                         "emails": {"$ref": "#/definitions/router_notification_settings_emails_set"},
+                        "ntfy": {"$ref": "#/definitions/router_notification_settings_ntfy_set"},
                         "reboots": {"$ref": "#/definitions/router_notification_settings_reboots"}
                     },
                     "additionalProperties": false,
-                    "required": ["emails", "reboots"]
+                    "required": []
                 }
             },
             "additionalProperties": false,
@@ -326,10 +359,11 @@
                     "type": "object",
                     "properties": {
                         "emails": {"$ref": "#/definitions/router_notification_settings_emails_notification"},
+                        "ntfy": {"$ref": "#/definitions/router_notification_settings_ntfy_set"},
                         "reboots": {"$ref": "#/definitions/router_notification_settings_reboots"}
                     },
                     "additionalProperties": false,
-                    "required": ["emails", "reboots"]
+                    "required": []
                 }
             },
             "additionalProperties": false,
@@ -389,86 +423,6 @@
                     "additionalProperties": false,
                     "required": ["id", "severity", "new_count"]
                 }
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
-            "description": "Request to update email notifications settings",
-            "properties": {
-                "module": {"enum": ["router_notifications"]},
-                "kind": {"enum": ["request"]},
-                "action": {"enum": ["update_email_settings"]},
-                "data": {"$ref": "#/definitions/router_notification_settings_emails_set"}
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
-            "description": "Reply to update email notifications settings",
-            "properties": {
-                "module": {"enum": ["router_notifications"]},
-                "kind": {"enum": ["reply"]},
-                "action": {"enum": ["update_email_settings"]},
-                "data": {
-                    "type": "object",
-                    "properties": {
-                        "result": {"type": "boolean"}
-                    },
-                    "additionalProperties": false,
-                    "required": ["result"]
-                }
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
-            "description": "Notification that notifications email settings was updated",
-            "properties": {
-                "module": {"enum": ["router_notifications"]},
-                "kind": {"enum": ["notification"]},
-                "action": {"enum": ["update_email_settings"]},
-                "data": {"$ref": "#/definitions/router_notification_settings_emails_notification"}
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
-            "description": "Request to update reboot settings",
-            "properties": {
-                "module": {"enum": ["router_notifications"]},
-                "kind": {"enum": ["request"]},
-                "action": {"enum": ["update_reboot_settings"]},
-                "data": {"$ref": "#/definitions/router_notification_settings_reboots"}
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
-            "description": "Reply to update notifications settings",
-            "properties": {
-                "module": {"enum": ["router_notifications"]},
-                "kind": {"enum": ["reply"]},
-                "action": {"enum": ["update_reboot_settings"]},
-                "data": {
-                    "type": "object",
-                    "properties": {
-                        "result": {"type": "boolean"}
-                    },
-                    "additionalProperties": false,
-                    "required": ["result"]
-                }
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
-            "description": "Notification that notifications settings was updated",
-            "properties": {
-                "module": {"enum": ["router_notifications"]},
-                "kind": {"enum": ["notification"]},
-                "action": {"enum": ["update_reboot_settings"]},
-                "data": {"$ref": "#/definitions/router_notification_settings_reboots"}
             },
             "additionalProperties": false,
             "required": ["data"]

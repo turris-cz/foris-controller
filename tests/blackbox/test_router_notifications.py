@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,10 @@ import pytest
 import os
 import json
 
-from foris_controller_testtools.utils import match_subdict
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
+from foris_controller_testtools.utils import match_subdict, get_uci_module
+
+from types import ModuleType
 
 STORED_NOTIFICATIONS = [
     {
@@ -79,6 +82,14 @@ STORED_NOTIFICATIONS = [
         "messages": {"cs": "", "en": "", "nb_NO": ""},
     },
 ]
+
+
+def get_uci_backend_data(uci: ModuleType) -> dict:
+    """Fetch raw config data from UCI backend."""
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+
+    return data
 
 
 @pytest.fixture(scope="function")
@@ -179,6 +190,7 @@ def test_get_settings(uci_configs_init, infrastructure):
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "emails" in res["data"].keys()
+    assert "ntfy" in res["data"].keys()
     assert "reboots" in res["data"].keys()
 
 
@@ -224,7 +236,7 @@ def test_update_settings(uci_configs_init, infrastructure):
         )
         assert match_subdict(data, res["data"])
 
-    update({"emails": {"enabled": False}, "reboots": {"delay": 1, "time": "03:30"}})
+    update({"emails": {"enabled": False}, "ntfy": {"enabled": False}})
 
     update(
         {
@@ -238,7 +250,11 @@ def test_update_settings(uci_configs_init, infrastructure):
                 "smtp_type": "turris",
                 "smtp_turris": {"sender_name": "name1"},
             },
-            "reboots": {"delay": 0, "time": "04:20"},
+            "ntfy": {
+                "enabled": True,
+                "url": "ntfy.sh/test",
+                "priority": "high"
+            }
         }
     )
     update(
@@ -253,7 +269,11 @@ def test_update_settings(uci_configs_init, infrastructure):
                 "smtp_type": "turris",
                 "smtp_turris": {"sender_name": "name2"},
             },
-            "reboots": {"delay": 0, "time": "04:20"},
+            "ntfy": {
+                "enabled": True,
+                "url": "ntfy.sh/test",
+                "priority": "max",
+            }
         }
     )
 
@@ -276,7 +296,11 @@ def test_update_settings(uci_configs_init, infrastructure):
                     "password": "pass1",
                 },
             },
-            "reboots": {"delay": 2, "time": "05:10"},
+            "ntfy": {
+                "enabled": True,
+                "url": "ntfy.sh/test",
+                "priority": "low",
+            }
         }
     )
     update(
@@ -298,7 +322,7 @@ def test_update_settings(uci_configs_init, infrastructure):
                     "password": "pass2",
                 },
             },
-            "reboots": {"delay": 2, "time": "05:10"},
+            "ntfy": {"enabled": False}
         }
     )
 
@@ -377,29 +401,29 @@ def test_create_notification(notify_cmd, uci_configs_init, infrastructure):
 
 
 def test_update_email_settings(uci_configs_init, infrastructure):
-    filters = [("router_notifications", "update_email_settings")]
+    filters = [("router_notifications", "update_settings")]
 
     def update(data):
         notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message(
             {
                 "module": "router_notifications",
-                "action": "update_email_settings",
+                "action": "update_settings",
                 "kind": "request",
-                "data": data,
+                "data": {"emails": data},
             }
         )
         assert res == {
-            "action": "update_email_settings",
+            "action": "update_settings",
             "data": {"result": True},
             "kind": "reply",
             "module": "router_notifications",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
-        assert notifications[-1]["action"] == "update_email_settings"
+        assert notifications[-1]["action"] == "update_settings"
         assert notifications[-1]["kind"] == "notification"
-        assert match_subdict(notifications[-1]["data"], data)
+        assert match_subdict(notifications[-1]["data"]["emails"], data)
 
         res = infrastructure.process_message(
             {"module": "router_notifications", "action": "get_settings", "kind": "request"}
@@ -500,9 +524,9 @@ def test_update_settings_incorrect_from_and_host(infrastructure, uci_configs_ini
 
     msg = {
         "module": "router_notifications",
-        "action": "update_email_settings",
+        "action": "update_settings",
         "kind": "request",
-        "data": data,
+        "data": {"emails": data},
     }
 
     res = infrastructure.process_message(msg)
@@ -512,29 +536,29 @@ def test_update_settings_incorrect_from_and_host(infrastructure, uci_configs_ini
 
 
 def test_update_reboot_settings(uci_configs_init, infrastructure):
-    filters = [("router_notifications", "update_reboot_settings")]
+    filters = [("router_notifications", "update_settings")]
 
     def update(data):
         notifications = infrastructure.get_notifications(filters=filters)
         res = infrastructure.process_message(
             {
                 "module": "router_notifications",
-                "action": "update_reboot_settings",
+                "action": "update_settings",
                 "kind": "request",
-                "data": data,
+                "data": {"reboots": data},
             }
         )
         assert res == {
-            "action": "update_reboot_settings",
+            "action": "update_settings",
             "data": {"result": True},
             "kind": "reply",
             "module": "router_notifications",
         }
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["module"] == "router_notifications"
-        assert notifications[-1]["action"] == "update_reboot_settings"
+        assert notifications[-1]["action"] == "update_settings"
         assert notifications[-1]["kind"] == "notification"
-        assert match_subdict(notifications[-1]["data"], data)
+        assert match_subdict(notifications[-1]["data"]["reboots"], data)
 
         res = infrastructure.process_message(
             {"module": "router_notifications", "action": "get_settings", "kind": "request"}
@@ -544,3 +568,142 @@ def test_update_reboot_settings(uci_configs_init, infrastructure):
     update({"delay": 1, "time": "03:30"})
     update({"delay": 0, "time": "04:20"})
     update({"delay": 2, "time": "05:10"})
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_update_settings_openwrt(uci_configs_init, infrastructure):
+
+    uci = get_uci_module(infrastructure.name)
+
+    def update(data):
+        res = infrastructure.process_message(
+            {
+                "module": "router_notifications",
+                "action": "update_settings",
+                "kind": "request",
+                "data": data,
+            }
+        )
+        assert "errors" not in res.keys()
+
+    # test ntfy
+
+    update(
+        {
+            "emails": {
+                "enabled": False
+            },
+            "ntfy": {
+                "enabled": True,
+                "url": "ntfy.sh/test",
+                "priority": "low",
+            }
+        }
+    )
+
+    uci_data = get_uci_backend_data(uci)
+    assert uci.get_option_named(uci_data, "user_notify", "ntfy", "url") == "ntfy.sh/test"
+    assert uci.parse_bool(uci.get_option_named(uci_data, "user_notify", "ntfy", "enable")) is True
+    assert uci.get_option_named(uci_data, "user_notify", "ntfy", "priority") == "low"
+
+    assert uci.parse_bool(uci.get_option_named(uci_data, "user_notify", "smtp", "enable")) is False
+
+    # test email
+    update(
+        {
+            "emails": {
+                "enabled": True,
+                "common": {
+                    "to": ["user3@example.com", "user2@example.com"],
+                    "severity_filter": 2,
+                    "send_news": True,
+                },
+                "smtp_type": "custom",
+                "smtp_custom": {
+                    "from": "turris2@example.com",
+                    "host": "example2.com",
+                    "port": 26,
+                    "security": "ssl",
+                    "username": "user2",
+                    "password": "pass2",
+                },
+            },
+            "ntfy": {"enabled": False}
+        }
+    )
+
+    uci_data = get_uci_backend_data(uci)
+    assert uci.get_option_named(uci_data, "user_notify", "ntfy", "url") == "ntfy.sh/test"
+    assert uci.parse_bool(uci.get_option_named(uci_data, "user_notify", "ntfy", "enable")) is False
+    assert uci.get_option_named(uci_data, "user_notify", "ntfy", "priority") == "low"
+
+    assert uci.parse_bool(uci.get_option_named(uci_data, "user_notify", "smtp", "enable")) is True
+    assert (
+        set(uci.get_option_named(uci_data, "user_notify", "smtp", "to"))
+        == {"user3@example.com", "user2@example.com"}
+    )
+
+    assert uci.get_option_named(uci_data, "user_notify", "smtp", "from") == "turris2@example.com"
+    assert uci.get_option_named(uci_data, "user_notify", "smtp", "server") == "example2.com"
+    assert uci.get_option_named(uci_data, "user_notify", "smtp", "port") == "26"
+    assert uci.get_option_named(uci_data, "user_notify", "smtp", "username") == "user2"
+    assert uci.get_option_named(uci_data, "user_notify", "smtp", "password") == "pass2"
+    assert uci.get_option_named(uci_data, "user_notify", "smtp", "security") == "ssl"
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_update_reboot_settings(uci_configs_init, infrastructure):
+
+    uci = get_uci_module(infrastructure.name)
+
+    def update(data):
+        res = infrastructure.process_message(
+            {
+                "module": "router_notifications",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {"reboots": data},
+            }
+        )
+        assert res == {
+            "action": "update_settings",
+            "data": {"result": True},
+            "kind": "reply",
+            "module": "router_notifications",
+        }
+        assert "errors" not in res.keys()
+
+    update({"delay": 1, "time": "03:30"})
+
+    uci_data = get_uci_backend_data(uci)
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == '1'
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "time") == "03:30"
+
+    update({"delay": 0, "time": "04:20"})
+
+    uci_data = get_uci_backend_data(uci)
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == '0'
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "time") == "04:20"
+
+    update({"delay": 2, "time": "05:10"})
+
+    uci_data = get_uci_backend_data(uci)
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == '2'
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "time") == "05:10"
+
+
+def test_update_void_settings(uci_configs_init, infrastructure):
+    res = infrastructure.process_message(
+        {
+            "module": "router_notifications",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {},
+        }
+    )
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": False},
+        "kind": "reply",
+        "module": "router_notifications",
+    }

@@ -75,8 +75,12 @@ class OpenwrtRouterNotificationsHandler(Handler, BaseOpenwrtHandler):
         return self.uci.get_settings()
 
     @logger_wrapper(logger)
-    def update_settings(self, emails_settings=None, reboots_settings=None):
-        return self.uci.update_settings(emails_settings, reboots_settings)
+    def update_settings(self, emails=None, ntfy=None, reboots=None):
+        return self.uci.update_settings(
+            emails_settings=emails,
+            ntfy_settings=ntfy,
+            reboots_settings=reboots,
+        )
 
     @logger_wrapper(logger)
     def create(self, msg, severity, immediate):
