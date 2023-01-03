@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -181,7 +181,11 @@ class LanUci:
     def get_ipv6_client_list(self, interface="br-lan"):
         lease_data = UbusBackend.call_ubus("dhcp", "ipv6leases")
         res = []
-        if lease_data:
+
+        # Interface (e.g. `br-lan`) might not be actively managed by odhcpd,
+        # if for instance, IPv6 is explicitely disabled on it.
+        # Do not rely on assumption that interface has IPv6 always enabled.
+        if lease_data and interface in lease_data["device"]:
             for lease in lease_data["device"][interface]["leases"]:
                 if "ipv6-addr" not in lease:
                     # If assigned IPv6 prefix is large enough, downstream router might get both

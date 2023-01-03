@@ -115,6 +115,28 @@ def dhcpv6_leases_ipv6_prefix():
         yield ubus_dhcp_mock_file
 
 
+@pytest.fixture(scope="function")
+def dhcpv6_leases_missing_lan_bridge():
+    """Test data for missing lan bridge or case when lan bridge is not managed by odhcpd."""
+    # NOTE: keep these data in sync with ubus-cli mock data structure
+    leases = {
+        "dhcp": {
+            "ipv6leases": {
+                "device": {
+                    "br-guest-turris": {
+                        "leases": []
+                    }
+                }
+            }
+        }
+    }
+
+    with FileFaker(
+        FILE_ROOT_PATH, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(leases, indent=2)
+    ) as ubus_dhcp_mock_file:
+        yield ubus_dhcp_mock_file
+
+
 def all_equal(first, *items):
     return all(first == item for item in items)
 
@@ -1296,6 +1318,28 @@ def test_dhcp_clients_openwrt_ipv6leases_with_ipv6_prefix(
     assert len(dhcpv6_clients) == 1
     assert dhcpv6_clients[0]["active"]
     assert dhcpv6_clients[0]["ipv6"] == "fd60:ad42:a6c9::4"
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_dhcp_clients_openwrt_ipv6leases_missing_lan_bridge(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+    dhcpv6_leases_missing_lan_bridge,
+):
+    """Test that missing dhcpv6 leases info for lan bridge won't break fetching dhcpv6 clients.
+
+    In case that odhcpd is not managing leases for lan bridge, we should get no leases.
+    """
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+    dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
+    assert len(dhcpv6_clients) == 0
 
 
 @pytest.mark.file_root_path(WIFI_ROOT_PATH)
