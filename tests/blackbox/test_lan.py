@@ -349,6 +349,44 @@ def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):
     )
 
 
+# NOTE: Keep the fetch test here before updates as workaround.
+# Ifrastructucture does not reset between tests, so mock backend keeps its
+# state across multiple tests.
+# Which leads to weird test results based on the order of the test execution.
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
+def test_dhcp_clients_leasetime_format(
+    infrastructure,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+):
+    """Test that DHCPv6 leases provides the same timestamp format as DHCPv4 leases.
+
+    odhcpd reports DHCPv6 lease time in seconds => meaning lease time duration.
+    Which is unfortunately treated as unix timestamp in reForis Lan page (e.g.
+    1970-01-01 <some time>).
+
+    DHCPv4 lease time, on the other hand, is reported as timestamp of end of
+    the lease (e.g. 2022-01-11 20:41).
+
+    DHCPv6 lease timestamp from backend should have the same meaning =>
+    timestamp of end of the lease.
+    """
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    timestamp_limit = 946681260  # timestamp should be later than 2000-01-01 00:01:00
+
+    ipv4clients = res["data"]["mode_managed"]["dhcp"]["clients"]
+    assert ipv4clients[0]["expires"] > timestamp_limit
+
+    ipv6clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
+    assert ipv6clients[0]["expires"] > timestamp_limit
+    assert ipv6clients[1]["expires"] > timestamp_limit
+
+
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
     uci_configs_init, infrastructure, network_restart_command, device, turris_os_version, lan_dnsmasq_files
@@ -1481,8 +1519,8 @@ def test_dhcp_clients_openwrt_ipv6leases_negative_leasetime(
 
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
     assert len(dhcpv6_clients) == 2
-    assert dhcpv6_clients[0]["expires"] == 3600
-    assert dhcpv6_clients[1]["expires"] == 0
+    assert dhcpv6_clients[0]["expires"] >= 0  # regular leasetime
+    assert dhcpv6_clients[1]["expires"] == 0  # negative leasetime
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
@@ -1507,7 +1545,8 @@ def test_dhcp_clients_openwrt_ipv6leases_junk_leasetime(
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
     assert len(dhcpv6_clients) == 1  # the other malformed lease should not be there
     assert dhcpv6_clients[0]["hostname"] == "good-lease"
-    assert dhcpv6_clients[0]["expires"] == 60
+    assert isinstance(dhcpv6_clients[0]["expires"], int)
+    assert dhcpv6_clients[0]["expires"] >= 0
 
 
 @pytest.mark.file_root_path(WIFI_ROOT_PATH)

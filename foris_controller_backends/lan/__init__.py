@@ -19,6 +19,7 @@
 
 import ipaddress
 import logging
+import time
 import typing
 
 import pkg_resources
@@ -192,6 +193,9 @@ class LanUci:
         # if for instance, IPv6 is explicitely disabled on it.
         # Do not rely on assumption that interface has IPv6 always enabled.
         if lease_data and interface in lease_data["device"]:
+            # use the same base timestamp for all the leases
+            now = int(time.time())
+
             for lease in lease_data["device"][interface]["leases"]:
                 if "ipv6-addr" not in lease:
                     # If assigned IPv6 prefix is large enough, downstream router might get both
@@ -206,10 +210,16 @@ class LanUci:
                     continue  # something is wrong with lease time, ignore this lease
 
                 addresses = lease["ipv6-addr"]
+                expires_time = LanUci._sanitize_dhcpv6_lease_time(lease["valid"])
+                if expires_time is None:
+                    continue  # something is wrong with lease time, ignore this lease
+
+                expires_timestamp = LanUci._make_timestamp_from_dhcpv6_lease_time(now, expires_time)
+
                 for address in addresses:
                     res.append(
                         {
-                            "expires": expires_time,
+                            "expires": expires_timestamp,
                             "duid": lease["duid"],
                             "ipv6": address["address"],
                             "hostname": lease["hostname"],
@@ -220,7 +230,7 @@ class LanUci:
 
     @staticmethod
     def _sanitize_dhcpv6_lease_time(leasetime: str) -> typing.Optional[int]:
-        """Sanitize dhvcpv6 lease time string.
+        """Sanitize dhcpv6 lease time string.
 
         Fallback to `None` on unexpected values (i.e. lease time that can't be converted to int).
         """
@@ -235,6 +245,24 @@ class LanUci:
         # '-1' or other negative numbers points to some kind of error with lease time (see odhcpd source code).
         # Fallback to 0 in case of negative lease time.
         return expires if expires >= 0 else 0
+
+    @staticmethod
+    def _make_timestamp_from_dhcpv6_lease_time(now: int, lease_duration: int) -> int:
+        """Make lease end time timestamp from lease time duration.
+
+        odhcpd reports lease time *duration* in seconds, while dnsmasq reports
+        dhcpv4 lease timestamp as time of the *end* of the lease.
+        Therefore we would like to have the timestamp meaning in sync with DHCPv4 timestamps.
+        """
+        if lease_duration == 0:
+            # Previous processing should sanitize lease time to positive numbers.
+            # Lease time 0 is considered special value: some kind of error with lease time, but not fatal one.
+            # To highlight this unusual value to consumer (frontend), do not return now + lease_duration
+            # (effectively just `now`) timestamp, which might look as good valid timestamp.
+            # Return 0 instead.
+            return 0
+
+        return now + lease_duration
 
     @staticmethod
     def _normalize_lease(value):
