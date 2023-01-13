@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import json
 import os
 import typing
+from pathlib import Path
 
 import pytest
 from foris_controller_testtools.fixtures import (
@@ -41,8 +43,76 @@ from foris_controller_testtools.utils import (
     prepare_turrishw,
 )
 
-WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
+WIFI_ROOT_PATH = Path(__file__).resolve().parent / "test_wifi_files"
+UBUS_TEST_MOCK_DATA_FILE = "/tmp/ubus_test_mock_data.json"
 WIFI_DEFAULT_ENCRYPTION = "WPA2/3"
+
+
+@pytest.fixture(scope="function")
+def dhcpv6_leases_ipv6_prefix():
+    """Test data for downsteam router.
+
+    If IPv6 prefix assigned to main router is large enough,
+    downstream router should get both `ipv6-addr` and `ipv6-prefix`.
+    """
+    # NOTE: keep these data in sync with ubus-cli mock data structure
+    leases = {
+        "dhcp": {
+            "ipv6leases": {
+                "device": {
+                    "br-guest-turris": {
+                        "leases": []
+                    },
+                    "br-lan": {
+                        "leases": [
+                            {
+                                "duid": "00010003d8e63397f73ed8cd7cda",
+                                "iaid": 987654321,
+                                "hostname": "downstream-router",
+                                "accept-reconf": False,
+                                "assigned": 801,
+                                "flags": [
+                                    "bound"
+                                ],
+                                "ipv6-addr": [
+                                    {
+                                        "address": "fd60:ad42:a6c9::4",
+                                        "preferred-lifetime": 42,
+                                        "valid-lifetime": 42
+                                    }
+                                ],
+                                "valid": 42
+                            },
+                            {
+                                "duid": "00020000df167896750a08ce0782",
+                                "iaid": 123456789,
+                                "hostname": "downstream-router",
+                                "accept-reconf": False,
+                                "assigned": 2033,
+                                "flags": [
+                                    "bound"
+                                ],
+                                "ipv6-prefix": [
+                                    {
+                                        "address": "fd60:ad42:910e::11",
+                                        "preferred-lifetime": 4096,
+                                        "valid-lifetime": 4096,
+                                        "prefix-length": 62,
+                                    }
+                                ],
+                                "valid": 4096
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+
+    with FileFaker(
+        FILE_ROOT_PATH, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(leases, indent=2)
+    ) as ubus_dhcp_mock_file:
+        yield ubus_dhcp_mock_file
 
 
 def all_equal(first, *items):
@@ -1182,7 +1252,7 @@ def test_dhcp_clients_multimac_openwrt(
     assert uci.get_option_anonymous(data, "dhcp", "host", -1, "mac") == "77:88:99:99:88:77 AA:BB:CC:DD:EE:FF"
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_dhcp_clients_openwrt_ipv6leases(
     uci_configs_init,
@@ -1195,8 +1265,37 @@ def test_dhcp_clients_openwrt_ipv6leases(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )
     assert "errors" not in res.keys()
-    assert res["data"]["mode_managed"]["dhcp"]["ipv6clients"][2]["active"]
-    assert res["data"]["mode_managed"]["dhcp"]["ipv6clients"][2]["ipv6"] == "fd52:ad42:910e::64fa"
+
+    dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
+    assert len(dhcpv6_clients) == 3
+    assert dhcpv6_clients[2]["active"]
+    assert dhcpv6_clients[2]["ipv6"] == "fd52:ad42:910e::64fa"
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_dhcp_clients_openwrt_ipv6leases_with_ipv6_prefix(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+    dhcpv6_leases_ipv6_prefix,
+):
+    """We are interested only in IPv6 addresses for reForis LAN page.
+
+    Test that dhcpv6 leases with IPv6 prefix (e.g. for downstream IPv6 capable router) are ignored
+    and only IPv6 addresses of such devices are returned.
+    """
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
+    assert len(dhcpv6_clients) == 1
+    assert dhcpv6_clients[0]["active"]
+    assert dhcpv6_clients[0]["ipv6"] == "fd60:ad42:a6c9::4"
 
 
 @pytest.mark.file_root_path(WIFI_ROOT_PATH)

@@ -183,6 +183,14 @@ class LanUci:
         res = []
         if lease_data:
             for lease in lease_data["device"][interface]["leases"]:
+                if "ipv6-addr" not in lease:
+                    # If assigned IPv6 prefix is large enough, downstream router might get both
+                    # IPv6 address ('ipv6-addr') and IPv6 prefix ('ipv6-prefix') from upstream dhcpv6 server.
+                    #
+                    # Currently we just care about IPv6 address leases, e.g. devices in network, so ignore
+                    # the IPv6 prefixes part or anything else.
+                    continue
+
                 addresses = lease["ipv6-addr"]
                 for address in addresses:
                     res.append(
