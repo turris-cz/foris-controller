@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add new backend "ubus" for querying `/bin/ubus`.
+- tests: Allow ubus-cli mock to load json data for tests.
 
 ### Changed
 - lan+wan: refactor querying ubus from lan & wan backends.
