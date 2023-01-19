@@ -195,11 +195,15 @@ class LanUci:
                     # the IPv6 prefixes part or anything else.
                     continue
 
+                expires_time = LanUci._sanitize_dhcpv6_lease_time(lease["valid"])
+                if expires_time is None:
+                    continue  # something is wrong with lease time, ignore this lease
+
                 addresses = lease["ipv6-addr"]
                 for address in addresses:
                     res.append(
                         {
-                            "expires": int(lease["valid"]),
+                            "expires": expires_time,
                             "duid": lease["duid"],
                             "ipv6": address["address"],
                             "hostname": lease["hostname"],
@@ -207,6 +211,24 @@ class LanUci:
                         }
                     )
         return res
+
+    @staticmethod
+    def _sanitize_dhcpv6_lease_time(leasetime: str) -> typing.Optional[int]:
+        """Sanitize dhvcpv6 lease time string.
+
+        Fallback to `None` on unexpected values (i.e. lease time that can't be converted to int).
+        """
+        try:
+            expires = int(leasetime)
+        except ValueError as exc:
+            # odhcpd should already process "junk" values as "-1" (see source code),
+            # so this is intended for really unexpected values from odhcpd.
+            logger.warning("Malformed DHCPv6 lease time. Cannot convert lease time to numeric value. Reason: %r", exc)
+            return None
+
+        # '-1' or other negative numbers points to some kind of error with lease time (see odhcpd source code).
+        # Fallback to 0 in case of negative lease time.
+        return expires if expires >= 0 else 0
 
     @staticmethod
     def _normalize_lease(value):

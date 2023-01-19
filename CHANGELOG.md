@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from "warning" to "debug". It will no longer spam system log during normal operation
   of foris-controller with message
   "WARNING:foris_controller_backends.networks:No anonymous section 'br-<bridge_name>' found among network devices.".
+- lan: Make fetching dhcpv6 leases more resilient to unexpected values.
 
 ## [5.4.0] - 2022-12-15
 ### Added

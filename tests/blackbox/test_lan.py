@@ -84,8 +84,8 @@ def dhcpv6_leases_ipv6_prefix():
                                 "valid": 42
                             },
                             {
-                                "duid": "00020000df167896750a08ce0782",
-                                "iaid": 123456789,
+                                "duid": "00010003d8e63397f73ed8cd7cda",
+                                "iaid": 987654321,
                                 "hostname": "downstream-router",
                                 "accept-reconf": False,
                                 "assigned": 2033,
@@ -125,6 +125,133 @@ def dhcpv6_leases_missing_lan_bridge():
                 "device": {
                     "br-guest-turris": {
                         "leases": []
+                    }
+                }
+            }
+        }
+    }
+
+    with FileFaker(
+        FILE_ROOT_PATH, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(leases, indent=2)
+    ) as ubus_dhcp_mock_file:
+        yield ubus_dhcp_mock_file
+
+
+@pytest.fixture(scope="function")
+def dhcpv6_leases_negative_leasetime():
+    """Test data for dhcpv6 lease with negative leasetime - aka something is wrong with leasetime (see odhcpd)."""
+    # NOTE: keep these data in sync with ubus-cli mock data structure
+    leases = {
+        "dhcp": {
+            "ipv6leases": {
+                "device": {
+                    "br-guest-turris": {
+                        "leases": []
+                    },
+                    "br-lan": {
+                        "leases": [
+                            {
+                                "duid": "00010003d8e63397f73ed8cd7cda",
+                                "iaid": 987654321,
+                                "hostname": "device1",
+                                "accept-reconf": False,
+                                "assigned": 801,
+                                "flags": [
+                                    "bound"
+                                ],
+                                "ipv6-addr": [
+                                    {
+                                        "address": "fd60:ad42:a6c9::4",
+                                        "preferred-lifetime": 3600,
+                                        "valid-lifetime": 3600
+                                    }
+                                ],
+                                "valid": 3600
+                            },
+                            {
+                                "duid": "00020000df167896750a08ce0782",
+                                "iaid": 123456789,
+                                "hostname": "device2",
+                                "accept-reconf": False,
+                                "assigned": 2033,
+                                "flags": [
+                                    "bound"
+                                ],
+                                "ipv6-addr": [
+                                    {
+                                        "address": "fd52:ad42:910e::11",
+                                        "preferred-lifetime": -1,
+                                        "valid-lifetime": -1,
+                                    }
+                                ],
+                                "valid": -1
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+
+    with FileFaker(
+        FILE_ROOT_PATH, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(leases, indent=2)
+    ) as ubus_dhcp_mock_file:
+        yield ubus_dhcp_mock_file
+
+
+@pytest.fixture(scope="function")
+def dhcpv6_leases_junk_leasetime():
+    """Test data for dhcpv6 lease with "junk" leasetime - value that cannot be cast into int.
+
+    Aka something is very wrong with leasetime and probably odhcpd too.
+    """
+    # NOTE: keep these data in sync with ubus-cli mock data structure
+    leases = {
+        "dhcp": {
+            "ipv6leases": {
+                "device": {
+                    "br-guest-turris": {
+                        "leases": []
+                    },
+                    "br-lan": {
+                        "leases": [
+                            {
+                                "duid": "00010003d8e63397f73ed8cd7cda",
+                                "iaid": 987654321,
+                                "hostname": "good-lease",
+                                "accept-reconf": False,
+                                "assigned": 801,
+                                "flags": [
+                                    "bound"
+                                ],
+                                "ipv6-addr": [
+                                    {
+                                        "address": "fd60:ad42:a6c9::4",
+                                        "preferred-lifetime": 3600,
+                                        "valid-lifetime": 3600
+                                    }
+                                ],
+                                "valid": 60
+                            },
+                            {
+                                "duid": "00020000df167896750a08ce0782",
+                                "iaid": 123456789,
+                                "hostname": "junk-lease",
+                                "accept-reconf": False,
+                                "assigned": 2033,
+                                "flags": [
+                                    "bound"
+                                ],
+                                "ipv6-addr": [
+                                    {
+                                        "address": "fd52:ad42:910e::11",
+                                        "preferred-lifetime": -1,
+                                        "valid-lifetime": -1,
+                                    }
+                                ],
+                                "valid": "non-int junk data"
+                            }
+                        ]
                     }
                 }
             }
@@ -1338,8 +1465,62 @@ def test_dhcp_clients_openwrt_ipv6leases_missing_lan_bridge(
         {"module": "lan", "action": "get_settings", "kind": "request"}
     )
     assert "errors" not in res.keys()
+
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
     assert len(dhcpv6_clients) == 0
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_dhcp_clients_openwrt_ipv6leases_negative_leasetime(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+    dhcpv6_leases_negative_leasetime,
+):
+    """Test that dhcpv6 leases with negative lease time does not break fetching of leases.
+
+    According to `odhcpd` source code, negative lease time points to some errors with lease time string.
+    However, in that case we should fall back to some value that passes json schema validation.
+
+    For instance: "-1" => "0"
+    """
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
+    assert len(dhcpv6_clients) == 2
+    assert dhcpv6_clients[0]["expires"] == 3600
+    assert dhcpv6_clients[1]["expires"] == 0
+
+
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_dhcp_clients_openwrt_ipv6leases_junk_leasetime(
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    lan_dnsmasq_files,
+    dhcpv6_leases_junk_leasetime,
+):
+    """Test that dhcpv6 leases with some sort of "junk" lease time does not break fetching of leases.
+
+    These junk values are really not expected during regular operation and such leases should be ignored.
+    """
+    res = infrastructure.process_message(
+        {"module": "lan", "action": "get_settings", "kind": "request"}
+    )
+    assert "errors" not in res.keys()
+
+    dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
+    assert len(dhcpv6_clients) == 1  # the other malformed lease should not be there
+    assert dhcpv6_clients[0]["hostname"] == "good-lease"
+    assert dhcpv6_clients[0]["expires"] == 60
 
 
 @pytest.mark.file_root_path(WIFI_ROOT_PATH)
