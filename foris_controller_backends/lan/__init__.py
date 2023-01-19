@@ -178,7 +178,13 @@ class LanUci:
             )
         return file_records
 
-    def get_ipv6_client_list(self, interface="br-lan"):
+    @staticmethod
+    def _get_ipv6_client_list(interface="br-lan") -> typing.List[dict]:
+        """Get dhcpv6 leases info from json data provided by odhcpd.
+
+        NOTE: We are getting this data via ubus, so this function could break anytime
+        the odhcpd json output structure changes.
+        """
         lease_data = UbusBackend.call_ubus("dhcp", "ipv6leases")
         res = []
 
@@ -277,7 +283,7 @@ class LanUci:
             mode_managed["dhcp"]["clients"] = self.get_client_list(
                 dhcp_data, mode_managed["router_ip"], mode_managed["netmask"]
             )
-            mode_managed["dhcp"]["ipv6clients"] = self.get_ipv6_client_list()
+            mode_managed["dhcp"]["ipv6clients"] = LanUci._get_ipv6_client_list()
         else:
             mode_managed["dhcp"]["clients"] = []
 
