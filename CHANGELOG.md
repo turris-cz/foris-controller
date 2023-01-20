@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - tests: Refactor helper functions into shared module.
 
+### Fixed
+- guest: Use correct guest network bridge name for Turris OS 6.0+, so QoS for
+  guest network will be able to start again.
+
 ## [5.5.0] - 2023-01-20
 ### Added
 - Add new backend "ubus" for querying `/bin/ubus`.

@@ -302,7 +302,7 @@ def test_update_settings_openwrt(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
     assert uci.parse_bool(uci.get_option_named(data, "sqm", "guest_limit_turris", "enabled"))
-    assert uci.get_option_named(data, "sqm", "guest_limit_turris", "interface") == "br-guest_turris"
+    assert uci.get_option_named(data, "sqm", "guest_limit_turris", "interface") == "br-guest-turris"
     assert uci.get_option_named(data, "sqm", "guest_limit_turris", "qdisc") == "fq_codel"
     assert uci.get_option_named(data, "sqm", "guest_limit_turris", "script") == "simple.qos"
     assert uci.get_option_named(data, "sqm", "guest_limit_turris", "link_layer") == "none"

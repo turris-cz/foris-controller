@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2019, 2021-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2019, 2021-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -124,15 +124,16 @@ class GuestUci:
         enabled = store_bool(guest_network["enabled"])
         # On OpenWrt >=21.02 firewall zone name is limited to max 11 chars
         guest_zone_name = "tr_guest"
+        guest_net_bridge_name = "br-guest-turris"
 
         # update network interface list
         backend.add_section("network", "interface", "guest_turris")
         backend.set_option("network", "guest_turris", "enabled", enabled)
         backend.set_option("network", "guest_turris", "proto", "static")
         backend.add_section("network", "device", "br_guest_turris")
-        backend.set_option("network", "br_guest_turris", "name", "br-guest-turris")
+        backend.set_option("network", "br_guest_turris", "name", guest_net_bridge_name)
         backend.set_option("network", "br_guest_turris", "type", "bridge")
-        backend.set_option("network", "guest_turris", "device", "br-guest-turris")
+        backend.set_option("network", "guest_turris", "device", guest_net_bridge_name)
         if guest_network["enabled"]:
             backend.set_option("network", "guest_turris", "ipaddr", guest_network["ip"])
             backend.set_option("network", "guest_turris", "netmask", guest_network["netmask"])
@@ -244,7 +245,7 @@ class GuestUci:
             ):
                 backend.add_section("sqm", "queue", "guest_limit_turris")
                 backend.set_option("sqm", "guest_limit_turris", "enabled", enabled)
-                backend.set_option("sqm", "guest_limit_turris", "interface", "br-guest_turris")
+                backend.set_option("sqm", "guest_limit_turris", "interface", guest_net_bridge_name)
                 backend.set_option("sqm", "guest_limit_turris", "qdisc", "fq_codel")
                 backend.set_option("sqm", "guest_limit_turris", "script", "simple.qos")
                 backend.set_option("sqm", "guest_limit_turris", "link_layer", "none")
