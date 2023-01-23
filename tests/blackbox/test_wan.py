@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 #
 
 import os
-from types import ModuleType
 
 import pytest
 from foris_controller_testtools.fixtures import (
@@ -38,32 +37,9 @@ from foris_controller_testtools.utils import (
     prepare_turrishw_root,
 )
 
+from .helpers.common import get_uci_backend_data, query_infrastructure
+
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
-
-
-# TODO: move it to upper levels (conftest?) later
-def get_uci_backend_data(uci: ModuleType) -> dict:
-    """Fetch raw config data from UCI backend."""
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        data = backend.read()
-
-    return data
-
-
-# TODO: move it to upper levels (conftest?) and refactor it later
-def query_infrastructure(infrastructure, message: dict, expect_success: bool = True) -> dict:
-    """Send message through infrastructure and check for errors based on expected result (success, failure).
-
-    Succesful query should not contain errors, while failure should contain errors.
-    Return whole response (dict), if assertions passes.
-    """
-    res = infrastructure.process_message(message)
-    if not expect_success:
-        assert "errors" in res.keys()
-    else:
-        assert "errors" not in res.keys()
-
-    return res
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0"),("omnia", "6.0")], indirect=True)

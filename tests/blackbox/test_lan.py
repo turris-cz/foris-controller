@@ -43,6 +43,8 @@ from foris_controller_testtools.utils import (
     prepare_turrishw,
 )
 
+from .helpers.common import query_infrastructure
+
 WIFI_ROOT_PATH = Path(__file__).resolve().parent / "test_wifi_files"
 UBUS_TEST_MOCK_DATA_FILE = "/tmp/ubus_test_mock_data.json"
 WIFI_DEFAULT_ENCRYPTION = "WPA2/3"
@@ -266,21 +268,6 @@ def dhcpv6_leases_junk_leasetime():
 
 def all_equal(first, *items):
     return all(first == item for item in items)
-
-
-def query_infrastructure(infrastructure, message: dict, expect_success: bool = True) -> dict:
-    """Send message through infrastructure and check for errors based on expected result (success, failure).
-
-    Succesful query should not contain errors, while failure should contain errors.
-    Return whole response (dict), if assertions passes.
-    """
-    res = infrastructure.process_message(message)
-    if not expect_success:
-        assert "errors" in res.keys()
-    else:
-        assert "errors" not in res.keys()
-
-    return res
 
 
 @pytest.fixture(scope="function")
