@@ -22,7 +22,7 @@ setup(
     ],
     package_data={"foris_controller_modules.{{ cookiecutter.name_snake }}": ["schema", "schema/*.json"]},
     namespace_packages=["foris_controller_modules", "foris_controller_backends"],
-    license='GPL-3.0-only',
+    license="GPL-3.0-only",
     description=DESCRIPTION,
     long_description=open("README.rst").read(),
     install_requires=[
@@ -34,12 +34,12 @@ setup(
         ]
     },
     extras_require={
-        'tests': [
-            'pytest',
-            'foris-controller-testtools @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.13.0#egg=foris-controller-testtools',
-            'foris-client @ git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git#egg=foris-client',
-            'ubus',
-            'paho-mqtt',
+        "tests": [
+            "pytest",
+            "foris-controller-testtools @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.13.0",
+            "foris-client @ git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git",
+            "ubus",
+            "paho-mqtt",
         ],
     },
     include_package_data=True,
