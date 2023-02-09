@@ -3,10 +3,11 @@
 import logging
 import random
 
+from foris_controller_backends.cmdline import BaseCmdLine
+
 # import json
 
-from foris_controller_backends.cmdline import BaseCmdLine
-from foris_controller_backends.uci import UciBackend, get_option_named
+# from foris_controller_backends.uci import UciBackend, get_option_named
 
 logger = logging.getLogger(__name__)
 

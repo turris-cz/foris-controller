@@ -11,7 +11,7 @@ Requirements
 Installation
 ============
 
-	``python3 setup.py install``
+	``pip install .``
 
 Usage
 =====

@@ -1,9 +1,6 @@
 before_script:
   - pip install wheel
-  - pip install virtualenv
-  - virtualenv -p "$(which python)" /tmp/test
-  - source /tmp/test/bin/activate
-  - pip install .
+  - pip install tox
 
 .base_image: &py3_common
   image: registry.nic.cz/turris/foris-ci/python3
@@ -11,37 +8,35 @@ before_script:
 flake8:
   <<: *py3_common
   script:
-    - python setup.py flake8
+    - tox -q -e lint
 
 unit_tests:
   <<: *py3_common
   script:
-    - python setup.py test --addopts="--backend openwrt --message-bus mqtt tests/unit/"
+    - tox -q -e py39 -- --backend openwrt --message-bus mqtt tests/unit/
 
 blackbox_openwrt_unix_socket:
   <<: *py3_common
   script:
     # production backend + unix-socket bus
-    - python setup.py test --addopts="--backend openwrt --message-bus unix-socket tests/blackbox/"
+    - tox -q -e py39 -- --backend openwrt --message-bus unix-socket tests/blackbox/
 
 blackbox_mock_mqtt:
   <<: *py3_common
   script:
     # production bus + mock backend
-    - python setup.py test --addopts="--backend mock --message-bus mqtt tests/blackbox/"
+    - tox -q -e py39 -- --backend mock --message-bus mqtt tests/blackbox/
 
 blackbox_openwrt_mqtt:
   <<: *py3_common
   script:
     # blackbox production config
-    - python setup.py test --addopts="--backend openwrt --message-bus mqtt tests/blackbox/"
-
+    - tox -q -e py39 -- --backend openwrt --message-bus mqtt tests/blackbox/
 blackbox_openwrt_ubus:
   <<: *py3_common
   script:
     # blackbox production config
-    - python setup.py test --addopts="--backend openwrt --message-bus ubus tests/blackbox/"
-
+    - tox -q -e py39 -- --backend openwrt --message-bus ubus tests/blackbox/
 sample_module:
   <<: *py3_common
   script:
@@ -49,10 +44,7 @@ sample_module:
     - pip install cookiecutter
     - rm -rf /tmp/cookiecutter/
     - cookiecutter --no-input doc/examples -o /tmp/cookiecutter/
-
-    # install sample modole
+    # install sample module
     - cd /tmp/cookiecutter/sample_example/
-    - pip install .
-
     # test both backends here
-    - python setup.py test --addopts="--backend openwrt --backend mock --message-bus mqtt --message-bus ubus"
+    - tox -q -e py39 -- --backend openwrt --backend mock --message-bus mqtt --message-bus ubus

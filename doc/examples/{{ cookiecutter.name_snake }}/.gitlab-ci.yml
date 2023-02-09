@@ -1,20 +1,16 @@
 before_script:
-  - pip install virtualenv
-  - virtualenv -p "$(which python)" /tmp/test
+  - pip install wheel
+  - pip install tox
 
-.run_script: &run_script
-  script:
-    - source /tmp/test/bin/activate
-
-    - pip install .
-
-    - python setup.py test --addopts="--backend openwrt --backend mock"
-
-test_python3:
+.base_image: &py3_common
   image: registry.nic.cz/turris/foris-ci/python3
-  <<: *run_script
 
 flake8:
-  image: registry.nic.cz/turris/foris-ci/python3
+  <<: *py3_common
   script:
-    - python setup.py flake8
+    - tox -q -e lint
+
+test_python3:
+  <<: *py3_common
+  script:
+    - tox -q -e py39 -- --backend openwrt --backend mock

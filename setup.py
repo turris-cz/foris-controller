@@ -128,22 +128,18 @@ setup(
         "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git@v0.10.0#egg=turrishw",
         "turris-timezone @ git+https://gitlab.nic.cz/turris/foris-controller/turris-timezone.git#egg=turris-timezone",
     ],
-    setup_requires=[
-        'pytest-runner',
-        'flake8<4.0',  # setuptools integration with flake8 is deprecated in version >=4.0
-    ],
-    tests_require=[
-        'pytest',
-        'foris-controller-testtools',
-        'foris-client',
-        'ubus',
-        'paho-mqtt',
-    ],
     extras_require={
         "ubus": ["ubus"],
         "mqtt": ["paho-mqtt"],
         "zeroconf": ["zeroconf", "ifaddr", "paho-mqtt"],
         'client-socket': ["foris-client @ git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git"],
+        'tests': [
+            'pytest',
+            'foris-controller-testtools @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.13.0#egg=foris-controller-testtools',
+            'foris-client @ git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git#egg=foris-client',
+            'ubus',
+            'paho-mqtt',
+        ],
     },
     entry_points={
         "console_scripts": [
@@ -151,9 +147,5 @@ setup(
             "foris-notify = foris_controller.notify.__main__:main",
         ]
     },
-    dependency_links=[
-        "git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.12.0#egg=foris-controller-testtools",
-        "git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git#egg=foris-client",
-    ],
     zip_safe=False,
 )
