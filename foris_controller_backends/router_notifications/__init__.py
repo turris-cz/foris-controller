@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,14 +17,19 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import glob
 import json
 import logging
-import glob
 import typing
 
-from foris_controller_backends.cmdline import BaseCmdLine
-from foris_controller_backends.uci import UciBackend, get_option_named, parse_bool, store_bool
 from foris_controller.exceptions import FailedToParseCommandOutput
+from foris_controller_backends.cmdline import BaseCmdLine
+from foris_controller_backends.uci import (
+    UciBackend,
+    get_option_named,
+    parse_bool,
+    store_bool,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +147,7 @@ class RouterNotificationsUci(object):
 
         return res
 
-    def update_email_settings(self, backend, emails_settings):
+    def update_email_settings(self, backend: UciBackend, emails_settings: dict):
         if emails_settings["enabled"]:
             backend.add_section("user_notify", "smtp", "smtp")
             backend.set_option("user_notify", "smtp", "enable", store_bool(True))
@@ -199,14 +204,14 @@ class RouterNotificationsUci(object):
         else:
             backend.set_option("user_notify", "smtp", "enable", store_bool(False))
 
-    def update_reboots_settings(
-        self, backend: typing.Optional[dict] = None, reboots_settings: typing.Optional[dict] = None
-    ):
+    def update_reboots_settings(self, backend: UciBackend, reboots_settings: dict):
         backend.add_section("user_notify", "reboot", "reboot")
         backend.set_option("user_notify", "reboot", "time", reboots_settings["time"])
         backend.set_option("user_notify", "reboot", "delay", str(reboots_settings["delay"]))
 
-    def update_settings(self, emails_settings, reboots_settings):
+    def update_settings(
+        self, emails_settings: typing.Optional[dict] = None, reboots_settings: typing.Optional[dict] = None
+    ):
         with UciBackend() as backend:
             # set emails
             if emails_settings:
