@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,7 @@
 #
 
 import logging
-import collections
 import time
-
 from datetime import datetime
 
 from foris_controller.handler_base import BaseMockHandler
@@ -146,7 +144,7 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
             # update values
             def update_dict(d, u):
                 for k, v in u.items():
-                    if isinstance(v, collections.Mapping):
+                    if isinstance(v, dict):
                         update_dict(d.get(k, {}), v)
                     else:
                         d[k] = v
