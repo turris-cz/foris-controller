@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [5.5.1] - 2023-02-24
 ### Changed
 - tests: Refactor helper functions into shared module.
 - tests: Use tox to run tests and linter checks instead of using deprecated
@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - guest: Use correct guest network bridge name for Turris OS 6.0+, so QoS for
   guest network will be able to start again.
+- wan: Do not crash when some of the PPPoE credentials options are missing in
+  uci config.
 
 ## [5.5.0] - 2023-01-20
 ### Added
