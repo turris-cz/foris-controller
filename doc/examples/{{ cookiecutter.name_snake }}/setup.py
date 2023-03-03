@@ -22,7 +22,7 @@ setup(
     ],
     package_data={"foris_controller_modules.{{ cookiecutter.name_snake }}": ["schema", "schema/*.json"]},
     namespace_packages=["foris_controller_modules", "foris_controller_backends"],
-    license="GPL-3.0-only",
+    license="COPYING",
     description=DESCRIPTION,
     long_description=open("README.rst").read(),
     install_requires=[
