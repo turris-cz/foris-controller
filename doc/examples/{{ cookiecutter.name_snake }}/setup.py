@@ -24,7 +24,8 @@ setup(
     namespace_packages=["foris_controller_modules", "foris_controller_backends"],
     license="COPYING",
     description=DESCRIPTION,
-    long_description=open("README.rst").read(),
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     install_requires=[
         "foris-controller @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller.git"
     ],
