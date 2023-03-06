@@ -37,7 +37,7 @@ setup(
     extras_require={
         "tests": [
             "pytest",
-            "foris-controller-testtools @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git@v0.13.0",
+            "foris-controller-testtools @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git",
             "foris-client @ git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git",
             "ubus",
             "paho-mqtt",
