@@ -49,5 +49,9 @@ sample_module:
     - cookiecutter --no-input doc/examples -o /tmp/cookiecutter/
     # install sample module
     - cd /tmp/cookiecutter/sample_example/
+    # initialize git submodule for shared config files
+    - git init
+    - git submodule add https://gitlab.nic.cz/turris/foris-controller/common.git common
+    - ln -s common/foris-controller-modules/tox.ini .
     # test both backends here
     - tox -q -e py39 -- --backend openwrt --backend mock --message-bus mqtt --message-bus ubus
