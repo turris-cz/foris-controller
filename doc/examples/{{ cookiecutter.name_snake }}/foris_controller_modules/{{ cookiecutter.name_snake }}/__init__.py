@@ -23,5 +23,5 @@ class {{ cookiecutter.name_camel }}Module(BaseModule):
 
 
 @wrap_required_functions(["set_slices", "get_slices", "list"])
-class Handler(object):
+class Handler():
     pass
