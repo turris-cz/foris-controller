@@ -1,18 +1,17 @@
 {{ cookiecutter.license_short }}
 
-import pytest
-
 from pathlib import Path
 
+import pytest
 # load common fixtures
 from foris_controller_testtools.fixtures import (
-    uci_config_default_path,
-    env_overrides,
+    backend,
     cmdline_script_root,
     controller_modules,
+    env_overrides,
     extra_module_paths,
     message_bus,
-    backend,
+    uci_config_default_path,
 )
 
 
