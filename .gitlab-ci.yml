@@ -1,6 +1,12 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
+stages:
+  - lint
+  - test
+  - build
+  - publish
+
 before_script:
   - pip install wheel
   - pip install tox
@@ -10,38 +16,45 @@ before_script:
 
 flake8:
   <<: *py3_common
+  stage: lint
   script:
     - tox -q -e lint
 
 unit_tests:
   <<: *py3_common
+  stage: test
   script:
     - tox -q -e py39 -- --backend openwrt --message-bus mqtt tests/unit/
 
 blackbox_openwrt_unix_socket:
   <<: *py3_common
+  stage: test
   script:
     # production backend + unix-socket bus
     - tox -q -e py39 -- --backend openwrt --message-bus unix-socket tests/blackbox/
 
 blackbox_mock_mqtt:
   <<: *py3_common
+  stage: test
   script:
     # production bus + mock backend
     - tox -q -e py39 -- --backend mock --message-bus mqtt tests/blackbox/
 
 blackbox_openwrt_mqtt:
   <<: *py3_common
+  stage: test
   script:
     # blackbox production config
     - tox -q -e py39 -- --backend openwrt --message-bus mqtt tests/blackbox/
 blackbox_openwrt_ubus:
   <<: *py3_common
+  stage: test
   script:
     # blackbox production config
     - tox -q -e py39 -- --backend openwrt --message-bus ubus tests/blackbox/
 sample_module:
   <<: *py3_common
+  stage: test
   script:
     # render cookiecutter template
     - pip install cookiecutter
@@ -55,3 +68,7 @@ sample_module:
     - ln -s common/foris-controller-modules/tox.ini .
     # test both backends here
     - tox -q -e py39 -- --backend openwrt --backend mock --message-bus mqtt --message-bus ubus
+
+include:
+  - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/base.yml"
+  - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/build_and_publish.yml"
