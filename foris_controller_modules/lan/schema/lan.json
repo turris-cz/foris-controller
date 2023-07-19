@@ -131,7 +131,7 @@
                         {"enum": ["ignore"]}
                     ]
                 },
-                "hostname": {"$ref": "#definitions/hostname"}
+                "hostname": {"$ref": "#/definitions/hostname"}
             },
             "additionalProperties": false,
             "required": ["ip", "mac", "hostname"]
@@ -147,7 +147,7 @@
                         {"enum": ["ignore"]}
                     ]
                 },
-                "hostname": {"$ref": "#definitions/hostname"}
+                "hostname": {"$ref": "#/definitions/hostname"}
             },
             "additionalProperties": false,
             "required": ["ip", "old_mac", "mac", "hostname"]
