@@ -1,19 +1,17 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  CI_TOX_EXTRA: "--backend openwrt --backend mock"
+  CI_TOX_IMAGE: registry.nic.cz/turris/foris-ci/python3
+  IMAGE: registry.nic.cz/turris/foris-ci/python3
 
-before_script:
-  - pip install wheel
-  - pip install tox
+stages:
+  - lint
+  - test
+  - build
+  - publish
 
-.base_image: &py3_common
-  image: registry.nic.cz/turris/foris-ci/python3
-
-flake8:
-  <<: *py3_common
-  script:
-    - tox -q -e lint
-
-test_python3:
-  <<: *py3_common
-  script:
-    - tox -q -e py39 -- --backend openwrt --backend mock
+include:
+  - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/base.yml"
+  - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/linters.yml"
+  - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/tox.yml"
+  - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/build_and_publish.yml"

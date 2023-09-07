@@ -22,26 +22,23 @@ setup(
     ],
     package_data={"foris_controller_modules.{{ cookiecutter.name_snake }}": ["schema", "schema/*.json"]},
     namespace_packages=["foris_controller_modules", "foris_controller_backends"],
-    license="COPYING",
+    license="GPLv3",
     description=DESCRIPTION,
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    install_requires=[
-        "foris-controller @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller.git"
+    install_requires=["foris-controller"],
+    setup_requires=['pytest-runner'],
+    tests_require=[
+        'pytest',
+        'foris-controller-testtools',
+        'foris-client',
+        'ubus',
+        'paho-mqtt',
     ],
     entry_points={
         "foris_controller_announcer": [
             "{{ cookiecutter.name_snake }} = foris_controller_{{ cookiecutter.name_snake }}_module.announcer:make_time_message"
         ]
-    },
-    extras_require={
-        "tests": [
-            "pytest",
-            "foris-controller-testtools @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools.git",
-            "foris-client @ git+https://gitlab.nic.cz/turris/foris-controller/foris-client.git",
-            "ubus",
-            "paho-mqtt",
-        ],
     },
     include_package_data=True,
     zip_safe=False,

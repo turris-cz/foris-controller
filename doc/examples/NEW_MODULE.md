@@ -7,6 +7,13 @@ pip install cookiecutter
 cookiecutter foris_controller/doc/examples/ -o <module_name>
 ```
 
+Note that after the skeleton in your git repository, you need to initialize `common` git submodule
+```
+git submodule add https://gitlab.nic.cz/turris/foris-controller/common.git common
+ln -s common/foris-controller-modules/tox.ini tox.ini
+git add tox.ini
+```
+
 # Making a new version of module
 * set new version in `<module_name>/foris_controller_<module_name>/__init__.py`
 * update changelog `<module_name>/CHANGELOG.md`
