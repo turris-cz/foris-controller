@@ -120,7 +120,7 @@ setup(
     description=DESCRIPTION,
     long_description=open("README.rst").read(),
     install_requires=[
-        "foris-schema @ git+https://gitlab.nic.cz/turris/foris-controller/foris-schema.git",
+        "foris-schema",
         "python-prctl",
         "pbkdf2",
         "python-slugify",
