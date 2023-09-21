@@ -25,6 +25,7 @@
                         "link_speed": {"$ref": "#/definitions/interface_link_speed"},
                         "configurable": {"type": "boolean"},
                         "macaddr": {"format": "macaddress", "type": "string"},
+                        "qmi_device": {"type": "string"},
                         "vlan_id": {"$ref": "#/definitions/vlan_id"}
                     },
                     "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "macaddr"],
