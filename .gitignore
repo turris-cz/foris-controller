@@ -3,3 +3,6 @@
 .eggs/
 build/
 foris_controller.egg-info/
+.tox/
+dist/
+.pytest/
