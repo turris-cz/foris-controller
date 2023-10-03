@@ -1,8 +1,10 @@
 repos:
+
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: 'v4.4.0'
   hooks:
   - id: check-json
+
 - repo: local
   hooks:
   - id: tox-lint
@@ -11,3 +13,8 @@ repos:
     language: system
     types: [python]
     pass_filenames: false
+  - id: ruff
+    name: check files using ruff
+    entry: ruff
+    language: system
+    types: [python]

@@ -142,6 +142,7 @@ setup(
         ],
         "dev": [
             "pre-commit",
+            "ruff",
         ],
     },
     entry_points={
