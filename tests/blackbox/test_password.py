@@ -24,17 +24,8 @@ import pytest
 import random
 import string
 
-from foris_controller_testtools.fixtures import (
-    uci_configs_init,
-    infrastructure,
-    only_backends,
-    device,
-    turris_os_version,
-    file_root_init,
-)
 
 PASS_PATH = "/tmp/passwd_input"
-
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_password_files")
 
 

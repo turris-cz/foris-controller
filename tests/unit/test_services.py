@@ -20,7 +20,6 @@
 import os
 import pytest
 
-from foris_controller_testtools.fixtures import lock_backend, init_script_result, sh_command
 from foris_controller_testtools.utils import check_service_result, sh_was_called
 
 from foris_controller.exceptions import ServiceCmdFailed

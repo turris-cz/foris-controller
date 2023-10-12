@@ -20,16 +20,7 @@
 import os
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    UCI_CONFIG_DIR_PATH,
-    device,
-    file_root_init,
-    infrastructure,
-    network_restart_command,
-    only_backends,
-    turris_os_version,
-    uci_configs_init,
-)
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
     get_uci_module,
     match_subdict,
@@ -291,7 +282,13 @@ def test_update_settings_do_the_old_syntax_migration_on_update_openwrt(
 
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_set_custom_macaddr_openwrt(uci_configs_init, infrastructure, network_restart_command, device, turris_os_version):
+def test_set_custom_macaddr_openwrt(
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
+):
     """Test that new `device` section for 'dev_wan' is created if needed.
 
     Test scenario in which there is just `interface 'wan'` without any L2 options,
@@ -345,7 +342,13 @@ def test_set_custom_macaddr_openwrt(uci_configs_init, infrastructure, network_re
 
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_update_settings_delete_l2_options_openwrt(uci_configs_init, infrastructure, network_restart_command, device, turris_os_version):
+def test_update_settings_delete_l2_options_openwrt(
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
+):
     """Check that removing last L2 option from `wan` device will clear that device.
 
     And we are still able to get overall wan settings from `interface`.
@@ -858,7 +861,11 @@ def test_update_settings_change_mac(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66", "mac_address": "11:22:33:44:55:66"},
+            "mac_settings": {
+                "custom_mac_enabled": True,
+                "custom_mac": "11:22:33:44:55:66",
+                "mac_address": "11:22:33:44:55:66",
+            },
         },
         {"wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": True},
     )
@@ -871,7 +878,11 @@ def test_update_settings_change_mac(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": ""}},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66", "mac_address": "11:22:33:44:55:66"},
+            "mac_settings": {
+                "custom_mac_enabled": True,
+                "custom_mac": "11:22:33:44:55:66",
+                "mac_address": "11:22:33:44:55:66",
+            },
         },
         {"wan_type": "dhcp", "wan6_type": "6to4", "custom_mac_enabled": True},
     )
@@ -884,7 +895,11 @@ def test_update_settings_change_mac(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "6to4", "wan6_6to4": {"ipv4_address": "1.2.3.4"}},
-            "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:44:55:66", "mac_address": "11:22:33:44:55:66"},
+            "mac_settings": {
+                "custom_mac_enabled": True,
+                "custom_mac": "11:22:33:44:55:66",
+                "mac_address": "11:22:33:44:55:66",
+            },
         },
         {"wan_type": "dhcp", "wan6_type": "6to4", "custom_mac_enabled": True},
     )
@@ -1699,7 +1714,13 @@ def test_wan6_options_can_be_empty(uci_configs_init, infrastructure, device, tur
 
 
 @pytest.mark.parametrize("device, turris_os_version",[("mox", "4.0"),("omnia","4.0")], indirect=True)
-def test_update_mac_address_and_disable(uci_configs_init, network_restart_command, infrastructure, device, turris_os_version):
+def test_update_mac_address_and_disable(
+    uci_configs_init,
+    network_restart_command,
+    infrastructure,
+    device,
+    turris_os_version,
+):
 
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)

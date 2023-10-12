@@ -21,18 +21,7 @@ import os
 import sys
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    FILE_ROOT_PATH,
-    UCI_CONFIG_DIR_PATH,
-    device,
-    file_root_init,
-    infrastructure,
-    init_script_result,
-    network_restart_command,
-    only_backends,
-    turris_os_version,
-    uci_configs_init,
-)
+from foris_controller_testtools.fixtures import FILE_ROOT_PATH, UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
     FileFaker,
     get_uci_module,

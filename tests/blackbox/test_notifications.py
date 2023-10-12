@@ -20,13 +20,6 @@
 import os
 import pytest
 
-from foris_controller_testtools.fixtures import (
-    uci_configs_init,
-    infrastructure,
-    notify_api,
-    notify_cmd,
-)
-
 
 @pytest.fixture(scope="module")
 def extra_module_paths():

@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 import pytest
-from foris_controller_testtools.fixtures import lock_backend
 
 CMDLINE_ROOT = Path(__file__).resolve().parent / "test_root"
 

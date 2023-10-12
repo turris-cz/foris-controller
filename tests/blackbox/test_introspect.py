@@ -20,11 +20,6 @@
 
 import pytest
 
-from foris_controller_testtools.fixtures import (
-    infrastructure,
-    only_backends,
-)
-
 
 @pytest.mark.only_backends(["mock"])
 def test_list_modules(infrastructure):

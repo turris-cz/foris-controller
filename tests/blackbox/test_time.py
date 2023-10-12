@@ -21,16 +21,7 @@
 import pytest
 import os
 
-from foris_controller_testtools.fixtures import (
-    infrastructure,
-    uci_configs_init,
-    only_backends,
-    init_script_result,
-    device,
-    turris_os_version,
-    UCI_CONFIG_DIR_PATH,
-    file_root_init,
-)
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import check_service_result, get_uci_module
 
 

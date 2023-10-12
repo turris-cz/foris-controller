@@ -21,7 +21,6 @@ import os
 import pytest
 import time
 
-from foris_controller_testtools.fixtures import lock_backend, file_root_init
 
 NOTIFICATION_PATH = "/tmp/async-notification.txt"
 RESET_PATH = "/tmp/async-reset.txt"

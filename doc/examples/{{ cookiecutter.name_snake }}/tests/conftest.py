@@ -3,16 +3,6 @@
 from pathlib import Path
 
 import pytest
-# load common fixtures
-from foris_controller_testtools.fixtures import (
-    backend,
-    cmdline_script_root,
-    controller_modules,
-    env_overrides,
-    extra_module_paths,
-    message_bus,
-    uci_config_default_path,
-)
 
 
 @pytest.fixture(scope="session")
@@ -22,6 +12,11 @@ def uci_config_default_path():
 
 @pytest.fixture(scope="session")
 def cmdline_script_root():
+    return Path(__file__).resolve().parent / "test_root"
+
+
+@pytest.fixture(scope="session")
+def file_root():
     return Path(__file__).resolve().parent / "test_root"
 
 

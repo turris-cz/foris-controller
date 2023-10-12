@@ -19,11 +19,6 @@
 
 import pytest
 
-from foris_controller_testtools.fixtures import (
-    only_message_buses,
-    infrastructure,
-)
-
 
 def test_wrong_input_data(infrastructure):
     res = infrastructure.process_message(

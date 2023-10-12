@@ -17,4 +17,5 @@ repos:
     name: check files using ruff
     entry: ruff
     language: system
+    exclude: "^doc\/"
     types: [python]

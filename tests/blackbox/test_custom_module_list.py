@@ -19,8 +19,6 @@
 
 import pytest
 
-from foris_controller_testtools.fixtures import only_message_buses, uci_configs_init, infrastructure
-
 
 @pytest.fixture(scope="module")
 def controller_modules():

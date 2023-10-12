@@ -21,17 +21,7 @@ import os
 import typing
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    infrastructure,
-    uci_configs_init,
-    file_root_init,
-    init_script_result,
-    only_backends,
-    device,
-    turris_os_version,
-    FILE_ROOT_PATH,
-    UCI_CONFIG_DIR_PATH,
-)
+from foris_controller_testtools.fixtures import FILE_ROOT_PATH, UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
     check_service_result,
     FileFaker,
@@ -565,7 +555,14 @@ def test_set_forwarder(custom_forwarders, uci_configs_init, infrastructure):
         ),
     ],
 )
-def test_set_forwarder_openwrt(custom_forwarders, uci_configs_init, infrastructure, resolver_data, config_name, dns_port):
+def test_set_forwarder_openwrt(
+    custom_forwarders,
+    uci_configs_init,
+    infrastructure,
+    resolver_data,
+    config_name,
+    dns_port,
+):
     """Check that valid port is set for TLS and non-TLS servers"""
     add_forwarder(infrastructure, resolver_data, True)
     check_dns_server_port(config_name, dns_port)

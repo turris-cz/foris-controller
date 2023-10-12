@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2020-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,18 +20,7 @@
 import os
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    FILE_ROOT_PATH,
-    UCI_CONFIG_DIR_PATH,
-    device,
-    file_root_init,
-    infrastructure,
-    init_script_result,
-    network_restart_command,
-    only_backends,
-    turris_os_version,
-    uci_configs_init,
-)
+from foris_controller_testtools.fixtures import FILE_ROOT_PATH, UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
     FileFaker,
     check_service_result,

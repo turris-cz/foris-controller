@@ -27,19 +27,8 @@ import uuid
 
 from io import BytesIO
 
-from foris_controller_testtools.fixtures import (
-    backend,
-    infrastructure,
-    only_backends,
-    only_message_buses,
-    uci_configs_init,
-    init_script_result,
-    file_root_init,
-    network_restart_command,
-    UCI_CONFIG_DIR_PATH,
-)
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import match_subdict, get_uci_module, check_service_result
-from .test_mqtt import mount_on_netboot, mount_on_normal, netboot_configured
 
 CERT_PATH = "/tmp/test-cagen/"
 

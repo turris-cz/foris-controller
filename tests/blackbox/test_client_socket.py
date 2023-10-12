@@ -21,9 +21,6 @@ import os
 import pytest
 
 
-from foris_controller_testtools.fixtures import infrastructure
-
-
 @pytest.fixture(scope="module")
 def extra_module_paths():
     """ Override of extra module paths fixture

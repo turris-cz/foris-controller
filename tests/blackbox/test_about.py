@@ -20,14 +20,6 @@
 import os
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    file_root_init,
-    infrastructure,
-    lock_backend,
-    only_backends,
-    uci_configs_init,
-    prepare_turrishw,
-)
 from foris_controller_testtools.utils import FileFaker
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_about_files")

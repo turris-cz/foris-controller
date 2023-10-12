@@ -2,13 +2,6 @@
 
 import pytest
 
-from foris_controller_testtools.fixtures import (
-    only_message_buses,
-    backend,
-    infrastructure,
-    notify_api,
-)
-
 
 def test_get_slices(infrastructure):
     res = infrastructure.process_message(

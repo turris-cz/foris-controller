@@ -17,31 +17,15 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import os
 import time
 import uuid
 from datetime import datetime
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    UCI_CONFIG_DIR_PATH,
-    clean_reboot_indicator,
-    device,
-    file_root_init,
-    infrastructure,
-    only_backends,
-    turris_os_version,
-    uci_configs_init,
-    updater_languages,
-    updater_userlists,
-)
 from foris_controller_testtools.utils import (
-    get_uci_module,
     match_subdict,
     set_approval,
 )
-
-from foris_controller.exceptions import UciRecordNotFound
 
 
 def wait_for_updater_run_finished(notifications, infrastructure):
@@ -715,12 +699,8 @@ def test_run(uci_configs_init, infrastructure):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_run_notifications(uci_configs_init, infrastructure):
+def test_run_notifications(uci_configs_init, infrastructure, clean_reboot_indicator):
     filters = [("updater", "run")]
-    try:
-        os.unlink(clean_reboot_indicator)
-    except Exception:
-        pass
 
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message(

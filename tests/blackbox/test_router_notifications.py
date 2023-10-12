@@ -21,13 +21,6 @@ import pytest
 import os
 import json
 
-from foris_controller_testtools.fixtures import (
-    only_backends,
-    uci_configs_init,
-    infrastructure,
-    notify_cmd,
-)
-
 from foris_controller_testtools.utils import match_subdict
 
 STORED_NOTIFICATIONS = [

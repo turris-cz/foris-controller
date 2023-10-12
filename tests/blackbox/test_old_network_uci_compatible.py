@@ -22,17 +22,7 @@ import os
 from pathlib import Path
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    UCI_CONFIG_DIR_PATH,
-    device,
-    file_root_init,
-    infrastructure,
-    init_script_result,
-    network_restart_command,
-    only_backends,
-    turris_os_version,
-    uci_configs_init,
-)
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
     get_uci_module,
     network_restart_was_called,
@@ -43,7 +33,6 @@ from foris_controller_testtools.utils import (
 from foris_controller import profiles
 
 from .test_guest import WIFI_DEFAULT_ENCRYPTION
-from .test_lan import lan_dnsmasq_files
 
 WIFI_DEFAULT_ENCRYPTION = "WPA2/3"
 WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
@@ -919,7 +908,11 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "firewall", "wan_https_turris_rule", "dest_port") == "443"
 
 
-@pytest.mark.parametrize("inject_network,device,turris_os_version", [("_DEFAULT_OLD_CONFIG","omnia", "4.0")], indirect=True)
+@pytest.mark.parametrize(
+    "inject_network,device,turris_os_version",
+    [("_DEFAULT_OLD_CONFIG","omnia", "4.0")],
+    indirect=True,
+)
 @pytest.mark.parametrize(
     "old_workflow,new_workflow",
     [

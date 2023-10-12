@@ -21,14 +21,6 @@ import base64
 import os
 import pytest
 
-from foris_controller_testtools.fixtures import (
-    infrastructure,
-    uci_configs_init,
-    file_root_init,
-    only_backends,
-    reboot_command,
-)
-
 from foris_controller_testtools.utils import reboot_was_called
 
 from .test_updater import wait_for_updater_run_finished

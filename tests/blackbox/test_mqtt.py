@@ -19,7 +19,6 @@
 
 import collections
 import json
-import pathlib
 import pytest
 import uuid
 
@@ -28,58 +27,7 @@ from paho.mqtt import client as mqtt
 
 from foris_controller_testtools.infrastructure import MQTT_ID, MQTT_PORT, MQTT_HOST
 
-from foris_controller_testtools.fixtures import (
-    only_message_buses,
-    only_backends,
-    infrastructure,
-    file_root_init,
-    FILE_ROOT_PATH,
-)
-
-from foris_controller_testtools.utils import FileFaker
 from foris_controller import __version__
-
-
-SCRIPT_ROOT_DIR = str(pathlib.Path(__file__).parent / "test_root")
-
-
-@pytest.fixture(scope="function")
-def mount_on_netboot():
-    script = """\
-#!/bin/sh
-cat << EOF
-tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
-tmpfs on /dev type tmpfs (rw,nosuid,relatime,size=512k,mode=755)
-EOF
-"""
-    with FileFaker(SCRIPT_ROOT_DIR, "/bin/mount", True, script) as mount_script:
-        yield mount_script
-
-
-@pytest.fixture(scope="function")
-def mount_on_normal():
-    script = """\
-#!/bin/sh
-cat << EOF
-/dev/mmcblk0p1 on / type btrfs (rw,noatime,ssd,noacl,space_cache,commit=5,subvolid=397,subvol=/@)
-devtmpfs on /dev type devtmpfs (rw,relatime,size=1033476k,nr_inodes=189058,mode=755)
-proc on /proc type proc (rw,nosuid,nodev,noexec,noatime)
-sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,noatime)
-cgroup on /sys/fs/cgroup type cgroup (rw,nosuid,nodev,noexec,relatime,cpuset,cpu,cpuacct,blkio,memory,devices,freezer,net_cls,pids,rdma,debug)
-tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
-tmpfs on /dev type tmpfs (rw,nosuid,relatime,size=512k,mode=755)
-devpts on /dev/pts type devpts (rw,nosuid,noexec,relatime,mode=600,ptmxmode=000)
-debugfs on /sys/kernel/debug type debugfs (rw,noatime)
-EOF
-"""
-    with FileFaker(SCRIPT_ROOT_DIR, "/bin/mount", True, script) as mount_script:
-        yield mount_script
-
-
-@pytest.fixture(scope="function")
-def netboot_configured():
-    with FileFaker(FILE_ROOT_PATH, "/tmp/netboot-configured", False, "") as configured_indicator:
-        yield configured_indicator
 
 
 def query_bus(topic):

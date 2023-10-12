@@ -20,18 +20,7 @@
 import os
 
 import pytest
-from foris_controller_testtools.fixtures import (
-    UCI_CONFIG_DIR_PATH,
-    device,
-    file_root_init,
-    infrastructure,
-    init_script_result,
-    network_restart_command,
-    notify_api,
-    only_backends,
-    turris_os_version,
-    uci_configs_init,
-)
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
     TURRISHW_ROOT,
     get_uci_module,
@@ -148,7 +137,13 @@ def test_get_settings_interfaces_in_order(uci_configs_init, fix_mox_wan, infrast
 
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0")], indirect=True)
-def test_get_settings_interfaces_in_order_mixed_ifaces(uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version):
+def test_get_settings_interfaces_in_order_mixed_ifaces(
+    uci_configs_init,
+    fix_mox_wan,
+    infrastructure,
+    device,
+    turris_os_version,
+):
     """Test mixed interfaces names, not just lans, to further check natural order sorting.
 
     For example:
