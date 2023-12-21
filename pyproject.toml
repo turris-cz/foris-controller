@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foris-controller"
+dynamic = ["version"]
+description = "An program which is placed in top of a message bus and translates requests to commands for backends."
+readme = "README.rst"
+license = { "file" = "COPYING" }
+authors = [
+    { name = "CZ.NIC, z.s.p.o. (http://www.nic.cz/)", email = "packaging@turris.cz" },
+]
+dependencies = [
+    "foris-schema",
+    "pbkdf2",
+    "python-prctl",
+    "python-slugify",
+    "svupdater",
+    "turris-timezone",
+    "turrishw",
+]
+
+[project.optional-dependencies]
+client-socket = [
+    "foris-client",
+]
+dev = [
+    "cookiecutter",
+    "pre-commit",
+    "ruff",
+]
+mqtt = [
+    "paho-mqtt",
+]
+tests = [
+    "foris-client",
+    "foris-controller-testtools",
+    "paho-mqtt",
+    "pytest",
+    "ubus",
+]
+ubus = [
+    "ubus",
+]
+zeroconf = [
+    "ifaddr",
+    "paho-mqtt",
+    "zeroconf",
+]
+
+[project.scripts]
+foris-controller = "foris_controller.controller.__main__:main"
+foris-notify = "foris_controller.notify.__main__:main"
+
+[project.urls]
+Homepage = "https://gitlab.nic.cz/turris/foris-controller/foris-controller"
+
+[tool.hatch.version]
+path = "foris_controller/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/foris_controller",
+    "/foris_controller_backends",
+    "/foris_controller_modules",
+]
+[tool.hatch.build.targets.wheel]
+include = [
+    "/foris_controller",
+    "/foris_controller_backends",
+    "/foris_controller_modules",
+]

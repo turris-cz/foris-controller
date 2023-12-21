@@ -34,7 +34,7 @@ Write some tests to fill some basic requirements for the function api.
 Basically theses tests should prove that your schema mathes the messages.
 You might need to run the tests in debug mod to see more verbose output::
 
-    python setup.py test --addopts="--debug-output"
+    pytest --debug-output
 
 6 Write the backend part
 ========================
@@ -61,7 +61,7 @@ Make sure that you have your system in a state that resambles the actual OpenWRT
 
 and run::
 
-    python setup.py test --addopts="--debug-output --backend openwrt"
+    pytest --debug-output --backend openwrt
 
 Note that CI in gitlab will actually test only mock backend for now since we don't have an appropriate TurrisOS system (or something which resembles it) in the docker image.
 
