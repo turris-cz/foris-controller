@@ -44,6 +44,19 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "module_id": 0,
                 "configurable": True,
                 "macaddr": "04:f0:21:24:11:1f"
+            },
+            {
+                "id": "wwan0",
+                "type": "wwan",
+                "slot": "MPCI1",
+                "state": "down",
+                "link_speed": 0,
+                "bus": "pci",
+                "module_id": 0,
+                "configurable": True,
+                "macaddr": "",
+                'qmi_device': '/dev/cdc-wdm0',
+                "slot_path": "/sys/devices/platform/soc/soc:internal-regs@d0000000/d005e000.usb/usb1/1-1"
             }
         ],
         "lan": [
@@ -118,17 +131,6 @@ class MockNetworksHandler(Handler, BaseMockHandler):
         ],
         "none": [
             {
-                "id": "wwan0",
-                "type": "wwan",
-                "slot": "MPCI1",
-                "state": "down",
-                "link_speed": 0,
-                "bus": "pci",
-                "module_id": 0,
-                "configurable": True,
-                "macaddr": "04:f0:21:24:11:1b"
-            },
-            {
                 "id": "wwan1",
                 "type": "wwan",
                 "slot": "MPCI2",
@@ -137,7 +139,9 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "pci",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "04:f0:21:24:11:be"
+                "macaddr": "04:f0:21:24:11:be",
+                'qmi_device': '/dev/cdc-wdm1',
+                "slot_path": "/sys/devices/platform/soc/soc:internal-regs@d0000000/d0058000.usb/usb3/3-1"
             },
             {
                 "id": "wlan0",
@@ -151,7 +155,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "ssid": "testing-ssid",
                 "macaddr": "04:f0:21:23:22:dc",
                 "slot_path": "soc/soc:pcie/pci0000:00/0000:00:02.0/0000:01:00.0"
-            },
+            }
         ],
     }
     networks = BaseMockHandler._manager.dict(dict(copy.deepcopy(DEFAULT_NETWORKS)))

@@ -15,7 +15,7 @@
                         "type": {
                             "allOf": [
                                 {"$ref": "#/definitions/interface_type"},
-                                {"enum": ["eth", "wwan"]}
+                                {"enum": ["eth"]}
                             ]
                         },
                         "bus": {"$ref": "#/definitions/interface_bus"},
@@ -24,8 +24,7 @@
                         "module_id": {"$ref": "#/definitions/interface_module_id"},
                         "link_speed": {"$ref": "#/definitions/interface_link_speed"},
                         "configurable": {"type": "boolean"},
-                        "macaddr": {"format": "macaddress", "type": "string"},
-                        "qmi_device": {"type": "string"},
+                        "macaddr" : {"format": "macaddress", "type": "string"},
                         "vlan_id": {"$ref": "#/definitions/vlan_id"}
                     },
                     "required": ["id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "macaddr"],
@@ -59,6 +58,37 @@
                         "macaddr"
                     ],
                     "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {"$ref": "#/definitions/interface_id"},
+                        "type": {
+                            "allOf": [
+                                {"$ref": "#/definitions/interface_type"},
+                                {"enum": ["wwan"]}
+                            ]
+                        },
+                        "bus": {"$ref": "#/definitions/interface_bus"},
+                        "slot": {"type": "string"},
+                        "state": {"$ref": "#/definitions/interface_state"},
+                        "module_id": {"$ref": "#/definitions/interface_module_id"},
+                        "link_speed": {"$ref": "#/definitions/interface_link_speed"},
+                        "configurable": {"type": "boolean"},
+                        "macaddr": {
+                            "anyOf" : [
+                                {"format": "macaddress", "type": "string"},
+                                {"enum": [""]}
+                            ]
+                        },
+                        "slot_path": {"type": "string"},
+                        "qmi_device": {"type": "string"}
+                    },
+                    "required": [
+                        "id", "type", "bus", "slot", "state", "module_id", "link_speed", "configurable", "slot_path",
+                        "macaddr", "qmi_device"
+                    ],
+                    "additionalProperties": true
                 }
             ]
         },
@@ -107,8 +137,7 @@
                             "properties": {
                                 "wan": {
                                     "type": "array",
-                                    "items": {"$ref": "#/definitions/interface_record"},
-                                    "maxItems": 1
+                                    "items": {"$ref": "#/definitions/interface_record"}
                                 },
                                 "lan": {
                                     "type": "array",

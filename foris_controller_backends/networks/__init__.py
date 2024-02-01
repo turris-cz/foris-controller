@@ -105,6 +105,20 @@ class NetworksUci():
                 res.append(ports_map.pop(interface))
         return res
 
+    def _prepare_wwan(self, data: dict, ports_map: typing.Dict[str, dict]) -> typing.List[dict]:
+        """Detetmine if network in uci and return list of active devices."""
+
+        res = []
+
+        device_path = get_option_named(data, "network", "gsm", "device", "none")
+
+        if device_path != "none":
+            for id_, interface in ports_map.items():
+                if id_.startswith("wwan") and interface["slot_path"] == device_path:
+                    res.append(interface)
+
+        return res
+
     @staticmethod
     def _get_anonymous_bridge_ports(uci_data: dict, section: str) -> typing.List[str]:
         """Get network bridges (lan, guest, ...) ports names of anonymous bridge config section.
@@ -252,8 +266,9 @@ class NetworksUci():
             for k, v in interfaces.items():
                 v["id"] = k
                 v["configurable"] = True
-                if v["type"] == "wifi":
+                if v["type"] in {"wifi","wwan"}:
                     v["configurable"] = False
+                if v["type"] == "wifi":
                     res_wireless.append(v)
                 else:
                     res.append(v)
@@ -358,8 +373,14 @@ class NetworksUci():
         # Return only first interface asigned to wan to make it compatible with bridges for wan,
         # so the json message will still pass validation.
         # Note: remove this little workaround when multiple interfaces on wan are supported
-        if wan_network:
-            wan_network = [wan_network[0]]
+        # TODO: add active "wwan" if exists
+        wwan_network = self._prepare_wwan(network_data, iface_map)
+
+        if wwan_network:
+            wan_network.extend(wwan_network)
+        else:
+            if wan_network:
+                wan_network = [wan_network[0]]
 
         lan_network = self._prepare_network(network_data, "lan", iface_map)
         guest_network = self._prepare_network(network_data, "guest_turris", iface_map)

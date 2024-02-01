@@ -47,6 +47,36 @@ def test_get_settings(uci_configs_init, fix_mox_wan, infrastructure, device, tur
 
 
 @pytest.mark.only_backends(["openwrt"])
+@pytest.mark.parametrize("device,turris_os_version", [("omnia","7.0"), ("mox","7.0"), ("turris","7.0")], indirect=True)
+def test_get_settings_wwan(uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version):
+    """Test networks return in case of wwan interface existing"""
+
+    prepare_turrishw(f"{device}-wwan-{turris_os_version}")
+
+    DEVICE_PATH_MAP = {
+        "omnia": "/sys/devices/platform/soc/soc:internal-regs/f1058000.usb/usb1/1-1",
+        "mox": "/sys/devices/platform/soc/soc:internal-regs@d0000000/d005e000.usb/usb1/1-1",
+        "turris": "/sys/devices/platform/ffe08000.pcie/pci0002:00/0002:00:00.0/0002:01:00.0/usb2/2-2"
+    }
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.add_section("network", "interface", "gsm")
+        backend.set_option("network", "gsm", "apn", "internet")
+        backend.set_option("network", "gsm", "proto", "modemanager")
+        backend.set_option("network", "gsm", "iptype", "ipv4v6")
+        backend.set_option("network", "gsm", "metric", "2048")
+        backend.set_option("network", "gsm", "device", DEVICE_PATH_MAP.get(device))
+
+    res = infrastructure.process_message(
+        {"module": "networks", "action": "get_settings", "kind": "request"}
+    )
+
+    assert "errors" not in res.keys()
+
+
+@pytest.mark.only_backends(["openwrt"])
 @pytest.mark.parametrize(
     "device,turris_os_version", [("mox", "5.2")], indirect=True
 )
@@ -181,7 +211,7 @@ def test_get_settings_interfaces_in_order_mixed_ifaces(
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 def test_update_settings(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init, fix_mox_wan, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -190,6 +220,9 @@ def test_update_settings(
     res = infrastructure.process_message(
         {"module": "networks", "action": "get_settings", "kind": "request"}
     )
+
+    assert "errors" not in res.keys()
+
     # get ports
     ports = (
         res["data"]["networks"]["wan"]
@@ -265,7 +298,7 @@ def test_update_settings(
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 def test_update_settings_empty_wan(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init, fix_mox_wan, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -403,7 +436,7 @@ def test_update_settings_more_wans(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_missing_assign(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init, fix_mox_wan, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -471,7 +504,7 @@ def test_update_settings_missing_assign(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0"), ("turris", "6.0")], indirect=True)
 def test_update_settings_unknown_assign(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init, fix_mox_wan, infrastructure, network_restart_command, device, turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -608,6 +641,7 @@ def test_update_settings_set_non_configurable(
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
     uci_configs_init,
+    fix_mox_wan,
     init_script_result,
     infrastructure,
     network_restart_command,
@@ -833,6 +867,7 @@ def test_network_change_notification(uci_configs_init, infrastructure, notify_ap
 @pytest.mark.only_backends(["openwrt"])
 def test_one_lan_does_not_break(
     uci_configs_init,
+    fix_mox_wan,
     init_script_result,
     infrastructure,
     network_restart_command,
