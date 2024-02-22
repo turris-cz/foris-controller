@@ -31,6 +31,7 @@ import pkg_resources
 
 from distutils.util import strtobool
 
+from paho import mqtt as mqtt_module
 from paho.mqtt import client as mqtt
 from paho.mqtt.publish import single
 from jsonschema import ValidationError
@@ -48,6 +49,15 @@ bus_info = {"bus_thread": None}
 
 ANNOUNCER_PERIOD_DEFAULT = 1.0  # in seconds
 CLEAR_RETAIN_PERIOD = 10.0  # in seconds
+
+
+def mqtt_client_extra():
+    if mqtt_module.__version__.split(".")[0] not in ["1", "0"]:
+        return {
+            "callback_api_version": mqtt.CallbackAPIVersion.VERSION1,
+        }
+    else:
+        return {}
 
 
 class EntryPointAnnouncer:
@@ -145,7 +155,11 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
     def on_publish(client, userdata, mid):
         logger.debug("Announcer thread published.")
 
-    client = mqtt.Client(client_id=f"{uuid.uuid4()}-controller-announcer", clean_session=False)
+    client = mqtt.Client(
+        client_id=f"{uuid.uuid4()}-controller-announcer",
+        clean_session=False,
+        **mqtt_client_extra(),
+    )
     client.on_connect = on_connect
     client.on_publish = on_publish
     logger.debug("Announcer thread started. Trying to connect to '%s':'%d'", host, port)
@@ -428,7 +442,11 @@ class MqttListener(BaseSocketListener):
                 # This should not happen
                 logger.error("Don't know how to respond.")
 
-        self.client = mqtt.Client(client_id=self.mqtt_client_id, clean_session=False)
+        self.client = mqtt.Client(
+            client_id=self.mqtt_client_id,
+            clean_session=False,
+            **mqtt_client_extra(),
+        )
         self.client.on_connect = MqttListener.handle_on_connect
         self.client.on_message = on_message
         self.client.on_subscribe = on_subscribe
@@ -469,7 +487,11 @@ class MqttNotificationSender(BaseNotificationSender):
         def on_publish(client, userdata, mid):
             logger.debug("Notification inserted into publish queue (mid=%s)", mid)
 
-        self.client = mqtt.Client(client_id=self.mqtt_client_id, clean_session=False)
+        self.client = mqtt.Client(
+            client_id=self.mqtt_client_id,
+            clean_session=False,
+            **mqtt_client_extra(),
+        )
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
         self.client.on_publish = on_publish

@@ -23,6 +23,7 @@ import pytest
 import uuid
 
 
+from paho import mqtt as mqtt_module
 from paho.mqtt import client as mqtt
 
 from foris_controller_testtools.infrastructure import MQTT_ID, MQTT_PORT, MQTT_HOST
@@ -48,10 +49,14 @@ def query_bus(topic):
         except Exception:
             return
         result["data"] = parsed
-        client.loop_stop(True)
+        client.loop_stop()
         client.disconnect()
 
-    client = mqtt.Client()
+    if mqtt_module.__version__.split(".")[0] not in ["1", "0"]:
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1)
+    else:
+        client = mqtt.Client()
+
     client.on_subscribe = on_subscribe
     client.on_message = on_message
     client.on_connect = on_connect
