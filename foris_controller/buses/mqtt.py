@@ -507,8 +507,8 @@ class MqttNotificationSender(BaseNotificationSender):
         self.credentials = credentials
         self.mqtt_client_id = f"{uuid.uuid4()}-controller-notification"
 
+        self._connected = False
         self._connect()
-        self._connected = True
 
     def _send_message(self, msg, controller_id, module, action, data=None):
         logger.debug(
