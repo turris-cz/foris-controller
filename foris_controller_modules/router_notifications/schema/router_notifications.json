@@ -324,8 +324,7 @@
                         "ntfy": {"$ref": "#/definitions/router_notification_settings_ntfy_set"},
                         "reboots": {"$ref": "#/definitions/router_notification_settings_reboots"}
                     },
-                    "additionalProperties": false,
-                    "required": []
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false,
@@ -362,8 +361,7 @@
                         "ntfy": {"$ref": "#/definitions/router_notification_settings_ntfy_set"},
                         "reboots": {"$ref": "#/definitions/router_notification_settings_reboots"}
                     },
-                    "additionalProperties": false,
-                    "required": []
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false,
