@@ -17,4 +17,4 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-__version__ = "5.5.4"
+__version__ = "5.6.0"
