@@ -42,19 +42,13 @@ FINISH_WORKFLOWS = [e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW
 
 EXPECTED_WORKFLOWS = {
     ("mox", "4.0"): list(set(NEW_WORKFLOWS).intersection(set(FINISH_WORKFLOWS))),
-    ("mox", "3.10.7"): [],
     ("omnia", "4.0"): [profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER, profiles.WORKFLOW_BRIDGE],
-    ("omnia", "3.10.7"): [profiles.WORKFLOW_OLD],
     ("turris", "4.0"): [profiles.WORKFLOW_OLD],
-    ("turris", "3.10.7"): [profiles.WORKFLOW_OLD],
 }
 
 RECOMMENDED_WORKFLOWS = {
-    ("mox", "3.10.7"): profiles.WORKFLOW_OLD,
     ("omnia", "4.0"): profiles.WORKFLOW_ROUTER,
-    ("omnia", "3.10.7"): profiles.WORKFLOW_OLD,
     ("turris", "4.0"): profiles.WORKFLOW_OLD,
-    ("turris", "3.10.7"): profiles.WORKFLOW_OLD,
 }
 
 
@@ -76,11 +70,8 @@ def installed_languages(request):
     "device,turris_os_version",
     [
         ("mox", "4.0"),
-        ("mox", "3.10.7"),
         ("omnia", "4.0"),
-        ("omnia", "3.10.7"),
         ("turris", "4.0"),
-        ("turris", "3.10.7"),
     ],
     indirect=True,
 )
@@ -162,11 +153,8 @@ def test_set_language_missing_data(
     "device,turris_os_version",
     [
         ("mox", "4.0"),
-        ("mox", "3.10.7"),
         ("omnia", "4.0"),
-        ("omnia", "3.10.7"),
         ("turris", "4.0"),
-        ("turris", "3.10.7"),
     ],
     indirect=True,
 )
@@ -189,11 +177,8 @@ def test_get_guide(file_root_init, uci_configs_init, infrastructure, device, tur
 @pytest.mark.parametrize(
     "device,turris_os_version",
     [
-        ("mox", "3.10.7"),
         ("omnia", "4.0"),
-        ("omnia", "3.10.7"),
         ("turris", "4.0"),
-        ("turris", "3.10.7"),
     ],
     indirect=True,
 )
@@ -274,11 +259,8 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, device, 
     "device,turris_os_version",
     [
         ("mox", "4.0"),
-        ("mox", "3.10.7"),
         ("omnia", "4.0"),
-        ("omnia", "3.10.7"),
         ("turris", "4.0"),
-        ("turris", "3.10.7"),
     ],
     indirect=True,
 )
@@ -372,11 +354,8 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, device, t
     "device,turris_os_version",
     [
         ("mox", "4.0"),
-        ("mox", "3.10.7"),
         ("omnia", "4.0"),
-        ("omnia", "3.10.7"),
         ("turris", "4.0"),
-        ("turris", "3.10.7"),
     ],
     indirect=True,
 )
