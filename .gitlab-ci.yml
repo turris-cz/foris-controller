@@ -24,34 +24,34 @@ unit_tests:
   <<: *py3_common
   stage: test
   script:
-    - tox -q -e py39 -- --backend openwrt --message-bus mqtt tests/unit/
+    - tox -q -e py310 -- --backend openwrt --message-bus mqtt tests/unit/
 
 blackbox_openwrt_unix_socket:
   <<: *py3_common
   stage: test
   script:
     # production backend + unix-socket bus
-    - tox -q -e py39 -- --backend openwrt --message-bus unix-socket tests/blackbox/
+    - tox -q -e py310 -- --backend openwrt --message-bus unix-socket tests/blackbox/
 
 blackbox_mock_mqtt:
   <<: *py3_common
   stage: test
   script:
     # production bus + mock backend
-    - tox -q -e py39 -- --backend mock --message-bus mqtt tests/blackbox/
+    - tox -q -e py310 -- --backend mock --message-bus mqtt tests/blackbox/
 
 blackbox_openwrt_mqtt:
   <<: *py3_common
   stage: test
   script:
     # blackbox production config
-    - tox -q -e py39 -- --backend openwrt --message-bus mqtt tests/blackbox/
+    - tox -q -e py310 -- --backend openwrt --message-bus mqtt tests/blackbox/
 blackbox_openwrt_ubus:
   <<: *py3_common
   stage: test
   script:
     # blackbox production config
-    - tox -q -e py39 -- --backend openwrt --message-bus ubus tests/blackbox/
+    - tox -q -e py310 -- --backend openwrt --message-bus ubus tests/blackbox/
 sample_module:
   <<: *py3_common
   stage: test
@@ -67,7 +67,7 @@ sample_module:
     - git submodule add https://gitlab.nic.cz/turris/foris-controller/common.git common
     - ln -s common/foris-controller-modules/tox.ini tox.ini
     # test both backends here
-    - tox -q -e py39 -- --backend openwrt --backend mock --message-bus mqtt --message-bus ubus
+    - tox -q -e py310 -- --backend openwrt --backend mock --message-bus mqtt --message-bus ubus
 
 include:
   - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/base.yml"

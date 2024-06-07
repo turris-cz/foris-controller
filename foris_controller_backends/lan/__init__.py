@@ -22,7 +22,7 @@ import logging
 import time
 import typing
 
-import pkg_resources
+from importlib import metadata
 
 from foris_controller.exceptions import UciException
 from foris_controller.utils import parse_to_list, unwrap_list
@@ -119,7 +119,11 @@ class LanUci:
             return (
                 ipaddr_option,
                 get_option_named(
-                    network_data, "network", "lan", "netmask", LanUci.DEFAULT_NETMASK
+                    network_data,
+                    "network",
+                    "lan",
+                    "netmask",
+                    LanUci.DEFAULT_NETMASK,
                 ),
                 gateway
             )
@@ -527,7 +531,7 @@ class LanUci:
                         raise UciException from e
 
         # trigger hooks in modules to perform related changes after LAN configuration was changed
-        for entry_point in pkg_resources.iter_entry_points("lan_range_changed"):
+        for entry_point in metadata.entry_points(group="lan_range_changed"):
             entry_point.load()()
 
         # update wizard passed in foris web (best effort)

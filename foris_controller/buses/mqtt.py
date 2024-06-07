@@ -27,9 +27,9 @@ import sys
 import threading
 import time
 import typing
-import pkg_resources
 
 from distutils.util import strtobool
+from importlib import metadata
 
 from paho import mqtt as mqtt_module
 from paho.mqtt import client as mqtt
@@ -173,7 +173,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
 
     # perpare entry points
     announcers: typing.List[EntryPointAnnouncer] = []
-    for entry_point in pkg_resources.iter_entry_points("foris_controller_announcer"):
+    for entry_point in metadata.entry_points(group="foris_controller_announcer"):
         logger.debug("Loading announcer entry point %s", entry_point.name)
         period, callback = entry_point.load()()
         announcers.append(EntryPointAnnouncer(period, callback))
