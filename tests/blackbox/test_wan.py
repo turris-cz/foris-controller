@@ -26,11 +26,27 @@ from foris_controller_testtools.utils import (
     match_subdict,
     network_restart_was_called,
     prepare_turrishw_root,
+    FileFaker,
 )
 
 from .helpers.common import get_uci_backend_data, query_infrastructure
 
-FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
+CONNTEST_MAPPING = {
+    'success' : '{"dns":"OK"}',
+    'failed' : '{"ipv4":"FAILED"}',
+    'unknown' : '{"ipv6":"UNKNOWN"}'
+}
+
+FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_wan_files')
+TMP_CONN_RESULTS = '/tmp/foris_conn_test'
+
+
+@pytest.fixture(scope="function")
+def check_connection_mock(request):
+    with FileFaker(
+        TMP_CONN_RESULTS, "results.json", True, CONNTEST_MAPPING.get(request.param)
+    ) as check_connection:
+        yield check_connection
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0"),("omnia", "6.0")], indirect=True)
@@ -1548,7 +1564,10 @@ def test_wrong_update(
     )
 
 
-def test_connection_test(uci_configs_init, infrastructure):
+@pytest.mark.parametrize('check_connection_mock', ["success"], indirect=True)
+def test_connection_test(check_connection_mock, uci_configs_init, infrastructure):
+    """When triggering test on openwrt backend, `connection_test_status`
+    is unfinished while the test is running."""
     res = infrastructure.process_message(
         {
             "module": "wan",
@@ -1583,6 +1602,57 @@ def test_connection_test(uci_configs_init, infrastructure):
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert res["data"]["status"] in ["running", "finished"]
     assert "data" in res["data"]
+
+
+def _connection_test(infrastructure, test_kind, expected):
+    """Helper function to test mocked output using openwrt backend only."""
+    res = infrastructure.process_message(
+        {
+            "module": "wan",
+            "action": "connection_test_trigger",
+            "kind": "request",
+            "data": {"test_kinds": [test_kind]}
+        }
+    )
+    assert set(res.keys()) == {"action", "kind", "data", "module"}
+    assert "test_id" in res["data"].keys()
+
+    test_id = res["data"]["test_id"]
+    status = None
+    while status != "finished":
+        res = infrastructure.process_message(
+            {
+                "module": "wan",
+                "action": "connection_test_status",
+                "kind": "request",
+                "data": {"test_id": test_id},
+            }
+        )
+        status = res["data"]["status"]
+
+    assert status == "finished"
+    assert test_kind in res["data"]["data"]
+    assert res["data"]["data"][test_kind] == expected
+
+    return True
+
+
+@pytest.mark.parametrize("check_connection_mock", ["success"], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_connection_test_openwrt_ok(check_connection_mock, uci_configs_init, infrastructure):
+    assert _connection_test(infrastructure, "dns", "OK")
+
+
+@pytest.mark.parametrize("check_connection_mock", ["failed"], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_connection_test_openwrt_failed(check_connection_mock, uci_configs_init, infrastructure):
+    assert _connection_test(infrastructure, "ipv4", "FAILED")
+
+
+@pytest.mark.parametrize("check_connection_mock", ["unknown"], indirect=True)
+@pytest.mark.only_backends(["openwrt"])
+def test_connection_test_openwrt_unknown(check_connection_mock, uci_configs_init, infrastructure):
+    assert _connection_test(infrastructure, "ipv6", "UNKNOWN")
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)

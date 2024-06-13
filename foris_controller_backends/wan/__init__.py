@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+from enum import Enum
 import logging
 
 from foris_controller.exceptions import GenericError, UciException
@@ -443,6 +444,14 @@ class WanUci:
 
 
 class WanTestCommands(AsyncCommand):
+    class TestResult(str, Enum):
+        UNKNOWN = "UNKNOWN"
+        FAILED = "FAILED"
+        OK = "OK"
+
+        @classmethod
+        def _missing_(cls, value):
+            return cls.FAILED
 
     FIELDS = ("ipv6", "ipv6_gateway", "ipv4", "ipv4_gateway", "dns", "dnssec")
     TEST_KIND_MAP = {
@@ -499,23 +508,27 @@ class WanTestCommands(AsyncCommand):
         # generate a notification handler
         def handler_gen(regex, option):
             def handler(matched, process_data):
-                passed = matched.group(1) == "OK"
-                res = {"test_id": process_data.id, "data": {option: passed}}
+                status = WanTestCommands.TestResult(matched.group(1))
+                res = {"test_id": process_data.id, "data": {option: status}}
                 process_data.append_data(res)
                 notify_function(res)
 
             return regex, handler
 
         # handler which will be called when the test exits
-        def handler_exit(process_data):
-            data = {e: False for e in WanTestCommands.FIELDS}
-            for record in process_data.read_all_data():
+        def handler_exit(exit_data):
+            processed_data = exit_data.read_all_data()
+
+            data = {e: "UNKNOWN" for e in WanTestCommands.FIELDS}
+
+            for record in processed_data:
                 for option, res in record["data"].items():
-                    data[option] = res or data.get(option, False)
+                    data[option] = WanTestCommands.TestResult(res)
+
             exit_notify_function(
-                {"test_id": process_data.id, "data": data, "passed": process_data.get_retval() == 0}
+                {"test_id": exit_data.id, "data": data, "passed": exit_data.get_retval() == 0}
             )
-            logger.debug("Connection test finished: (retval=%d)" % process_data.get_retval())
+            logger.debug("Connection test finished: (retval=%d)" % exit_data.get_retval())
 
         # prepare test kinds
         cmd_line_kinds = []

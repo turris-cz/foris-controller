@@ -3,15 +3,16 @@
         "duid": {"type": "string", "pattern": "^([0-9a-fA-F][0-9a-fA-F]){4}([0-9a-fA-F][0-9a-fA-F])*$"},
         "connection_test_kind": {"enum": ["ipv4", "ipv6", "dns"]},
         "connection_test_id": {"type": "string"},
+        "connection_test_result": {"enum": ["OK", "FAILED", "UNKNOWN"]},
         "connection_test_data": {
             "type": "object",
             "properties": {
-                "ipv6": {"type": "boolean"},
-                "ipv6_gateway": {"type": "boolean"},
-                "ipv4": {"type": "boolean"},
-                "ipv4_gateway": {"type": "boolean"},
-                "dns": {"type": "boolean"},
-                "dnssec": {"type": "boolean"}
+                "ipv6": {"$ref": "#/definitions/connection_test_result"},
+                "ipv6_gateway": {"$ref": "#/definitions/connection_test_result"},
+                "ipv4": {"$ref": "#/definitions/connection_test_result"},
+                "ipv4_gateway": {"$ref": "#/definitions/connection_test_result"},
+                "dns": {"$ref": "#/definitions/connection_test_result"},
+                "dnssec": {"$ref": "#/definitions/connection_test_result"}
             },
             "additionalProperties": false
         },

@@ -238,7 +238,7 @@ class MockWanHandler(Handler, BaseMockHandler):
         :rtype: dict
         """
         if test_id in MockWanHandler.test_id_set:
-            return {"status": "running", "data": {"ipv4": True, "ipv6": False}}
+            return {"status": "running", "data": {"ipv4": "OK", "ipv6": "FAILED"}}
         else:
             return {"status": "not_found"}
 
