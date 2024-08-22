@@ -51,6 +51,11 @@ class WifiUci:
     # reverse lookup of json schema values and uci config values
     WIFI_ENC_UCI_TO_MODES = {v:k for k, v in WIFI_ENC_MODES_TO_UCI.items()}
     WIFI_UCI_DEFAULT_ENC_MODE = "sae-mixed"
+    DEFAULT_CHANNELS = {
+        "2g": 11,
+        "5g": 36,
+        "6g": 37,
+    }
 
     @staticmethod
     def get_wifi_devices(backend):
@@ -80,14 +85,10 @@ class WifiUci:
     def _get_device_bands(device_name: str) -> list:
         DEFAULT_HTMODE = "NOHT"
 
-        # map bands to compatible hwmodes values for reforis
-        BANDS_MAP = {
-            "2g": "11g",
-            "5g": "11a",
-        }
         BANDS_TO_MODES_MAP = {
             "2g": ("n", "ax"),
             "5g": ("n", "ac", "ax"),
+            "6g": ("n", "ac", "ax"),
         }
 
         request_msg = {"device": device_name}
@@ -104,17 +105,17 @@ class WifiUci:
 
         # return frequencies and htmodes for each frequency band in separate objects
         res = []
-        for band in ["2g", "5g"]:
+        for band in ["2g", "5g", "6g"]:
             if len(channels[band]) > 0:
                 record = {
                     "available_channels": channels[band],
-                    "hwmode": BANDS_MAP[band],
+                    "band": band,
                 }
                 band_htmodes = [DEFAULT_HTMODE]
-                for htmode in BANDS_TO_MODES_MAP[band]:
+                for hwmode in BANDS_TO_MODES_MAP[band]:
                     # filter htmodes and keep them in order by BANDS_TO_MODES_MAP
-                    if htmode in ht_data["hwmodes"]:
-                        band_htmodes += htmodes.get(htmode, [])
+                    if hwmode in ht_data["hwmodes"]:
+                        band_htmodes += htmodes.get(hwmode, [])
 
                 record["available_htmodes"] = band_htmodes
                 res.append(record)
@@ -124,9 +125,9 @@ class WifiUci:
     def _get_frequencies(freq_data, device_name: str) -> typing.Dict[str, list]:
         """Get available frequencies sorted into frequency bands
 
-        Return frequencies for both 2.4 GHz and 5 GHz.
+        Return frequencies for both 2.4 GHz, 5 GHz and 6GHz.
         """
-        channels = {"2g": [], "5g": []}
+        channels = {"2g": [], "5g": [], "6g": []}
 
         for freq in freq_data["results"]:
             channel = {
@@ -138,11 +139,13 @@ class WifiUci:
             ch_freq = channel["frequency"]
             if 2412 <= ch_freq <= 2484:
                 band = "2g"
-            elif 5160 <= ch_freq <= 5980:
+            elif 5160 <= ch_freq < 5925:
                 band = "5g"
+            elif 5925 <= ch_freq <= 7125:
+                band = "6g"
             else:
                 logger.warning(
-                    "%s: Frequency '%d MHz' does not fit supported bands (2.4 & 5 GHz)",
+                    "%s: Frequency '%d MHz' does not fit supported bands (2.4 & 5 & 6 GHz)",
                     device_name, ch_freq
                 )
                 continue
@@ -158,7 +161,7 @@ class WifiUci:
         Get intersection of valid HT modes by standard with modes advertised by device.
         Return list of HT modes sorted in natural order.
         """
-        HWMODE_TO_HT = {
+        MODE_TO_HT = {
             "n": {"HT20", "HT40"},
             "ac": {"VHT20", "VHT40", "VHT80", "VHT160"},
             "ax": {"HE20", "HE40", "HE80", "HE160"},
@@ -166,13 +169,13 @@ class WifiUci:
 
         device_htmodes_set = set(device_htmodes)
         res = {
-            hwmode: WifiUci._sort_htmodes(device_htmodes_set & htmodes)
-            for hwmode, htmodes in HWMODE_TO_HT.items()
+            mode: WifiUci._sort_htmodes(device_htmodes_set & htmodes)
+            for mode, htmodes in MODE_TO_HT.items()
         }
 
         # Skip empty lists, for example:
         # Do not return {"ac": []}, when device does not support any of "ac" htmodes
-        return {hwmode: htmodes for hwmode, htmodes in res.items() if htmodes}
+        return {mode: htmodes for mode, htmodes in res.items() if htmodes}
 
     def _prepare_wifi_device(self, device, interface, guest_interface):
         # read data from uci
@@ -188,9 +191,9 @@ class WifiUci:
         ssid = interface["data"].get("ssid", "Turris")
         hidden = parse_bool(interface["data"].get("hidden", "0"))
         password = interface["data"].get("key", "")
-        hwmode = WifiUci._get_hwmode(device)
         htmode = device["data"].get("htmode", "NOHT")
-        current_channel = device["data"].get("channel", "11" if hwmode == "11g" else "36")
+        band = device["data"].get("band", "2g")
+        current_channel = device["data"].get("channel", WifiUci.DEFAULT_CHANNELS[band])
         current_channel = 0 if current_channel == "auto" else int(current_channel)
         wifi_encryption = interface["data"].get("encryption", self.WIFI_UCI_DEFAULT_ENC_MODE)
         ieee80211w = interface["data"].get("ieee80211w")
@@ -236,7 +239,7 @@ class WifiUci:
             "SSID": ssid,
             "channel": current_channel,
             "hidden": hidden,
-            "hwmode": hwmode,
+            "band": band,
             "htmode": htmode,
             "encryption": self.WIFI_ENC_UCI_TO_MODES.get(wifi_encryption, "custom"),
             "ieee80211w_disabled": False,
@@ -254,29 +257,6 @@ class WifiUci:
             res["ieee80211w_disabled"] = ieee80211w_disabled
 
         return res
-
-    @staticmethod
-    def _get_hwmode(device) -> typing.Literal["11g", "11a"]:
-        """Get device hwmode in compatible manner with OpenWrt 19.07
-
-        OpenWrt 19.07 use `option hwmode` for setting frequency band
-        OpenWrt 21.02 use `option band` instead
-
-        Return either "11g" (2.4 GHz) or "11a" (5 Ghz)
-        """
-        BAND_HWMODE = {
-            "2g": "11g",
-            "5g": "11a",
-        }
-        FALLBACK_HWMODE = "11g"
-
-        band = device["data"].get("band")
-        if not band:
-            hwmode = device["data"].get("hwmode", FALLBACK_HWMODE)
-        else:
-            hwmode = BAND_HWMODE.get(band, FALLBACK_HWMODE)
-
-        return hwmode
 
     def _get_device_sections(self, data):
         return [
@@ -344,10 +324,6 @@ class WifiUci:
         :rtype: None or bool
         """
         DEFAULT_WIFI_ENC_MODE = "WPA2/3"
-        HWMODE_BAND = {
-            "11g": "2g",
-            "11a": "5g",
-        }
         # sections are supposed to exist so there is no need to create them
 
         if not settings["enabled"]:
@@ -369,7 +345,7 @@ class WifiUci:
         # device
         channel = "auto" if settings["channel"] == 0 else int(settings["channel"])
         backend.set_option("wireless", device_section["name"], "channel", channel)
-        backend.set_option("wireless", device_section["name"], "band", HWMODE_BAND[settings["hwmode"]])
+        backend.set_option("wireless", device_section["name"], "band", settings["band"])
         backend.set_option("wireless", device_section["name"], "htmode", settings["htmode"])
 
         # interface
@@ -474,7 +450,7 @@ class WifiUci:
                         bands = [
                             e
                             for e in WifiUci._get_device_bands(device_section["name"])
-                            if e and e["hwmode"] == device["hwmode"]
+                            if e and e["band"] == device["band"]
                         ]
                         if len(bands) != 1:
                             raise ValueError()

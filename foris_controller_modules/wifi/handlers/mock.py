@@ -38,7 +38,7 @@ DEFAULT_CONFIG = [
         "hidden": False,
         "channel": 36,
         "htmode": "HE80",
-        "hwmode": "11a",
+        "band": "5g",
         "encryption": DEFAULT_WIFI_ENCRYPTION,
         "ieee80211w_disabled": False,
         "password": "",
@@ -50,7 +50,7 @@ DEFAULT_CONFIG = [
         },
         "available_bands": [
             {
-                "hwmode": "11g",
+                "band": "2g",
                 "available_htmodes": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
@@ -69,7 +69,7 @@ DEFAULT_CONFIG = [
                 ],
             },
             {
-                "hwmode": "11a",
+                "band": "5g",
                 "available_htmodes": [
                     "NOHT",
                     "HT20", "HT40",
@@ -113,7 +113,6 @@ DEFAULT_CONFIG = [
                     {"number": 169, "frequency": 5845, "radar": False},
                     {"number": 173, "frequency": 5865, "radar": False},
                     {"number": 177, "frequency": 5885, "radar": False},
-                    {"number": 181, "frequency": 5905, "radar": False}
                 ],
             },
         ],
@@ -125,7 +124,7 @@ DEFAULT_CONFIG = [
         "hidden": False,
         "channel": 1,
         "htmode": "HT20",
-        "hwmode": "11g",
+        "band": "2g",
         "encryption": DEFAULT_WIFI_ENCRYPTION,
         "ieee80211w_disabled": False,
         "password": "",
@@ -137,7 +136,7 @@ DEFAULT_CONFIG = [
         },
         "available_bands": [
             {
-                "hwmode": "11g",
+                "band": "2g",
                 "available_htmodes": ["NOHT", "HT20", "HT40"],
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
@@ -181,7 +180,7 @@ class MockWifiHandler(Handler, BaseMockHandler):
         hidden=None,
         channel=None,
         htmode=None,
-        hwmode=None,
+        band=None,
         encryption=None,
         ieee80211w_disabled=None,
         password=None,
@@ -203,24 +202,24 @@ class MockWifiHandler(Handler, BaseMockHandler):
             return True
 
         # find corresponding band
-        corresponding_bands = [e for e in dev["available_bands"] if e["hwmode"] == hwmode]
+        corresponding_bands = [e for e in dev["available_bands"] if e["band"] == band]
         if len(corresponding_bands) != 1:
             return False
-        band = corresponding_bands[0]
+        band_o = corresponding_bands[0]
 
         # wrong channel
-        if channel not in [e["number"] for e in band["available_channels"]] and channel != 0:
+        if channel not in [e["number"] for e in band_o["available_channels"]] and channel != 0:
             return False
 
         # from htmode
-        if htmode not in band["available_htmodes"]:
+        if htmode not in band_o["available_htmodes"]:
             return False
 
         dev["SSID"] = SSID
         dev["hidden"] = hidden
         dev["channel"] = channel
         dev["htmode"] = htmode
-        dev["hwmode"] = hwmode
+        dev["band"] = band
         dev["encryption"] = encryption if encryption is not None else DEFAULT_WIFI_ENCRYPTION
 
         # handle optional ieee80211w based on encryption type

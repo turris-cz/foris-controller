@@ -43,7 +43,7 @@ DEFAULT_CONFIG = [
         "hidden": False,
         "channel": 36,
         "htmode": "HE80",
-        "hwmode": "11a",
+        "band": "5g",
         "encryption": "WPA2/3",
         "ieee80211w_disabled": False,
         "password": "",
@@ -55,7 +55,7 @@ DEFAULT_CONFIG = [
         },
         "available_bands": [
             {
-                "hwmode": "11g",
+                "band": "2g",
                 "available_htmodes": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
@@ -74,7 +74,7 @@ DEFAULT_CONFIG = [
                 ],
             },
             {
-                "hwmode": "11a",
+                "band": "5g",
                 "available_htmodes": [
                     "NOHT",
                     "HT20", "HT40",
@@ -118,7 +118,6 @@ DEFAULT_CONFIG = [
                     {"number": 169, "frequency": 5845, "radar": False},
                     {"number": 173, "frequency": 5865, "radar": False},
                     {"number": 177, "frequency": 5885, "radar": False},
-                    {"number": 181, "frequency": 5905, "radar": False}
                 ],
             },
         ],
@@ -130,7 +129,7 @@ DEFAULT_CONFIG = [
         "hidden": False,
         "channel": 1,
         "htmode": "HT20",
-        "hwmode": "11g",
+        "band": "2g",
         "password": "",
         "encryption": "WPA2/3",
         "ieee80211w_disabled": False,
@@ -142,7 +141,7 @@ DEFAULT_CONFIG = [
         },
         "available_bands": [
             {
-                "hwmode": "11g",
+                "band": "2g",
                 "available_htmodes": ["NOHT", "HT20", "HT40"],  # only 802.11n wifi card
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
@@ -173,7 +172,7 @@ DEFAULT_UPDATE_DATA = [
         "hidden": True,
         "channel": 0,
         "htmode": "VHT20",
-        "hwmode": "11a",
+        "band": "5g",
         "encryption": "WPA3",
         "ieee80211w_disabled": False,
         "password": "passpass",
@@ -186,7 +185,7 @@ DEFAULT_UPDATE_DATA = [
         "hidden": True,
         "channel": 0,
         "htmode": "NOHT",
-        "hwmode": "11g",
+        "band": "2g",
         "encryption": "WPA2/3",
         "ieee80211w_disabled": False,
         "password": "passpass",
@@ -220,7 +219,7 @@ def cut_out_htdata(data):
         for band in item["available_bands"]:
             bands.append(
                 {
-                    "hwmode": band["hwmode"],
+                    "band": band["band"],
                     "available_htmodes": set(band.pop("available_htmodes"))
                 }
             )
@@ -278,7 +277,7 @@ def test_get_settings_wpa2_openwrt(file_root_init, uci_configs_init, infrastruct
     res = get(infrastructure)
     first_wifi_device = res["data"]["devices"][0]
     assert first_wifi_device["encryption"] == "WPA2"
-    assert first_wifi_device["hwmode"] == "11g"
+    assert first_wifi_device["band"] == "2g"
     assert first_wifi_device["htmode"] == "HT40"
     assert first_wifi_device["channel"] == 1
     # In case of WPA2, we return "ieee80211w_disabled" only for compatibility, but it should be always False
@@ -293,7 +292,7 @@ def test_get_settings_wpa2_openwrt(file_root_init, uci_configs_init, infrastruct
     res = get(infrastructure)
     first_wifi_device = res["data"]["devices"][0]
     assert first_wifi_device["encryption"] == "WPA2"
-    assert first_wifi_device["hwmode"] == "11a"
+    assert first_wifi_device["band"] == "5g"
     assert first_wifi_device["htmode"] == "VHT40"
     assert first_wifi_device["channel"] == 36
     assert first_wifi_device["ieee80211w_disabled"] is False
@@ -326,7 +325,7 @@ def test_get_settings_wpa3_openwrt(file_root_init, uci_configs_init, infrastruct
     res = get(infrastructure)
     first_wifi_device = res["data"]["devices"][0]
     assert first_wifi_device["encryption"] == "WPA3"
-    assert first_wifi_device["hwmode"] == "11g"
+    assert first_wifi_device["band"] == "2g"
     assert first_wifi_device["htmode"] == "HT40"
     assert first_wifi_device["channel"] == 1
     assert first_wifi_device["ieee80211w_disabled"] is False
@@ -341,7 +340,7 @@ def test_get_settings_wpa3_openwrt(file_root_init, uci_configs_init, infrastruct
     res = get(infrastructure)
     first_wifi_device = res["data"]["devices"][0]
     assert first_wifi_device["encryption"] == "WPA3"
-    assert first_wifi_device["hwmode"] == "11a"
+    assert first_wifi_device["band"] == "5g"
     assert first_wifi_device["htmode"] == "VHT40"
     assert first_wifi_device["channel"] == 36
     assert first_wifi_device["ieee80211w_disabled"] is True
@@ -357,7 +356,7 @@ def test_get_settings_wpa3_openwrt(file_root_init, uci_configs_init, infrastruct
     res = get(infrastructure)
     first_wifi_device = res["data"]["devices"][0]
     assert first_wifi_device["encryption"] == "WPA2/3"
-    assert first_wifi_device["hwmode"] == "11g"
+    assert first_wifi_device["band"] == "2g"
     assert first_wifi_device["htmode"] == "HT40"
     assert first_wifi_device["channel"] == 1
     assert first_wifi_device["ieee80211w_disabled"] is True
@@ -372,7 +371,7 @@ def test_get_settings_wpa3_openwrt(file_root_init, uci_configs_init, infrastruct
     res = get(infrastructure)
     first_wifi_device = res["data"]["devices"][0]
     assert first_wifi_device["encryption"] == "WPA2/3"
-    assert first_wifi_device["hwmode"] == "11a"
+    assert first_wifi_device["band"] == "5g"
     assert first_wifi_device["htmode"] == "VHT40"
     assert first_wifi_device["channel"] == 36
     assert first_wifi_device["ieee80211w_disabled"] is False
@@ -469,7 +468,7 @@ def test_update_settings_custom_encryption_openwrt(
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "custom",
             "password": "2gcustompass",
             "guest_wifi": {"enabled": False},
@@ -492,7 +491,7 @@ def test_update_settings_custom_encryption_openwrt(
             "hidden": False,
             "channel": 36,
             "htmode": "VHT80",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "custom",
             "password": "5gcustompass",
             "guest_wifi": {"enabled": False},
@@ -519,7 +518,7 @@ def test_update_settings_custom_encryption_openwrt(
             "hidden": False,
             "channel": 36,
             "htmode": "VHT80",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "custom",
             "password": "5gcustompass",
             "guest_wifi": {"enabled": False},
@@ -640,7 +639,7 @@ def test_update_settings(
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA2",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
@@ -656,7 +655,7 @@ def test_update_settings(
             "hidden": True,
             "channel": 40,
             "htmode": "VHT20",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -669,7 +668,7 @@ def test_update_settings(
             "hidden": True,
             "channel": 6,
             "htmode": "NOHT",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA2/3",
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -692,7 +691,7 @@ def test_update_settings(
             "hidden": True,
             "channel": 0,
             "htmode": "VHT20",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -705,7 +704,7 @@ def test_update_settings(
             "hidden": True,
             "channel": 0,
             "htmode": "NOHT",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA2/3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -728,7 +727,7 @@ def test_update_settings(
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -741,7 +740,7 @@ def test_update_settings(
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -754,7 +753,7 @@ def test_update_settings(
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -772,7 +771,7 @@ def test_update_settings(
             "hidden": True,
             "channel": 40,
             "htmode": "VHT20",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -785,7 +784,7 @@ def test_update_settings(
             "hidden": True,
             "channel": 44,
             "htmode": "NOHT",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -824,7 +823,7 @@ def test_update_and_get_wpa2_modes(
             "hidden": True,
             "channel": 0,
             "htmode": "NOHT",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA2",
             "password": "passpass",
             "guest_wifi": {"enabled": True, "password": "passpassg", "SSID": "Dev111G", "encryption": "WPA2"},
@@ -914,7 +913,7 @@ def test_update_settings_uci(
             "hidden": False,
             "channel": 36,
             "htmode": "VHT80",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA2/3",
             "ieee80211w_disabled": True,
             "password": "passpass",
@@ -927,7 +926,7 @@ def test_update_settings_uci(
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA3",
             "ieee80211w_disabled": True,
             "password": "ssapssap",
@@ -991,7 +990,7 @@ def test_update_settings_uci(
             "hidden": False,
             "channel": 40,
             "htmode": "VHT40",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA2/3",
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1004,7 +1003,7 @@ def test_update_settings_uci(
             "hidden": True,
             "channel": 12,
             "htmode": "HT40",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA3",
             "ieee80211w_disabled": False,
             "password": "ssapssap",
@@ -1082,7 +1081,7 @@ def test_update_settings_uci(
             "hidden": True,
             "channel": 0,
             "htmode": "NOHT",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA2/3",
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1183,7 +1182,7 @@ def test_update_settings_migrate_old_syntax_uci(
             "hidden": False,
             "channel": 36,
             "htmode": "VHT80",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "WPA2/3",
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1216,7 +1215,7 @@ def test_update_settings_migrate_old_syntax_uci(
             "hidden": False,
             "channel": 11,
             "htmode": "HT40",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "WPA2/3",
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1260,7 +1259,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1277,7 +1276,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1300,7 +1299,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 11,
             "htmode": "TH20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1316,7 +1315,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 36,
             "htmode": "VTH80",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1332,7 +1331,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 11,
             "htmode": "VHT40",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1349,7 +1348,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 40,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1364,7 +1363,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 10,
             "htmode": "HT20",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1381,7 +1380,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 40,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": "custom",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
@@ -1395,7 +1394,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 10,
             "htmode": "VHT80",
-            "hwmode": "11a",
+            "band": "5g",
             "encryption": "custom",
             "password": "passpass",
             "guest_wifi": {"enabled": False},
@@ -1411,7 +1410,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 10,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1426,7 +1425,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 10,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1448,7 +1447,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "ieee80211w_disabled": False,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
@@ -1462,7 +1461,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "password": "passpass",
             "guest_wifi": {"enabled": False},
@@ -1478,7 +1477,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
-            "hwmode": "11g",
+            "band": "2g",
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
@@ -1594,7 +1593,7 @@ def test_too_long_generated_guest_ssid(
                         "hidden": False,
                         "channel": 10,
                         "htmode": "HT20",
-                        "hwmode": "11g",
+                        "band": "2g",
                         "encryption": "WPA2/3",
                         "ieee80211w_disabled": False,
                         "password": "passpass",
@@ -1688,7 +1687,7 @@ def test_get_hwmode_fallback_openwrt(infrastructure, uci_configs_init):
         {"module": "wifi", "action": "get_settings", "kind": "request"}
     )
     assert "errors" not in res
-    assert res["data"]["devices"][0]["hwmode"] == "11g"
+    assert res["data"]["devices"][0]["band"] == "2g"
 
 
 def test_get_80211ax_htmodes(infrastructure, uci_configs_init):
@@ -1739,7 +1738,7 @@ def test_update_settings_uci_country(
                             "hidden": True,
                             "channel": 0,
                             "htmode": "NOHT",
-                            "hwmode": "11a",
+                            "band": "5g",
                             "encryption": "WPA3",
                             "ieee80211w_disabled": False,
                             "password": "passpass",
@@ -1841,7 +1840,7 @@ def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart
         "hidden": False,
         "channel": 40,
         "htmode": "VHT40",
-        "hwmode": "11a",
+        "band": "5g",
         "encryption": "WPA3",
         "ieee80211w_disabled": False,
         "password": "passpass",
@@ -1858,7 +1857,7 @@ def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart
         "hidden": False,
         "channel": 40,
         "htmode": "VHT40",
-        "hwmode": "11a",
+        "band": "5g",
         "encryption": "WPA3",
         "ieee80211w_disabled": True,
         "password": "passpass",
@@ -1875,7 +1874,7 @@ def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart
         "hidden": False,
         "channel": 40,
         "htmode": "VHT40",
-        "hwmode": "11a",
+        "band": "5g",
         "encryption": "WPA2/3",
         "ieee80211w_disabled": False,
         "password": "passpass",
@@ -1892,7 +1891,7 @@ def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart
         "hidden": False,
         "channel": 40,
         "htmode": "VHT40",
-        "hwmode": "11a",
+        "band": "5g",
         "encryption": "WPA2/3",
         "ieee80211w_disabled": True,
         "password": "passpass",

@@ -346,11 +346,6 @@ MOCK_DATA = {
                         "mhz": 5885,
                         "restricted": False
                     },
-                    {
-                        "channel": 181,
-                        "mhz": 5905,
-                        "restricted": False
-                    }
                 ]
             },
             "radio1": {

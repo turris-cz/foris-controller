@@ -780,7 +780,7 @@ config wifi-device 'radio0'
 	option macaddr '00:00:00:00:00:00'
 	option disabled '1'
 	option channel 'auto'
-	option hwmode '11g'
+	option band '2g'
 	option htmode 'NOHT'
 
 config wifi-iface 'default_radio0'
