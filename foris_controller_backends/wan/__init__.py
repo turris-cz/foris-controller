@@ -423,17 +423,22 @@ class WanUci:
             backend.del_option("network", "wan", "macaddr", fail_on_error=False)
             backend.set_option("network", "dev_wan", "macaddr", macaddr)
 
-    def update_uncofigured_wan_to_default(self) -> bool:
+    def update_unconfigured_wan_to_default(self) -> bool:
         """
         Updates wan if it was not configured to get IP address via DHCP
 
         :returns: True if wan configuration was changed
         """
         with UciBackend() as backend:
+            # Try to migrate OpenWrt 19.07 style config to new style
+            # ifname => device
+            WanUci._migrate_old_config(backend)
+
             network_data = backend.read("network")
             wan_proto = get_option_named(network_data, "network", "wan", "proto")
+            wan_device = get_option_named(network_data, "network", "wan", "device", "")
 
-        if wan_proto == "none":
+        if wan_proto == "none" and wan_device:
             self.update_settings(
                 wan_settings={"wan_type": "dhcp", "wan_dhcp": {}},
                 wan6_settings={"wan6_type": "dhcpv6", "wan6_dhcpv6": {"duid": ""}},

@@ -154,7 +154,7 @@ class WebUciCommands:
                 backend.set_option("foris", "wizard", "finished", store_bool(True))
             if profiles.STEP_PASSWORD in self.get_guide_data(foris_data)["passed"]:
                 # if a password was try to update wan if it ws not configured
-                if WanUci().update_uncofigured_wan_to_default():
+                if WanUci().update_unconfigured_wan_to_default():
                     MaintainCommands().restart_network()
 
             WebUciCommands.update_passed("finished")

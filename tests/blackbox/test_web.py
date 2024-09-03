@@ -666,6 +666,9 @@ def test_auto_set_unconfigured_wan(
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("network", "wan", "proto", "none")
+        if not wan_configured:
+            # wan is not used at all
+            backend.del_option("network", "wan", "device")
 
     res = infrastructure.process_message(
         {"module": "wan", "action": "get_settings", "kind": "request"}
