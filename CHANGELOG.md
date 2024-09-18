@@ -4,6 +4,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [5.7.0] - 2024-09-18
+### Fixed
+- web: WAN is updated in the guide only when it is used
+
+### Added
+- pathlib compatibility in files backend
+- three states in connection tests
+- port forwarding to lan
+
+
 ## [5.6.0] - 2024-05-16
 ### Fixed
 - notification was lost in some cases
