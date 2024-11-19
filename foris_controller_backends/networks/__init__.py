@@ -20,7 +20,6 @@
 import json
 import logging
 import typing
-from functools import wraps
 
 import turrishw
 
@@ -44,17 +43,10 @@ logger = logging.getLogger(__name__)
 NetworkAndSSIDs = typing.List[typing.Tuple[str, str]]
 
 
-def decorate_guest_net(pos):
-    """Handle guest net on position"""
-    def decorate(func):
-        @wraps(func)
-        def wrapper(*args):
-            if args[pos] == "guest":
-                args = [*args]
-                args[pos] = "guest_turris"
-            func(*args)
-        return wrapper
-    return decorate
+def convert_network_name(name: str) -> str:
+    if name == "guest":
+        return "guest_turris"
+    return name
 
 
 class NetworksUci():
@@ -89,20 +81,18 @@ class NetworksUci():
         if ports:
             ports = sort_by_natural_order(ports)
             for port in ports:
-                if port in ports_map:
-                    res.append(ports_map.pop(port))
+                if prt := ports_map.pop(port, None):
+                    res.append(prt)
         else:
-            try:
-                res.append(ports_map.pop(device))
-            except KeyError:
-                pass
+            if prt := ports_map.pop(device, None):
+                res.append(prt)
 
         interfaces = sort_by_natural_order(interfaces)
 
         # TODO: once old uci not supported delete, see above
         for interface in interfaces:
-            if interface in ports_map:
-                res.append(ports_map.pop(interface))
+            if iface := ports_map.pop(interface, None):
+                res.append(iface)
         return res
 
     def _prepare_wwan(self, data: dict, ports_map: typing.Dict[str, dict]) -> typing.List[dict]:
@@ -336,6 +326,10 @@ class NetworksUci():
         """
         ifname = record["id"]
 
+        # try to matched based on ifname
+        if ssids := self._find_enabled_networks_by_ifname(wireless_data, ifname):
+            return ssids
+
         # try to find it by pci slot path first
         slot_path = record.get("slot_path")
         if ssids := self._find_enabled_networks_by_path(wireless_data, slot_path, ifname):
@@ -344,9 +338,6 @@ class NetworksUci():
         # try the macaddr as second choice
         macaddr = record.get("macaddr")
         if ssids := self._find_enabled_networks_by_macaddr(wireless_data, macaddr, ifname):
-            return ssids
-
-        if ssids := self._find_enabled_networks_by_ifname(wireless_data, ifname):
             return ssids
 
         return []  # None found
@@ -453,9 +444,9 @@ class NetworksUci():
             # current ports doesn't match the one that are being set
             return False
 
-        @decorate_guest_net(1)
         def _create_bridge(backend: UciBackend, net: str, ifs: typing.List[str], mac=None):
             """Create bridge device and set its interfaces"""
+            net = convert_network_name(net)
             backend.add_section("network", "device", f"br_{net}")
             backend.set_option("network", f"br_{net}", "name", f"br-{net}")
             backend.set_option("network", f"br_{net}", "type", "bridge")
@@ -465,9 +456,9 @@ class NetworksUci():
             if mac:
                 backend.set_option("network", f"br_{net}", "macaddr", mac)
 
-        @decorate_guest_net(2)
         def _del_bridge(backend: UciBackend, data, net: str, devices: typing.List[str]):
             """Delete bridge and set the interface device to device"""
+            net = convert_network_name(net)
             mac = get_option_named(data, "network", f"br_{net}", "macaddr", False)
             if section_exists(data, "network", f"br_{net}"):
                 backend.del_section("network", f"br_{net}")
@@ -479,9 +470,9 @@ class NetworksUci():
                 backend.del_option("network", net, "device", fail_on_error=False)
                 backend.set_option("network", net, "bridge_empty", store_bool(True))
 
-        @decorate_guest_net(1)
         def _set_bridge_ports(backend, net, ifs):
             """Set bridge ports to provided interfaces"""
+            net = convert_network_name(net)
             backend.replace_list("network", f"br_{net}", "ports", ifs)
 
         with UciBackend() as backend:
