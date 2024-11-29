@@ -17,7 +17,6 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import imp
 import importlib
 import inspect
 import ipaddress
@@ -25,6 +24,7 @@ import os
 import pkgutil
 import re
 import signal
+import sys
 import typing
 from functools import wraps
 from multiprocessing.managers import SyncManager
@@ -187,19 +187,12 @@ def get_modules(filter_modules, module_paths=[]):
         # dir base name will be module name
         modules_path = modules_path.rstrip("/")
         name = os.path.basename(modules_path)
-        fp, pathname, description = imp.find_module(name, [os.path.dirname(modules_path)])
-        try:
-            res.append(
-                (
-                    name,
-                    imp.load_module(
-                        "foris_controller_modules.%s" % name, fp, pathname, description
-                    ),
-                )
-            )
-        finally:
-            if fp:
-                fp.close()
+        modules_path = modules_path + "/__init__.py"
+        spec = importlib.util.spec_from_file_location(name, modules_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+        res.append((name, module))
 
     return res
 
@@ -327,5 +320,12 @@ def sort_by_natural_order(items: typing.Union[typing.List[str], typing.Set[str]]
     """Sort strings in collection by natural order"""
     return sorted(
         items,
-        key=lambda l: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", l)]
+        key=lambda line: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", line)]
     )
+
+
+def strtobool(value: str) -> bool:
+    value = value.lower()
+    if value in ("y", "yes", "on", "1", "true", "t"):
+        return True
+    return False

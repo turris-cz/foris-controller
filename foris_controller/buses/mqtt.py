@@ -28,7 +28,6 @@ import threading
 import time
 import typing
 
-from distutils.util import strtobool
 from importlib import metadata
 
 from paho import mqtt as mqtt_module
@@ -37,6 +36,7 @@ from paho.mqtt.publish import single
 from jsonschema import ValidationError
 
 from foris_controller.app import app_info
+from foris_controller.utils import strtobool
 from foris_controller.message_router import Router
 from foris_controller.utils import get_modules
 
