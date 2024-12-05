@@ -2850,7 +2850,7 @@ def test_qos_openwrt(
     _assert_sqm_option(uci, "debug_logging", "1")
 
 
-def test_set_get_forwarding(static_leases, uci_configs_init, init_script_result, infrastructure):
+def test_set_get_port_forwarding(static_leases, uci_configs_init, init_script_result, infrastructure):
     my_rule = {
         "name": "my-forward-rule",
         "dest_ip": "192.168.1.95",
@@ -2860,14 +2860,12 @@ def test_set_get_forwarding(static_leases, uci_configs_init, init_script_result,
     }
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
-            "data": {
-                "updates": [my_rule]
-            }
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "data": my_rule,
         }
     )
     assert "errors" not in res.keys()
-    res = infrastructure.process_message({"module": "lan", "action": "get_forwardings", "kind": "request"})
+    res = infrastructure.process_message({"module": "lan", "action": "get_port_forwardings", "kind": "request"})
     assert "rules" in res["data"].keys()
     assert match_subdict(my_rule, res["data"]["rules"][0])
 
@@ -2877,17 +2875,13 @@ def test_not_user_defined_static_ip(uci_configs_init, init_script_result, infras
     # test if error is returned when no user-defined static lease ip addres is used
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data": {
-                "updates": [
-                    {
-                        "name": "my-forward-rule",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": 8080,
-                        "dest_port": 80,
-                        "enabled": True
-                    }
-                ]
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": 8080,
+                "dest_port": 80,
+                "enabled": True
             }
         }
     )
@@ -2903,33 +2897,25 @@ def test_src_dport_overlap(static_leases, init_script_result, infrastructure):
     # test if src_ports overlap with existing rule and assert the message
     infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data": {
-                "updates": [
-                    {
-                        "name": "my-forward-rule",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": "7999-8020",
-                        "enabled": True
-                    }
-                ]
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": "7999-8020",
+                "enabled": True
             }
         }
     )
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data":
             {
-                "updates": [
-                    {
-                        "name": "overlaping-rule",
-                        "dest_ip": "192.168.1.94",
-                        "src_dport": "8000-8080",
-                        "enabled": True
-                    }
-                ]
+                "name": "overlaping-rule",
+                "dest_ip": "192.168.1.94",
+                "src_dport": "8000-8080",
+                "enabled": True
             }
         }
     )
@@ -2947,33 +2933,25 @@ def test_src_dport_overlap_single(static_leases, init_script_result, infrastruct
     # test if src_ports overlap with existing rule and assert the message
     infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data": {
-                "updates": [
-                    {
-                        "name": "my-forward-rule",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": 8040,
-                        "dest_port": 79,
-                        "enabled": True
-                    }
-                ]
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": 8040,
+                "dest_port": 79,
+                "enabled": True
             }
         }
     )
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data":
             {
-                "updates": [
-                    {
-                        "name": "overlaping-rule",
-                        "dest_ip": "192.168.1.94",
-                        "src_dport": "8000-8080",
-                        "enabled": True
-                    }
-                ]
+                "name": "overlaping-rule",
+                "dest_ip": "192.168.1.94",
+                "src_dport": "8000-8080",
+                "enabled": True
             }
         }
     )
@@ -3015,15 +2993,13 @@ def test_src_dport_overlap_different_network(static_leases, init_script_result, 
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data": {
-                "updates": [{
-                    "name": "forward",
-                    "dest_ip": "192.168.1.95",
-                    "src_dport": 22,
-                    "dest_port": 22,
-                    "enabled": True
-                }]
+                "name": "forward",
+                "dest_ip": "192.168.1.95",
+                "src_dport": 22,
+                "dest_port": 22,
+                "enabled": True
             }
         }
     )
@@ -3044,24 +3020,21 @@ def test_src_dport_overlap_different_network(static_leases, init_script_result, 
 def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructure):
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data":
             {
-                "updates": [
-                    {
-                        "name": "my-forward-rule",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": 8000,
-                        "dest_port": 80,
-                        "enabled": True
-                    }
-                ]
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": 8000,
+                "dest_port": 80,
+                "enabled": True
             }
 
         }
     )
 
     assert "errors" not in res.keys()
+    assert res["data"]["result"]
 
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -3077,22 +3050,19 @@ def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructur
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data":
             {
-                "updates": [
-                    {
-                        "name": "my-forward-rule",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": '8000-8080',
-                        "enabled": True
-                    }
-                ]
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": '8000-8080',
+                "enabled": True
             }
         }
     )
 
     assert "errors" not in res.keys()
+    assert res["data"]["result"]
 
     uci = get_uci_module(infrastructure.name)
 
@@ -3106,23 +3076,48 @@ def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructur
         assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src_dport") == "8000-8080"
         assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "enabled") == "1"
 
+    res = infrastructure.process_message(
+        {
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "data":
+            {
+                "name": "my-new-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": '8000-8080',
+                "enabled": False,
+                "old_name": "my-forward-rule",
+            }
+        }
+    )
+
+    assert "errors" not in res.keys()
+    assert res["data"]["result"]
+
+    uci = get_uci_module(infrastructure.name)
+
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read("firewall")
+
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "name") == "my-new-forward-rule"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "target") == "DNAT"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src") == "wan"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "dest") == "lan"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "src_dport") == "8000-8080"
+        assert uci.get_option_anonymous(data, "firewall", "redirect", 0, "enabled") == "0"
+
 
 @pytest.mark.only_backends(["openwrt"])
 def test_edit_forwarding(static_leases, init_script_result, infrastructure):
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data":
             {
-                "updates": [
-                    {
-                        "name": "my-forward-rule",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": 8080,
-                        "dest_port": 80,
-                        "enabled": True
-                    }
-                ]
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": 8080,
+                "dest_port": 80,
+                "enabled": True
             }
         }
     )
@@ -3139,18 +3134,13 @@ def test_edit_forwarding(static_leases, init_script_result, infrastructure):
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
-            "data":
-            {
-                "updates": [
-                    {
-                        "name": "my-forward-rule",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": 8000,
-                        "dest_port": 80,
-                        "enabled": True,
-                    }
-                ]
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "data": {
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.95",
+                "src_dport": 8000,
+                "dest_port": 80,
+                "enabled": True,
             }
         }
     )
@@ -3170,52 +3160,61 @@ def test_edit_forwarding(static_leases, init_script_result, infrastructure):
 def test_delete_forwarding(static_leases, init_script_result, infrastructure):
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
             "data":
             {
-                "updates": [
-                    {
-                        "name": "rule-to-be-there-whatever",
-                        "dest_ip": "192.168.1.94",
-                        "src_dport": 8000,
-                        "dest_port": 80,
-                        "enabled": True
-                    }
-                ]
+                "name": "rule-to-be-there-whatever",
+                "dest_ip": "192.168.1.94",
+                "src_dport": 8000,
+                "dest_port": 80,
+                "enabled": True
             }
         }
     )
     assert "errors" not in res.keys()
 
+    filters = [("lan", "port_forwarding_set")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
-            "data":
-            {
-                "updates": [
-                    {
-                        "name": "rule-to-delete",
-                        "dest_ip": "192.168.1.95",
-                        "src_dport": 8080,
-                        "dest_port": 80,
-                        "enabled": True
-                    }
-                ]
+            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "data": {
+                "name": "rule-to-delete",
+                "dest_ip": "192.168.1.95",
+                "src_dport": 8080,
+                "dest_port": 80,
+                "enabled": True
             }
 
         }
     )
     assert "errors" not in res.keys()
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "module": "lan", "action": "port_forwarding_set", "kind": "notification",
+        "data" : {
+            "name": "rule-to-delete",
+            "dest_ip": "192.168.1.95",
+            "src_dport": 8080,
+            "dest_port": 80,
+            "enabled": True
+        }
+    }
 
+    filters = [("lan", "port_forwarding_delete")]
+    notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "update_forwardings", "kind": "request",
-            "data" : {
-                "deletions": ["rule-to-delete"]
-            }
+            "module": "lan", "action": "port_forwarding_delete", "kind": "request",
+            "data" : {"names": ["rule-to-delete"]}
         }
     )
     assert "errors" not in res.keys()
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "module": "lan", "action": "port_forwarding_delete", "kind": "notification",
+        "data" : {"names": ["rule-to-delete"]}
+    }
 
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -3223,3 +3222,29 @@ def test_delete_forwarding(static_leases, init_script_result, infrastructure):
 
         forwards = uci.get_sections_by_type(data, "firewall", "redirect")
         assert len(forwards) == 1  # successfully deleted
+
+
+@pytest.mark.only_backends(["openwrt"])
+def test_get_port_forwarding_no_dest_ip(
+    static_leases,
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+):
+    """ redirect rule can be set via luci withou IP address
+        we want want to display these rules
+    """
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        redirect = backend.add_section("firewall", "redirect")
+        backend.set_option("firewall", redirect, "name", "rule-from-uci")
+        backend.set_option("firewall", redirect, "target", "DNAT")
+        backend.set_option("firewall", redirect, "src", "wan")
+        backend.set_option("firewall", redirect, "dest", "lan")
+        backend.set_option("firewall", redirect, "src_dport", "8888")
+
+    res = infrastructure.process_message({"module": "lan", "action": "get_port_forwardings", "kind": "request"})
+    assert "rules" in res["data"].keys()
+    assert res["data"]["rules"] == [
+        {"enabled": True, "name": "rule-from-uci", "src_dport": 8888},
+    ]

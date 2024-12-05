@@ -352,13 +352,36 @@ class MockLanHandler(Handler, BaseMockHandler):
         MockLanHandler.mode_managed["dhcp"]["clients"] = [c for c in clients if c["mac"] != mac]
         return {"result": True}
 
-    def update_forwardings(self, data) -> dict:
-        # delete the updates also and replace those in next step
-        deletes = {e["name"] for e in data.get("deletions", []) + data.get("updates", [])}
-        self.forwarding = [e for e in self.forwarding if e["name"] not in deletes]
+    @logger_wrapper(logger)
+    def get_port_forwardings(self):
+        return {"rules" : self.forwarding}
 
-        self.forwarding.extend(data.get("updates", []))
+    @logger_wrapper(logger)
+    def port_forwarding_set(
+        self,
+        name: str,
+        src_dport: typing.Union[int, str],
+        dest_ip: str,
+        enabled: bool,
+        dest_port: typing.Optional[typing.Union[int, str]] = None,
+        old_name: typing.Optional[str] = None
+    ):
+        self.forwarding = [e for e in self.forwarding if e["name"] != old_name]
+        self.forwarding.append(
+            {
+                "name": name,
+                "src_dport": src_dport,
+                "dest_ip": dest_ip,
+                "enabled": enabled,
+                **({"dest_port": dest_port} if dest_port else {}),
+            }
+        )
         return {"result": True}
 
-    def get_forwardings(self):
-        return {"rules" : self.forwarding}
+    @logger_wrapper(logger)
+    def port_forwarding_delete(
+        self,
+        names: typing.List[str],
+    ):
+        self.forwarding = [e for e in self.forwarding if e["name"] not in names]
+        return True

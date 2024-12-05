@@ -18,6 +18,7 @@
 #
 
 import logging
+import typing
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
@@ -90,20 +91,42 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
         return {"result": True}
 
     @logger_wrapper(logger)
-    def get_forwardings(self) -> list:
+    def get_port_forwardings(self) -> list:
         """ Returns all current forwardings
         :rtype: List[dict]
         """
-        return self.uci.get_forwardings()
+        return self.uci.get_port_forwardings()
 
     @logger_wrapper(logger)
-    def update_forwardings(self, data) -> dict:
+    def port_forwarding_set(
+        self,
+        name: str,
+        src_dport: typing.Union[int, str],
+        dest_ip: typing.Union[int, str],
+        enabled: bool,
+        dest_port: typing.Optional[typing.Union[int, str]] = None,
+        old_name: typing.Optional[str] = None
+    ):
         """ Updates lan forwarding rules
         :param data: new forwarding settings
         :returns: {'result': True} or {'result': False, 'reason': [...]}
         """
-        err = self.uci.update_forwardings(**data)
-        if len(err) > 0:
+        err = self.uci.port_forwarding_set(
+            name=name,
+            src_dport=src_dport,
+            dest_ip=dest_ip,
+            enabled=enabled,
+            dest_port=dest_port,
+            old_name=old_name
+        )
+        if err:
             return {"result": False, "reason": err}
         else:
             return {"result": True}
+
+    @logger_wrapper(logger)
+    def port_forwarding_delete(
+        self,
+        names: typing.List[str],
+    ):
+        return self.uci.port_forwarding_delete(names)

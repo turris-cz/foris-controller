@@ -85,19 +85,26 @@ class LanModule(BaseModule):
             self.notify("delete_dhcp_client", data)
         return res
 
-    def action_get_forwardings(self, data) -> dict:
+    def action_get_port_forwardings(self, data) -> dict:
         """ Provides list of forwarding rules
         :param data: new forwarding settings
         :returns: list of forwaridng rules
         """
-        return self.handler.get_forwardings()
+        return self.handler.get_port_forwardings()
 
-    def action_update_forwardings(self, data: dict) -> dict:
-        """ Updates lan forwarding rules
+    def action_port_forwarding_set(self, data: dict) -> dict:
+        """ Sets lan forwarding rule
         :param data: new forwarding settings
         :returns: {'result': True} or {'result': False, 'reason': [...]}
         """
-        return self.handler.update_forwardings(data)
+        if res := self.handler.port_forwarding_set(**data):
+            self.notify("port_forwarding_set", data)
+        return res
+
+    def action_port_forwarding_delete(self, data: dict) -> dict:
+        if res := self.handler.port_forwarding_delete(**data):
+            self.notify("port_forwarding_delete", data)
+        return {"result": res}
 
 
 @wrap_required_functions(
@@ -107,8 +114,9 @@ class LanModule(BaseModule):
         "set_dhcp_client",
         "update_dhcp_client",
         "delete_dhcp_client",
-        "update_forwardings",
-        "get_forwardings"
+        "get_port_forwardings",
+        "port_forwarding_set",
+        "port_forwarding_delete",
     ]
 )
 class Handler:

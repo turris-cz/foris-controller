@@ -957,7 +957,7 @@ class LanUci:
 
         return errors if len(errors) > 0 else None
 
-    def get_forwardings(self) -> typing.List[typing.Dict[str,str]]:
+    def get_port_forwardings(self) -> typing.List[typing.Dict[str,str]]:
         """ API method, gets all current forwardings. """
         with UciBackend() as backend:
             firewall_data = backend.read("firewall")
@@ -982,7 +982,8 @@ class LanUci:
         dest_ip,
         src_dport,
         dest_port=None,
-        enabled=True
+        enabled=True,
+        old_name=None,
     ) -> typing.Union[dict, list, None]:
         """ Creates/updates/deletes configuration of single firewall rule
         :dhcp_clients, network_data, firewall_data, bakend: Uci parameters to set the rules
@@ -993,6 +994,19 @@ class LanUci:
         :enabled: determine if rule should be applied
         :returns: None if update passes or list in case of range interference, error object otherwise
         """
+        # assert lease name is unique as it is the only identifier
+        leases = self._get_all_forwardings(firewall_data)
+
+        for item in leases:
+            #  delete it, we will change it
+            if item["name"] == name:
+                self._delete_rule(firewall_data, backend, name)
+            elif item["name"] == old_name:
+                self._delete_rule(firewall_data, backend, old_name)
+
+        # refresh firewall data possible delete
+        firewall_data = backend.read("firewall")
+
         # determine if required ip address has user-defined lease
         if dest_ip not in dhcp_clients:
             return {"new_rule": name, "msg": "not-user-defined"}
@@ -1010,14 +1024,6 @@ class LanUci:
             for item in chck_range:
                 item["new_rule"] = name
             return chck_range
-
-        # assert lease name is unique as it is the only identifier
-        leases = self._get_all_forwardings(firewall_data)
-
-        for item in leases:
-            #  delete it, we will change it
-            if item["name"] == name:
-                self._delete_rule(firewall_data, backend, name)
 
         # create new in UCI, rule does not exist or is being modified (while deleted above)
         redirect = backend.add_section("firewall", "redirect")
@@ -1046,42 +1052,43 @@ class LanUci:
             if item['name'] == name:
                 backend.del_section("firewall", f"@redirect[{item['index']}]")
 
-    def update_forwardings(
-        self,
-        updates=None,
-        deletions=None
-    ) -> list:
-        errors = []
+    def port_forwarding_delete(self, names: typing.List[str]) -> bool:
         with UciBackend() as backend:
             fw_data = backend.read("firewall")
-            dhcp_data = backend.read("dhcp")
-            network_data = backend.read("network")
-
-            if deletions:
-                for rule_name in deletions:
-                    self._delete_rule(fw_data, backend, rule_name)
-
-            # loop throught settings and update
-            if updates:
-                # determine current client defined dhcp
-                _hosts = get_sections_by_type(dhcp_data,"dhcp", "host")
-                dhcp_clients = [e["data"]["ip"] for e in _hosts if "ip" in e["data"]]
-
-                for fwd in updates:
-                    self._convert_ports(fwd)
-
-                    if err := self._update_forwarding(
-                        dhcp_clients,
-                        network_data,
-                        fw_data,
-                        backend,
-                        **fwd,
-                    ):
-                        errors.extend(err if isinstance(err, list) else [err])
+            for rule_name in names:
+                self._delete_rule(fw_data, backend, rule_name)
 
         # restart the firewall
         with OpenwrtServices() as services:
             services.reload("firewall")
 
-        # filter errors
-        return errors
+        return True
+
+    def port_forwarding_set(
+        self,
+        **kwargs,
+    ) -> list:
+        with UciBackend() as backend:
+            fw_data = backend.read("firewall")
+            dhcp_data = backend.read("dhcp")
+            network_data = backend.read("network")
+
+            if not kwargs.get("dest_port"):
+                # remove `"dest_port": None`
+                kwargs.pop("dest_port")
+
+            _hosts = get_sections_by_type(dhcp_data,"dhcp", "host")
+            dhcp_clients = [e["data"]["ip"] for e in _hosts if "ip" in e["data"]]
+
+            self._convert_ports(kwargs)
+
+            if err := self._update_forwarding(
+                dhcp_clients,
+                network_data,
+                fw_data,
+                backend,
+                **kwargs,
+            ):
+                return err if isinstance(err, list) else [err]
+            else:
+                return []

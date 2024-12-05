@@ -243,7 +243,7 @@
                 }
             ]
         },
-        "port-forwarding": {
+        "port_forwarding_rule": {
                 "type": "object",
                 "properties": {
                     "name": {"type": "string"},
@@ -253,7 +253,86 @@
                     "enabled": {"type": "boolean"}
                 },
                 "additionalProperties": false,
-                "required": ["name", "dest_ip", "src_dport", "enabled"]
+                "required": ["name", "src_dport", "enabled"]
+        },
+        "port_forwarding_set": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "old_name": {"type": "string"},
+                "dest_ip": {"type": "string", "format": "ipv4"},
+                "src_dport": {"$ref": "#/definitions/port_number"},
+                "dest_port": {"$ref": "#/definitions/port_number"},
+                "enabled": {"type": "boolean"}
+            },
+            "additionalProperties": false,
+            "required": ["name", "dest_ip", "src_dport", "enabled"]
+        },
+        "port_forwarding_set_reply": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [true]}
+                    },
+                    "additionalProperties": false,
+                    "required": ["result"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "result": {"enum": [false]},
+                        "reason": {
+                            "type": "array",
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "new_rule": {"type": "string"},
+                                            "msg": {"enum": ["range-already-used"]},
+                                            "old_rule": {"type": "string"},
+                                            "range": {"type": "string", "pattern": "\\d{1,5}(?:-\\d{1,5})?$"}
+                                        },
+                                        "additionalProperties": false,
+                                        "required": ["new_rule", "msg", "old_rule", "range"]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "new_rule": {"type": "string"},
+                                            "msg": {"enum": ["not-user-defined", "not-in-lan"]}
+                                        },
+                                        "additionalProperties": false,
+                                        "required": ["new_rule", "msg"]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["result", "reason"]
+                }
+            ]
+        },
+        "port_forwarding_delete": {
+            "type": "object",
+            "properties": {
+                "names": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            },
+            "additionalProperties": false,
+            "required": ["names"]
+        },
+        "port_forwarding_delete_reply": {
+            "type": "object",
+            "properties": {
+                "result": {"type": "boolean"}
+            },
+            "additionalProperties": false,
+            "required": ["result"]
         }
     },
     "oneOf": [
@@ -383,36 +462,6 @@
             "additionalProperties": false
         },
         {
-            "description": "request to get lan client port forwarding rules",
-            "properties": {
-                "module": {"enum": ["lan"]},
-                "kind": {"enum": ["request"]},
-                "action": {"enum": ["get_forwardings"]}
-            },
-            "additionalProperties": false
-        },
-        {
-            "description": "reply to get lan client port forwarding rules",
-            "properties": {
-                "module": {"enum": ["lan"]},
-                "kind": {"enum": ["reply"]},
-                "action": {"enum": ["get_forwardings"]},
-                "data": {
-                    "type": "object",
-                    "properties": {
-                        "rules": {
-                            "type": "array",
-                            "items": {"$ref": "#/definitions/port-forwarding"}
-                        }
-                    },
-                    "additionalProperties": false,
-                    "required": ["rules"]
-                }
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
             "description": "request to delete dhcp client",
             "properties": {
                 "module": {"enum": ["lan"]},
@@ -425,27 +474,6 @@
                     },
                     "additionalProperties": false,
                     "required": ["mac"]
-                }
-            },
-            "additionalProperties": false,
-            "required": ["data"]
-        },
-        {
-            "description": "request to update lan client port forwarding rules",
-            "properties": {
-                "module": {"enum": ["lan"]},
-                "kind": {"enum": ["request"]},
-                "action": {"enum": ["update_forwardings"]},
-                "data": {
-                    "type": "object",
-                    "properties": {
-                        "updates": {"type":"array", "items": {"$ref": "#/definitions/port-forwarding"}},
-                        "deletions": {
-                            "type": "array",
-                            "items":  {"type": "string"}
-                        }
-                    },
-                    "additionalProperties": false
                 }
             },
             "additionalProperties": false,
@@ -481,57 +509,96 @@
             "required": ["data"]
         },
         {
-            "description": "reply to update lan client port forwarding rules",
+            "description": "request to set client forwarding",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["port_forwarding_set"]},
+                "data": {"$ref": "#/definitions/port_forwarding_set"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to set client forwarding",
             "properties": {
                 "module": {"enum": ["lan"]},
                 "kind": {"enum": ["reply"]},
-                "action": {"enum": ["update_forwardings"]},
+                "action": {"enum": ["port_forwarding_set"]},
+                "data": {"$ref": "#/definitions/port_forwarding_set_reply"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that client forwarding was set",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["port_forwarding_set"]},
+                "data": {"$ref": "#/definitions/port_forwarding_set"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to delete client forwarding",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["port_forwarding_delete"]},
+                "data": {"$ref": "#/definitions/port_forwarding_delete"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "reply to delete client forwarding",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["port_forwarding_delete"]},
+                "data": {"$ref": "#/definitions/port_forwarding_delete_reply"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "notification that client forwarding was deleted",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["notification"]},
+                "action": {"enum": ["port_forwarding_delete"]},
+                "data": {"$ref": "#/definitions/port_forwarding_delete"}
+            },
+            "additionalProperties": false,
+            "required": ["data"]
+        },
+        {
+            "description": "request to get lan client port forwarding rules",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["request"]},
+                "action": {"enum": ["get_port_forwardings"]}
+            },
+            "additionalProperties": false
+        },
+        {
+            "description": "reply to get lan client port forwarding rules",
+            "properties": {
+                "module": {"enum": ["lan"]},
+                "kind": {"enum": ["reply"]},
+                "action": {"enum": ["get_port_forwardings"]},
                 "data": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "result": {"enum": [true]}
-                            },
-                            "additionalProperties": false,
-                            "required": ["result"]
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "result": {"enum": [false]},
-                                "reason": {
-                                    "type": "array",
-                                    "items": {
-                                        "oneOf": [
-                                            {
-                                                "type": "object",
-                                                "properties": {
-                                                    "new_rule": {"type": "string"},
-                                                    "msg": {"enum": ["range-already-used"]},
-                                                    "old_rule": {"type": "string"},
-                                                    "range": {"type": "string", "pattern": "\\d{1,5}(?:-\\d{1,5})?$"}
-                                                },
-                                                "additionalProperties": false,
-                                                "required": ["new_rule", "msg", "old_rule", "range"]
-                                            },
-                                            {
-                                                "type": "object",
-                                                "properties": {
-                                                    "new_rule": {"type": "string"},
-                                                    "msg": {"enum": ["not-user-defined", "not-in-lan"]}
-                                                },
-                                                "additionalProperties": false,
-                                                "required": ["new_rule", "msg"]
-                                            }
-                                        ]
-                                    }
-                                }
-                            },
-                            "additionalProperties": false,
-                            "required": ["result", "reason"]
+                    "type": "object",
+                    "properties": {
+                        "rules": {
+                            "type": "array",
+                            "items": {"$ref": "#/definitions/port_forwarding_rule"}
                         }
-                    ]
+                    },
+                    "additionalProperties": false,
+                    "required": ["rules"]
                 }
             },
             "additionalProperties": false,
