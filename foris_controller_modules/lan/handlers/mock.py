@@ -366,7 +366,7 @@ class MockLanHandler(Handler, BaseMockHandler):
         dest_port: typing.Optional[typing.Union[int, str]] = None,
         old_name: typing.Optional[str] = None
     ):
-        self.forwarding = [e for e in self.forwarding if e["name"] != old_name]
+        self.forwarding = [e for e in self.forwarding if e["name"] not in (old_name, name)]
         self.forwarding.append(
             {
                 "name": name,

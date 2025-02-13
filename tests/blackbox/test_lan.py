@@ -51,9 +51,7 @@ def dhcpv6_leases_ipv6_prefix():
         "dhcp": {
             "ipv6leases": {
                 "device": {
-                    "br-guest-turris": {
-                        "leases": []
-                    },
+                    "br-guest-turris": {"leases": []},
                     "br-lan": {
                         "leases": [
                             {
@@ -62,17 +60,11 @@ def dhcpv6_leases_ipv6_prefix():
                                 "hostname": "downstream-router",
                                 "accept-reconf": False,
                                 "assigned": 801,
-                                "flags": [
-                                    "bound"
-                                ],
+                                "flags": ["bound"],
                                 "ipv6-addr": [
-                                    {
-                                        "address": "fd60:ad42:a6c9::4",
-                                        "preferred-lifetime": 42,
-                                        "valid-lifetime": 42
-                                    }
+                                    {"address": "fd60:ad42:a6c9::4", "preferred-lifetime": 42, "valid-lifetime": 42}
                                 ],
-                                "valid": 42
+                                "valid": 42,
                             },
                             {
                                 "duid": "00010003d8e63397f73ed8cd7cda",
@@ -80,9 +72,7 @@ def dhcpv6_leases_ipv6_prefix():
                                 "hostname": "downstream-router",
                                 "accept-reconf": False,
                                 "assigned": 2033,
-                                "flags": [
-                                    "bound"
-                                ],
+                                "flags": ["bound"],
                                 "ipv6-prefix": [
                                     {
                                         "address": "fd60:ad42:910e::11",
@@ -91,10 +81,10 @@ def dhcpv6_leases_ipv6_prefix():
                                         "prefix-length": 62,
                                     }
                                 ],
-                                "valid": 4096
-                            }
+                                "valid": 4096,
+                            },
                         ]
-                    }
+                    },
                 }
             }
         }
@@ -110,17 +100,7 @@ def dhcpv6_leases_ipv6_prefix():
 def dhcpv6_leases_missing_lan_bridge():
     """Test data for missing lan bridge or case when lan bridge is not managed by odhcpd."""
     # NOTE: keep these data in sync with ubus-cli mock data structure
-    leases = {
-        "dhcp": {
-            "ipv6leases": {
-                "device": {
-                    "br-guest-turris": {
-                        "leases": []
-                    }
-                }
-            }
-        }
-    }
+    leases = {"dhcp": {"ipv6leases": {"device": {"br-guest-turris": {"leases": []}}}}}
 
     with FileFaker(
         FILE_ROOT_PATH, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(leases, indent=2)
@@ -136,9 +116,7 @@ def dhcpv6_leases_negative_leasetime():
         "dhcp": {
             "ipv6leases": {
                 "device": {
-                    "br-guest-turris": {
-                        "leases": []
-                    },
+                    "br-guest-turris": {"leases": []},
                     "br-lan": {
                         "leases": [
                             {
@@ -147,17 +125,11 @@ def dhcpv6_leases_negative_leasetime():
                                 "hostname": "device1",
                                 "accept-reconf": False,
                                 "assigned": 801,
-                                "flags": [
-                                    "bound"
-                                ],
+                                "flags": ["bound"],
                                 "ipv6-addr": [
-                                    {
-                                        "address": "fd60:ad42:a6c9::4",
-                                        "preferred-lifetime": 3600,
-                                        "valid-lifetime": 3600
-                                    }
+                                    {"address": "fd60:ad42:a6c9::4", "preferred-lifetime": 3600, "valid-lifetime": 3600}
                                 ],
-                                "valid": 3600
+                                "valid": 3600,
                             },
                             {
                                 "duid": "00020000df167896750a08ce0782",
@@ -165,9 +137,7 @@ def dhcpv6_leases_negative_leasetime():
                                 "hostname": "device2",
                                 "accept-reconf": False,
                                 "assigned": 2033,
-                                "flags": [
-                                    "bound"
-                                ],
+                                "flags": ["bound"],
                                 "ipv6-addr": [
                                     {
                                         "address": "fd52:ad42:910e::11",
@@ -175,10 +145,10 @@ def dhcpv6_leases_negative_leasetime():
                                         "valid-lifetime": -1,
                                     }
                                 ],
-                                "valid": -1
-                            }
+                                "valid": -1,
+                            },
                         ]
-                    }
+                    },
                 }
             }
         }
@@ -201,9 +171,7 @@ def dhcpv6_leases_junk_leasetime():
         "dhcp": {
             "ipv6leases": {
                 "device": {
-                    "br-guest-turris": {
-                        "leases": []
-                    },
+                    "br-guest-turris": {"leases": []},
                     "br-lan": {
                         "leases": [
                             {
@@ -212,17 +180,11 @@ def dhcpv6_leases_junk_leasetime():
                                 "hostname": "good-lease",
                                 "accept-reconf": False,
                                 "assigned": 801,
-                                "flags": [
-                                    "bound"
-                                ],
+                                "flags": ["bound"],
                                 "ipv6-addr": [
-                                    {
-                                        "address": "fd60:ad42:a6c9::4",
-                                        "preferred-lifetime": 3600,
-                                        "valid-lifetime": 3600
-                                    }
+                                    {"address": "fd60:ad42:a6c9::4", "preferred-lifetime": 3600, "valid-lifetime": 3600}
                                 ],
-                                "valid": 60
+                                "valid": 60,
                             },
                             {
                                 "duid": "00020000df167896750a08ce0782",
@@ -230,9 +192,7 @@ def dhcpv6_leases_junk_leasetime():
                                 "hostname": "junk-lease",
                                 "accept-reconf": False,
                                 "assigned": 2033,
-                                "flags": [
-                                    "bound"
-                                ],
+                                "flags": ["bound"],
                                 "ipv6-addr": [
                                     {
                                         "address": "fd52:ad42:910e::11",
@@ -240,10 +200,10 @@ def dhcpv6_leases_junk_leasetime():
                                         "valid-lifetime": -1,
                                     }
                                 ],
-                                "valid": "non-int junk data"
-                            }
+                                "valid": "non-int junk data",
+                            },
                         ]
-                    }
+                    },
                 }
             }
         }
@@ -292,13 +252,10 @@ def lan_dnsmasq_files():
             "ipv6     10 udp      17 41 src=fd52:ad42:910e:0000:0000:0000:0000:64fa "
             "dst=fd21:36f9:644e:0000:0000:0000:0000:0001 sport=59532 dport=53 packets=1 bytes=102 "
             "src=fd21:36f9:644e:0000:0000:0000:0000:0001 dst=fd52:ad42:910e:0000:0000:0000:0000:64fa "
-            "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2"
+            "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2",
         ]
     )
-    with FileFaker(
-        FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases
-    ) as lease_file,\
-        FileFaker(
+    with FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file, FileFaker(
         FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack
     ) as conntrack_file:
         yield lease_file, conntrack_file
@@ -321,9 +278,7 @@ def static_leases(uci_configs_init, infrastructure):
 
 
 def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert res.keys() == {"action", "kind", "data", "module"}
     assert res["data"].keys() == {
         "mode",
@@ -332,7 +287,7 @@ def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):
         "interface_count",
         "interface_up_count",
         "lan_redirect",
-        "qos"
+        "qos",
     }
     assert res["data"]["mode"] in ["managed", "unmanaged"]
 
@@ -343,7 +298,7 @@ def test_get_settings(uci_configs_init, infrastructure, lan_dnsmasq_files):
         "limit",
         "lease_time",
         "clients",
-        "ipv6clients"
+        "ipv6clients",
     }
 
     assert set(res["data"]["mode_unmanaged"].keys()) == {"lan_type", "lan_static", "lan_dhcp"}
@@ -377,9 +332,7 @@ def test_dhcp_clients_leasetime_format(
     DHCPv6 lease timestamp from backend should have the same meaning =>
     timestamp of end of the lease.
     """
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     timestamp_limit = 946681260  # timestamp should be later than 2000-01-01 00:01:00
@@ -415,9 +368,7 @@ def test_update_settings(
         assert notifications[-1]["kind"] == "notification"
         assert match_subdict(data, notifications[-1]["data"])
 
-        res = infrastructure.process_message(
-            {"module": "lan", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
         assert res["module"] == "lan"
         assert res["action"] == "get_settings"
         assert res["kind"] == "reply"
@@ -538,7 +489,11 @@ def test_update_settings(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_wrong_update(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
     def update(data):
         res = infrastructure.process_message(
@@ -701,16 +656,14 @@ def test_dhcp_lease(
     new_backend_val,
     device,
     turris_os_version,
-    lan_dnsmasq_files
+    lan_dnsmasq_files,
 ):
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("dhcp", "lan", "leasetime", orig_backend_val)
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert res["data"]["mode_managed"]["dhcp"]["lease_time"] == api_val
 
     res = infrastructure.process_message(
@@ -737,9 +690,9 @@ def test_dhcp_lease(
 
 
 @pytest.mark.only_backends(["openwrt"])
-@pytest.mark.parametrize("device,turris_os_version", [("mox","5.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
 def test_dhcp_lease_multi_mac(uci_configs_init, infrastructure, device, turris_os_version):
-    """ In case user sets `host` with list of options or string separated by space for mac address. """
+    """In case user sets `host` with list of options or string separated by space for mac address."""
     uci = get_uci_module(infrastructure.name)
 
     # list
@@ -747,29 +700,25 @@ def test_dhcp_lease_multi_mac(uci_configs_init, infrastructure, device, turris_o
         section = backend.add_section("dhcp", "host")
         backend.set_option("dhcp", section, "ip", "192.168.1.114")
         backend.set_option("dhcp", section, "name", "grogu")
-        backend.add_to_list("dhcp", section, "mac", ['A4:34:D9:ED:8B:6D', '50:7B:9D:D5:A9:65'])
+        backend.add_to_list("dhcp", section, "mac", ["A4:34:D9:ED:8B:6D", "50:7B:9D:D5:A9:65"])
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     # space separated
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.del_section("dhcp","@host[0]")
+        backend.del_section("dhcp", "@host[0]")
         section = backend.add_section("dhcp", "host")
         backend.set_option("dhcp", section, "ip", "192.168.1.114")
         backend.set_option("dhcp", section, "name", "grogu")
-        backend.set_option("dhcp", section, "mac", 'A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65')
+        backend.set_option("dhcp", section, "mac", "A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
 
 @pytest.mark.only_backends(["openwrt"])
-@pytest.mark.parametrize("device,turris_os_version", [("mox","5.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "5.0")], indirect=True)
 def test_dhcp_lease_static_attr(uci_configs_init, infrastructure, device, turris_os_version, lan_dnsmasq_files):
     """Test whether static lease which is at the same time in dhcp.leases file is considered as 'static'
     I.e. Check that dynamic and static info of host gets merged into one static record
@@ -795,7 +744,11 @@ def test_dhcp_lease_static_attr(uci_configs_init, infrastructure, device, turris
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -982,9 +935,7 @@ def test_dhcp_clients_openwrt(
             "kind": "reply",
             "module": "lan",
         }
-        res = infrastructure.process_message(
-            {"module": "lan", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
         assert res["data"]["mode_managed"]["dhcp"]["clients"] == clients
 
     # Return both
@@ -1222,18 +1173,10 @@ def test_dhcp_clients_multimac_openwrt(
          and keep the rest of original record intact.
     5b) Deleting single mac from multiple mac addresses (>2) should keep remaining macs (>=2)
     """
+
     def host_in_result(clients: typing.List[dict], ip: str, mac: str, hostname: str, present: bool = True):
-        assert (
-            len(
-                [
-                    e
-                    for e in clients
-                    if e["ip"] == ip
-                    and e["mac"] == mac
-                    and e["hostname"] == hostname
-                ]
-            )
-            == (1 if present else 0)
+        assert len([e for e in clients if e["ip"] == ip and e["mac"] == mac and e["hostname"] == hostname]) == (
+            1 if present else 0
         )
 
     def get_dhcpv4_clients() -> typing.List[dict]:
@@ -1306,7 +1249,7 @@ def test_dhcp_clients_multimac_openwrt(
     res = query_infrastructure(
         infrastructure,
         {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": multimac_data},
-        expect_success=False
+        expect_success=False,
     )
     assert "ValidationError" in res["errors"][0]["stacktrace"]
 
@@ -1322,8 +1265,7 @@ def test_dhcp_clients_multimac_openwrt(
     }
 
     res = query_infrastructure(
-        infrastructure,
-        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": single_mac_data}
+        infrastructure, {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": single_mac_data}
     )
 
     clients_list = get_dhcpv4_clients()
@@ -1340,7 +1282,7 @@ def test_dhcp_clients_multimac_openwrt(
     }
     res = query_infrastructure(
         infrastructure,
-        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": mac_already_in_multimac_data}
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": mac_already_in_multimac_data},
     )
 
     clients_list = get_dhcpv4_clients()
@@ -1355,7 +1297,7 @@ def test_dhcp_clients_multimac_openwrt(
 
     res = query_infrastructure(
         infrastructure,
-        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": mac_already_in_multimac_data}
+        {"module": "lan", "action": "set_dhcp_client", "kind": "request", "data": mac_already_in_multimac_data},
     )
 
     clients_list = get_dhcpv4_clients()
@@ -1373,7 +1315,7 @@ def test_dhcp_clients_multimac_openwrt(
 
     res = query_infrastructure(
         infrastructure,
-        {"module": "lan", "action": "update_dhcp_client", "kind": "request", "data": part_of_multimac_data_update}
+        {"module": "lan", "action": "update_dhcp_client", "kind": "request", "data": part_of_multimac_data_update},
     )
 
     clients_list = get_dhcpv4_clients()
@@ -1399,7 +1341,7 @@ def test_dhcp_clients_multimac_openwrt(
     cut_single_mac_out_data = {"mac": "44:55:66:44:55:66"}
     res = query_infrastructure(
         infrastructure,
-        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": cut_single_mac_out_data}
+        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": cut_single_mac_out_data},
     )
 
     clients_list = get_dhcpv4_clients()
@@ -1411,7 +1353,7 @@ def test_dhcp_clients_multimac_openwrt(
     # (5b)
     # prepare another multimac record first
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.del_section("dhcp","@host[-1]")
+        backend.del_section("dhcp", "@host[-1]")
         section = backend.add_section("dhcp", "host")
         backend.set_option("dhcp", section, "ip", "192.168.1.128")
         backend.set_option("dhcp", section, "name", "multimac3")
@@ -1419,7 +1361,7 @@ def test_dhcp_clients_multimac_openwrt(
 
     res = query_infrastructure(
         infrastructure,
-        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": cut_single_mac_out_data}
+        {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": cut_single_mac_out_data},
     )
 
     clients_list = get_dhcpv4_clients()
@@ -1440,9 +1382,7 @@ def test_dhcp_clients_openwrt_ipv6leases(
     turris_os_version,
     lan_dnsmasq_files,
 ):
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
@@ -1466,9 +1406,7 @@ def test_dhcp_clients_openwrt_ipv6leases_with_ipv6_prefix(
     Test that dhcpv6 leases with IPv6 prefix (e.g. for downstream IPv6 capable router) are ignored
     and only IPv6 addresses of such devices are returned.
     """
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
@@ -1491,9 +1429,7 @@ def test_dhcp_clients_openwrt_ipv6leases_missing_lan_bridge(
 
     In case that odhcpd is not managing leases for lan bridge, we should get no leases.
     """
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
@@ -1517,9 +1453,7 @@ def test_dhcp_clients_openwrt_ipv6leases_negative_leasetime(
 
     For instance: "-1" => "0"
     """
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
@@ -1542,9 +1476,7 @@ def test_dhcp_clients_openwrt_ipv6leases_junk_leasetime(
 
     These junk values are really not expected during regular operation and such leases should be ignored.
     """
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     dhcpv6_clients = res["data"]["mode_managed"]["dhcp"]["ipv6clients"]
@@ -1565,7 +1497,7 @@ def test_interface_count(
     device,
     turris_os_version,
     lan_dnsmasq_files,
-    fix_mox_wan
+    fix_mox_wan,
 ):
     prepare_turrishw("mox")  # plain mox without any boards
 
@@ -1591,9 +1523,7 @@ def test_interface_count(
             }
         )
         assert res["data"] == {"result": True}
-        res = infrastructure.process_message(
-            {"module": "lan", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
         assert res["data"]["interface_count"] == count
 
     # No wifi no interfaces
@@ -1738,7 +1668,11 @@ def test_interface_count(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_dhcp_range(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
     def update(ip, netmask, start, limit, result):
         res = infrastructure.process_message(
@@ -1775,9 +1709,9 @@ def test_update_settings_dhcp_range(
     # first wrong
     update("192.168.1.1", "255.255.255.0", 150, 106, False)
     # other range
-    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 2, True)
+    update("10.10.0.1", "255.255.192.0", (2**13), (2**13) - 2, True)
     # too high number
-    update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)
+    update("10.10.0.1", "255.255.192.0", (2**32), 1, False)
     # last valid router ip
     update("192.168.1.99", "255.255.255.0", 100, 150, True)
     # router ip in range
@@ -1787,7 +1721,11 @@ def test_update_settings_dhcp_range(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_dns_option(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -1817,9 +1755,7 @@ def test_get_settings_dns_option(
         backend.del_option("network", "lan", "dns")
         backend.set_option("network", "lan", "dns", "1.1.1.1 8.8.8.8")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert res["data"]["mode_unmanaged"]["lan_static"]["dns1"] == "8.8.8.8"
     assert res["data"]["mode_unmanaged"]["lan_static"]["dns2"] == "1.1.1.1"
 
@@ -1827,9 +1763,7 @@ def test_get_settings_dns_option(
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_missing_wireless(uci_configs_init, infrastructure, lan_dnsmasq_files):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
 
 
@@ -1888,9 +1822,9 @@ def test_dhcp_client_settings(
                 "data": data,
             }
 
-        return infrastructure.process_message(
-            {"module": "lan", "action": "get_settings", "kind": "request"}
-        )["data"]["mode_managed"]["dhcp"]["clients"]
+        return infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})["data"][
+            "mode_managed"
+        ]["dhcp"]["clients"]
 
     def update_client(data, reason=None):
         res = infrastructure.process_message(
@@ -1898,22 +1832,18 @@ def test_dhcp_client_settings(
         )
         assert res["data"]["result"] is True or res["data"]["reason"] == reason
 
-        return infrastructure.process_message(
-            {"module": "lan", "action": "get_settings", "kind": "request"}
-        )["data"]["mode_managed"]["dhcp"]["clients"]
+        return infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})["data"][
+            "mode_managed"
+        ]["dhcp"]["clients"]
 
     # set all
-    client_list = set_client(
-        {"mac": "81:22:33:44:55:66", "hostname": "static-client1", "ip": "192.168.1.5"}
-    )
+    client_list = set_client({"mac": "81:22:33:44:55:66", "hostname": "static-client1", "ip": "192.168.1.5"})
     assert (
         len(
             [
                 e
                 for e in client_list
-                if e["ip"] == "192.168.1.5"
-                and e["mac"] == "81:22:33:44:55:66"
-                and e["hostname"] == "static-client1"
+                if e["ip"] == "192.168.1.5" and e["mac"] == "81:22:33:44:55:66" and e["hostname"] == "static-client1"
             ]
         )
         == 1
@@ -1939,9 +1869,7 @@ def test_dhcp_client_settings(
             [
                 e
                 for e in client_list
-                if e["ip"] == "192.168.1.7"
-                and e["mac"] == "AA:BB:CC:DD:55:66"
-                and e["hostname"] == "static3"
+                if e["ip"] == "192.168.1.7" and e["mac"] == "AA:BB:CC:DD:55:66" and e["hostname"] == "static3"
             ]
         )
         == 1
@@ -1960,7 +1888,7 @@ def test_dhcp_client_settings(
     # out of lan
     client_list = update_client(
         {"old_mac": "82:22:33:44:55:66", "mac": "82:22:33:44:55:66", "hostname": "static4", "ip": "192.168.2.3"},
-        "out-of-network"
+        "out-of-network",
     )
     assert orig_client_list == client_list
 
@@ -1991,9 +1919,9 @@ def test_dhcp_client_settings(
         "kind": "reply",
         "module": "lan",
     }
-    client_list = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    client_list = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})[
+        "data"
+    ]["mode_managed"]["dhcp"]["clients"]
     assert "192.168.1.9" not in [e["ip"] for e in client_list]
 
     # clear when out of network range
@@ -2023,9 +1951,9 @@ def test_dhcp_client_settings(
         "kind": "reply",
         "module": "lan",
     }
-    client_list = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    client_list = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})[
+        "data"
+    ]["mode_managed"]["dhcp"]["clients"]
     assert "192.168.1.3" not in [e["ip"] for e in client_list]
 
     orig_client_list = client_list
@@ -2175,11 +2103,9 @@ def test_dhcp_update_multi_mac_client(
         section = backend.add_section("dhcp", "host")
         backend.set_option("dhcp", section, "ip", "192.168.1.123")
         backend.set_option("dhcp", section, "name", "multimac")
-        backend.set_option("dhcp", section, "mac", 'A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65')
+        backend.set_option("dhcp", section, "mac", "A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     client_list = res["data"]["mode_managed"]["dhcp"]["clients"]
@@ -2323,18 +2249,16 @@ def test_dhcp_delete_client(
     assert res["data"]["result"] is True
     assert "reason" not in res["data"]  # setting dhcp client succeeded
 
-    client_list = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    client_list = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})[
+        "data"
+    ]["mode_managed"]["dhcp"]["clients"]
 
     assert (
         len(
             [
                 e
                 for e in client_list
-                if e["ip"] == "192.168.1.11"
-                and e["mac"] == "DE:AD:BE:EF:56:78"
-                and e["hostname"] == "static1"
+                if e["ip"] == "192.168.1.11" and e["mac"] == "DE:AD:BE:EF:56:78" and e["hostname"] == "static1"
             ]
         )
         == 1
@@ -2345,18 +2269,16 @@ def test_dhcp_delete_client(
     )
     assert "errors" not in res.keys()
 
-    client_list = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    client_list = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})[
+        "data"
+    ]["mode_managed"]["dhcp"]["clients"]
 
     assert (
         len(
             [
                 e
                 for e in client_list
-                if e["ip"] == "192.168.1.11"
-                and e["mac"] == "DE:AD:BE:EF:56:78"
-                and e["hostname"] == "static-client1"
+                if e["ip"] == "192.168.1.11" and e["mac"] == "DE:AD:BE:EF:56:78" and e["hostname"] == "static-client1"
             ]
         )
         == 0
@@ -2408,7 +2330,7 @@ def test_dhcp_delete_client_openwrt(
         section = backend.add_section("dhcp", "host")
         backend.set_option("dhcp", section, "ip", "192.168.1.123")
         backend.set_option("dhcp", section, "name", "multimac")
-        backend.set_option("dhcp", section, "mac", 'A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65')
+        backend.set_option("dhcp", section, "mac", "A4:34:D9:ED:8B:6D 50:7B:9D:D5:A9:65")
 
     res = infrastructure.process_message(
         {"module": "lan", "action": "delete_dhcp_client", "kind": "request", "data": {"mac": "A4:34:D9:ED:8B:6D"}}
@@ -2424,9 +2346,9 @@ def test_dhcp_delete_client_openwrt(
     first_record = dhcp_hosts_uci[0]
     assert first_record["mac"] == "50:7B:9D:D5:A9:65"
 
-    client_list = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    client_list = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})[
+        "data"
+    ]["mode_managed"]["dhcp"]["clients"]
 
     # make sure that we accidentally didn't deleted wrong mac
     # this should not exists anymore
@@ -2435,9 +2357,7 @@ def test_dhcp_delete_client_openwrt(
             [
                 e
                 for e in client_list
-                if e["ip"] == "192.168.1.123"
-                and e["mac"] == "A4:34:D9:ED:8B:6D"
-                and e["hostname"] == "multimac"
+                if e["ip"] == "192.168.1.123" and e["mac"] == "A4:34:D9:ED:8B:6D" and e["hostname"] == "multimac"
             ]
         )
         == 0
@@ -2448,9 +2368,7 @@ def test_dhcp_delete_client_openwrt(
             [
                 e
                 for e in client_list
-                if e["ip"] == "192.168.1.123"
-                and e["mac"] == "50:7B:9D:D5:A9:65"
-                and e["hostname"] == "multimac"
+                if e["ip"] == "192.168.1.123" and e["mac"] == "50:7B:9D:D5:A9:65" and e["hostname"] == "multimac"
             ]
         )
         == 1
@@ -2468,7 +2386,6 @@ def test_dhcp_client_settings_openwrt(
     lan_dnsmasq_files,
     init_script_result,
 ):
-
     uci = get_uci_module(infrastructure.name)
 
     def get_uci_data():
@@ -2488,9 +2405,7 @@ def test_dhcp_client_settings_openwrt(
             "data": {"result": True},
         }
 
-        infrastructure.process_message(
-            {"module": "lan", "action": "get_settings", "kind": "request"}
-        )
+        infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
         check_service_result("dnsmasq", "restart", True)
 
         return get_uci_data()
@@ -2506,9 +2421,7 @@ def test_dhcp_client_settings_openwrt(
             "data": {"result": True},
         }
 
-        infrastructure.process_message(
-            {"module": "lan", "action": "get_settings", "kind": "request"}
-        )
+        infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
         check_service_result("dnsmasq", "restart", passed=True)
 
         return get_uci_data()
@@ -2541,9 +2454,7 @@ def test_dhcp_client_settings_openwrt(
     }
 
     # full
-    data = set_client(
-        {"mac": "AA:22:33:44:55:66", "hostname": "my-second-hostname", "ip": "192.168.8.4"}
-    )
+    data = set_client({"mac": "AA:22:33:44:55:66", "hostname": "my-second-hostname", "ip": "192.168.8.4"})
     assert {
         "ip": "192.168.8.4",
         "name": "my-second-hostname",
@@ -2554,23 +2465,21 @@ def test_dhcp_client_settings_openwrt(
 
     # ignored
     data = set_client({"mac": "CC:22:33:44:55:66", "hostname": "ignored", "ip": "ignore"})
-    assert {
-        "ip": "ignore", "mac": "CC:22:33:44:55:66", "name": "ignored", "leasetime": "infinite", "dns": "1"
-    } in data
+    assert {"ip": "ignore", "mac": "CC:22:33:44:55:66", "name": "ignored", "leasetime": "infinite", "dns": "1"} in data
 
     # multiple macs
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})["data"][
+        "mode_managed"
+    ]["dhcp"]["clients"]
 
     assert len(res) == 2  # full, ignore
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("dhcp", "@host[0]", "mac", "DD:22:33:44:55:66 EE:22:33:44:55:66")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})["data"][
+        "mode_managed"
+    ]["dhcp"]["clients"]
 
     assert len(res) == 2  # multimac, but only first mac is returned
     assert "DD:22:33:44:55:66" in [e["mac"] for e in res]
@@ -2658,18 +2567,16 @@ def test_dhcp_client_settings_openwrt(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         section_name = backend.add_section("dhcp", "host")
         backend.set_option("dhcp", section_name, "ip", "192.168.9.25")  # only ip is mandatory
-    client_list = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )["data"]["mode_managed"]["dhcp"]["clients"]
+    client_list = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})[
+        "data"
+    ]["mode_managed"]["dhcp"]["clients"]
     assert "192.168.9.25" not in [e["ip"] for e in client_list]
 
     # test tab in macaddress field
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("dhcp", "@host[0]", "mac", "\tEE:22:33:44:55:66")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res
 
 
@@ -2681,16 +2588,12 @@ def test_ipv6_address_in_dns(uci_configs_init, infrastructure, device, turris_os
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("network", "lan", "dns", "ff::")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res
 
 
 def test_get_settings_lan_redirect(uci_configs_init, infrastructure, lan_dnsmasq_files):
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
     assert res["data"]["lan_redirect"]
 
@@ -2703,18 +2606,14 @@ def test_get_settings_lan_redirect_openwrt(uci_configs_init, infrastructure, lan
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("firewall", "redirect_192_168_1_1", "enabled", 0)
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
     assert res["data"]["lan_redirect"] is False
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.set_option("firewall", "redirect_192_168_1_1", "enabled", 1)
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
     assert res["data"]["lan_redirect"]
 
@@ -2722,9 +2621,7 @@ def test_get_settings_lan_redirect_openwrt(uci_configs_init, infrastructure, lan
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("firewall", "redirect_192_168_1_1", "enabled")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res.keys()
     assert res["data"]["lan_redirect"]
@@ -2733,9 +2630,7 @@ def test_get_settings_lan_redirect_openwrt(uci_configs_init, infrastructure, lan
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_section("firewall", "redirect_192_168_1_1")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res.keys()
     assert "lan_redirect" not in res["data"].keys()
@@ -2750,9 +2645,7 @@ def test_ip_slash_netmask(uci_configs_init, infrastructure):
         backend.del_option("network", "lan", "ipaddr")
         backend.set_option("network", "lan", "ipaddr", "192.168.1.1/24")
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res.keys()
 
@@ -2763,38 +2656,41 @@ def test_ip_slash_netmask(uci_configs_init, infrastructure):
     assert all_equal(mode_managed["netmask"], mode_unmanaged["netmask"], "255.255.255.0")
 
 
-@pytest.mark.parametrize('device,turris_os_version', [('mox', '4.0')], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_qos(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
     assert not res["data"]["qos"]["enabled"]
     assert res["data"]["qos"]["download"] == 1024
     assert res["data"]["qos"]["upload"] == 1024
 
-    res = infrastructure.process_message({
-        "module": "lan", "action": "update_settings", "kind": "request", "data":{
-            "mode": "managed",
-            "mode_managed": {
-                "router_ip": "192.168.5.8",
-                "netmask": "255.255.255.0",
-                "dhcp": {"enabled": False},
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.5.8",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {"enabled": False},
+                },
+                "lan_redirect": False,
+                "qos": {"download": 1200, "upload": 512, "enabled": True},
             },
-            "lan_redirect": False,
-            "qos": {
-                "download": 1200, "upload": 512, "enabled": True
-            }
         }
-    })
+    )
 
     assert "errors" not in res.keys()
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res.keys()
     qos = res["data"]["qos"]
@@ -2804,38 +2700,42 @@ def test_qos(
 
 
 @pytest.mark.only_backends(["openwrt"])
-@pytest.mark.parametrize('device,turris_os_version', [('mox', '4.0')], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_qos_openwrt(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
-
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
     def _assert_sqm_option(uci, key, expected_value):
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
             data = backend.read()
         assert uci.get_option_named(data, "sqm", "limit_lan_turris", key) == expected_value
 
-    res = infrastructure.process_message(
-        {"module": "lan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "lan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
     assert not res["data"]["qos"]["enabled"]
     assert res["data"]["qos"]["download"] == 1024
     assert res["data"]["qos"]["upload"] == 1024
 
-    res = infrastructure.process_message({
-        "module": "lan", "action": "update_settings", "kind": "request", "data":{
-            "mode": "managed",
-            "mode_managed": {
-                "router_ip": "192.168.5.8",
-                "netmask": "255.255.255.0",
-                "dhcp": {"enabled": False},
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "update_settings",
+            "kind": "request",
+            "data": {
+                "mode": "managed",
+                "mode_managed": {
+                    "router_ip": "192.168.5.8",
+                    "netmask": "255.255.255.0",
+                    "dhcp": {"enabled": False},
+                },
+                "lan_redirect": False,
+                "qos": {"download": 1200, "upload": 512, "enabled": True},
             },
-            "lan_redirect": False,
-            "qos": {
-                "download": 1200, "upload": 512, "enabled": True
-            }
         }
-    })
+    )
 
     uci = get_uci_module(infrastructure.name)
 
@@ -2854,13 +2754,15 @@ def test_set_get_port_forwarding(static_leases, uci_configs_init, init_script_re
     my_rule = {
         "name": "my-forward-rule",
         "dest_ip": "192.168.1.95",
-        "src_dport": '8000-8080',
+        "src_dport": "8000-8080",
         "dest_port": 80,
-        "enabled": True
+        "enabled": True,
     }
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
             "data": my_rule,
         }
     )
@@ -2875,14 +2777,16 @@ def test_not_user_defined_static_ip(uci_configs_init, init_script_result, infras
     # test if error is returned when no user-defined static lease ip addres is used
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
             "data": {
                 "name": "my-forward-rule",
                 "dest_ip": "192.168.1.95",
                 "src_dport": 8080,
                 "dest_port": 80,
-                "enabled": True
-            }
+                "enabled": True,
+            },
         }
     )
     assert "errors" not in res.keys()
@@ -2897,26 +2801,19 @@ def test_src_dport_overlap(static_leases, init_script_result, infrastructure):
     # test if src_ports overlap with existing rule and assert the message
     infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data": {
-                "name": "my-forward-rule",
-                "dest_ip": "192.168.1.95",
-                "src_dport": "7999-8020",
-                "enabled": True
-            }
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {"name": "my-forward-rule", "dest_ip": "192.168.1.95", "src_dport": "7999-8020", "enabled": True},
         }
     )
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data":
-            {
-                "name": "overlaping-rule",
-                "dest_ip": "192.168.1.94",
-                "src_dport": "8000-8080",
-                "enabled": True
-            }
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {"name": "overlaping-rule", "dest_ip": "192.168.1.94", "src_dport": "8000-8080", "enabled": True},
         }
     )
     assert "errors" not in res.keys()
@@ -2933,26 +2830,24 @@ def test_src_dport_overlap_single(static_leases, init_script_result, infrastruct
     # test if src_ports overlap with existing rule and assert the message
     infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
             "data": {
                 "name": "my-forward-rule",
                 "dest_ip": "192.168.1.95",
                 "src_dport": 8040,
                 "dest_port": 79,
-                "enabled": True
-            }
+                "enabled": True,
+            },
         }
     )
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data":
-            {
-                "name": "overlaping-rule",
-                "dest_ip": "192.168.1.94",
-                "src_dport": "8000-8080",
-                "enabled": True
-            }
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {"name": "overlaping-rule", "dest_ip": "192.168.1.94", "src_dport": "8000-8080", "enabled": True},
         }
     )
     assert "errors" not in res.keys()
@@ -2987,20 +2882,16 @@ def test_src_dport_overlap_different_network(static_leases, init_script_result, 
         backend.set_option("firewall", redirect, "src", "br-guest-turris")
         backend.set_option("firewall", redirect, "dest", "lan")
         backend.set_option("firewall", redirect, "dest_ip", "192.168.1.95")
-        backend.set_option("firewall", redirect, "src_dport","22")
+        backend.set_option("firewall", redirect, "src_dport", "22")
         backend.set_option("firewall", redirect, "dest_port", "22")
-        backend.set_option("firewall", redirect, "enabled","1")
+        backend.set_option("firewall", redirect, "enabled", "1")
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data": {
-                "name": "forward",
-                "dest_ip": "192.168.1.95",
-                "src_dport": 22,
-                "dest_port": 22,
-                "enabled": True
-            }
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {"name": "forward", "dest_ip": "192.168.1.95", "src_dport": 22, "dest_port": 22, "enabled": True},
         }
     )
 
@@ -3020,16 +2911,16 @@ def test_src_dport_overlap_different_network(static_leases, init_script_result, 
 def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructure):
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data":
-            {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {
                 "name": "my-forward-rule",
                 "dest_ip": "192.168.1.95",
                 "src_dport": 8000,
                 "dest_port": 80,
-                "enabled": True
-            }
-
+                "enabled": True,
+            },
         }
     )
 
@@ -3050,14 +2941,10 @@ def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructur
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data":
-            {
-                "name": "my-forward-rule",
-                "dest_ip": "192.168.1.95",
-                "src_dport": '8000-8080',
-                "enabled": True
-            }
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {"name": "my-forward-rule", "dest_ip": "192.168.1.95", "src_dport": "8000-8080", "enabled": True},
         }
     )
 
@@ -3078,15 +2965,16 @@ def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructur
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data":
-            {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {
                 "name": "my-new-forward-rule",
                 "dest_ip": "192.168.1.95",
-                "src_dport": '8000-8080',
+                "src_dport": "8000-8080",
                 "enabled": False,
                 "old_name": "my-forward-rule",
-            }
+            },
         }
     )
 
@@ -3110,15 +2998,16 @@ def test_set_forwarding_openwrt(static_leases, init_script_result, infrastructur
 def test_edit_forwarding(static_leases, init_script_result, infrastructure):
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data":
-            {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {
                 "name": "my-forward-rule",
                 "dest_ip": "192.168.1.95",
                 "src_dport": 8080,
                 "dest_port": 80,
-                "enabled": True
-            }
+                "enabled": True,
+            },
         }
     )
     assert "errors" not in res.keys()
@@ -3134,14 +3023,16 @@ def test_edit_forwarding(static_leases, init_script_result, infrastructure):
 
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
             "data": {
                 "name": "my-forward-rule",
                 "dest_ip": "192.168.1.95",
                 "src_dport": 8000,
                 "dest_port": 80,
                 "enabled": True,
-            }
+            },
         }
     )
     assert "errors" not in res.keys()
@@ -3160,15 +3051,16 @@ def test_edit_forwarding(static_leases, init_script_result, infrastructure):
 def test_delete_forwarding(static_leases, init_script_result, infrastructure):
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
-            "data":
-            {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {
                 "name": "rule-to-be-there-whatever",
                 "dest_ip": "192.168.1.94",
                 "src_dport": 8000,
                 "dest_port": 80,
-                "enabled": True
-            }
+                "enabled": True,
+            },
         }
     )
     assert "errors" not in res.keys()
@@ -3177,43 +3069,45 @@ def test_delete_forwarding(static_leases, init_script_result, infrastructure):
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message(
         {
-            "module": "lan", "action": "port_forwarding_set", "kind": "request",
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
             "data": {
                 "name": "rule-to-delete",
                 "dest_ip": "192.168.1.95",
                 "src_dport": 8080,
                 "dest_port": 80,
-                "enabled": True
-            }
-
+                "enabled": True,
+            },
         }
     )
     assert "errors" not in res.keys()
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        "module": "lan", "action": "port_forwarding_set", "kind": "notification",
-        "data" : {
+        "module": "lan",
+        "action": "port_forwarding_set",
+        "kind": "notification",
+        "data": {
             "name": "rule-to-delete",
             "dest_ip": "192.168.1.95",
             "src_dport": 8080,
             "dest_port": 80,
-            "enabled": True
-        }
+            "enabled": True,
+        },
     }
 
     filters = [("lan", "port_forwarding_delete")]
     notifications = infrastructure.get_notifications(filters=filters)
     res = infrastructure.process_message(
-        {
-            "module": "lan", "action": "port_forwarding_delete", "kind": "request",
-            "data" : {"names": ["rule-to-delete"]}
-        }
+        {"module": "lan", "action": "port_forwarding_delete", "kind": "request", "data": {"names": ["rule-to-delete"]}}
     )
     assert "errors" not in res.keys()
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {
-        "module": "lan", "action": "port_forwarding_delete", "kind": "notification",
-        "data" : {"names": ["rule-to-delete"]}
+        "module": "lan",
+        "action": "port_forwarding_delete",
+        "kind": "notification",
+        "data": {"names": ["rule-to-delete"]},
     }
 
     uci = get_uci_module(infrastructure.name)
@@ -3231,8 +3125,8 @@ def test_get_port_forwarding_no_dest_ip(
     init_script_result,
     infrastructure,
 ):
-    """ redirect rule can be set via luci withou IP address
-        we want want to display these rules
+    """redirect rule can be set via luci withou IP address
+    we want want to display these rules
     """
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -3248,3 +3142,92 @@ def test_get_port_forwarding_no_dest_ip(
     assert res["data"]["rules"] == [
         {"enabled": True, "name": "rule-from-uci", "src_dport": 8888},
     ]
+
+
+def test_set_forwarding_to_existing_one(
+    static_leases,
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+):
+    """Rename to a rule which already exists
+    This should override the rule
+    """
+    filters = [("lan", "port_forwarding_set")]
+    notifications = infrastructure.get_notifications(filters=filters)
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {"name": "existing-rule", "dest_ip": "192.168.1.95", "src_dport": "8000-8080", "enabled": True},
+        }
+    )
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "action": "port_forwarding_set",
+        "data": {
+            "dest_ip": "192.168.1.95",
+            "enabled": True,
+            "name": "existing-rule",
+            "src_dport": "8000-8080",
+        },
+        "kind": "notification",
+        "module": "lan",
+    }
+    assert res["data"]["result"] is True
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {"name": "to-be-renamed", "dest_ip": "192.168.1.94", "src_dport": "9001-9025", "enabled": True},
+        }
+    )
+    assert res["data"]["result"] is True
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "action": "port_forwarding_set",
+        "data": {
+            "dest_ip": "192.168.1.94",
+            "enabled": True,
+            "name": "to-be-renamed",
+            "src_dport": "9001-9025",
+        },
+        "kind": "notification",
+        "module": "lan",
+    }
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {
+                "old_name": "to-be-renamed",
+                "name": "existing-rule",
+                "dest_ip": "192.168.1.94",
+                "src_dport": "9001-9025",
+                "enabled": True,
+            },
+        }
+    )
+    assert res["data"]["result"] is True
+    notifications = infrastructure.get_notifications(notifications, filters=filters)
+    assert notifications[-1] == {
+        "action": "port_forwarding_set",
+        "data": {
+            "dest_ip": "192.168.1.94",
+            "enabled": True,
+            "old_name": "to-be-renamed",
+            "name": "existing-rule",
+            "src_dport": "9001-9025",
+        },
+        "kind": "notification",
+        "module": "lan",
+    }
+
+    res = infrastructure.process_message({"module": "lan", "action": "get_port_forwardings", "kind": "request"})
+    assert {
+        "name": "existing-rule", "dest_ip": "192.168.1.94", "src_dport": "9001-9025", "enabled": True
+    } in res["data"]["rules"]
+    assert all(e["name"] != "to-be-removed" for e in res["data"]["rules"])

@@ -995,13 +995,20 @@ class LanUci:
         :returns: None if update passes or list in case of range interference, error object otherwise
         """
         # assert lease name is unique as it is the only identifier
-        leases = self._get_all_forwardings(firewall_data)
 
+        leases = self._get_all_forwardings(firewall_data)
         for item in leases:
             #  delete it, we will change it
             if item["name"] == name:
                 self._delete_rule(firewall_data, backend, name)
-            elif item["name"] == old_name:
+                # we need to update the leases in order to perform the second delete
+                # - index of anonymous rule changed
+                firewall_data = backend.read("firewall")
+                leases = self._get_all_forwardings(firewall_data)
+
+        for item in leases:
+            #  delete the old one as well
+            if item["name"] == old_name:
                 self._delete_rule(firewall_data, backend, old_name)
 
         # refresh firewall data possible delete
