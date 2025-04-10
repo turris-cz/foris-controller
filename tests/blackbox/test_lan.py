@@ -2773,7 +2773,7 @@ def test_set_get_port_forwarding(static_leases, uci_configs_init, init_script_re
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_not_user_defined_static_ip(uci_configs_init, init_script_result, infrastructure):
+def test_not_user_defined_static_ip(static_leases, uci_configs_init, init_script_result, infrastructure):
     # test if error is returned when no user-defined static lease ip addres is used
     res = infrastructure.process_message(
         {
@@ -2790,10 +2790,30 @@ def test_not_user_defined_static_ip(uci_configs_init, init_script_result, infras
         }
     )
     assert "errors" not in res.keys()
+    assert res["data"]["result"] is True
+
+    res = infrastructure.process_message(
+        {
+            "module": "lan",
+            "action": "port_forwarding_set",
+            "kind": "request",
+            "data": {
+                "name": "my-forward-rule",
+                "dest_ip": "192.168.1.17",
+                "src_dport": 8080,
+                "dest_port": 80,
+                "enabled": True,
+            },
+        }
+    )
+    assert "errors" not in res.keys()
     assert res["data"]["result"] is False
     error = res["data"]["reason"][0]
     assert error["new_rule"] == "my-forward-rule"
     assert error["msg"] == "not-user-defined"
+
+    res = infrastructure.process_message({"module": "lan", "action": "get_port_forwardings", "kind": "request"})
+    assert any(e["name"] == "my-forward-rule" for e in res["data"]["rules"]), "original is not deleted"
 
 
 @pytest.mark.only_backends(["openwrt"])
@@ -2823,6 +2843,9 @@ def test_src_dport_overlap(static_leases, init_script_result, infrastructure):
     assert error["msg"] == "range-already-used"
     assert error["old_rule"] == "my-forward-rule"
     assert error["range"] == "8000-8020"
+
+    res = infrastructure.process_message({"module": "lan", "action": "get_port_forwardings", "kind": "request"})
+    assert any(e["name"] == "my-forward-rule" for e in res["data"]["rules"]), "original is not deleted"
 
 
 @pytest.mark.only_backends(["openwrt"])
@@ -3230,4 +3253,4 @@ def test_set_forwarding_to_existing_one(
     assert {
         "name": "existing-rule", "dest_ip": "192.168.1.94", "src_dport": "9001-9025", "enabled": True
     } in res["data"]["rules"]
-    assert all(e["name"] != "to-be-removed" for e in res["data"]["rules"])
+    assert all(e["name"] != "to-be-renamed" for e in res["data"]["rules"])

@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2019-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2025 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import abc
 import ipaddress
 import logging
 import time
@@ -42,6 +43,43 @@ from foris_controller_backends.uci import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class ForwardingException(Exception, metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def api_response(self) -> typing.List[dict]:
+        pass
+
+    def __init__(self, rule_name):
+        self.rule_name = rule_name
+
+
+class NotInLanException(ForwardingException):
+    def api_response(self) -> typing.List[dict]:
+        return [{"new_rule": self.rule_name, "msg": "not-in-lan"}]
+
+
+class NotUserDefinedException(ForwardingException):
+    def api_response(self) -> typing.List[dict]:
+        return [{"new_rule": self.rule_name, "msg": "not-user-defined"}]
+
+
+class AlreadyUsedException(ForwardingException):
+    def __init__(self, rule_name: str, overlaps: dict):
+        self.rule_name = rule_name
+        self.overlaps = overlaps
+
+    def api_response(self) -> typing.List[dict]:
+        return [
+            {
+                "old_rule": e["old_rule"],
+                "new_rule": self.rule_name,
+                "range": e["range"],
+                "msg": "range-already-used",
+            }
+            for e in self.overlaps
+        ]
 
 
 def _get_interface(ip: str, netmask: str) -> str:
@@ -984,7 +1022,7 @@ class LanUci:
         dest_port=None,
         enabled=True,
         old_name=None,
-    ) -> typing.Union[dict, list, None]:
+    ):
         """ Creates/updates/deletes configuration of single firewall rule
         :dhcp_clients, network_data, firewall_data, bakend: Uci parameters to set the rules
         :name: string rule name
@@ -992,7 +1030,7 @@ class LanUci:
         :src_dport: integer | dict
         :dest_port: integer | dict ; destination port, leave empty in case of source port range
         :enabled: determine if rule should be applied
-        :returns: None if update passes or list in case of range interference, error object otherwise
+        :raises ForwardingException when improperly configured
         """
         # assert lease name is unique as it is the only identifier
 
@@ -1016,21 +1054,19 @@ class LanUci:
 
         # determine if required ip address has user-defined lease
         if dest_ip not in dhcp_clients:
-            return {"new_rule": name, "msg": "not-user-defined"}
+            raise NotUserDefinedException(name)
 
         # make sure lease is part of LAN
         router_ip, netmask, _ = LanUci.get_network_combo(network_data)
 
         if not self.in_network(dest_ip, router_ip, netmask):
-            return {"new_rule": name, "msg": "not-in-lan"}
+            raise NotInLanException(name)
 
         # check if this new settings does not overlap with existing (firewall_data)
         chck_range = self._check_port_range_not_used(firewall_data, src_dport, name)
 
         if isinstance(chck_range, list):
-            for item in chck_range:
-                item["new_rule"] = name
-            return chck_range
+            raise AlreadyUsedException(name, chck_range)
 
         # create new in UCI, rule does not exist or is being modified (while deleted above)
         redirect = backend.add_section("firewall", "redirect")
@@ -1075,27 +1111,30 @@ class LanUci:
         self,
         **kwargs,
     ) -> list:
-        with UciBackend() as backend:
-            fw_data = backend.read("firewall")
-            dhcp_data = backend.read("dhcp")
-            network_data = backend.read("network")
+        try:
+            with UciBackend() as backend:
+                fw_data = backend.read("firewall")
+                dhcp_data = backend.read("dhcp")
+                network_data = backend.read("network")
 
-            if not kwargs.get("dest_port"):
-                # remove `"dest_port": None`
-                kwargs.pop("dest_port")
+                if not kwargs.get("dest_port"):
+                    # remove `"dest_port": None`
+                    kwargs.pop("dest_port")
 
-            _hosts = get_sections_by_type(dhcp_data,"dhcp", "host")
-            dhcp_clients = [e["data"]["ip"] for e in _hosts if "ip" in e["data"]]
+                _hosts = get_sections_by_type(dhcp_data,"dhcp", "host")
+                dhcp_clients = [e["data"]["ip"] for e in _hosts if "ip" in e["data"]]
 
-            self._convert_ports(kwargs)
+                self._convert_ports(kwargs)
 
-            if err := self._update_forwarding(
-                dhcp_clients,
-                network_data,
-                fw_data,
-                backend,
-                **kwargs,
-            ):
-                return err if isinstance(err, list) else [err]
-            else:
-                return []
+                self._update_forwarding(
+                    dhcp_clients,
+                    network_data,
+                    fw_data,
+                    backend,
+                    **kwargs,
+                )
+
+        except ForwardingException as e:
+            return e.api_response()
+
+        return []

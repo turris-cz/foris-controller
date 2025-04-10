@@ -38,7 +38,7 @@ def set_app_info(program_options):
     :param program_options: cmd line parameters
     :type program_options: argparse.Namespace
     """
-    global app_info
+    global app_info  # noqa
     app_info["bus"] = program_options.bus
     app_info["debug"] = program_options.debug
     app_info["backend"] = program_options.backend
@@ -147,7 +147,7 @@ def set_validator(filter_modules):
     :param filter_modules: use only specific modules in the validator
     :type filter_modules: list of str
     """
-    global app_info
+    global app_info  # noqa
     from foris_schema import ForisValidator
 
     app_info["validator"] = ForisValidator(*get_validator_dirs(filter_modules))
@@ -163,5 +163,5 @@ def prepare_notification_sender(sender_class, *args, **kwargs):
     :param kwargs: named arguments
     :type kwargs: dict
     """
-    global app_info
+    global app_info  # noqa
     app_info["notification_sender"] = sender_class(*args, **kwargs)
