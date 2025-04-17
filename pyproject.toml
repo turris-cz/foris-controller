@@ -29,6 +29,7 @@ dev = [
     "cookiecutter",
     "pre-commit",
     "ruff",
+	"tox",
 ]
 mqtt = [
     "paho-mqtt",
@@ -39,6 +40,7 @@ tests = [
     "paho-mqtt",
     "pytest",
     "ubus",
+    "tox",
 ]
 ubus = [
     "ubus",

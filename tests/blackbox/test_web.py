@@ -34,21 +34,21 @@ from foris_controller import profiles
 from foris_controller.exceptions import UciRecordNotFound
 
 NEW_WORKFLOWS = [
-    e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_OLD, profiles.WORKFLOW_SHIELD)
+    e for e in profiles.get_workflows() if e not in (profiles.Workflow.OLD, profiles.Workflow.SHIELD)
 ]
 
-START_WORKFLOWS = [profiles.WORKFLOW_OLD, profiles.WORKFLOW_UNSET]
-FINISH_WORKFLOWS = [e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_UNSET)]
+START_WORKFLOWS = [profiles.Workflow.OLD, profiles.Workflow.UNSET]
+FINISH_WORKFLOWS = [e for e in profiles.get_workflows() if e not in (profiles.Workflow.UNSET)]
 
 EXPECTED_WORKFLOWS = {
     ("mox", "4.0"): list(set(NEW_WORKFLOWS).intersection(set(FINISH_WORKFLOWS))),
-    ("omnia", "4.0"): [profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER, profiles.WORKFLOW_BRIDGE],
-    ("turris", "4.0"): [profiles.WORKFLOW_OLD],
+    ("omnia", "4.0"): [profiles.Workflow.MIN, profiles.Workflow.ROUTER, profiles.Workflow.BRIDGE],
+    ("turris", "4.0"): [profiles.Workflow.OLD],
 }
 
 RECOMMENDED_WORKFLOWS = {
-    ("omnia", "4.0"): profiles.WORKFLOW_ROUTER,
-    ("turris", "4.0"): profiles.WORKFLOW_OLD,
+    ("omnia", "4.0"): profiles.Workflow.ROUTER,
+    ("turris", "4.0"): profiles.Workflow.OLD,
 }
 
 
@@ -209,32 +209,32 @@ def test_get_guide_mox_variants(
         {"module": "web", "action": "get_guide", "kind": "request"}
     )
     assert set(res["data"]["available_workflows"]) == {
-        profiles.WORKFLOW_MIN,
-        profiles.WORKFLOW_BRIDGE,
+        profiles.Workflow.MIN,
+        profiles.Workflow.BRIDGE,
     }
-    assert res["data"]["recommended_workflow"] == profiles.WORKFLOW_BRIDGE
+    assert res["data"]["recommended_workflow"] == profiles.Workflow.BRIDGE
 
     prepare_turrishw("mox+C")
     res = infrastructure.process_message(
         {"module": "web", "action": "get_guide", "kind": "request"}
     )
     assert set(res["data"]["available_workflows"]) == {
-        profiles.WORKFLOW_MIN,
-        profiles.WORKFLOW_ROUTER,
-        profiles.WORKFLOW_BRIDGE,
+        profiles.Workflow.MIN,
+        profiles.Workflow.ROUTER,
+        profiles.Workflow.BRIDGE,
     }
-    assert res["data"]["recommended_workflow"] == profiles.WORKFLOW_ROUTER
+    assert res["data"]["recommended_workflow"] == profiles.Workflow.ROUTER
 
     prepare_turrishw("mox+EEC")
     res = infrastructure.process_message(
         {"module": "web", "action": "get_guide", "kind": "request"}
     )
     assert set(res["data"]["available_workflows"]) == {
-        profiles.WORKFLOW_MIN,
-        profiles.WORKFLOW_ROUTER,
-        profiles.WORKFLOW_BRIDGE,
+        profiles.Workflow.MIN,
+        profiles.Workflow.ROUTER,
+        profiles.Workflow.BRIDGE,
     }
-    assert res["data"]["recommended_workflow"] == profiles.WORKFLOW_ROUTER
+    assert res["data"]["recommended_workflow"] == profiles.Workflow.ROUTER
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
@@ -247,7 +247,7 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, device, 
             "module": "web",
             "action": "update_guide",
             "kind": "request",
-            "data": {"enabled": True, "workflow": profiles.WORKFLOW_OLD},  # doesn't matter which
+            "data": {"enabled": True, "workflow": profiles.Workflow.OLD},  # doesn't matter which
         }
     )
 
@@ -265,7 +265,7 @@ def test_update_guide(file_root_init, uci_configs_init, infrastructure, device, 
     indirect=True,
 )
 @pytest.mark.only_backends(["openwrt"])
-@pytest.mark.parametrize("workflow", list(profiles.WORKFLOWS))
+@pytest.mark.parametrize("workflow", list(profiles.get_workflows()))
 def test_update_guide_openwrt(
     file_root_init,
     init_script_result,
@@ -306,7 +306,7 @@ def test_update_guide_openwrt(
         assert uci.get_option_named(data, "foris", "wizard", "workflow") == workflow
         passed = uci.get_option_named(data, "foris", "wizard", "passed")
         assert "profile" in passed
-        if set(profiles.WORKFLOWS[workflow]).issubset(set(passed)):
+        if set(profiles.get_workflows()[workflow]).issubset(set(passed)):
             assert uci.parse_bool(uci.get_option_named(data, "foris", "wizard", "finished"))
     else:
         try:
@@ -327,7 +327,7 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, device, t
     assert res["data"] == {"result": True}
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert res["data"]["guide"]["enabled"] is True
-    assert res["data"]["guide"]["workflow"] in [profiles.WORKFLOW_UNSET, profiles.WORKFLOW_OLD]
+    assert res["data"]["guide"]["workflow"] in [profiles.Workflow.UNSET, profiles.Workflow.OLD]
     assert res["data"]["guide"]["passed"] == []
 
     res = infrastructure.process_message(
@@ -346,7 +346,7 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, device, t
 
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert res["data"]["guide"]["enabled"] is True
-    assert res["data"]["guide"]["workflow"] in [profiles.WORKFLOW_UNSET, profiles.WORKFLOW_OLD]
+    assert res["data"]["guide"]["workflow"] in [profiles.Workflow.UNSET, profiles.Workflow.OLD]
     assert res["data"]["guide"]["passed"] == []
 
 
@@ -377,8 +377,8 @@ def test_reset_guide_openwrt(
         data = backend.read()
 
     assert uci.get_option_named(data, "foris", "wizard", "workflow") in [
-        profiles.WORKFLOW_UNSET,
-        profiles.WORKFLOW_OLD,
+        profiles.Workflow.UNSET,
+        profiles.Workflow.OLD,
     ]
     assert not uci.parse_bool(
         uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False))
@@ -387,7 +387,7 @@ def test_reset_guide_openwrt(
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert res["data"]["guide"]["enabled"] is True
     allowed_workflows = EXPECTED_WORKFLOWS[device, turris_os_version]
-    possible_workflows = allowed_workflows + [profiles.WORKFLOW_UNSET]
+    possible_workflows = allowed_workflows + [profiles.Workflow.UNSET]
     assert (res["data"]["guide"]["workflow"] in possible_workflows) or not allowed_workflows
     assert res["data"]["guide"]["passed"] == []
 
@@ -414,8 +414,8 @@ def test_reset_guide_openwrt(
         data = backend.read()
 
     assert uci.get_option_named(data, "foris", "wizard", "workflow") in [
-        profiles.WORKFLOW_UNSET,
-        profiles.WORKFLOW_OLD,
+        profiles.Workflow.UNSET,
+        profiles.Workflow.OLD,
     ]
     assert not uci.parse_bool(
         uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False))
@@ -431,11 +431,11 @@ def test_reset_guide_openwrt(
 @pytest.mark.parametrize(
     "old_workflow,new_workflow",
     [
-        (profiles.WORKFLOW_OLD, profiles.WORKFLOW_OLD),
-        (profiles.WORKFLOW_SHIELD, profiles.WORKFLOW_SHIELD),
+        (profiles.Workflow.OLD, profiles.Workflow.OLD),
+        (profiles.Workflow.SHIELD, profiles.Workflow.SHIELD),
     ]
     + [
-        (profiles.WORKFLOW_UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))
+        (profiles.Workflow.UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))
     ],
 )
 def test_walk_through_guide(
@@ -471,7 +471,7 @@ def test_walk_through_guide(
         assert res["data"]["guide"]["enabled"] is enabled
         assert res["data"]["guide"]["workflow"] == workflow
         assert res["data"]["guide"]["passed"] == passed
-        assert res["data"]["guide"]["workflow_steps"] == [e for e in profiles.WORKFLOWS[workflow]]
+        assert res["data"]["guide"]["workflow_steps"] == [e for e in profiles.get_workflows()[workflow]]
         if enabled:
             assert res["data"]["guide"]["next_step"] == profiles.next_step(passed, workflow)
         else:
@@ -632,17 +632,17 @@ def test_walk_through_guide(
 
     check_passed(passed, old_workflow, True)
     active_workflow = old_workflow
-    for step in profiles.WORKFLOWS[old_workflow]:
-        last = set(profiles.WORKFLOWS[active_workflow]) != set(passed + [step])
-        if step == profiles.STEP_PROFILE:
+    for step in profiles.get_workflows()[old_workflow]:
+        last = set(profiles.get_workflows()[active_workflow]) != set(passed + [step])
+        if step == profiles.Step.PROFILE:
             active_workflow = new_workflow
             break
         MAP[step](passed + [step], active_workflow, last)
         passed.append(step)
-    for step in profiles.WORKFLOWS[active_workflow]:
+    for step in profiles.get_workflows()[active_workflow]:
         if step in passed:
             continue
-        last = set(profiles.WORKFLOWS[active_workflow]) != set(passed + [step])
+        last = set(profiles.get_workflows()[active_workflow]) != set(passed + [step])
         MAP[step](passed + [step], active_workflow, last)
         passed.append(step)
 

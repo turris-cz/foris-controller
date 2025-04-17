@@ -36,9 +36,9 @@ from .test_guest import WIFI_DEFAULT_ENCRYPTION
 
 WIFI_DEFAULT_ENCRYPTION = "WPA2/3"
 WIFI_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
-FINISH_WORKFLOWS = [e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_UNSET)]
+FINISH_WORKFLOWS = [e for e in profiles.WORKFLOWS if e not in (profiles.Workflow.UNSET)]
 NEW_WORKFLOWS = [
-    e for e in profiles.WORKFLOWS if e not in (profiles.WORKFLOW_OLD, profiles.WORKFLOW_SHIELD)
+    e for e in profiles.get_workflows() if e not in (profiles.Workflow.OLD, profiles.Workflow.SHIELD)
 ]
 
 _DEFAULT_OLD_CONFIG = """config interface 'loopback'
@@ -916,11 +916,11 @@ def test_update_settings_openwrt(
 @pytest.mark.parametrize(
     "old_workflow,new_workflow",
     [
-        (profiles.WORKFLOW_OLD, profiles.WORKFLOW_OLD),
-        (profiles.WORKFLOW_SHIELD, profiles.WORKFLOW_SHIELD),
+        (profiles.Workflow.OLD, profiles.Workflow.OLD),
+        (profiles.Workflow.SHIELD, profiles.Workflow.SHIELD),
     ]
     + [
-        (profiles.WORKFLOW_UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))
+        (profiles.Workflow.UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))
     ],
 )
 def test_walk_through_guide(
@@ -956,7 +956,7 @@ def test_walk_through_guide(
         assert res["data"]["guide"]["enabled"] is enabled
         assert res["data"]["guide"]["workflow"] == workflow
         assert res["data"]["guide"]["passed"] == passed
-        assert res["data"]["guide"]["workflow_steps"] == [e for e in profiles.WORKFLOWS[workflow]]
+        assert res["data"]["guide"]["workflow_steps"] == [e for e in profiles.get_workflows()[workflow]]
         if enabled:
             assert res["data"]["guide"]["next_step"] == profiles.next_step(passed, workflow)
         else:
@@ -1117,16 +1117,16 @@ def test_walk_through_guide(
 
     check_passed(passed, old_workflow, True)
     active_workflow = old_workflow
-    for step in profiles.WORKFLOWS[old_workflow]:
-        last = set(profiles.WORKFLOWS[active_workflow]) != set(passed + [step])
-        if step == profiles.STEP_PROFILE:
+    for step in profiles.get_workflows()[old_workflow]:
+        last = set(profiles.get_workflows()[active_workflow]) != set(passed + [step])
+        if step == profiles.Step.PROFILE:
             active_workflow = new_workflow
             break
         MAP[step](passed + [step], active_workflow, last)
         passed.append(step)
-    for step in profiles.WORKFLOWS[active_workflow]:
+    for step in profiles.get_workflows()[active_workflow]:
         if step in passed:
             continue
-        last = set(profiles.WORKFLOWS[active_workflow]) != set(passed + [step])
+        last = set(profiles.get_workflows()[active_workflow]) != set(passed + [step])
         MAP[step](passed + [step], active_workflow, last)
         passed.append(step)

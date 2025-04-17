@@ -25,40 +25,40 @@ from foris_controller import profiles
 @pytest.fixture(
     params=[
         (
-            profiles.WORKFLOW_OLD,
+            profiles.Workflow.OLD,
             [
-                profiles.STEP_PASSWORD,
-                profiles.STEP_WAN,
-                profiles.STEP_TIME,
-                profiles.STEP_DNS,
-                profiles.STEP_UPDATER,
-                profiles.STEP_FINISHED,
+                profiles.Step.PASSWORD,
+                profiles.Step.WAN,
+                profiles.Step.TIME,
+                profiles.Step.DNS,
+                profiles.Step.UPDATER,
+                profiles.Step.FINISHED,
             ],
         ),
-        (profiles.WORKFLOW_UNSET, [profiles.STEP_PASSWORD, profiles.STEP_PROFILE]),
+        (profiles.Workflow.UNSET, [profiles.Step.PASSWORD, profiles.Step.PROFILE]),
         (
-            profiles.WORKFLOW_MIN,
-            [profiles.STEP_PASSWORD, profiles.STEP_PROFILE, profiles.STEP_FINISHED],
+            profiles.Workflow.MIN,
+            [profiles.Step.PASSWORD, profiles.Step.PROFILE, profiles.Step.FINISHED],
         ),
         (
-            profiles.WORKFLOW_ROUTER,
+            profiles.Workflow.ROUTER,
             [
-                profiles.STEP_PASSWORD,
-                profiles.STEP_PROFILE,
-                profiles.STEP_NETWORKS,
-                profiles.STEP_WAN,
-                profiles.STEP_TIME,
-                profiles.STEP_DNS,
-                profiles.STEP_UPDATER,
-                profiles.STEP_FINISHED,
+                profiles.Step.PASSWORD,
+                profiles.Step.PROFILE,
+                profiles.Step.NETWORKS,
+                profiles.Step.WAN,
+                profiles.Step.TIME,
+                profiles.Step.DNS,
+                profiles.Step.UPDATER,
+                profiles.Step.FINISHED,
             ],
         ),
     ],
     ids=[
-        profiles.WORKFLOW_OLD,
-        profiles.WORKFLOW_UNSET,
-        profiles.WORKFLOW_MIN,
-        profiles.WORKFLOW_ROUTER,
+        profiles.Workflow.OLD,
+        profiles.Workflow.UNSET,
+        profiles.Workflow.MIN,
+        profiles.Workflow.ROUTER,
     ],
 )
 def all_profiles(request):
@@ -78,26 +78,26 @@ def test_strait_workflow(all_profiles):
 
 @pytest.fixture(
     params=[
-        (profiles.WORKFLOW_UNSET, [profiles.STEP_PASSWORD, profiles.STEP_PROFILE]),
+        (profiles.Workflow.UNSET, [profiles.Step.PASSWORD, profiles.Step.PROFILE]),
         (
-            profiles.WORKFLOW_MIN,
-            [profiles.STEP_PASSWORD, profiles.STEP_PROFILE, profiles.STEP_FINISHED],
+            profiles.Workflow.MIN,
+            [profiles.Step.PASSWORD, profiles.Step.PROFILE, profiles.Step.FINISHED],
         ),
         (
-            profiles.WORKFLOW_ROUTER,
+            profiles.Workflow.ROUTER,
             [
-                profiles.STEP_PASSWORD,
-                profiles.STEP_PROFILE,
-                profiles.STEP_NETWORKS,
-                profiles.STEP_WAN,
-                profiles.STEP_TIME,
-                profiles.STEP_DNS,
-                profiles.STEP_UPDATER,
-                profiles.STEP_FINISHED,
+                profiles.Step.PASSWORD,
+                profiles.Step.PROFILE,
+                profiles.Step.NETWORKS,
+                profiles.Step.WAN,
+                profiles.Step.TIME,
+                profiles.Step.DNS,
+                profiles.Step.UPDATER,
+                profiles.Step.FINISHED,
             ],
         ),
     ],
-    ids=[profiles.WORKFLOW_UNSET, profiles.WORKFLOW_MIN, profiles.WORKFLOW_ROUTER],
+    ids=[profiles.Workflow.UNSET, profiles.Workflow.MIN, profiles.Workflow.ROUTER],
 )
 def profile_changable(request):
     yield request.param[0], request.param[1][:]
@@ -112,7 +112,7 @@ def test_mixed_workflow(profile_changable, all_profiles):
         expected = steps1.pop(0)
         assert profiles.next_step(passed, workflow1) == expected
         passed.append(expected)
-        if expected == profiles.STEP_PROFILE:
+        if expected == profiles.Step.PROFILE:
             break
 
     steps2 = [e for e in steps2 if e not in passed]
@@ -120,6 +120,6 @@ def test_mixed_workflow(profile_changable, all_profiles):
         expected = steps2.pop(0)
         assert profiles.next_step(passed, workflow2) == expected
         passed.append(expected)
-        if expected == profiles.STEP_PROFILE:
+        if expected == profiles.Step.PROFILE:
             break
     assert profiles.next_step(passed, workflow2) is None

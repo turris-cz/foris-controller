@@ -80,7 +80,7 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         data["updater_running"] = self.updater.updater_running()
         data["notification_count"] = self.notifications_cmds.active_count()
         data["reboot_required"] = self.maintain_cmds.reboot_required()
-        data["guide"]["workflow_steps"] = profiles.WORKFLOWS[data["guide"]["workflow"]]
+        data["guide"]["workflow_steps"] = profiles.get_workflows()[data["guide"]["workflow"]]
         data["device"] = self.sys_info_files.get_model()
         data["turris_os_version"] = self.sys_info_files.get_os_version()
 

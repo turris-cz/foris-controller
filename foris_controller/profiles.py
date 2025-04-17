@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2025 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,55 +17,96 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import logging
 
-WORKFLOW_UNSET = "unset"
-WORKFLOW_OLD = "old"
-WORKFLOW_ROUTER = "router"
-WORKFLOW_MIN = "min"
-WORKFLOW_SHIELD = "shield"
-WORKFLOW_BRIDGE = "bridge"
+from copy import deepcopy
+from enum import Enum
+from functools import lru_cache
+from importlib import metadata
 
-STEP_PASSWORD = "password"
-STEP_PROFILE = "profile"
-STEP_NETWORKS = "networks"
-STEP_WAN = "wan"
-STEP_TIME = "time"
-STEP_DNS = "dns"
-STEP_UPDATER = "updater"
-STEP_LAN = "lan"
-STEP_FINISHED = "finished"
+
+logger = logging.getLogger(__name__)
+
+
+class Workflow(str, Enum):
+    UNSET = "unset"
+    OLD = "old"
+    ROUTER = "router"
+    MIN = "min"
+    SHIELD = "shield"
+    BRIDGE = "bridge"
+
+
+class Step(str, Enum):
+    PASSWORD = "password"
+    PROFILE = "profile"
+    NETWORKS = "networks"
+    WAN = "wan"
+    TIME = "time"
+    DNS = "dns"
+    UPDATER = "updater"
+    LAN = "lan"
+    FINISHED = "finished"
 
 
 WORKFLOWS = {
-    WORKFLOW_OLD: [STEP_PASSWORD, STEP_WAN, STEP_TIME, STEP_DNS, STEP_UPDATER, STEP_FINISHED],
-    WORKFLOW_ROUTER: [
-        STEP_PASSWORD,
-        STEP_PROFILE,
-        STEP_NETWORKS,
-        STEP_WAN,
-        STEP_TIME,
-        STEP_DNS,
-        STEP_UPDATER,
-        STEP_FINISHED,
+    Workflow.OLD: [Step.PASSWORD, Step.WAN, Step.TIME, Step.DNS, Step.UPDATER, Step.FINISHED],
+    Workflow.ROUTER: [
+        Step.PASSWORD,
+        Step.PROFILE,
+        Step.NETWORKS,
+        Step.WAN,
+        Step.TIME,
+        Step.DNS,
+        Step.UPDATER,
+        Step.FINISHED,
     ],
-    WORKFLOW_MIN: [STEP_PASSWORD, STEP_PROFILE, STEP_FINISHED],
-    WORKFLOW_SHIELD: [STEP_PASSWORD, STEP_FINISHED],
-    WORKFLOW_BRIDGE: [
-        STEP_PASSWORD,
-        STEP_PROFILE,
-        STEP_NETWORKS,
-        STEP_LAN,
-        STEP_TIME,
-        STEP_DNS,
-        STEP_UPDATER,
-        STEP_FINISHED,
+    Workflow.MIN: [Step.PASSWORD, Step.PROFILE, Step.FINISHED],
+    Workflow.SHIELD: [Step.PASSWORD, Step.FINISHED],
+    Workflow.BRIDGE: [
+        Step.PASSWORD,
+        Step.PROFILE,
+        Step.NETWORKS,
+        Step.LAN,
+        Step.TIME,
+        Step.DNS,
+        Step.UPDATER,
+        Step.FINISHED,
     ],
-    WORKFLOW_UNSET: [STEP_PASSWORD, STEP_PROFILE],
+    Workflow.UNSET: [Step.PASSWORD, Step.PROFILE],
 }
 
 
-def next_step(passed, workflow):
-    """ Returns next step in a given workflow or None (if finihsed)
+@lru_cache
+def get_workflows():
+    workflows = deepcopy(WORKFLOWS)
+
+    extra_workflows = []
+    for entry_point in metadata.entry_points(group="foris_controller_workflow_extras"):
+        logger.debug("Loading workflow extras entry point %s", entry_point.name)
+        for priority, name, workflow, *rest in entry_point.load():
+            if not isinstance(priority, int) or not isinstance(name, str) or not isinstance(workflow, str) or rest:
+                logger.warning("Wrong extras entry point format for %s", entry_point.name)
+                continue
+            logger.debug("Added extra step '%s' for workflow '%s'", name, workflow)
+            extra_workflows.append((priority, name, workflow))
+
+    extra_workflows.sort()  # sort order priority, name
+
+    for workflow in workflows:
+        extras = [e[1] for e in extra_workflows if e[2] == workflow]
+        if extras:
+            if workflow == Workflow.UNSET:
+                logger.warning("Can't modify 'UNSET' workflow")
+                continue
+
+            workflows[workflow] = workflows[workflow][:-1] + extras + [workflows[workflow][-1]]
+
+    return workflows
+
+
+def next_step(passed, workflow: Workflow):
+    """Returns next step in a given workflow or None (if finihsed)
 
     :param passed: list of passed steps
     :type passed: list
@@ -75,7 +116,7 @@ def next_step(passed, workflow):
     :returns: next step if needed or None
     :rtype: str or None
     """
-    for step in WORKFLOWS[workflow]:
+    for step in get_workflows()[workflow]:
         if step not in passed:
             return step
     return None

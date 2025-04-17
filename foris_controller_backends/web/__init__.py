@@ -72,51 +72,51 @@ class WebUciCommands:
         return [k for k, v in turrishw.get_ifaces().items() if v["type"] != "wifi"]
 
     @staticmethod
-    def _detect_basic_workflow():
+    def _detect_basic_workflow() -> str:
         if int(SystemInfoFiles().get_os_version().split(".", 1)[0]) < 4:
-            return profiles.WORKFLOW_OLD
+            return profiles.Workflow.OLD.value
         else:
             if SystemInfoFiles().get_model() == "turris":
-                return profiles.WORKFLOW_OLD
+                return profiles.Workflow.OLD.value
             elif SystemInfoFiles().get_contract() == "shield":
-                return profiles.WORKFLOW_SHIELD
-        return profiles.WORKFLOW_UNSET
+                return profiles.Workflow.SHIELD.value
+        return profiles.Workflow.UNSET.value
 
     @staticmethod
-    def _detect_recommended_workflow():
+    def _detect_recommended_workflow() -> str:
         if int(SystemInfoFiles().get_os_version().split(".", 1)[0]) > 3:
             if SystemInfoFiles().get_model() == "turris":
-                return profiles.WORKFLOW_OLD
+                return profiles.Workflow.OLD.value
             else:
                 if len(WebUciCommands._get_configurable_ifaces()) > 1:
-                    return profiles.WORKFLOW_ROUTER
+                    return profiles.Workflow.ROUTER.value
                 else:
-                    return profiles.WORKFLOW_BRIDGE
+                    return profiles.Workflow.BRIDGE.value
 
-        return profiles.WORKFLOW_OLD
+        return profiles.Workflow.OLD.value
 
     @staticmethod
     def _detect_available_workflows():
         model = SystemInfoFiles().get_model()
         if int(SystemInfoFiles().get_os_version().split(".", 1)[0]) >= 4:
             if model == "turris":
-                return [profiles.WORKFLOW_OLD]
+                return [profiles.Workflow.OLD.value]
             else:
                 if len(WebUciCommands._get_configurable_ifaces()) > 1:
                     return [
-                        e
-                        for e in profiles.WORKFLOWS
+                        e.value
+                        for e in profiles.get_workflows()
                         if e
                         not in (
-                            profiles.WORKFLOW_OLD,
-                            profiles.WORKFLOW_UNSET,
-                            profiles.WORKFLOW_SHIELD,
+                            profiles.Workflow.OLD,
+                            profiles.Workflow.UNSET,
+                            profiles.Workflow.SHIELD,
                         )
                     ]
                 else:
-                    return [profiles.WORKFLOW_MIN, profiles.WORKFLOW_BRIDGE]
+                    return [profiles.Workflow.MIN.value, profiles.Workflow.BRIDGE.value]
         if model in ["turris", "omnia"]:
-            return [profiles.WORKFLOW_OLD]
+            return [profiles.Workflow.OLD.value]
         return []
 
     @staticmethod
@@ -152,7 +152,7 @@ class WebUciCommands:
                 foris_data = backend.read("foris")
                 backend.add_section("foris", "config", "wizard")
                 backend.set_option("foris", "wizard", "finished", store_bool(True))
-            if profiles.STEP_PASSWORD in self.get_guide_data(foris_data)["passed"]:
+            if profiles.Step.PASSWORD in self.get_guide_data(foris_data)["passed"]:
                 # if a password was try to update wan if it ws not configured
                 if WanUci().update_unconfigured_wan_to_default():
                     MaintainCommands().restart_network()
@@ -172,7 +172,8 @@ class WebUciCommands:
         }
 
     @staticmethod
-    def update_passed(step):
+    def update_passed(step: typing.Union[str, profiles.Step]):
+        step = step.value if isinstance(step, profiles.Step) else step
         with UciBackend() as backend:
             data = backend.read("foris")
             passed = get_option_named(data, "foris", "wizard", "passed", [])
@@ -183,7 +184,7 @@ class WebUciCommands:
             workflow = get_option_named(
                 data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow()
             )
-            if set(profiles.WORKFLOWS[workflow]).issubset(set(passed)):
+            if set(profiles.get_workflows()[workflow]).issubset(set(passed)):
                 backend.add_section("foris", "config", "wizard")
                 backend.set_option("foris", "wizard", "finished", store_bool(True))
 

@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 class MockWebHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
     guide_finished_set = BaseMockHandler._manager.Value(bool, False)
-    guide_workflow = profiles.WORKFLOW_UNSET
-    recommended_workflow = profiles.WORKFLOW_ROUTER
+    guide_workflow = profiles.Workflow.UNSET
+    recommended_workflow = profiles.Workflow.ROUTER
     guide_enabled = True
     language_list = ["en", "de", "cs", "nb_NO"]
     current_language = "en"
@@ -121,7 +121,7 @@ class MockWebHandler(Handler, BaseMockHandler):
         res = {
             "enabled": MockWebHandler.guide_enabled,
             "workflow": MockWebHandler.guide_workflow,
-            "workflow_steps": profiles.WORKFLOWS[MockWebHandler.guide_workflow],
+            "workflow_steps": profiles.get_workflows()[MockWebHandler.guide_workflow],
             "passed": passed,
         }
         next_step = profiles.next_step(passed, MockWebHandler.guide_workflow)
@@ -153,13 +153,13 @@ class MockWebHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def get_guide(self):
         return {
-            "available_workflows": [e for e in profiles.WORKFLOWS],
+            "available_workflows": [e for e in profiles.get_workflows()],
             "current_workflow": MockWebHandler.guide_workflow,
             "recommended_workflow": MockWebHandler.recommended_workflow,
         }
 
     @logger_wrapper(logger)
-    def reset_guide(self, new_workflow=profiles.WORKFLOW_UNSET):
+    def reset_guide(self, new_workflow=profiles.Workflow.UNSET):
         from foris_controller_modules.password.handlers import MockPasswordHandler
         from foris_controller_modules.wan.handlers import MockWanHandler
         from foris_controller_modules.time.handlers import MockTimeHandler
