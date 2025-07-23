@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2025 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@
 import logging
 import re
 import typing
+from enum import Enum
 
 from foris_controller.exceptions import (
     BackendCommandFailed,
     UciException,
     UciRecordNotFound,
 )
-from foris_controller.utils import sort_by_natural_order
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
@@ -42,6 +42,42 @@ from foris_controller_backends.uci import (
 logger = logging.getLogger(__name__)
 
 
+class Band(str, Enum):
+    G2 = "2g"
+    G5 = "5g"
+    G6 = "6g"
+
+    @classmethod
+    def from_frequency(cls, freq: int) -> typing.Optional['Band']:
+        if 2412 <= freq <= 2484:
+            return Band.G2
+        elif 5160 <= freq < 5925:
+            return Band.G5
+        elif 5925 <= freq <= 7125:
+            return Band.G6
+        else:
+            return None
+
+    @property
+    def htmodes(self) -> typing.List[str]:
+        """ Band to htmode mapping
+
+            Note that the order of modes matters here.
+            Users will select mode from a list based on this order.
+        """
+        if self == Band.G2:
+            return ["HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]
+        return [
+            "HT20", "HT40",
+            "VHT20", "VHT40", "VHT80", "VHT160",
+            "HE20", "HE40", "HE80", "HE160",
+        ]
+
+    @property
+    def default_htmode(self) -> str:
+        return "NOHT"
+
+
 class WifiUci:
     WIFI_ENC_MODES_TO_UCI = {
         "WPA2": "psk2+ccmp",
@@ -49,16 +85,26 @@ class WifiUci:
         "WPA2/3": "sae-mixed",
     }
     # reverse lookup of json schema values and uci config values
-    WIFI_ENC_UCI_TO_MODES = {v:k for k, v in WIFI_ENC_MODES_TO_UCI.items()}
+    WIFI_ENC_UCI_TO_MODES = {v: k for k, v in WIFI_ENC_MODES_TO_UCI.items()}
     WIFI_UCI_DEFAULT_ENC_MODE = "sae-mixed"
     DEFAULT_CHANNELS = {
-        "2g": 11,
-        "5g": 36,
-        "6g": 37,
+        Band.G2: 11,
+        Band.G5: 36,
+        Band.G6: 37,
     }
+    DEFAULT_WIFI_ENC_MODE = "WPA2/3"
 
     @staticmethod
     def get_wifi_devices(backend):
+        """ Example wifi-device section:
+config wifi-device 'radio0'
+    option type 'mac80211'
+    option path 'platform/soc@0/c000000.wifi'
+    option band '2g'
+    option channel '6'
+    option htmode 'HE20'
+    option cell_density '0'
+        """
         try:
             wifi_data = backend.read("wireless")
             return get_sections_by_type(wifi_data, "wireless", "wifi-device")
@@ -77,19 +123,7 @@ class WifiUci:
             backend.set_option("wireless", section_name, "disabled", store_bool(True))
 
     @staticmethod
-    def _sort_htmodes(modes: typing.Set[str]) -> typing.List[str]:
-        """Sort HT (HT, VHT, HE, ...) modes in natural order"""
-        return sort_by_natural_order(modes)
-
-    @staticmethod
     def _get_device_bands(device_name: str) -> list:
-        DEFAULT_HTMODE = "NOHT"
-
-        BANDS_TO_MODES_MAP = {
-            "2g": ("n", "ax"),
-            "5g": ("n", "ac", "ax"),
-            "6g": ("n", "ac", "ax"),
-        }
 
         request_msg = {"device": device_name}
         ht_data = UbusBackend.call_ubus("iwinfo", "info", request_msg)
@@ -101,22 +135,21 @@ class WifiUci:
             return []
 
         channels = WifiUci._get_frequencies(freq_data, device_name)
-        htmodes = WifiUci._get_htmodes(ht_data["htmodes"])
 
-        # return frequencies and htmodes for each frequency band in separate objects
         res = []
-        for band in ["2g", "5g", "6g"]:
+        for band in Band:
             if len(channels[band]) > 0:
                 record = {
                     "available_channels": channels[band],
                     "band": band,
                 }
-                band_htmodes = [DEFAULT_HTMODE]
-                for hwmode in BANDS_TO_MODES_MAP[band]:
-                    # filter htmodes and keep them in order by BANDS_TO_MODES_MAP
-                    if hwmode in ht_data["hwmodes"]:
-                        band_htmodes += htmodes.get(hwmode, [])
-
+                # sometime hw may claim that it supports htmodes
+                # which are not compatible e.g. 2g -> VTH20
+                # this will filter out such cases
+                band_htmodes = [e for e in band.htmodes if e in ht_data["htmodes"]]
+                # default should be always included (usually NOHT)
+                if band.default_htmode not in band_htmodes:
+                    band_htmodes = [band.default_htmode] + band_htmodes
                 record["available_htmodes"] = band_htmodes
                 res.append(record)
         return res
@@ -125,9 +158,9 @@ class WifiUci:
     def _get_frequencies(freq_data, device_name: str) -> typing.Dict[str, list]:
         """Get available frequencies sorted into frequency bands
 
-        Return frequencies for both 2.4 GHz, 5 GHz and 6GHz.
+        Return frequencies for both 2.4 GHz, 5 GHz and 6 GHz.
         """
-        channels = {"2g": [], "5g": [], "6g": []}
+        channels = {band: [] for band in Band}
 
         for freq in freq_data["results"]:
             channel = {
@@ -137,45 +170,15 @@ class WifiUci:
             }
 
             ch_freq = channel["frequency"]
-            if 2412 <= ch_freq <= 2484:
-                band = "2g"
-            elif 5160 <= ch_freq < 5925:
-                band = "5g"
-            elif 5925 <= ch_freq <= 7125:
-                band = "6g"
+            if band := Band.from_frequency(ch_freq):
+                channels[band].append(channel)
             else:
                 logger.warning(
                     "%s: Frequency '%d MHz' does not fit supported bands (2.4 & 5 & 6 GHz)",
                     device_name, ch_freq
                 )
-                continue
-
-            channels[band].append(channel)
 
         return channels
-
-    @staticmethod
-    def _get_htmodes(device_htmodes: typing.List[str]) -> typing.Dict[str, typing.List[str]]:
-        """Get HT modes based on 802.11 standard (n, ac, ax, ...)
-
-        Get intersection of valid HT modes by standard with modes advertised by device.
-        Return list of HT modes sorted in natural order.
-        """
-        MODE_TO_HT = {
-            "n": {"HT20", "HT40"},
-            "ac": {"VHT20", "VHT40", "VHT80", "VHT160"},
-            "ax": {"HE20", "HE40", "HE80", "HE160"},
-        }
-
-        device_htmodes_set = set(device_htmodes)
-        res = {
-            mode: WifiUci._sort_htmodes(device_htmodes_set & htmodes)
-            for mode, htmodes in MODE_TO_HT.items()
-        }
-
-        # Skip empty lists, for example:
-        # Do not return {"ac": []}, when device does not support any of "ac" htmodes
-        return {mode: htmodes for mode, htmodes in res.items() if htmodes}
 
     def _prepare_wifi_device(self, device, interface, guest_interface):
         # read data from uci
@@ -191,8 +194,13 @@ class WifiUci:
         ssid = interface["data"].get("ssid", "Turris")
         hidden = parse_bool(interface["data"].get("hidden", "0"))
         password = interface["data"].get("key", "")
-        htmode = device["data"].get("htmode", "NOHT")
-        band = device["data"].get("band", "2g")
+        band = device["data"].get("band", Band.G2)
+        if not (htmode := device["data"].get("htmode", None)):
+            try:
+                htmode = Band(band).default_htmode
+            except ValueError:
+                htmode = Band.G2.default_htmode
+
         current_channel = device["data"].get("channel", WifiUci.DEFAULT_CHANNELS[band])
         current_channel = 0 if current_channel == "auto" else int(current_channel)
         wifi_encryption = interface["data"].get("encryption", self.WIFI_UCI_DEFAULT_ENC_MODE)
@@ -323,7 +331,6 @@ class WifiUci:
         :returns: True/False if guest interface is enabled/disabled or None if wifi is disabled
         :rtype: None or bool
         """
-        DEFAULT_WIFI_ENC_MODE = "WPA2/3"
         # sections are supposed to exist so there is no need to create them
 
         if not settings["enabled"]:
@@ -353,7 +360,7 @@ class WifiUci:
         backend.set_option(
             "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"])
         )
-        wifi_encryption = settings.get("encryption", DEFAULT_WIFI_ENC_MODE)
+        wifi_encryption = settings.get("encryption", WifiUci.DEFAULT_WIFI_ENC_MODE)
         ieee80211w_disabled = settings.get("ieee80211w_disabled", False)
         if wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
             self._set_wifi_encryption(backend, interface_section["name"], wifi_encryption, ieee80211w_disabled)
@@ -378,7 +385,9 @@ class WifiUci:
         backend.set_option("wireless", guest_name, "mode", "ap")
         backend.set_option("wireless", guest_name, "ssid", settings["guest_wifi"]["SSID"])
         backend.set_option("wireless", guest_name, "network", "guest_turris")
-        guest_wifi_encryption = settings["guest_wifi"].get("encryption", DEFAULT_WIFI_ENC_MODE)
+        guest_wifi_encryption = settings["guest_wifi"].get(
+            "encryption", WifiUci.DEFAULT_WIFI_ENC_MODE
+        )
         if guest_wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
             # apply the same encryption settings as main SSID to guest SSID
             self._set_wifi_encryption(backend, guest_name, guest_wifi_encryption, ieee80211w_disabled)
@@ -436,8 +445,6 @@ class WifiUci:
                     ][0]
 
                     if device["enabled"]:
-                        # test configuration
-
                         # find corresponding band
                         bands = [
                             e
