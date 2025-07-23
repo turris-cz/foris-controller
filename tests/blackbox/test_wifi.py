@@ -1,6 +1,6 @@
 #
 # foris-controller
-# Copyright (C) 2018-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2025 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ from foris_controller_testtools.utils import (
     network_restart_was_called,
 )
 
-from foris_controller.exceptions import UciRecordNotFound
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
 
@@ -1140,98 +1139,6 @@ def test_update_settings_uci(
     )
 
 
-@pytest.mark.only_backends(["openwrt"])
-def test_update_settings_migrate_old_syntax_uci(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
-):
-
-    uci = get_uci_module(infrastructure.name)
-
-    def update(*devices):
-        res = infrastructure.process_message(
-            {
-                "module": "wifi",
-                "action": "update_settings",
-                "kind": "request",
-                "data": {"devices": devices},
-            }
-        )
-        assert res == {
-            "action": "update_settings",
-            "data": {"result": True},
-            "kind": "reply",
-            "module": "wifi",
-        }
-        network_restart_was_called([])
-        with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-            data = backend.read()
-        return data
-
-    # init config first to look like OpenWrt 19.07
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.del_option("wireless", "radio0", "band", fail_on_error=False)
-        backend.set_option("wireless", "radio0", "hwmode", "11a")
-        backend.del_option("wireless", "radio1", "band", fail_on_error=False)
-        backend.set_option("wireless", "radio1", "hwmode", "11g")
-
-    data = update(
-        {
-            "id": 0,
-            "enabled": True,
-            "SSID": "Dev1",
-            "hidden": False,
-            "channel": 36,
-            "htmode": "VHT80",
-            "band": "5g",
-            "encryption": "WPA2/3",
-            "ieee80211w_disabled": False,
-            "password": "passpass",
-            "guest_wifi": {"enabled": False},
-        },
-        {
-            "id": 1,
-            "enabled": False,
-        },
-    )
-
-    assert uci.get_option_named(data, "wireless", "radio0", "band") == "5g"
-    with pytest.raises(UciRecordNotFound):
-        uci.get_option_named(data, "wireless", "radio0", "hwmode")
-
-    assert uci.get_option_named(data, "wireless", "radio1", "hwmode") == "11g"
-    with pytest.raises(UciRecordNotFound):
-        uci.get_option_named(data, "wireless", "radio1", "band")
-
-    # enable second radio
-    data = update(
-        {
-            "id": 0,
-            "enabled": False,
-        },
-        {
-            "id": 1,
-            "enabled": True,
-            "SSID": "Dev2",
-            "hidden": False,
-            "channel": 11,
-            "htmode": "HT40",
-            "band": "2g",
-            "encryption": "WPA2/3",
-            "ieee80211w_disabled": False,
-            "password": "passpass",
-            "guest_wifi": {"enabled": False},
-        }
-    )
-
-    assert uci.get_option_named(data, "wireless", "radio0", "band") == "5g"
-    with pytest.raises(UciRecordNotFound):
-        uci.get_option_named(data, "wireless", "radio0", "hwmode")
-
-    assert uci.get_option_named(data, "wireless", "radio1", "band") == "2g"
-    with pytest.raises(UciRecordNotFound):
-        uci.get_option_named(data, "wireless", "radio1", "hwmode")
-
-
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_restart_command):
     def update(*devices):
@@ -1623,29 +1530,6 @@ def test_get_settings_missing_wireless(file_root_init, uci_configs_init, infrast
         {"module": "wifi", "action": "get_settings", "kind": "request"}
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
-
-
-@pytest.mark.only_backends(["openwrt"])
-def test_get_hwmode_openwrt_19_07(infrastructure, uci_configs_init):
-    """Test that we get correct hwmode from OpenWrt 19.07 config syntax
-
-    OpenWrt 19.07 uses `option hwmode` for frequency band
-    """
-    uci = get_uci_module(infrastructure.name)
-
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.del_option("wireless", "radio0", "band")
-        backend.set_option("wireless", "radio0", "hwmode", "11a")
-
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
-    assert "errors" not in res
-
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        uci_data = backend.read()
-
-    assert uci.get_option_named(uci_data, "wireless", "radio0", "hwmode") == "11a"
 
 
 @pytest.mark.only_backends(["openwrt"])

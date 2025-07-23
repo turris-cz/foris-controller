@@ -340,8 +340,6 @@ class WifiUci:
             backend.set_option("wireless", interface_section["name"], "disabled", store_bool(False))
             # guest wifi is enabled elsewhere
 
-        WifiUci._delete_old_config(backend, device_section["name"])
-
         # device
         channel = "auto" if settings["channel"] == 0 else int(settings["channel"])
         backend.set_option("wireless", device_section["name"], "channel", channel)
@@ -390,12 +388,6 @@ class WifiUci:
         backend.set_option("wireless", guest_name, "isolate", store_bool(True))
 
         return True
-
-    @staticmethod
-    def _delete_old_config(backend: UciBackend, device: str):
-        """Delete OpenWrt 19.07 config options which are no longer used"""
-        # OpenWrt 21.02 uses `option band` instead of `option hwmode`
-        backend.del_option("wireless", device, "hwmode", fail_on_error=False)
 
     def _set_wifi_encryption(
         self,

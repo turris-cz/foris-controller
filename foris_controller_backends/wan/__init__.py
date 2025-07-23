@@ -185,8 +185,6 @@ class WanUci:
 
     def update_settings(self, wan_settings, wan6_settings, mac_settings, qos=None, vlan_settings=None):
         with UciBackend() as backend:
-            # Try to migrate OpenWrt 19.07 style config to new style
-            WanUci._migrate_old_config(backend)
 
             # WAN
             wan_type = wan_settings["wan_type"]
@@ -400,29 +398,6 @@ class WanUci:
         except UciException:
             logger.error("Failed to change VLAN ID for WAN device '%s'.", base_wan_device)
 
-    @staticmethod
-    def _migrate_old_config(backend: UciBackend) -> None:
-        """Try to migrate device config to OpenWrt 21.02 style config.
-
-        Create new `device` section for L2 option if needed.
-        """
-        network_data = backend.read("network")
-        ifname = get_option_named(network_data, "network", "wan", "ifname", "")
-        if not ifname:
-            return
-
-        backend.del_option("network", "wan", "ifname", fail_on_error=False)
-        backend.set_option("network", "wan", "device", ifname)
-
-        backend.add_section("network", "device", "dev_wan")
-        backend.set_option("network", "dev_wan", "name", ifname)
-
-        # move the `macaddr` to correct location
-        macaddr = get_option_named(network_data, "network", "wan", "macaddr", "")
-        if macaddr:
-            backend.del_option("network", "wan", "macaddr", fail_on_error=False)
-            backend.set_option("network", "dev_wan", "macaddr", macaddr)
-
     def update_unconfigured_wan_to_default(self) -> bool:
         """
         Updates wan if it was not configured to get IP address via DHCP
@@ -430,10 +405,6 @@ class WanUci:
         :returns: True if wan configuration was changed
         """
         with UciBackend() as backend:
-            # Try to migrate OpenWrt 19.07 style config to new style
-            # ifname => device
-            WanUci._migrate_old_config(backend)
-
             network_data = backend.read("network")
             wan_proto = get_option_named(network_data, "network", "wan", "proto")
             wan_device = get_option_named(network_data, "network", "wan", "device", "")

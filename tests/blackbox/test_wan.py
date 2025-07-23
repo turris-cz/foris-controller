@@ -237,65 +237,6 @@ def test_get_wan_settings_pppoe_credentials_missing_openwrt(
     check_get("", "")
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
-@pytest.mark.only_backends(["openwrt"])
-def test_update_settings_do_the_old_syntax_migration_on_update_openwrt(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version
-):
-    """Test that L2 options (macaddr, ...) are stored in uci `device` section instead of `interface`.
-
-    In case there is still old style syntax (OpenWrt 19.07) present, check that update_settings will migrate config
-    to new style syntax first and then update the config according to the provided data.
-
-    Before update:
-    ```
-    config interface 'wan'
-        option ifname 'eth2'
-        option macaddr '11:22:33:44:55:66'
-    ```
-
-    After update:
-    ```
-    config interface 'wan'
-        option device 'eth2'
-
-    config device 'dev_wan'
-        option name 'eth2'
-        option macaddr '11:22:33:AA:BB:CC'
-    ```
-    """
-    prepare_turrishw_root(device, turris_os_version)
-
-    uci = get_uci_module(infrastructure.name)
-    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
-        backend.del_option("network", "wan", "device")
-        backend.set_option("network", "wan", "ifname", "eth2")
-        backend.set_option("network", "wan", "macaddr", "11:22:33:44:55:66")
-
-    uci_data = get_uci_backend_data(uci)
-    assert not uci.section_exists(uci_data, "network", "dev_wan")
-
-    msg_data = {
-        "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
-        "wan6_settings": {"wan6_type": "none"},
-        "mac_settings": {"custom_mac_enabled": True, "custom_mac": "11:22:33:AA:BB:CC"},
-    }
-
-    query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "update_settings", "kind": "request", "data": msg_data}
-    )
-
-    uci_data = get_uci_backend_data(uci)
-
-    assert uci.get_option_named(uci_data, "network", "wan", "device", "") == "eth2"
-    assert uci.get_option_named(uci_data, "network", "wan", "macaddr", "") == ""
-
-    assert uci.section_exists(uci_data, "network", "dev_wan")
-    assert uci.get_option_named(uci_data, "network", "dev_wan", "name", "") == "eth2"
-    assert uci.get_option_named(uci_data, "network", "dev_wan", "macaddr", "") == "11:22:33:AA:BB:CC"
-
-
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_set_custom_macaddr_openwrt(
