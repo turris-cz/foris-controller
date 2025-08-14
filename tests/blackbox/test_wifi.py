@@ -71,6 +71,7 @@ DEFAULT_CONFIG = [
                     {"number": 12, "frequency": 2467, "radar": False},
                     {"number": 13, "frequency": 2472, "radar": False},
                 ],
+                "available_multilink": False,
             },
             {
                 "band": "5g",
@@ -118,6 +119,7 @@ DEFAULT_CONFIG = [
                     {"number": 173, "frequency": 5865, "radar": False},
                     {"number": 177, "frequency": 5885, "radar": False},
                 ],
+                "available_multilink": False,
             },
         ],
     },
@@ -157,6 +159,7 @@ DEFAULT_CONFIG = [
                     {"number": 12, "frequency": 2467, "radar": False},
                     {"number": 13, "frequency": 2472, "radar": False},
                 ],
+                "available_multilink": True,
             }
         ],
     },

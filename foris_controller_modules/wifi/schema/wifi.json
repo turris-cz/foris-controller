@@ -142,10 +142,11 @@
                             "allOf": [{"$ref": "#/definitions/wifi_device_band"}, {"enum": ["2g"]}]
                         },
                         "available_htmodes": {"$ref": "#/definitions/wifi_device_htmodes_2g"},
-                        "available_channels": {"$ref": "#/definitions/wifi_device_channels_2g"}
+                        "available_channels": {"$ref": "#/definitions/wifi_device_channels_2g"},
+                        "available_multilink": {"type": "boolean"}
                     },
                     "additionalProperties": false,
-                    "required": ["band", "available_htmodes", "available_channels"]
+                    "required": ["band", "available_htmodes", "available_channels", "available_multilink"]
                 },
                 {
                     "type": "object",
@@ -154,10 +155,11 @@
                             "allOf": [{"$ref": "#/definitions/wifi_device_band"}, {"enum": ["5g"]}]
                         },
                         "available_htmodes": {"$ref": "#/definitions/wifi_device_htmodes_5g"},
-                        "available_channels": {"$ref": "#/definitions/wifi_device_channels_5g"}
+                        "available_channels": {"$ref": "#/definitions/wifi_device_channels_5g"},
+                        "available_multilink": {"type": "boolean"}
                     },
                     "additionalProperties": false,
-                    "required": ["band", "available_htmodes", "available_channels"]
+                    "required": ["band", "available_htmodes", "available_channels", "available_multilink"]
                 },
                 {
                     "type": "object",
@@ -166,10 +168,11 @@
                             "allOf": [{"$ref": "#/definitions/wifi_device_band"}, {"enum": ["6g"]}]
                         },
                         "available_htmodes": {"$ref": "#/definitions/wifi_device_htmodes_6g"},
-                        "available_channels": {"$ref": "#/definitions/wifi_device_channels_6g"}
+                        "available_channels": {"$ref": "#/definitions/wifi_device_channels_6g"},
+                        "available_multilink": {"type": "boolean"}
                     },
                     "additionalProperties": false,
-                    "required": ["band", "available_htmodes", "available_channels"]
+                    "required": ["band", "available_htmodes", "available_channels", "available_multilink"]
                 }
             ]
         },

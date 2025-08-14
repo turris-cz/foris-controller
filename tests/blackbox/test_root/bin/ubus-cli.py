@@ -78,6 +78,7 @@ MOCK_DATA = {
                 "txpower_offset": 0,
                 "quality_max": 70,
                 "noise": 0,
+                "mlo_cap": 0x01,
                 "htmodes": [
                     "HT20",
                     "HT40"

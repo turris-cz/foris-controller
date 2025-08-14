@@ -21,6 +21,7 @@ import logging
 import re
 import typing
 from enum import Enum
+from dataclasses import dataclass, field, asdict
 
 from foris_controller.exceptions import (
     BackendCommandFailed,
@@ -78,6 +79,21 @@ class Band(str, Enum):
         return "NOHT"
 
 
+@dataclass
+class Channel:
+    number: int
+    frequency: int
+    radar: bool = False  # iwinfo/rpcd doesn't return DFS flags; use False for compatibility
+
+
+@dataclass
+class BandData:
+    band: Band
+    available_channels: typing.List[Channel] = field(default_factory=list)
+    available_htmodes: typing.List[str] = field(default_factory=list)
+    available_multilink: bool = False
+
+
 class WifiUci:
     WIFI_ENC_MODES_TO_UCI = {
         "WPA2": "psk2+ccmp",
@@ -123,62 +139,59 @@ config wifi-device 'radio0'
             backend.set_option("wireless", section_name, "disabled", store_bool(True))
 
     @staticmethod
-    def _get_device_bands(device_name: str) -> list:
+    def _get_device_bands(device_name: str) -> typing.List[BandData]:
 
         request_msg = {"device": device_name}
-        ht_data = UbusBackend.call_ubus("iwinfo", "info", request_msg)
-        if not ht_data:
+        iwinfo_data = UbusBackend.call_ubus("iwinfo", "info", request_msg)
+        if not iwinfo_data:
             return []
 
         freq_data = UbusBackend.call_ubus("iwinfo", "freqlist", request_msg)
         if not freq_data:
             return []
 
-        channels = WifiUci._get_frequencies(freq_data, device_name)
+        band_list = WifiUci._get_frequencies(freq_data, device_name)
 
         res = []
-        for band in Band:
-            if len(channels[band]) > 0:
-                record = {
-                    "available_channels": channels[band],
-                    "band": band,
-                }
-                # sometime hw may claim that it supports htmodes
-                # which are not compatible e.g. 2g -> VTH20
-                # this will filter out such cases
-                band_htmodes = [e for e in band.htmodes if e in ht_data["htmodes"]]
-                # default should be always included (usually NOHT)
-                if band.default_htmode not in band_htmodes:
-                    band_htmodes = [band.default_htmode] + band_htmodes
-                record["available_htmodes"] = band_htmodes
-                res.append(record)
+        for band_data in band_list:
+            if not band_data.available_channels:
+                continue
+
+            # sometime hw may claim that it supports htmodes
+            # which are not compatible e.g. 2g -> VTH20
+            # this will filter out such cases
+            band_htmodes = [e for e in band_data.band.htmodes if e in iwinfo_data["htmodes"]]
+            # default should be always included (usually NOHT)
+            if band_data.band.default_htmode not in band_htmodes:
+                band_htmodes = [band_data.band.default_htmode] + band_htmodes
+            band_data.available_htmodes = band_htmodes
+            band_data.available_multilink = bool(iwinfo_data.get("mlo_cap"))
+            res.append(band_data)
         return res
 
     @staticmethod
-    def _get_frequencies(freq_data, device_name: str) -> typing.Dict[str, list]:
+    def _get_frequencies(freq_data, device_name: str) -> typing.List[BandData]:
         """Get available frequencies sorted into frequency bands
 
         Return frequencies for both 2.4 GHz, 5 GHz and 6 GHz.
         """
-        channels = {band: [] for band in Band}
+        data = {band: BandData(band) for band in Band}
 
         for freq in freq_data["results"]:
-            channel = {
-                "number": freq["channel"],
-                "frequency": freq["mhz"],
-                "radar": False,  # iwinfo/rpcd doesn't return DFS flags; use False for compatibility
-            }
+            channel = Channel(
+                number=freq["channel"],
+                frequency=freq["mhz"],
+            )
 
-            ch_freq = channel["frequency"]
-            if band := Band.from_frequency(ch_freq):
-                channels[band].append(channel)
+            if band := Band.from_frequency(channel.frequency):
+                data[band].available_channels.append(channel)
             else:
                 logger.warning(
                     "%s: Frequency '%d MHz' does not fit supported bands (2.4 & 5 & 6 GHz)",
-                    device_name, ch_freq
+                    device_name, channel.frequency
                 )
 
-        return channels
+        return sorted(data.values(), key=lambda e: e.band.value)
 
     def _prepare_wifi_device(self, device, interface, guest_interface):
         # read data from uci
@@ -258,7 +271,7 @@ config wifi-device 'radio0'
                 "password": guest_password,
                 "encryption": self.WIFI_ENC_UCI_TO_MODES.get(guest_wifi_encryption, "custom"),
             },
-            "available_bands": bands,
+            "available_bands": [asdict(e) for e in bands],
         }
 
         if res["encryption"] in ("WPA2/3", "WPA3"):  # we don't care about 802.11w outside of WPA3
@@ -449,7 +462,7 @@ config wifi-device 'radio0'
                         bands = [
                             e
                             for e in WifiUci._get_device_bands(device_section["name"])
-                            if e and e["band"] == device["band"]
+                            if e and e.band == device["band"]
                         ]
                         if len(bands) != 1:
                             raise ValueError()
@@ -457,10 +470,10 @@ config wifi-device 'radio0'
 
                         # test channels (0 means auto)
                         if device["channel"] not in [0] + [
-                            e["number"] for e in band["available_channels"]
+                            e.number for e in band.available_channels
                         ]:
                             raise ValueError()
-                        if device["htmode"] not in band["available_htmodes"]:
+                        if device["htmode"] not in band.available_htmodes:
                             raise ValueError()
 
                     interface, guest_interface = self._get_interface_sections_from_device_section(
