@@ -3,7 +3,7 @@
         "interface_id": {"type": "string", "minLength": 1, "pattern": "^[0-9a-z_-]*"},
         "interface_link_speed": {"type": "integer", "minimum": 0},
         "interface_module_id": {"type": "integer", "minimum": 0},
-        "interface_bus": {"enum": ["eth", "pci", "usb", "sdio", "sfp"]},
+        "interface_bus": {"enum": ["eth", "pci", "usb", "sdio", "wifi", "sfp"]},
         "interface_type": {"enum": ["eth", "wwan", "wifi"]},
         "interface_state": {"enum": ["up", "down"]},
         "interface_record": {
@@ -125,7 +125,7 @@
                         "device": {
                             "type": "object",
                             "properties": {
-                                "model": {"enum": ["omnia", "turris", "mox"]},
+                                "model": {"enum": ["omnia", "omnia-ng", "turris", "mox"]},
                                 "version": {"type": "string"}
                             },
                             "additionalProperties": false,

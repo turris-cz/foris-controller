@@ -106,7 +106,9 @@ class SystemInfoFiles(BaseFile):
         """ display standartized model name (omnia/mox/turris)
         """
         repr_model = self.get_model_name()
-        if "Omnia" in repr_model:
+        if "Omnia NG" in repr_model:
+            return "omnia-ng"
+        elif "Omnia" in repr_model:
             return "omnia"
         elif "Mox" in repr_model:
             return "mox"
