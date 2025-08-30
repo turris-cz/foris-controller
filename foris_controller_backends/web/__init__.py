@@ -80,6 +80,8 @@ class WebUciCommands:
                 return profiles.Workflow.OLD.value
             elif SystemInfoFiles().get_contract() == "shield":
                 return profiles.Workflow.SHIELD.value
+            elif SystemInfoFiles().get_model() == "omnia-ng":
+                return profiles.Workflow.ROUTER.value
         return profiles.Workflow.UNSET.value
 
     @staticmethod
@@ -117,6 +119,8 @@ class WebUciCommands:
                     return [profiles.Workflow.MIN.value, profiles.Workflow.BRIDGE.value]
         if model in ["turris", "omnia"]:
             return [profiles.Workflow.OLD.value]
+        if model in ["omnia-ng"]:
+            return [profiles.Workflow.ROUTER.value]
         return []
 
     @staticmethod

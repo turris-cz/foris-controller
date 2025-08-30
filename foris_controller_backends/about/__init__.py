@@ -103,7 +103,7 @@ class SystemInfoFiles(BaseFile):
         return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r"^(\w+.*)$", (1,))
 
     def get_model(self):
-        """ display standartized model name (omnia/mox/turris)
+        """ display standartized model name (omnia-ng/omnia/mox/turris)
         """
         repr_model = self.get_model_name()
         if "Omnia NG" in repr_model:
