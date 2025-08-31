@@ -47,6 +47,8 @@
                         "link_speed": {"$ref": "#/definitions/interface_link_speed"},
                         "configurable": {"type": "boolean"},
                         "ssid": {"type": "string", "minLength": 0, "maxLength": 32},
+                        "vendor": {"type": "string"},
+                        "pci_id": {"type": "string", "pattern": "^[0-9A-F]{4}:[0-9A-F]{4}"},
                         "macaddr": {"format": "macaddress", "type": "string"},
                         "slot_path": {
                             "type": "string",
