@@ -66,17 +66,30 @@ class Band(str, Enum):
             Note that the order of modes matters here.
             Users will select mode from a list based on this order.
         """
-        if self == Band.G2:
-            return ["HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]
-        return [
-            "HT20", "HT40",
-            "VHT20", "VHT40", "VHT80", "VHT160",
-            "HE20", "HE40", "HE80", "HE160",
-        ]
+        match self:
+            case Band.G2:
+                return ["HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]
+            case Band.G5:
+                return [
+                    "HT20", "HT40",
+                    "VHT20", "VHT40", "VHT80", "VHT160",
+                    "HE20", "HE40", "HE80", "HE160",
+                    "EHT20", "EHT40", "EHT80", "EHT160", "EHT240", "EHT320",
+                ]
+            case Band.G6:
+                # 6G + VHT* + HT* modes caused fallback to 5G via hostapd
+                return [
+                    "HE20", "HE40", "HE80", "HE160",
+                    "EHT20", "EHT40", "EHT80", "EHT160", "EHT240", "EHT320",
+                ]
 
     @property
     def default_htmode(self) -> str:
-        return "NOHT"
+        match self:
+            case Band.G6:
+                return "HE20"
+            case _:
+                return "NOHT"
 
 
 @dataclass
