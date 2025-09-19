@@ -437,7 +437,7 @@ def test_update_settings_custom_encryption_openwrt(
 
     That it is possible to change SSID, password, channel, frequency band, etc., but not the encryption settings.
     """
-    def update(*devices):
+    def update(*devices, clean_guest=False):
         res = infrastructure.process_message(
             {
                 "module": "wifi",
@@ -454,7 +454,17 @@ def test_update_settings_custom_encryption_openwrt(
         }
 
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+            # Delete guest wifi to test that derived guest SSID is not too long
+            if clean_guest:
+                backend.del_section("wireless", "guest_iface_0")
             data = backend.read()
+
+        # try to perform get_settings to see that nothing is broken
+        res = infrastructure.process_message(
+            {"module": "wifi", "action": "get_settings", "kind": "request"}
+        )
+        assert "errors" not in res
+
         return data
 
     uci = get_uci_module(infrastructure.name)
@@ -466,7 +476,7 @@ def test_update_settings_custom_encryption_openwrt(
         {
             "id": 0,
             "enabled": True,
-            "SSID": "Turris-custom-2G",
+            "SSID": "Turris-custom-2G-with-long-SSID",
             "hidden": False,
             "channel": 11,
             "htmode": "HT20",
@@ -474,9 +484,10 @@ def test_update_settings_custom_encryption_openwrt(
             "encryption": "custom",
             "password": "2gcustompass",
             "guest_wifi": {"enabled": False},
-        }
+        },
+        clean_guest=True
     )
-    assert uci.get_option_named(data, "wireless", "default_radio0", "ssid") == "Turris-custom-2G"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "ssid") == "Turris-custom-2G-with-long-SSID"
     assert uci.get_option_named(data, "wireless", "default_radio0", "key") == "2gcustompass"
     assert uci.get_option_named(data, "wireless", "default_radio0", "encryption") == "wpa3-mixed"
     assert uci.get_option_named(data, "wireless", "default_radio0", "ieee80211w", "") == ""

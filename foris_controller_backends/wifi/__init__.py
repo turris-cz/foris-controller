@@ -246,8 +246,8 @@ config wifi-device 'radio0'
             # so it will be the initial choice in reForis for the first time wifi setup
             wifi_encryption = self.WIFI_UCI_DEFAULT_ENC_MODE
 
+        derived_guest = "%s-guest" % ssid if len("%s-guest" % ssid) <= 32 else "Turris-guest"
         if guest_interface:
-            derived_guest = "%s-guest" % ssid if len("%s-guest" % ssid) <= 32 else "Turris-guest"
             guest_enabled = not parse_bool(guest_interface["data"].get("disabled", "0"))
             guest_ssid = guest_interface["data"].get("ssid", derived_guest)
             guest_password = guest_interface["data"].get("key", "")
@@ -258,7 +258,7 @@ config wifi-device 'radio0'
                 guest_wifi_encryption = "psk2+ccmp"
         else:
             guest_enabled = False
-            guest_ssid = "%s-guest" % ssid
+            guest_ssid = derived_guest
             guest_password = ""
             guest_wifi_encryption = self.WIFI_UCI_DEFAULT_ENC_MODE
 
