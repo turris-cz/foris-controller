@@ -18,11 +18,13 @@
 #
 
 import copy
+import json
 import os
 
 import pytest
-from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
+from foris_controller_testtools.fixtures import FILE_ROOT_PATH as FORIS_FILES_ROOT, UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
+    FileFaker,
     get_uci_module,
     match_subdict,
     network_restart_was_called,
@@ -30,6 +32,7 @@ from foris_controller_testtools.utils import (
 
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
+UBUS_TEST_MOCK_DATA_FILE = "/tmp/ubus_test_mock_data.json"
 
 
 # default config based on Omnia with following wifi chipsets
@@ -1798,3 +1801,82 @@ def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart
 
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae-mixed"
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == "0"
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_5g_eht_no_higher_bandwidth_htmodes_openwrt(
+    file_root_init, uci_configs_init, infrastructure
+):
+    """Test that EHT240 and EHT320 are not available for 5 GHz band.
+
+    A WiFi 7 capable chip may report EHT240 and EHT320 in its supported htmodes,
+    but these wider bandwidths are only valid in the 6 GHz band.
+    The 5 GHz band must not expose EHT240/EHT320 as available htmodes.
+    """
+    # Simulate a WiFi 7 chip that reports EHT240 and EHT320 support.
+    # radio0 default freqlist already has 5 GHz channels.
+    iwinfo_mock = {
+        "iwinfo": {
+            "info": {
+                "radio0": {
+                    "phy": "phy0",
+                    "bssid": "AA:BB:CC:DD:EE:FF",
+                    "country": "US",
+                    "mode": "Client",
+                    "frequency_offset": 0,
+                    "txpower": 6,
+                    "txpower_offset": 0,
+                    "quality_max": 70,
+                    "noise": 0,
+                    "htmodes": [
+                        "HT20", "HT40",
+                        "VHT20", "VHT40", "VHT80", "VHT160",
+                        "HE20", "HE40", "HE80", "HE160",
+                        "EHT20", "EHT40", "EHT80", "EHT160", "EHT240", "EHT320",
+                    ],
+                    "hwmodes": ["ac", "ax", "be", "n"],
+                    "hwmode": "a/g",
+                    "htmode": "20",
+                    "hardware": {"id": [1, 2, 1, 2], "name": "WiFi 7 Test Chip"},
+                }
+            },
+            "freqlist": {
+                "radio0": {
+                    "results": [
+                        {
+                            "channel": 1,
+                            "mhz": 2412,
+                            "restricted": False
+                        },
+                        {
+                            "channel": 36,
+                            "mhz": 5180,
+                            "restricted": False
+                        },
+                    ]
+                }
+            }
+        },
+    }
+
+    with FileFaker(FORIS_FILES_ROOT, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(iwinfo_mock)):
+        res = infrastructure.process_message(
+                {"module": "wifi", "action": "get_settings", "kind": "request"}
+        )
+    #res = infrastructure.process_message(
+            #{"module": "wifi", "action": "get_settings", "kind": "request"}
+            #)
+
+    assert "errors" not in res
+    devices = res["data"]["devices"]
+
+    # radio0 serves both 2.4 GHz and 5 GHz channels
+    radio0_bands = {band["band"]: band for band in devices[0]["available_bands"]}
+    assert "5g" in radio0_bands, "radio0 should have a 5 GHz band"
+
+    available_htmodes_5g = radio0_bands["5g"]["available_htmodes"]
+    assert "EHT240" not in available_htmodes_5g, "EHT240 must not be available for 5 GHz"
+    assert "EHT320" not in available_htmodes_5g, "EHT320 must not be available for 5 GHz"
+    # EHT modes up to EHT160 are still valid for 5 GHz
+    assert "EHT160" in available_htmodes_5g

@@ -74,7 +74,7 @@ class Band(str, Enum):
                     "HT20", "HT40",
                     "VHT20", "VHT40", "VHT80", "VHT160",
                     "HE20", "HE40", "HE80", "HE160",
-                    "EHT20", "EHT40", "EHT80", "EHT160", "EHT240", "EHT320",
+                    "EHT20", "EHT40", "EHT80", "EHT160"
                 ]
             case Band.G6:
                 # 6G + VHT* + HT* modes caused fallback to 5G via hostapd
