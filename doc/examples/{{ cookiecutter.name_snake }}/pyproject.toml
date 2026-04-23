@@ -37,12 +37,22 @@ turris-{{ cookiecutter.name_snake }} = "foris_controller_{{ cookiecutter.name_sn
 {{ cookiecutter.name_snake }} = "foris_controller_{{ cookiecutter.name_snake }}_module.announcer:make_time_message"
 
 [tool.hatch.build.targets.sdist]
+packages = [
+    "foris_controller_backends/",
+    "foris_controller_modules/",
+    "foris_controller_{{ cookiecutter.name_snake }}_module/",
+]
 include = [
     "foris_controller_backends/",
     "foris_controller_modules/",
     "foris_controller_{{ cookiecutter.name_snake }}_module/",
 ]
 [tool.hatch.build.targets.wheel]
+packages = [
+    "foris_controller_backends/",
+    "foris_controller_modules/",
+    "foris_controller_{{ cookiecutter.name_snake }}_module/",
+]
 include = [
     "foris_controller_backends/",
     "foris_controller_modules/",
