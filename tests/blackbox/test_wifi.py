@@ -28,6 +28,7 @@ from foris_controller_testtools.utils import (
     get_uci_module,
     match_subdict,
     network_restart_was_called,
+    prepare_turrishw_root,
 )
 
 
@@ -40,6 +41,8 @@ UBUS_TEST_MOCK_DATA_FILE = "/tmp/ubus_test_mock_data.json"
 DEFAULT_CONFIG = [
     {
         "id": 0,
+        "slot": "2",
+        "bus": "pci",
         "enabled": False,
         "SSID": "Turris",
         "hidden": False,
@@ -1415,7 +1418,8 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
+@pytest.mark.only_backends(["mock"])
+def test_reset_mock(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
     res = infrastructure.process_message(
         {
             "module": "wifi",
@@ -1455,6 +1459,9 @@ def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, netwo
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_reset_openwrt(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
+
+    prepare_turrishw_root("omnia", "7.0")
+
     res = infrastructure.process_message(
         {
             "module": "wifi",
@@ -1862,11 +1869,8 @@ def test_get_settings_5g_eht_no_higher_bandwidth_htmodes_openwrt(
 
     with FileFaker(FORIS_FILES_ROOT, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(iwinfo_mock)):
         res = infrastructure.process_message(
-                {"module": "wifi", "action": "get_settings", "kind": "request"}
+            {"module": "wifi", "action": "get_settings", "kind": "request"}
         )
-    #res = infrastructure.process_message(
-            #{"module": "wifi", "action": "get_settings", "kind": "request"}
-            #)
 
     assert "errors" not in res
     devices = res["data"]["devices"]
@@ -1880,3 +1884,61 @@ def test_get_settings_5g_eht_no_higher_bandwidth_htmodes_openwrt(
     assert "EHT320" not in available_htmodes_5g, "EHT320 must not be available for 5 GHz"
     # EHT modes up to EHT160 are still valid for 5 GHz
     assert "EHT160" in available_htmodes_5g
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_slot_bus_openwrt(file_root_init, uci_configs_init, infrastructure):
+    """Test that get_settings populates slot and bus when UCI path matches turrishw slot_path.
+
+    omnia-7.0 turrishw mock provides:
+      wlan0: slot_path='.../0000:00:02.0/0000:02:00.0/net/wlan0', slot='2', bus='pci'
+      wlan1: slot_path='.../0000:00:01.0/0000:01:00.0/net/wlan1', slot='1', bus='pci'
+
+    The default UCI config has radio0 path matching wlan0 already.
+    radio1 is overridden here so its path matches wlan1.
+    """
+    prepare_turrishw_root("omnia", "7.0")
+
+    uci = get_uci_module(infrastructure.name)
+    # Default radio1 path (0000:00:03.0) doesn't match any turrishw interface in omnia-7.0;
+    # override it to match wlan1 (slot_path prefix: soc/soc:pcie/pci0000:00/0000:00:01.0/0000:01:00.0)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "radio1", "path", "soc/soc:pcie/pci0000:00/0000:00:01.0/0000:01:00.0")
+
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
+    assert "errors" not in res
+
+    devices = {d["id"]: d for d in res["data"]["devices"]}
+
+    # radio0 path matches wlan0
+    assert devices[0].get("slot") == "2"
+    assert devices[0].get("bus") == "pci"
+
+    # radio1 path now matches wlan1
+    assert devices[1].get("slot") == "1"
+    assert devices[1].get("bus") == "pci"
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_get_settings_no_slot_bus_without_match_openwrt(file_root_init, uci_configs_init, infrastructure):
+    """Test that slot and bus are absent when UCI path does not match any turrishw slot_path.
+
+    The default UCI config has radio1 path 'soc/soc:pcie/pci0000:00/0000:00:03.0/0000:03:00.0'
+    which does not appear in the omnia-7.0 turrishw mock (only 0000:00:01.0 and 0000:00:02.0).
+    """
+    prepare_turrishw_root("omnia", "7.0")
+
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
+    assert "errors" not in res
+
+    devices = {d["id"]: d for d in res["data"]["devices"]}
+
+    # radio0 path matches wlan0 — slot and bus must be present
+    assert devices[0].get("slot") == "2"
+    assert devices[0].get("bus") == "pci"
+
+    # radio1 path has no match — slot and bus must be absent
+    assert "slot" not in devices[1]
+    assert "bus" not in devices[1]

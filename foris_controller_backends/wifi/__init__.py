@@ -31,6 +31,7 @@ from foris_controller.exceptions import (
 from foris_controller_backends.cmdline import BaseCmdLine
 from foris_controller_backends.guest import GuestUci
 from foris_controller_backends.maintain import MaintainCommands
+from foris_controller_backends.networks import NetworksUci
 from foris_controller_backends.ubus import UbusBackend
 from foris_controller_backends.uci import (
     UciBackend,
@@ -206,7 +207,7 @@ config wifi-device 'radio0'
 
         return sorted(data.values(), key=lambda e: e.band.value)
 
-    def _prepare_wifi_device(self, device, interface, guest_interface):
+    def _prepare_wifi_device(self, device, interface, guest_interface, turrishw_interfaces_map):
         # read data from uci
         device_name = device["name"]
         device_no = re.search(r"radio(\d+)$", device_name)  # radioX -> X
@@ -290,6 +291,15 @@ config wifi-device 'radio0'
         if res["encryption"] in ("WPA2/3", "WPA3"):  # we don't care about 802.11w outside of WPA3
             res["ieee80211w_disabled"] = ieee80211w_disabled
 
+        # Try to detect slot and bus of wifi device
+        if path := device["data"].get("path"):
+            for hw_path in turrishw_interfaces_map.keys():
+                # 'soc@0/20000000.pci/pci0002:00/0002:00:00.0/0002:01:00.0' in
+                # 'soc@0/20000000.pci/pci0002:00/0002:00:00.0/0002:01:00.0/net/phy01.0-ap0'
+                if path in hw_path:
+                    res["slot"] = turrishw_interfaces_map[hw_path]["slot"]
+                    res["bus"] = turrishw_interfaces_map[hw_path]["bus"]
+
         return res
 
     def _get_device_sections(self, data):
@@ -324,6 +334,13 @@ config wifi-device 'radio0'
         """
         devices = []
         try:
+            turrishw_interfaces_map = {
+                e["slot_path"]: e for e in NetworksUci.detect_interfaces()[1]
+                if e.get("slot_path")
+            }
+        except Exception:
+            turrishw_interfaces_map = {}
+        try:
             with UciBackend() as backend:
                 data = backend.read("wireless")
             device_sections = self._get_device_sections(data)
@@ -331,7 +348,7 @@ config wifi-device 'radio0'
                 interface, guest_interface = self._get_interface_sections_from_device_section(
                     data, device_section
                 )
-                device = self._prepare_wifi_device(device_section, interface, guest_interface)
+                device = self._prepare_wifi_device(device_section, interface, guest_interface, turrishw_interfaces_map)
                 if device:
                     devices.append(device)
 

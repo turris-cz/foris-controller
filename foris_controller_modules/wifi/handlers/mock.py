@@ -33,6 +33,8 @@ DEFAULT_WIFI_ENCRYPTION = "WPA2/3"
 DEFAULT_CONFIG = [
     {
         "id": 0,
+        "slot": "2",
+        "bus": "pci",
         "enabled": False,
         "SSID": "Turris",
         "hidden": False,

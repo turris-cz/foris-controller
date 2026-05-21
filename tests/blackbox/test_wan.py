@@ -1569,7 +1569,7 @@ def _connection_test(infrastructure, test_kind, expected):
                 "data": {"test_id": test_id},
             }
         )
-        status = res["data"]["status"]
+        status = res.get("data", {}).get("status")
 
     assert status == "finished"
     assert test_kind in res["data"]["data"]
