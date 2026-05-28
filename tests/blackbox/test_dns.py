@@ -38,9 +38,9 @@ def check_dns_server_port(name: str, port: int):
 
 
 def list_forwarders(infrastructure) -> typing.List[dict]:
-    return infrastructure.process_message(
-        {"module": "dns", "action": "list_forwarders", "kind": "request"}
-    )["data"]["forwarders"]
+    return infrastructure.process_message({"module": "dns", "action": "list_forwarders", "kind": "request"})["data"][
+        "forwarders"
+    ]
 
 
 def add_forwarder(infrastructure, data: dict, result: bool):
@@ -77,9 +77,7 @@ def set_forwarder(infrastructure, data: dict, result: bool):
 
 def _edit_forwarder_wrapper(action: str):
     def _edit_forwarder_action(infrastructure, data: dict, result: bool):
-        res = infrastructure.process_message(
-            {"module": "dns", "action": action, "kind": "request", "data": data}
-        )
+        res = infrastructure.process_message({"module": "dns", "action": action, "kind": "request", "data": data})
         assert res["data"]["result"] is result
 
     return _edit_forwarder_action
@@ -119,13 +117,11 @@ ipv6="2606:4700:4700::1111"
 pin_sha256="yioEpqeR4WtDwE9YxNVnCEkTxIjx6EEIwFSQW+lJsbc="
 """
 
-    with FileFaker(
-        FILE_ROOT_PATH, "/etc/resolver/dns_servers/99_google.conf", False, res1
-    ) as res1, FileFaker(
-        FILE_ROOT_PATH, "/etc/resolver/dns_servers/99_quad9.conf", False, res2
-    ) as res2, FileFaker(
-        FILE_ROOT_PATH, "/etc/resolver/dns_servers/99_cloudflare.conf", False, res3
-    ) as res3:
+    with (
+        FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/99_google.conf", False, res1) as res1,
+        FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/99_quad9.conf", False, res2) as res2,
+        FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/99_cloudflare.conf", False, res3) as res3,
+    ):
         yield res1, res2, res3
 
 
@@ -153,11 +149,10 @@ ca_file="/etc/ssl/certs/ca-certificates.crt"
 hostname="odvr.nic.cz"
 """
 
-    with FileFaker(
-        FILE_ROOT_PATH, "/etc/resolver/dns_servers/01_odvr-cznic.conf", False, res1
-    ) as res1, FileFaker(
-        FILE_ROOT_PATH, "/etc/resolver/dns_servers/02_odvr-cznic.conf", False, res2
-    ) as res2:
+    with (
+        FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/01_odvr-cznic.conf", False, res1) as res1,
+        FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/02_odvr-cznic.conf", False, res2) as res2,
+    ):
         yield res1, res2
 
 
@@ -172,16 +167,12 @@ port="853"
 ca_file="/etc/ssl/certs/ca-certificates.crt"
 hostname="odvr.nic.cz"
 """
-    with FileFaker(
-        FILE_ROOT_PATH, "/etc/resolver/dns_servers/00_odvr-cznic.conf", False, res
-    ) as res:
+    with FileFaker(FILE_ROOT_PATH, "/etc/resolver/dns_servers/00_odvr-cznic.conf", False, res) as res:
         yield res
 
 
 def test_get_settings(file_root_init, uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "forwarding_enabled" in res["data"].keys()
     assert "available_forwarders" in res["data"].keys()
@@ -192,7 +183,12 @@ def test_get_settings(file_root_init, uci_configs_init, infrastructure):
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    file_root_init, uci_configs_init, infrastructure, device, turris_os_version, init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    init_script_result,
 ):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -260,7 +256,12 @@ def test_update_settings(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_and_get_settings(
-    file_root_init, uci_configs_init, infrastructure, device, turris_os_version, init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    device,
+    turris_os_version,
+    init_script_result,
 ):
     filters = [("dns", "update_settings")]
     notifications = infrastructure.get_notifications(filters=filters)
@@ -293,9 +294,7 @@ def test_update_and_get_settings(
             "dns_from_dhcp_enabled": False,
         },
     }
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "get_settings", "kind": "request"})
     assert res["data"]["forwarding_enabled"] is False
     assert res["data"]["dnssec_enabled"] is False
     assert res["data"]["dns_from_dhcp_enabled"] is False
@@ -332,9 +331,7 @@ def test_update_and_get_settings(
             "dns_from_dhcp_domain": "test",
         },
     }
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "get_settings", "kind": "request"})
     assert res["data"]["forwarding_enabled"] is True
     assert res["data"]["forwarder"] == ""
     assert res["data"]["dnssec_enabled"] is True
@@ -345,7 +342,12 @@ def test_update_and_get_settings(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_service_restart(
-    file_root_init, uci_configs_init, init_script_result, infrastructure, device, turris_os_version,
+    file_root_init,
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+    device,
+    turris_os_version,
 ):
     infrastructure.process_message(
         {
@@ -409,9 +411,7 @@ def test_update_settings_forwarder(
     uci = get_uci_module(infrastructure.name)
 
     # Get forwarder list
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "get_settings", "kind": "request"})
     assert sorted(res["data"]["available_forwarders"], key=lambda x: x["name"]) == sorted(
         [
             {"name": "", "description": "", "editable": False},
@@ -480,9 +480,7 @@ def test_update_settings_forwarder(
 
 
 def test_list_forwarders(file_root_init, custom_forwarders, uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "list_forwarders", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "list_forwarders", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "forwarders" in res["data"].keys()
     assert len(res["data"]["forwarders"]) == 3
@@ -541,7 +539,7 @@ def test_set_forwarder(custom_forwarders, uci_configs_init, infrastructure):
                 "tls_type": "no",
             },
             "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e",
-            "53"
+            "53",
         ),
         (
             {
@@ -551,7 +549,7 @@ def test_set_forwarder(custom_forwarders, uci_configs_init, infrastructure):
                 "tls_pin": "12345566777",
             },
             "myforward_tls_98c297a6ccfae349303c661132a75c9b",
-            "853"
+            "853",
         ),
     ],
 )
@@ -603,9 +601,7 @@ def test_del_forwarder(file_root_init, custom_forwarders, uci_configs_init, infr
         "kind": "notification",
         "data": {"name": "myforward_a2f9b620e7b9a21d0b9f910fe66fc31e"},
     }
-    assert "myforward_6842e9378ffb5c6be0b97309a48f6bc4" not in [
-        e["name"] for e in list_forwarders(infrastructure)
-    ]
+    assert "myforward_6842e9378ffb5c6be0b97309a48f6bc4" not in [e["name"] for e in list_forwarders(infrastructure)]
 
     # non-existing
     res = infrastructure.process_message(
@@ -633,24 +629,20 @@ def test_del_forwarder(file_root_init, custom_forwarders, uci_configs_init, infr
 
 @pytest.mark.only_backends(["openwrt"])
 def test_forwarders_ipv4_or_ipv6_only(custom_forwarders_missing_ips, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "list_forwarders", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "list_forwarders", "kind": "request"})
 
-    forwarders = sorted(res['data']['forwarders'], key=lambda x: x["name"])
+    forwarders = sorted(res["data"]["forwarders"], key=lambda x: x["name"])
 
-    assert len(forwarders[0]['ipaddresses']['ipv4']) == 2
-    assert len(forwarders[0]['ipaddresses']['ipv6']) == 0
+    assert len(forwarders[0]["ipaddresses"]["ipv4"]) == 2
+    assert len(forwarders[0]["ipaddresses"]["ipv6"]) == 0
 
-    assert len(forwarders[1]['ipaddresses']['ipv6']) == 1
-    assert len(forwarders[1]['ipaddresses']['ipv4']) == 0
+    assert len(forwarders[1]["ipaddresses"]["ipv6"]) == 1
+    assert len(forwarders[1]["ipaddresses"]["ipv4"]) == 0
 
 
 @pytest.mark.only_backends(["openwrt"])
 def test_empty_both_ip(custom_forwarders_no_ip, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "list_forwarders", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "list_forwarders", "kind": "request"})
 
-    error = res['errors'][0]['stacktrace']
+    error = res["errors"][0]["stacktrace"]
     assert "jsonschema.exceptions.ValidationError: {'ipv4': [], 'ipv6': []} is not valid" in error

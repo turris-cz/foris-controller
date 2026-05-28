@@ -31,33 +31,25 @@ from foris_controller_testtools.utils import (
 
 from .helpers.common import get_uci_backend_data, query_infrastructure
 
-CONNTEST_MAPPING = {
-    'success' : '{"dns":"OK"}',
-    'failed' : '{"ipv4":"FAILED"}',
-    'unknown' : '{"ipv6":"UNKNOWN"}'
-}
+CONNTEST_MAPPING = {"success": '{"dns":"OK"}', "failed": '{"ipv4":"FAILED"}', "unknown": '{"ipv6":"UNKNOWN"}'}
 
-FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_wan_files')
-TMP_CONN_RESULTS = '/tmp/foris_conn_test'
+FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wan_files")
+TMP_CONN_RESULTS = "/tmp/foris_conn_test"
 
 
 @pytest.fixture(scope="function")
 def check_connection_mock(request):
-    with FileFaker(
-        TMP_CONN_RESULTS, "results.json", True, CONNTEST_MAPPING.get(request.param)
-    ) as check_connection:
+    with FileFaker(TMP_CONN_RESULTS, "results.json", True, CONNTEST_MAPPING.get(request.param)) as check_connection:
         yield check_connection
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0"),("omnia", "6.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0"), ("omnia", "6.0")], indirect=True)
 def test_get_settings(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
 
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
         "wan_settings",
@@ -71,7 +63,7 @@ def test_get_settings(uci_configs_init, infrastructure, fix_mox_wan, device, tur
     assert "mac_address" in res["data"]["mac_settings"].keys()
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_interface_openwrt(uci_configs_init, infrastructure, device, turris_os_version):
     """Test that we can get wan interface settings from just the interface.
@@ -88,13 +80,10 @@ def test_get_settings_interface_openwrt(uci_configs_init, infrastructure, device
 
     assert not uci.section_exists(uci_data, "network", "dev_wan")
 
-    query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    query_infrastructure(infrastructure, {"module": "wan", "action": "get_settings", "kind": "request"})
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_device_openwrt(uci_configs_init, infrastructure, device, turris_os_version):
     """Test that we can get wan interface options from device section.
@@ -120,13 +109,10 @@ def test_get_settings_device_openwrt(uci_configs_init, infrastructure, device, t
         backend.set_option("network", "dev_wan", "name", "eth2")
         backend.set_option("network", "dev_wan", "macaddr", "AA:BB:CC:11:22:33")
 
-    query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    query_infrastructure(infrastructure, {"module": "wan", "action": "get_settings", "kind": "request"})
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_macaddr_from_interface_openwrt(uci_configs_init, infrastructure, device, turris_os_version):
     """Test that we can still get MAC address even from legacy config.
@@ -144,15 +130,12 @@ def test_get_macaddr_from_interface_openwrt(uci_configs_init, infrastructure, de
     uci_data = get_uci_backend_data(uci)
     assert not uci.section_exists(uci_data, "network", "dev_wan")
 
-    res = query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = query_infrastructure(infrastructure, {"module": "wan", "action": "get_settings", "kind": "request"})
 
     assert res["data"]["mac_settings"]["custom_mac"] == "AA:BB:CC:11:22:33"
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_macaddr_from_device_openwrt(uci_configs_init, infrastructure, device, turris_os_version):
     """Test that we will get MAC address from device instead of interface.
@@ -175,15 +158,12 @@ def test_get_macaddr_from_device_openwrt(uci_configs_init, infrastructure, devic
         backend.add_section("network", "device", "dev_wan")
         backend.set_option("network", "dev_wan", "macaddr", "11:22:33:44:55:66")
 
-    res = query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = query_infrastructure(infrastructure, {"module": "wan", "action": "get_settings", "kind": "request"})
 
-    assert res["data"]["mac_settings"]["custom_mac"] == '11:22:33:44:55:66'
+    assert res["data"]["mac_settings"]["custom_mac"] == "11:22:33:44:55:66"
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia","6.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_wan_settings_pppoe_credentials_missing_openwrt(
     uci_configs_init, infrastructure, device, turris_os_version
@@ -202,11 +182,9 @@ def test_get_wan_settings_pppoe_credentials_missing_openwrt(
 
     wan_pppoe: {username: "myuser", password: ""}
     """
+
     def check_get(expected_username: str, expected_password: str):
-        res = query_infrastructure(
-            infrastructure,
-            {"module": "wan", "action": "get_settings", "kind": "request"}
-        )
+        res = query_infrastructure(infrastructure, {"module": "wan", "action": "get_settings", "kind": "request"})
 
         assert res["data"]["wan_settings"]["wan_type"] == "pppoe"
         assert res["data"]["wan_settings"]["wan_pppoe"]["username"] == expected_username
@@ -283,8 +261,7 @@ def test_set_custom_macaddr_openwrt(
     }
 
     query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "update_settings", "kind": "request", "data": msg_data}
+        infrastructure, {"module": "wan", "action": "update_settings", "kind": "request", "data": msg_data}
     )
 
     uci_data = get_uci_backend_data(uci)
@@ -346,8 +323,7 @@ def test_update_settings_delete_l2_options_openwrt(
         "mac_settings": {"custom_mac_enabled": False},
     }
     query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "update_settings", "kind": "request", "data": msg_data}
+        infrastructure, {"module": "wan", "action": "update_settings", "kind": "request", "data": msg_data}
     )
 
     uci_data = get_uci_backend_data(uci)
@@ -357,16 +333,13 @@ def test_update_settings_delete_l2_options_openwrt(
     # check that setting doesn't by any chance moved to wan `interface`
     assert uci.get_option_named(uci_data, "network", "wan", "macaddr", "") == ""
 
-    query_infrastructure(
-        infrastructure,
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    query_infrastructure(infrastructure, {"module": "wan", "action": "get_settings", "kind": "request"})
 
 
-@pytest.mark.parametrize("device,turris_os_version", [("omnia","4.0"),("mox", "4.0")], indirect=True)
+@pytest.mark.parametrize("device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_ipv6prefix_as_an_option(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
-    """ Fallback test since ipv6prefix option is newly set as list, but uci still may contain plain option. """
+    """Fallback test since ipv6prefix option is newly set as list, but uci still may contain plain option."""
 
     prepare_turrishw_root(device, turris_os_version)
 
@@ -383,26 +356,20 @@ def test_get_ipv6prefix_as_an_option(uci_configs_init, infrastructure, fix_mox_w
         },
         "mac_settings": {"custom_mac_enabled": False},
     }
-    infrastructure.process_message(
-        {"module": "wan", "action": "update_settings", "kind": "request", "data": data}
-    )
+    infrastructure.process_message({"module": "wan", "action": "update_settings", "kind": "request", "data": data})
     uci = get_uci_module(infrastructure.name)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_option("network", "wan6", "ip6prefix", fail_on_error=False)
         # save as an option
         backend.set_option("network", "wan6", "ip6prefix", "2001:470:6e:39::/64")
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_wan_status(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_wan_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_wan_status", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "up" in res["data"].keys()
     assert "last_seen_duid" in res["data"].keys()
@@ -411,7 +378,11 @@ def test_get_wan_status(uci_configs_init, infrastructure):
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings(
-    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version,
+    infrastructure,
+    network_restart_command,
+    device,
+    fix_mox_wan,
+    turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -435,9 +406,7 @@ def test_update_settings(
         assert notifications[-1]["kind"] == "notification"
         assert notification_data == notifications[-1]["data"]
 
-        res = infrastructure.process_message(
-            {"module": "wan", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
         assert res["module"] == "wan"
         assert res["action"] == "get_settings"
         assert res["kind"] == "reply"
@@ -458,9 +427,7 @@ def test_update_settings(
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
         },
-        {
-            "wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": False
-        },
+        {"wan_type": "dhcp", "wan6_type": "none", "custom_mac_enabled": False},
     )
     # WAN
     update(
@@ -574,7 +541,7 @@ def test_update_settings(
                 "wan6_type": "dhcpv6",
                 "wan6_dhcpv6": {"duid": "00030001d858d7004555"},
             },
-            "mac_settings": {"custom_mac_enabled": False, "mac_address": 'de:ad:be:ef:99:99'},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
         },
         {"wan_type": "dhcp", "wan6_type": "dhcpv6", "custom_mac_enabled": False},
     )
@@ -601,7 +568,7 @@ def test_update_settings(
                     "gateway": "2001:1488:fffe:6::1",
                 },
             },
-            "mac_settings": {"custom_mac_enabled": False, "mac_address": 'de:ad:be:ef:99:99'},
+            "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
         },
         {"wan_type": "dhcp", "wan6_type": "static", "custom_mac_enabled": False},
     )
@@ -634,9 +601,7 @@ def test_update_settings(
             },
             "mac_settings": {"custom_mac_enabled": False, "mac_address": "de:ad:be:ef:99:99"},
         },
-        {
-            "wan_type": "dhcp", "wan6_type": "static", "custom_mac_enabled": False
-        },
+        {"wan_type": "dhcp", "wan6_type": "static", "custom_mac_enabled": False},
     )
     update(
         {
@@ -743,10 +708,14 @@ def test_update_settings(
     )
 
 
-@pytest.mark.only_backends(['mock'])
+@pytest.mark.only_backends(["mock"])
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_update_settings_change_mac(
-    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version,
+    infrastructure,
+    network_restart_command,
+    device,
+    fix_mox_wan,
+    turris_os_version,
 ):
     filters = [("wan", "update_settings")]
 
@@ -767,9 +736,7 @@ def test_update_settings_change_mac(
         assert notifications[-1]["kind"] == "notification"
         assert notification_data == notifications[-1]["data"]
 
-        res = infrastructure.process_message(
-            {"module": "wan", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
         assert res["module"] == "wan"
         assert res["action"] == "get_settings"
         assert res["kind"] == "reply"
@@ -778,6 +745,7 @@ def test_update_settings_change_mac(
         assert "mac_address" in mac_settings.keys()
         if mac_settings["custom_mac_enabled"]:
             assert "custom_mac" in mac_settings.keys()
+
     update(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
@@ -865,7 +833,11 @@ def test_update_settings_change_mac(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_wan_openwrt_backend(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
 
     uci = get_uci_module(infrastructure.name)
@@ -1046,10 +1018,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "static"
-    assert (
-        uci.get_option_named(data, "network", "wan6", "ip6addr")
-        == "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
-    )
+    assert uci.get_option_named(data, "network", "wan6", "ip6addr") == "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
     assert _filter_possible_list(data, "network", "wan6", "ip6prefix") == "2001:1488:fffe:6::/60"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw") == "2001:1488:fffe:6::1"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
@@ -1076,10 +1045,7 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "proto") == "dhcp"
     assert uci.get_option_named(data, "network", "wan", "hostname", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "proto") == "static"
-    assert (
-        uci.get_option_named(data, "network", "wan6", "ip6addr")
-        == "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
-    )
+    assert uci.get_option_named(data, "network", "wan6", "ip6addr") == "2001:1488:fffe:6:da9e:f3ff:fe73:59c/64"
     assert _filter_possible_list(data, "network", "wan6", "ip6prefix") == "2001:1488:fffe:6::/60"
     assert uci.get_option_named(data, "network", "wan6", "ip6gw") == "2001:1488:fffe:6::1"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
@@ -1130,18 +1096,10 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
     assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "0")) is True
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")
-        )
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")) is True
     assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "proto", "") == "ipv6"
     assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src", "") == "wan"
-    assert (
-        uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src_ip", "")
-        == "192.88.99.1"
-    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src_ip", "") == "192.88.99.1"
     assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "target", "") == "ACCEPT"
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1164,18 +1122,10 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
     assert uci.get_option_named(data, "network", "lan", "ip6assign", "") == "60"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")
-        )
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")) is True
     assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "proto", "") == "ipv6"
     assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src", "") == "wan"
-    assert (
-        uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src_ip", "")
-        == "192.88.99.1"
-    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "src_ip", "") == "192.88.99.1"
     assert uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "target", "") == "ACCEPT"
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1208,17 +1158,10 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "username", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "password", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "enabled", "0")
-        )
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "enabled", "0")) is True
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "family", "") == "ipv4"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src", "") == "wan"
-    assert (
-        uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src_ip", "") == "1.22.33.44"
-    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src_ip", "") == "1.22.33.44"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "proto", "") == "41"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "target", "") == "ACCEPT"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
@@ -1258,18 +1201,10 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "username", "") == "user11"
     assert uci.get_option_named(data, "network", "wan6", "password", "") == "passphrase11"
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "enabled", "")
-        )
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "enabled", "")) is True
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "family", "") == "ipv4"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src", "") == "wan"
-    assert (
-        uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src_ip", "")
-        == "1.222.33.44"
-    )
+    assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "src_ip", "") == "1.222.33.44"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "proto", "") == "41"
     assert uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "target", "") == "ACCEPT"
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is True
@@ -1294,25 +1229,19 @@ def test_wan_openwrt_backend(
     assert uci.get_option_named(data, "network", "wan6", "username", "") == ""
     assert uci.get_option_named(data, "network", "wan6", "password", "") == ""
     assert uci.get_option_named(data, "network", "wan", "macaddr", "") == ""
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "enabled", "0")
-        )
-        is False
-    )
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")
-        )
-        is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "turris_wan_6in4_rule", "enabled", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "turris_wan_6to4_rule", "enabled", "0")) is False
     assert uci.parse_bool(uci.get_option_named(data, "network", "wan", "ipv6", "0")) is False
     assert uci.parse_bool(uci.get_option_named(data, "resolver", "common", "net_ipv6", "1")) is False
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_wrong_update(
-    uci_configs_init, infrastructure, network_restart_command, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    device,
+    turris_os_version,
 ):
     def update(data):
         res = infrastructure.process_message(
@@ -1505,7 +1434,7 @@ def test_wrong_update(
     )
 
 
-@pytest.mark.parametrize('check_connection_mock', ["success"], indirect=True)
+@pytest.mark.parametrize("check_connection_mock", ["success"], indirect=True)
 def test_connection_test(check_connection_mock, uci_configs_init, infrastructure):
     """When triggering test on openwrt backend, `connection_test_status`
     is unfinished while the test is running."""
@@ -1548,12 +1477,7 @@ def test_connection_test(check_connection_mock, uci_configs_init, infrastructure
 def _connection_test(infrastructure, test_kind, expected):
     """Helper function to test mocked output using openwrt backend only."""
     res = infrastructure.process_message(
-        {
-            "module": "wan",
-            "action": "connection_test_trigger",
-            "kind": "request",
-            "data": {"test_kinds": [test_kind]}
-        }
+        {"module": "wan", "action": "connection_test_trigger", "kind": "request", "data": {"test_kinds": [test_kind]}}
     )
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "test_id" in res["data"].keys()
@@ -1599,15 +1523,18 @@ def test_connection_test_openwrt_unknown(check_connection_mock, uci_configs_init
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_missing_wan6_openwrt(
-    uci_configs_init, infrastructure, network_restart_command, fix_mox_wan, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    fix_mox_wan,
+    device,
+    turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         backend.del_section("network", "wan6")
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     assert "wan6_settings" in res["data"].keys()
     assert res["data"]["wan6_settings"]["wan6_type"] == "dhcpv6"
 
@@ -1626,9 +1553,7 @@ def test_missing_wan6_openwrt(
     assert "result" in res["data"]
     assert res["data"]["result"]
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     assert "wan6_settings" in res["data"].keys()
     assert res["data"]["wan6_settings"]["wan6_type"] == "dhcpv6"
 
@@ -1642,7 +1567,12 @@ def test_missing_wan6_openwrt(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_dns_option(
-    uci_configs_init, infrastructure, network_restart_command, fix_mox_wan, device, turris_os_version,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+    fix_mox_wan,
+    device,
+    turris_os_version,
 ):
     uci = get_uci_module(infrastructure.name)
 
@@ -1684,9 +1614,7 @@ def test_get_settings_dns_option(
         backend.del_option("network", "wan6", "dns")
         backend.set_option("network", "wan6", "dns", "2001:4860:4860::8888 2001:4860:4860::9999")
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
 
     assert res["data"]["wan_settings"]["wan_static"]["dns1"] == "8.8.8.8"
     assert res["data"]["wan_settings"]["wan_static"]["dns2"] == "1.1.1.1"
@@ -1697,15 +1625,13 @@ def test_get_settings_dns_option(
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_missing_wireless(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
-    prepare_turrishw_root(device,turris_os_version)
+    prepare_turrishw_root(device, turris_os_version)
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
 
 
-@pytest.mark.parametrize("device, turris_os_version",[("mox", "4.0"),("omnia","4.0")], indirect=True)
+@pytest.mark.parametrize("device, turris_os_version", [("mox", "4.0"), ("omnia", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_wan6_options_can_be_empty(uci_configs_init, infrastructure, device, turris_os_version):
 
@@ -1717,14 +1643,12 @@ def test_wan6_options_can_be_empty(uci_configs_init, infrastructure, device, tur
         backend.add_section("network", "interface", "wan6")
         backend.set_option("network", "wan6", "proto", "static")
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res.keys()
 
 
-@pytest.mark.parametrize("device, turris_os_version",[("mox", "4.0"),("omnia","4.0")], indirect=True)
+@pytest.mark.parametrize("device, turris_os_version", [("mox", "4.0"), ("omnia", "4.0")], indirect=True)
 def test_update_mac_address_and_disable(
     uci_configs_init,
     network_restart_command,
@@ -1751,7 +1675,7 @@ def test_update_mac_address_and_disable(
     )
 
     assert "errors" not in res.keys()
-    assert res['data']['result']
+    assert res["data"]["result"]
 
     res = infrastructure.process_message(
         {"module": "wan", "action": "update_settings", "kind": "request", "data": data_2}
@@ -1759,9 +1683,7 @@ def test_update_mac_address_and_disable(
 
     assert "errors" not in res.keys()
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
 
     assert "custom_mac" not in res.keys()
 
@@ -1773,16 +1695,14 @@ def test_update_mac_address_and_disable(
         ("omnia", "4.0", "d8:58:d7:00:92:9e"),
         # TODO: ("turris", "4.0", "00:00:00:00:00:00") mising data in /sys/class of mock file
     ],
-    indirect=["device", "turris_os_version"]
+    indirect=["device", "turris_os_version"],
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_different_devices(uci_configs_init, infrastructure, device, fix_mox_wan, turris_os_version, wan_mac):
 
     prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res.keys()
     assert res["data"]["mac_settings"]["mac_address"] == wan_mac
@@ -1790,21 +1710,21 @@ def test_different_devices(uci_configs_init, infrastructure, device, fix_mox_wan
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_qos_openwrt(
-    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version
-):
+def test_qos_openwrt(infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version):
     prepare_turrishw_root(device, turris_os_version)
     uci = get_uci_module(infrastructure.name)
 
     res = infrastructure.process_message(
         {
-            "module": "wan", "action": "update_settings", "kind": "request",
+            "module": "wan",
+            "action": "update_settings",
+            "kind": "request",
             "data": {
                 "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
                 "wan6_settings": {"wan6_type": "none"},
                 "mac_settings": {"custom_mac_enabled": False},
-                "qos": {"enabled": True, "upload": 2048, "download": 512}
-            }
+                "qos": {"enabled": True, "upload": 2048, "download": 512},
+            },
         }
     )
     assert "errors" not in res.keys()
@@ -1820,7 +1740,11 @@ def test_qos_openwrt(
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 def test_qos_settings_persistent(
-    infrastructure, network_restart_command, device, fix_mox_wan, turris_os_version,
+    infrastructure,
+    network_restart_command,
+    device,
+    fix_mox_wan,
+    turris_os_version,
 ):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
@@ -1835,12 +1759,13 @@ def test_qos_settings_persistent(
             "kind": "reply",
             "module": "wan",
         }
+
     update(
         {
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "qos": {"enabled": True, "upload": 2048, "download": 512}
+            "qos": {"enabled": True, "upload": 2048, "download": 512},
         },
     )
     update(
@@ -1848,12 +1773,10 @@ def test_qos_settings_persistent(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "qos": {"enabled": False}
+            "qos": {"enabled": False},
         }
     )
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
     assert res["data"]["qos"] == {"enabled": False, "upload": 2048, "download": 512}
 
@@ -1890,9 +1813,7 @@ def test_get_settings_vlan_openwrt(infrastructure, network_restart_command, devi
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
-def test_update_settings_vlan(
-    infrastructure, network_restart_command, device, turris_os_version
-):
+def test_update_settings_vlan(infrastructure, network_restart_command, device, turris_os_version):
     """Test update of VLAN ID for WAN interface.
 
     Test following scenarios:
@@ -1900,11 +1821,12 @@ def test_update_settings_vlan(
     * (2) Unset/reset VLAN ID
     * (3) Setting VLAN ID outside of the defined range (1<, >4094) should fail
     """
+
     def update(data, expect_success=True):
         query_infrastructure(
             infrastructure,
             {"module": "wan", "action": "update_settings", "kind": "request", "data": data},
-            expect_success
+            expect_success,
         )
 
         # `get_settings` should always succeed
@@ -1921,7 +1843,7 @@ def test_update_settings_vlan(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": True, "vlan_id": 100}
+            "vlan_settings": {"enabled": True, "vlan_id": 100},
         }
     )
     assert res["data"]["vlan_settings"]["enabled"] is True
@@ -1933,7 +1855,7 @@ def test_update_settings_vlan(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": False}
+            "vlan_settings": {"enabled": False},
         }
     )
     assert res["data"]["vlan_settings"]["enabled"] is False
@@ -1945,9 +1867,9 @@ def test_update_settings_vlan(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": True, "vlan_id": 4095}
+            "vlan_settings": {"enabled": True, "vlan_id": 4095},
         },
-        expect_success=False
+        expect_success=False,
     )
     assert res["data"]["vlan_settings"]["enabled"] is False
     assert "vlan_id" not in res["data"]["vlan_settings"]
@@ -1957,9 +1879,9 @@ def test_update_settings_vlan(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": True, "vlan_id": 0}
+            "vlan_settings": {"enabled": True, "vlan_id": 0},
         },
-        expect_success=False
+        expect_success=False,
     )
     assert res["data"]["vlan_settings"]["enabled"] is False
     assert "vlan_id" not in res["data"]["vlan_settings"]
@@ -1967,9 +1889,7 @@ def test_update_settings_vlan(
 
 @pytest.mark.parametrize("device,turris_os_version", [("omnia", "6.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_update_settings_vlan_openwrt(
-    infrastructure, network_restart_command, device, turris_os_version
-):
+def test_update_settings_vlan_openwrt(infrastructure, network_restart_command, device, turris_os_version):
     """Test update of VLAN ID for WAN interface.
 
     Test following scenarios:
@@ -1983,7 +1903,7 @@ def test_update_settings_vlan_openwrt(
         query_infrastructure(
             infrastructure,
             {"module": "wan", "action": "update_settings", "kind": "request", "data": data},
-            expect_success
+            expect_success,
         )
 
         if expect_success:
@@ -1997,7 +1917,7 @@ def test_update_settings_vlan_openwrt(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": True, "vlan_id": 100}
+            "vlan_settings": {"enabled": True, "vlan_id": 100},
         }
     )
     assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2.100"
@@ -2009,7 +1929,7 @@ def test_update_settings_vlan_openwrt(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": False}
+            "vlan_settings": {"enabled": False},
         }
     )
     assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2"
@@ -2021,9 +1941,9 @@ def test_update_settings_vlan_openwrt(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": True, "vlan_id": 4095}
+            "vlan_settings": {"enabled": True, "vlan_id": 4095},
         },
-        expect_success=False
+        expect_success=False,
     )
     assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2"
     assert uci.get_option_named(data, "network", "dev_wan", "name", "") == "eth2"
@@ -2033,9 +1953,9 @@ def test_update_settings_vlan_openwrt(
             "wan_settings": {"wan_type": "dhcp", "wan_dhcp": {}},
             "wan6_settings": {"wan6_type": "none"},
             "mac_settings": {"custom_mac_enabled": False},
-            "vlan_settings": {"enabled": True, "vlan_id": 0}
+            "vlan_settings": {"enabled": True, "vlan_id": 0},
         },
-        expect_success=False
+        expect_success=False,
     )
     assert uci.get_option_named(data, "network", "wan", "device", "") == "eth2"
     assert uci.get_option_named(data, "network", "dev_wan", "name", "") == "eth2"

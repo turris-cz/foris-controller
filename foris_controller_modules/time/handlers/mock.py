@@ -57,7 +57,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get time settings
+        """Mocks get time settings
 
         :returns: current time settiongs
         :rtype: str
@@ -69,7 +69,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
             "time_settings": {
                 "how_to_set_time": self.how_to_set_time,
                 "ntp_servers": self.ntp_servers,
-                "ntp_extras": self.ntp_extras
+                "ntp_extras": self.ntp_extras,
             },
             "timezone": self.timezone,
         }
@@ -85,7 +85,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
         ntp_extras: typing.Optional[typing.List[str]],
         time: typing.Optional[datetime] = None,
     ) -> bool:
-        """ Mocks updates current time settings
+        """Mocks updates current time settings
 
         :param region: set the region (Europe, America, Asia, ...)
         :param country: ISO/IEC 3166 alpha2 country code (US, CZ, DE, ...)
@@ -107,7 +107,7 @@ class MockTimeHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def ntpdate_trigger(self, exit_notify_function, reset_notify_function):
-        """ Mocks triggering of the ntpdate command
+        """Mocks triggering of the ntpdate command
         :param exit_notify_function: function for sending notification when the cmds finishes
         :type exit_notify_function: callable
         :param reset_notify_function: function to reconnect to the notification bus
@@ -115,6 +115,6 @@ class MockTimeHandler(Handler, BaseMockHandler):
         :returns: generated_ntpdate_id
         :rtype: str
         """
-        new_ntpdate_id = "%032X" % random.randrange(2 ** 32)
+        new_ntpdate_id = "%032X" % random.randrange(2**32)
         self.ntpdate_id_set.add(new_ntpdate_id)
         return new_ntpdate_id

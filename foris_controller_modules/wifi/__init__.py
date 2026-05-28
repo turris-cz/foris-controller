@@ -27,7 +27,7 @@ class WifiModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data):
-        """ Get current wifi settings
+        """Get current wifi settings
         :param data: supposed to be {}
         :type data: dict
         :returns: current wifi settings
@@ -36,7 +36,7 @@ class WifiModule(BaseModule):
         return self.handler.get_settings()
 
     def action_update_settings(self, data):
-        """ Updates wifi settings
+        """Updates wifi settings
         :param data: new wifi settings {"devices": [{...}, ...]}
         :type data: dict
         :returns: result of the update {'result': True/False}
@@ -48,7 +48,7 @@ class WifiModule(BaseModule):
         return {"result": res}
 
     def action_reset(self, data):
-        """ Reset wifi cards
+        """Reset wifi cards
         :param data: supposed to be {}
         :type data: dict
         :returns: result of the reset {'result': True/False}

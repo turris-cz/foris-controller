@@ -108,9 +108,7 @@ class RemoteAsync(AsyncCommand):
 
 class RemoteCmds(BaseCmdLine):
     def get_status(self):
-        output, _ = self._run_command_and_check_retval(
-            ["/usr/bin/turris-cagen-status", "remote"], 0
-        )
+        output, _ = self._run_command_and_check_retval(["/usr/bin/turris-cagen-status", "remote"], 0)
         output = output.decode("utf-8")
         ca_status = re.search(r"^status: (\w+)$", output, re.MULTILINE).group(1)
         clients = []
@@ -135,9 +133,7 @@ class RemoteCmds(BaseCmdLine):
         return {"status": ca_status, "tokens": clients}
 
     def revoke(self, cert_id):
-        retval, _, _ = self._run_command(
-            "/usr/bin/turris-cagen", "switch", "remote", "revoke", cert_id
-        )
+        retval, _, _ = self._run_command("/usr/bin/turris-cagen", "switch", "remote", "revoke", cert_id)
         return retval == 0
 
     def delete_ca(self):
@@ -168,15 +164,11 @@ class RemoteUci(object):
             firewall_data = backend.read("firewall")
 
         try:
-            enabled = parse_bool(
-                get_option_named(fosquitto_data, "fosquitto", "remote", "enabled", "0")
-            )
+            enabled = parse_bool(get_option_named(fosquitto_data, "fosquitto", "remote", "enabled", "0"))
             enabled = enabled and app_info["bus"] == "mqtt"
             port = int(get_option_named(fosquitto_data, "fosquitto", "remote", "port", "11884"))
             wan_access = parse_bool(
-                get_option_named(
-                    firewall_data, "firewall", "wan_fosquitto_turris_rule", "enabled", "0"
-                )
+                get_option_named(firewall_data, "firewall", "wan_fosquitto_turris_rule", "enabled", "0")
             )
 
         except UciException:
@@ -199,12 +191,9 @@ class RemoteUci(object):
 
         with UciBackend() as backend:
             if enabled:
-
                 backend.add_section("firewall", "rule", "wan_fosquitto_turris_rule")
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "name", "fosquitto_wan")
-                backend.set_option(
-                    "firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(wan_access)
-                )
+                backend.set_option("firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(wan_access))
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "target", "ACCEPT")
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "dest_port", port)
                 backend.set_option("firewall", "wan_fosquitto_turris_rule", "proto", "tcp")
@@ -216,9 +205,7 @@ class RemoteUci(object):
 
             else:
                 backend.add_section("firewall", "rule", "wan_fosquitto_turris_rule")
-                backend.set_option(
-                    "firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(False)
-                )
+                backend.set_option("firewall", "wan_fosquitto_turris_rule", "enabled", store_bool(False))
 
                 backend.add_section("fosquitto", "remote", "remote")
                 backend.set_option("fosquitto", "remote", "enabled", store_bool(False))

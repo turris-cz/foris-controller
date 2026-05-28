@@ -113,9 +113,7 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
                 "id": notification["id"],
                 "displayed": notification["displayed"],
                 "severity": notification["severity"],
-                "created_at": datetime.fromtimestamp(
-                    int(notification["id"].split("-")[0])
-                ).isoformat(),
+                "created_at": datetime.fromtimestamp(int(notification["id"].split("-")[0])).isoformat(),
             }
             msg = notification["messages"].get(lang, None)
             if msg:
@@ -173,8 +171,7 @@ class MockRouterNotificationsHandler(Handler, BaseMockHandler):
         MockRouterNotificationsHandler.notifications.append(
             {
                 "displayed": False,
-                "id": "%d-%d"
-                % (time.mktime(datetime.utcnow().timetuple()), self.notification_counter),
+                "id": "%d-%d" % (time.mktime(datetime.utcnow().timetuple()), self.notification_counter),
                 "severity": severity,
                 "messages": {"en": msg, "cs": msg},
             }

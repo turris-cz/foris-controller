@@ -87,7 +87,7 @@ class AdvertizementBase:
         self.get_netboot()
 
     def get_netboot(self):
-        """ Try to update obtain netboot status """
+        """Try to update obtain netboot status"""
         if self.netboot in self.NETBOOT_FINAL:
             # netboot state will not change
             return
@@ -111,8 +111,7 @@ class AdvertizementBase:
 
 def _publish(client: mqtt.Client, msg: dict):
     ANNOUNCER_TOPIC = (
-        f"foris-controller/{app_info['controller_id']}/notification/"
-        f"{msg['module']}/action/{msg['action']}"
+        f"foris-controller/{app_info['controller_id']}/notification/{msg['module']}/action/{msg['action']}"
     )
     try:
         logger.debug("Starting to validate announcement notification.")
@@ -146,9 +145,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
         logger.debug("Announcer handles connect.")
         if rc == 0:
             logger.debug("Announcer thread connected.")
-            _publish_advertize(
-                client, AdvertizementBase("started"), working_replies, working_replies_lock
-            )
+            _publish_advertize(client, AdvertizementBase("started"), working_replies, working_replies_lock)
         else:
             logger.error("Failed to connect announcer thread!")
 
@@ -182,9 +179,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
     while bus_info["bus_thread"].is_alive():
         time.sleep(app_info["mqtt_announcer_period"] or ANNOUNCER_PERIOD_DEFAULT)
         if app_info["mqtt_announcer_period"]:
-            _publish_advertize(
-                client, running_adv, working_replies, working_replies_lock
-            )
+            _publish_advertize(client, running_adv, working_replies, working_replies_lock)
             for announcer in announcers:
                 res = announcer.get_data(counter)
                 if res:
@@ -192,9 +187,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
 
         counter += app_info["mqtt_announcer_period"]
 
-    _publish_advertize(
-        client, AdvertizementBase("exited"), working_replies, working_replies_lock
-    )
+    _publish_advertize(client, AdvertizementBase("exited"), working_replies, working_replies_lock)
     client.loop_stop()
 
 
@@ -245,9 +238,7 @@ class MqttListener(BaseSocketListener):
     @staticmethod
     def list_modules():
         res = []
-        for module_name, module in get_modules(
-            app_info["filter_modules"], app_info["extra_module_paths"]
-        ):
+        for module_name, module in get_modules(app_info["filter_modules"], app_info["extra_module_paths"]):
             res.append({"name": module_name, "actions": get_method_names_from_module(module) or []})
         return res
 
@@ -267,7 +258,7 @@ class MqttListener(BaseSocketListener):
             return [e for e in self.working_replies.keys()]
 
     def start_message_worker(self, reply_topic: str, reply_id: str, msg: dict):
-        """ Performs the work and sends the reply
+        """Performs the work and sends the reply
         :param reply_topic: where the reply is supposed to be send
         :param reply_id: id of reply
         :param msg: message to be processed
@@ -395,9 +386,7 @@ class MqttListener(BaseSocketListener):
             if "reply_msg_id" not in parsed:
                 logger.warning("Missing mandatory reply_msg_id (data='%s')", parsed)
                 return  # missing reply msg_id
-            reply_topic = (
-                f"foris-controller/{app_info['controller_id']}/reply/{parsed['reply_msg_id']}"
-            )
+            reply_topic = f"foris-controller/{app_info['controller_id']}/reply/{parsed['reply_msg_id']}"
 
             response = None
 
@@ -470,8 +459,7 @@ class MqttNotificationSender(BaseNotificationSender):
                 sys.exit(1)  # can't connect to bus -> exitting
 
             logger.debug(
-                "Notification sender connected to mqtt server. "
-                "(client='%s', userdata='%s', flags='%s', rc='%s')",
+                "Notification sender connected to mqtt server. (client='%s', userdata='%s', flags='%s', rc='%s')",
                 client,
                 userdata,
                 flags,
@@ -530,9 +518,7 @@ class MqttNotificationSender(BaseNotificationSender):
                 break
             res = self.client.publish(publish_topic, json.dumps(msg), qos=0)
 
-        logger.debug(
-            "Notification published. (topic=%s, mid=%d, msg=%s)", publish_topic, res.mid, msg
-        )
+        logger.debug("Notification published. (topic=%s, mid=%d, msg=%s)", publish_topic, res.mid, msg)
 
     def disconnect(self):
         if self._connected:

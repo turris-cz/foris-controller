@@ -83,10 +83,8 @@ class AlreadyUsedException(ForwardingException):
 
 
 def _get_interface(ip: str, netmask: str) -> str:
-    ''' Get CIDR ipv4 address notation. '''
-    interface = ipaddress.ip_interface(
-        f"{ip}/{netmask}"
-    )
+    """Get CIDR ipv4 address notation."""
+    interface = ipaddress.ip_interface(f"{ip}/{netmask}")
     return str(interface)
 
 
@@ -113,9 +111,7 @@ class LanFiles(BaseFile):
             address = ipaddress.ip_address(ip)
 
             # filter by network and netmask
-            if address in ipaddress.ip_network(
-                f"{network_ip}/{netmask}", strict=False
-            ):
+            if address in ipaddress.ip_network(f"{network_ip}/{netmask}", strict=False):
                 res.append(
                     {
                         "expires": timestamp,
@@ -140,19 +136,15 @@ class LanUci:
 
     @staticmethod
     def get_network_combo(network_data) -> typing.Tuple[str, str, str]:
-        ''' In case CIDR ipv4 address notation is used in Uci
+        """In case CIDR ipv4 address notation is used in Uci
         convert lan address.
 
         return router_ip, netmask, gateway
-        '''
+        """
         ipaddr_option = unwrap_list(
-            get_option_named(
-                network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP
-            )
+            get_option_named(network_data, "network", "lan", "ipaddr", LanUci.DEFAULT_ROUTER_IP)
         )
-        gateway = get_option_named(
-            network_data, "network", "lan", "gateway", LanUci.DEFAULT_ROUTER_IP
-        )
+        gateway = get_option_named(network_data, "network", "lan", "gateway", LanUci.DEFAULT_ROUTER_IP)
         if ipaddr_option.count("/") == 1:
             ip_iface = ipaddress.ip_interface(ipaddr_option)
             return (str(ip_iface.ip), str(ip_iface.netmask), gateway)
@@ -166,21 +158,16 @@ class LanUci:
                     "netmask",
                     LanUci.DEFAULT_NETMASK,
                 ),
-                gateway
+                gateway,
             )
 
     @staticmethod
     def _set_lan(backend, router_ip, netmask):
-        ''' Helper function to save ipv4 address to uci in CIDR format. '''
+        """Helper function to save ipv4 address to uci in CIDR format."""
         backend.del_option("network", "lan", "ipaddr", fail_on_error=False)
         backend.del_option("network", "lan", "netmask", fail_on_error=False)
 
-        backend.add_to_list(
-            "network", "lan", "ipaddr",
-            parse_to_list(
-                _get_interface(router_ip, netmask)
-            )
-        )
+        backend.add_to_list("network", "lan", "ipaddr", parse_to_list(_get_interface(router_ip, netmask)))
 
     def get_client_list(self, uci_data: dict, router_ip: str, netmask: str) -> typing.List[dict]:
         file_records = LanFiles().get_dhcp_clients(router_ip, netmask)
@@ -198,8 +185,7 @@ class LanUci:
             if "mac" in e["data"]
             and "ip" in e["data"]  # `mac` and `ip` are mandatory for dhcp host, so ignore incomplete hosts
             and (
-                e["data"]["ip"] == "ignore"
-                or self.in_network(e["data"]["ip"], router_ip, netmask)  # has to be in lan
+                e["data"]["ip"] == "ignore" or self.in_network(e["data"]["ip"], router_ip, netmask)  # has to be in lan
             )
         }
         for record in file_records:
@@ -340,9 +326,7 @@ class LanUci:
         mode_managed = {"dhcp": {}}
         router_ip, netmask, gateway = LanUci.get_network_combo(network_data)
         mode_managed["router_ip"], mode_managed["netmask"] = router_ip, netmask
-        mode_managed["dhcp"]["enabled"] = not parse_bool(
-            get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0")
-        )
+        mode_managed["dhcp"]["enabled"] = not parse_bool(get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0"))
         mode_managed["dhcp"]["start"] = int(
             get_option_named(dhcp_data, "dhcp", "lan", "start", self.DEFAULT_DHCP_START)
         )
@@ -365,11 +349,7 @@ class LanUci:
         hostname = get_option_named(network_data, "network", "lan", "hostname", "")
 
         mode_unmanaged["lan_dhcp"] = {"hostname": hostname} if hostname else {}
-        mode_unmanaged["lan_static"] = {
-            "ip": router_ip,
-            "netmask": netmask,
-            "gateway": gateway
-        }
+        mode_unmanaged["lan_static"] = {"ip": router_ip, "netmask": netmask, "gateway": gateway}
         dns = get_option_named(network_data, "network", "lan", "dns", [])
         dns = dns if isinstance(dns, (list, tuple)) else [e for e in dns.split(" ") if e]
         dns = reversed(dns)  # dns with higher priority should be added last
@@ -383,26 +363,18 @@ class LanUci:
         from foris_controller_backends.networks import NetworksUci
 
         qos = {}
-        qos["enabled"] = parse_bool(
-            get_option_named(sqm_data, "sqm", "limit_lan_turris", "enabled", "0")
-        )
+        qos["enabled"] = parse_bool(get_option_named(sqm_data, "sqm", "limit_lan_turris", "enabled", "0"))
         # upload is actually download limit nad vice versa
-        qos["upload"] = int(
-            get_option_named(sqm_data, "sqm", "limit_lan_turris", "download", 1024)
-        )
-        qos["download"] = int(
-            get_option_named(sqm_data, "sqm", "limit_lan_turris", "upload", 1024)
-        )
+        qos["upload"] = int(get_option_named(sqm_data, "sqm", "limit_lan_turris", "download", 1024))
+        qos["download"] = int(get_option_named(sqm_data, "sqm", "limit_lan_turris", "upload", 1024))
 
         result = {
             "mode": mode,
             "mode_managed": mode_managed,
             "mode_unmanaged": mode_unmanaged,
             "interface_count": NetworksUci.get_interface_count(network_data, wireless_data, "lan"),
-            "interface_up_count": NetworksUci.get_interface_count(
-                network_data, wireless_data, "lan", True
-            ),
-            "qos": qos
+            "interface_up_count": NetworksUci.get_interface_count(network_data, wireless_data, "lan", True),
+            "qos": qos,
         }
 
         # quick hack for shield redirect to 192.168.1.1
@@ -434,14 +406,14 @@ class LanUci:
 
                 # remove if it was in old network and is not in the new
                 if old_router_ip and old_netmask:
-                    if self.in_network(
-                        record["data"]["ip"], old_router_ip, old_netmask
-                    ) and not self.in_network(record["data"]["ip"], new_router_ip, new_netmask):
+                    if self.in_network(record["data"]["ip"], old_router_ip, old_netmask) and not self.in_network(
+                        record["data"]["ip"], new_router_ip, new_netmask
+                    ):
                         backend.del_section("dhcp", record["name"])
 
     @staticmethod
     def _store_lan_redirect(backend, enabled):
-        """ quick hack for shield redirect to 192.168.1.1
+        """quick hack for shield redirect to 192.168.1.1
         store only if there is section redirect_192_168_1_1
         """
 
@@ -453,7 +425,7 @@ class LanUci:
             backend.set_option("firewall", "redirect_192_168_1_1", "enabled", store_bool(enabled))
 
     def update_settings(self, mode, mode_managed=None, mode_unmanaged=None, lan_redirect=None, qos=None):
-        """  Updates the lan settings in uci
+        """Updates the lan settings in uci
 
         :param mode: lan setting mode managed/unmanaged
         :type mode: str
@@ -466,7 +438,6 @@ class LanUci:
         """
 
         with UciBackend() as backend:
-
             backend.add_section("network", "interface", "lan")
             backend.set_option("network", "lan", "_turris_mode", mode)
 
@@ -497,9 +468,7 @@ class LanUci:
 
                     # this will override all user dhcp options
                     # TODO we might want to preserve some options
-                    backend.replace_list(
-                        "dhcp", "lan", "dhcp_option", ["6,%s" % mode_managed["router_ip"]]
-                    )
+                    backend.replace_list("dhcp", "lan", "dhcp_option", ["6,%s" % mode_managed["router_ip"]])
 
                     # update dhcp records when changing lan ip+network or start+limit
                     # get old network
@@ -529,14 +498,12 @@ class LanUci:
 
                 if mode_unmanaged["lan_type"] == "dhcp":
                     if "hostname" in mode_unmanaged["lan_dhcp"]:
-                        backend.set_option(
-                            "network", "lan", "hostname", mode_unmanaged["lan_dhcp"]["hostname"]
-                        )
+                        backend.set_option("network", "lan", "hostname", mode_unmanaged["lan_dhcp"]["hostname"])
                 elif mode_unmanaged["lan_type"] == "static":
-                    LanUci._set_lan(backend, mode_unmanaged["lan_static"]["ip"], mode_unmanaged["lan_static"]["netmask"])
-                    backend.set_option(
-                        "network", "lan", "gateway", mode_unmanaged["lan_static"]["gateway"]
+                    LanUci._set_lan(
+                        backend, mode_unmanaged["lan_static"]["ip"], mode_unmanaged["lan_static"]["netmask"]
                     )
+                    backend.set_option("network", "lan", "gateway", mode_unmanaged["lan_static"]["gateway"])
                     dns = [
                         mode_unmanaged["lan_static"][name]
                         for name in ("dns2", "dns1")
@@ -589,7 +556,7 @@ class LanUci:
 
     @staticmethod
     def in_range(ip: str, start_ip: str, start: int, limit: int) -> bool:
-        """ Determine whether ip is in range defined by (start_ip + start .. start_ip + start, + limit)
+        """Determine whether ip is in range defined by (start_ip + start .. start_ip + start, + limit)
         :param ip: ip to be compared
         :param start_ip: ip for where is range calculated
         :param start: start offset
@@ -602,7 +569,7 @@ class LanUci:
 
     @staticmethod
     def in_network(ip: str, ip_root: str, netmask: str) -> bool:
-        """ Determine whether ip is in network
+        """Determine whether ip is in network
         :param ip: ip to be compared
         :param ip_root: ip adress of router
         :param netmask: network mask address
@@ -731,9 +698,7 @@ class LanUci:
             if turris_mode != "managed":
                 return "disabled"
 
-            dhcp_enabled = not parse_bool(
-                get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0")
-            )
+            dhcp_enabled = not parse_bool(get_option_named(dhcp_data, "dhcp", "lan", "ignore", "0"))
             if not dhcp_enabled:
                 return "disabled"
 
@@ -745,7 +710,7 @@ class LanUci:
         return None  # data looks OK
 
     def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> typing.Optional[str]:
-        """ Create configuration of a single dhcp client
+        """Create configuration of a single dhcp client
 
         Distiction between create and update is that creating new client config
         should not overwrite existing configuration
@@ -787,7 +752,7 @@ class LanUci:
         return None  # everything went ok
 
     def update_dhcp_client(self, ip: str, old_mac: str, mac: str, hostname: str) -> typing.Optional[str]:
-        """ Update configuration of a single dhcp client
+        """Update configuration of a single dhcp client
 
         :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
         :param old_mac: previous mac address of the client
@@ -816,9 +781,11 @@ class LanUci:
                 "hostname": config_section["data"]["name"],
             }
 
-            if (current_config["hostname"] == hostname
-                    and current_config["ip"] == ip
-                    and new_mac in current_config["mac"]):
+            if (
+                current_config["hostname"] == hostname
+                and current_config["ip"] == ip
+                and new_mac in current_config["mac"]
+            ):
                 # updated values are the same as stored ones, there is no need to update anything
                 return None
 
@@ -878,9 +845,7 @@ class LanUci:
             else:
                 # Handle multi-mac record
                 # Remove only particular mac, but keep others
-                backend.set_option(
-                    "dhcp", section["name"], "mac", " ".join([e for e in macs if e != mac])
-                )
+                backend.set_option("dhcp", section["name"], "mac", " ".join([e for e in macs if e != mac]))
 
         with OpenwrtServices() as services:
             services.restart("dnsmasq")
@@ -888,7 +853,7 @@ class LanUci:
         return None  # everything went ok
 
     def _get_user_defined_dhcp_clients(self, dhcp_data) -> typing.List[dict]:
-        """ Helper function to determine user-defined dhcp leases that are used with forwarding. """
+        """Helper function to determine user-defined dhcp leases that are used with forwarding."""
         hosts = get_sections_by_type(dhcp_data, "dhcp", "host")
         return hosts
 
@@ -910,12 +875,7 @@ class LanUci:
             except (ValueError, TypeError):
                 if isinstance(port_range, str) and "-" in port_range:
                     # make the full dict
-                    res = dict(
-                        zip(
-                            ("start","end", "value"),
-                            [int(i) for i in port_range.split("-")] + [port_range]
-                        )
-                    )
+                    res = dict(zip(("start", "end", "value"), [int(i) for i in port_range.split("-")] + [port_range]))
 
             return res
 
@@ -931,7 +891,7 @@ class LanUci:
         for setting in {"src_dport", "dest_port"} & data.keys():
             data[setting] = data[setting]["value"]
 
-    def _extract_range(self, port: dict[str,int]):
+    def _extract_range(self, port: dict[str, int]):
         """Extracts range from port object
         :param port: dict
         """
@@ -941,7 +901,7 @@ class LanUci:
             return self._make_range_set(port["value"])
 
     def _get_all_forwardings(self, fw_data) -> typing.List[dict]:
-        """ Provides all current forwardings in UCI
+        """Provides all current forwardings in UCI
         src_dport and dest_port are converted to dictionary
         whether there is dashed `-` range or plain int
         """
@@ -956,15 +916,15 @@ class LanUci:
         return [e["data"] for e in forwardings]
 
     @staticmethod
-    def _make_range_set(start:int, end: typing.Optional[int] = None) -> typing.Set[int]:
-        """ Helper func. to create set of port ranges to interpolate. """
+    def _make_range_set(start: int, end: typing.Optional[int] = None) -> typing.Set[int]:
+        """Helper func. to create set of port ranges to interpolate."""
         if end is None:
             return {start}
         else:
             return set(range(start, end + 1))
 
-    def _check_port_range_not_used(self, fw_data, src_dport:dict, name: str) -> typing.Optional[typing.List[str]]:
-        """ Checks for possible port interference.
+    def _check_port_range_not_used(self, fw_data, src_dport: dict, name: str) -> typing.Optional[typing.List[str]]:
+        """Checks for possible port interference.
         :retval: None or List of objects related to an error"""
         errors = []
 
@@ -980,34 +940,37 @@ class LanUci:
                     continue
 
                 if item["name"] != name and item["src"] == "wan":
-
                     old_range = self._extract_range(item.get("src_dport"))
 
                     intrs = old_range.intersection(new_range)
 
                     if len(intrs) > 0:
-                        errors.extend([{
-                            "old_rule" : item['name'],
-                            "msg": "range-already-used",
-                            "range": f'{min(intrs)}-{max(intrs)}' if len(intrs) > 1 else str(intrs.pop())}])
+                        errors.extend(
+                            [
+                                {
+                                    "old_rule": item["name"],
+                                    "msg": "range-already-used",
+                                    "range": f"{min(intrs)}-{max(intrs)}" if len(intrs) > 1 else str(intrs.pop()),
+                                }
+                            ]
+                        )
 
         logger.debug(f"Errors in port forwarding: {errors}")
 
         return errors if len(errors) > 0 else None
 
-    def get_port_forwardings(self) -> typing.List[typing.Dict[str,str]]:
-        """ API method, gets all current forwardings. """
+    def get_port_forwardings(self) -> typing.List[typing.Dict[str, str]]:
+        """API method, gets all current forwardings."""
         with UciBackend() as backend:
             firewall_data = backend.read("firewall")
         raw_fwds = self._get_all_forwardings(firewall_data)
         res = []
 
         for fwd in raw_fwds:
-
             fwd["enabled"] = parse_bool(fwd.get("enabled", "true"))
             self._deconvert_ports(fwd)
 
-            res.append({k: v for k,v in fwd.items() if k in LanUci.FW_ALLOWED_KEYS})
+            res.append({k: v for k, v in fwd.items() if k in LanUci.FW_ALLOWED_KEYS})
         return {"rules": res}
 
     def _update_forwarding(
@@ -1023,7 +986,7 @@ class LanUci:
         enabled=True,
         old_name=None,
     ):
-        """ Creates/updates/deletes configuration of single firewall rule
+        """Creates/updates/deletes configuration of single firewall rule
         :dhcp_clients, network_data, firewall_data, bakend: Uci parameters to set the rules
         :name: string rule name
         :dest_ip: ip address of traffic recipient
@@ -1083,16 +1046,11 @@ class LanUci:
 
         return None  # update successful
 
-    def _delete_rule(
-        self,
-        fw_data,
-        backend,
-        name
-    ) -> None:
-        """ Delete rule based on name in list. """
+    def _delete_rule(self, fw_data, backend, name) -> None:
+        """Delete rule based on name in list."""
         current = self._get_all_forwardings(fw_data)
         for item in current:
-            if item['name'] == name:
+            if item["name"] == name:
                 backend.del_section("firewall", f"@redirect[{item['index']}]")
 
     def port_forwarding_delete(self, names: typing.List[str]) -> bool:
@@ -1121,7 +1079,7 @@ class LanUci:
                     # remove `"dest_port": None`
                     kwargs.pop("dest_port")
 
-                _hosts = get_sections_by_type(dhcp_data,"dhcp", "host")
+                _hosts = get_sections_by_type(dhcp_data, "dhcp", "host")
                 dhcp_clients = [e["data"]["ip"] for e in _hosts if "ip" in e["data"]]
 
                 self._convert_ports(kwargs)

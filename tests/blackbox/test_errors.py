@@ -50,20 +50,14 @@ def test_wrong_input_kind(infrastructure):
     assert res["action"] == "get"
     assert res["kind"] == "reply"
     assert res["module"] == "about"
-    assert res["errors"][0][
+    assert res["errors"][0]["description"] == "Wrong message kind (only request are allowed)." or res["errors"][0][
         "description"
-    ] == "Wrong message kind (only request are allowed)." or res["errors"][0][
-        "description"
-    ].startswith(
-        "Incorrect input"
-    )
+    ].startswith("Incorrect input")
 
 
 @pytest.mark.only_message_buses(["unix-socket", "mqtt"])
 def test_wrong_input_action(infrastructure):
-    res = infrastructure.process_message(
-        {"module": "about", "action": "non-exiting", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "about", "action": "non-exiting", "kind": "request"})
     assert res["action"] == "non-exiting"
     assert res["kind"] == "reply"
     assert res["module"] == "about"
@@ -73,9 +67,7 @@ def test_wrong_input_action(infrastructure):
 
 @pytest.mark.only_message_buses(["unix-socket", "mqtt"])
 def test_wrong_input_module(infrastructure):
-    res = infrastructure.process_message(
-        {"module": "non-exiting", "action": "get", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "non-exiting", "action": "get", "kind": "request"})
     assert res["action"] == "get"
     assert res["kind"] == "reply"
     assert res["module"] == "non-exiting"

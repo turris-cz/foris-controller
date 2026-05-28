@@ -40,9 +40,7 @@ FILTER_PASSWORDS_FILES_MATCH = "/usr/share/common_passwords/*"
 def pawned_password(password):
     for path in BaseMatch.list_files([FILTER_PASSWORDS_FILES_MATCH]):
         file_name = pathlib.Path(path).name
-        list_name = (
-            file_name[: -len("_passwords")] if file_name.endswith("_passwords") else file_name
-        )
+        list_name = file_name[: -len("_passwords")] if file_name.endswith("_passwords") else file_name
         with open(path, "rb") as f:
             line = f.readline()
             while line:

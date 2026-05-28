@@ -27,7 +27,7 @@ class DnsModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data):
-        """ Get current dns settings
+        """Get current dns settings
         :param data: supposed to be {}
         :type data: dict
         :returns: current dns settings {'forwarding_enabled': '..'}
@@ -36,7 +36,7 @@ class DnsModule(BaseModule):
         return self.handler.get_settings()
 
     def action_update_settings(self, data):
-        """ Updates dns settings
+        """Updates dns settings
         :param data: new dns settings {'forwarding_enabled': '..'}
         :type data: dict
         :returns: result of the update {'result': '..'}
@@ -48,7 +48,7 @@ class DnsModule(BaseModule):
         return {"result": res}
 
     def action_list_forwarders(self, data):
-        """ lists forwarders
+        """lists forwarders
         :param data: new dns settings {}
         :type data: dict
         :returns: result of the update {"forwarders": [{"name": "00_nic", ...}, ...]}
@@ -57,7 +57,7 @@ class DnsModule(BaseModule):
         return {"forwarders": self.handler.list_forwarders()}
 
     def action_add_forwarder(self, data):
-        """ set forwarder
+        """set forwarder
         :param data: forwarder settings {"description": "XXX", ...}
         :type data: dict
         :returns: result of the update {"result": True/False}
@@ -70,7 +70,7 @@ class DnsModule(BaseModule):
         return {"result": False}
 
     def action_set_forwarder(self, data):
-        """ set forwarder
+        """set forwarder
         :param data: forwarder settings {"name": "XXX", ...}
         :type data: dict
         :returns: result of the update {"result": True/False}
@@ -82,7 +82,7 @@ class DnsModule(BaseModule):
         return {"result": res}
 
     def action_del_forwarder(self, data):
-        """ del forwarder
+        """del forwarder
         :param data: forwarder settings {"name": "XXX"}
         :type data: dict
         :returns: result of the update {"result": True/False}

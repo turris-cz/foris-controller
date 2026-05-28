@@ -28,7 +28,7 @@ class BaseModule(object):
     version: str = None  # will be filled by individual modules later
 
     def __init__(self, handler, notify, reset_notify):
-        """ Inits base module (sets the handler)
+        """Inits base module (sets the handler)
 
         :param handler: handler to be set
         :type handler: handler instance
@@ -43,7 +43,7 @@ class BaseModule(object):
         self.reset_notify = types.MethodType(reset_notify, self)
 
     def perform_action(self, action, data):
-        """ Perfoms the specified action a returns result
+        """Perfoms the specified action a returns result
 
         :param action: actions to be performed
         :type action: str

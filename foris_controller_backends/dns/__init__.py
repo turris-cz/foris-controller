@@ -67,9 +67,9 @@ class DnsFiles(BaseFile):
             "tls_hostname": tls_hostname,
             "tls_pin": tls_pin,
         }
-        forwarder_dump = json.dumps(forwarder).encode('utf-8')
+        forwarder_dump = json.dumps(forwarder).encode("utf-8")
         forwarder_hash = hashlib.md5(forwarder_dump).hexdigest()
-        name = f'{slugify(description, separator="_")}_{forwarder_hash}'
+        name = f"{slugify(description, separator='_')}_{forwarder_hash}"
 
         path = str(DnsFiles.RESOLVERS_DIR / f"{name}.conf")
         if path_exists(path):
@@ -226,13 +226,9 @@ class DnsUciCommands(object):
             resolver_data = backend.read("resolver")
             dhcp_data = backend.read("dhcp")
 
-        forwarding_enabled = parse_bool(
-            get_option_named(resolver_data, "resolver", "common", "forward_upstream")
-        )
+        forwarding_enabled = parse_bool(get_option_named(resolver_data, "resolver", "common", "forward_upstream"))
         forwarder = get_option_named(resolver_data, "resolver", "common", "forward_custom", "")
-        dnssec_enabled = not parse_bool(
-            get_option_named(resolver_data, "resolver", "common", "ignore_root_key", "0")
-        )
+        dnssec_enabled = not parse_bool(get_option_named(resolver_data, "resolver", "common", "ignore_root_key", "0"))
         dns_from_dhcp_enabled = parse_bool(
             get_option_named(resolver_data, "resolver", "common", "dynamic_domains", "0")
         )
@@ -259,28 +255,16 @@ class DnsUciCommands(object):
         dns_from_dhcp_domain=None,
     ):
 
-        if forwarder and forwarder not in [
-            e["name"] for e in DnsFiles.get_available_forwarders_short()
-        ]:
+        if forwarder and forwarder not in [e["name"] for e in DnsFiles.get_available_forwarders_short()]:
             return False
 
         with UciBackend() as backend:
-            backend.set_option(
-                "resolver", "common", "forward_upstream", store_bool(forwarding_enabled)
-            )
-            backend.set_option(
-                "resolver", "common", "ignore_root_key", store_bool(not dnssec_enabled)
-            )
-            backend.set_option(
-                "resolver", "common", "dynamic_domains", store_bool(dns_from_dhcp_enabled)
-            )
+            backend.set_option("resolver", "common", "forward_upstream", store_bool(forwarding_enabled))
+            backend.set_option("resolver", "common", "ignore_root_key", store_bool(not dnssec_enabled))
+            backend.set_option("resolver", "common", "dynamic_domains", store_bool(dns_from_dhcp_enabled))
             if dns_from_dhcp_domain:
-                backend.set_option(
-                    "dhcp", "@dnsmasq[0]", "local", "/%s/" % dns_from_dhcp_domain.strip("/")
-                )
-                backend.set_option(
-                    "dhcp", "@dnsmasq[0]", "domain", "%s" % dns_from_dhcp_domain.strip("/")
-                )
+                backend.set_option("dhcp", "@dnsmasq[0]", "local", "/%s/" % dns_from_dhcp_domain.strip("/"))
+                backend.set_option("dhcp", "@dnsmasq[0]", "domain", "%s" % dns_from_dhcp_domain.strip("/"))
             if forwarder is not None:
                 backend.set_option("resolver", "common", "forward_custom", forwarder)
 

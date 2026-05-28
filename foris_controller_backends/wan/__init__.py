@@ -73,9 +73,7 @@ class WanUci:
 
         # WAN6
         wan6_settings = {}
-        wan6_settings["wan6_type"] = get_option_named(
-            network_data, "network", "wan6", "proto", "dhcpv6"
-        )
+        wan6_settings["wan6_type"] = get_option_named(network_data, "network", "wan6", "proto", "dhcpv6")
         if wan6_settings["wan6_type"] == "static":
             wan6_settings["wan6_static"] = {
                 "ip": get_option_named(network_data, "network", "wan6", "ip6addr", ""),
@@ -87,9 +85,7 @@ class WanUci:
             dns = reversed(dns)  # dns with higher priority should be last
             wan6_settings["wan6_static"].update(zip(("dns1", "dns2"), dns))
         elif wan6_settings["wan6_type"] == "dhcpv6":
-            wan6_settings["wan6_dhcpv6"] = {
-                "duid": get_option_named(network_data, "network", "wan6", "clientid", "")
-            }
+            wan6_settings["wan6_dhcpv6"] = {"duid": get_option_named(network_data, "network", "wan6", "clientid", "")}
         elif wan6_settings["wan6_type"] == "6to4":
             wan6_settings["wan6_6to4"] = {
                 "ipv4_address": get_option_named(network_data, "network", "wan6", "ipaddr", "")
@@ -99,7 +95,7 @@ class WanUci:
                 "ipv6_prefix": unwrap_list(get_option_named(network_data, "network", "wan6", "ip6prefix", "")),
                 "mtu": int(get_option_named(network_data, "network", "wan6", "mtu", "1480")),
                 "server_ipv4": get_option_named(network_data, "network", "wan6", "peeraddr", ""),
-                "ipv6_address": unwrap_list(get_option_named(network_data, "network", "wan6", "ip6addr", ""))
+                "ipv6_address": unwrap_list(get_option_named(network_data, "network", "wan6", "ip6addr", "")),
             }
             tunnel_id = get_option_named(network_data, "network", "wan6", "tunnelid", "")
             username = get_option_named(network_data, "network", "wan6", "username", "")
@@ -150,23 +146,15 @@ class WanUci:
             vlan_settings["enabled"] = False
 
         qos = {}
-        qos["enabled"] = parse_bool(
-            get_option_named(sqm_data, "sqm", WanUci._LNAME, "enabled", "0")
-        )
-        qos["upload"] = int(
-            get_option_named(sqm_data, "sqm", WanUci._LNAME, "upload", 1024)
-        )
-        qos["download"] = int(
-            get_option_named(sqm_data, "sqm", WanUci._LNAME, "download", 1024)
-        )
+        qos["enabled"] = parse_bool(get_option_named(sqm_data, "sqm", WanUci._LNAME, "enabled", "0"))
+        qos["upload"] = int(get_option_named(sqm_data, "sqm", WanUci._LNAME, "upload", 1024))
+        qos["download"] = int(get_option_named(sqm_data, "sqm", WanUci._LNAME, "download", 1024))
         return {
             "wan_settings": wan_settings,
             "wan6_settings": wan6_settings,
             "mac_settings": mac_settings,
             "interface_count": NetworksUci.get_interface_count(network_data, wireless_data, "wan"),
-            "interface_up_count": NetworksUci.get_interface_count(
-                network_data, wireless_data, "wan", True
-            ),
+            "interface_up_count": NetworksUci.get_interface_count(network_data, wireless_data, "wan", True),
             "qos": qos,
             "vlan_settings": vlan_settings,
         }
@@ -185,41 +173,28 @@ class WanUci:
 
     def update_settings(self, wan_settings, wan6_settings, mac_settings, qos=None, vlan_settings=None):
         with UciBackend() as backend:
-
             # WAN
             wan_type = wan_settings["wan_type"]
             backend.add_section("network", "interface", "wan")
             backend.set_option("network", "wan", "proto", wan_type)
             if wan_type == "dhcp":
                 if "hostname" in wan_settings["wan_dhcp"]:
-                    backend.set_option(
-                        "network", "wan", "hostname", wan_settings["wan_dhcp"]["hostname"]
-                    )
+                    backend.set_option("network", "wan", "hostname", wan_settings["wan_dhcp"]["hostname"])
                 else:
                     backend.del_option("network", "wan", "hostname", fail_on_error=False)
 
             elif wan_type == "static":
                 backend.set_option("network", "wan", "ipaddr", wan_settings["wan_static"]["ip"])
-                backend.set_option(
-                    "network", "wan", "netmask", wan_settings["wan_static"]["netmask"]
-                )
-                backend.set_option(
-                    "network", "wan", "gateway", wan_settings["wan_static"]["gateway"]
-                )
+                backend.set_option("network", "wan", "netmask", wan_settings["wan_static"]["netmask"])
+                backend.set_option("network", "wan", "gateway", wan_settings["wan_static"]["gateway"])
                 dns = [
-                    wan_settings["wan_static"][name]
-                    for name in ("dns2", "dns1")
-                    if name in wan_settings["wan_static"]
+                    wan_settings["wan_static"][name] for name in ("dns2", "dns1") if name in wan_settings["wan_static"]
                 ]  # dns with higher priority should be added last
                 backend.replace_list("network", "wan", "dns", dns)
 
             elif wan_type == "pppoe":
-                backend.set_option(
-                    "network", "wan", "username", wan_settings["wan_pppoe"]["username"]
-                )
-                backend.set_option(
-                    "network", "wan", "password", wan_settings["wan_pppoe"]["password"]
-                )
+                backend.set_option("network", "wan", "username", wan_settings["wan_pppoe"]["username"])
+                backend.set_option("network", "wan", "password", wan_settings["wan_pppoe"]["password"])
 
             # WAN6
             wan6_type = wan6_settings["wan6_type"]
@@ -246,9 +221,7 @@ class WanUci:
                 backend.add_to_list(
                     "network", "wan6", "ip6prefix", parse_to_list(wan6_settings["wan6_static"]["network"])
                 )
-                backend.set_option(
-                    "network", "wan6", "ip6gw", wan6_settings["wan6_static"]["gateway"]
-                )
+                backend.set_option("network", "wan6", "ip6gw", wan6_settings["wan6_static"]["gateway"])
                 dns = [
                     wan6_settings["wan6_static"][name]
                     for name in ("dns2", "dns1")
@@ -278,12 +251,10 @@ class WanUci:
 
             elif wan6_type == "6in4":
                 backend.set_option("network", "wan6", "mtu", wan6_settings["wan6_6in4"]["mtu"])
-                backend.set_option(
-                    "network", "wan6", "peeraddr", wan6_settings["wan6_6in4"]["server_ipv4"]
+                backend.set_option("network", "wan6", "peeraddr", wan6_settings["wan6_6in4"]["server_ipv4"])
+                backend.replace_list(
+                    "network", "wan6", "ip6addr", parse_to_list(wan6_settings["wan6_6in4"].get("ipv6_address", ""))
                 )
-                backend.replace_list("network", "wan6", "ip6addr", parse_to_list(
-                    wan6_settings["wan6_6in4"].get("ipv6_address", "")
-                ))
 
                 if wan6_settings["wan6_6in4"]["ipv6_prefix"]:
                     backend.add_to_list(
@@ -437,7 +408,7 @@ class WanTestCommands(AsyncCommand):
     }
 
     def connection_test_status(self, process_id):
-        """ Get the status of some connection test
+        """Get the status of some connection test
         :param process_id: test process identifier
         :type process_id: str
         :returns: data about test process
@@ -458,10 +429,8 @@ class WanTestCommands(AsyncCommand):
 
         return {"status": "finished" if process_data.get_exited() else "running", "data": data}
 
-    def connection_test_trigger(
-        self, test_kinds, notify_function, exit_notify_function, reset_notify_function
-    ):
-        """ Executes connection test in asyncronous mode
+    def connection_test_trigger(self, test_kinds, notify_function, exit_notify_function, reset_notify_function):
+        """Executes connection test in asyncronous mode
 
         This means that we don't wait for the test results. Only a test id is returned.
         This id can be used in other queries.
@@ -501,9 +470,7 @@ class WanTestCommands(AsyncCommand):
                 for option, res in record["data"].items():
                     data[option] = WanTestCommands.TestResult(res)
 
-            exit_notify_function(
-                {"test_id": exit_data.id, "data": data, "passed": exit_data.get_retval() == 0}
-            )
+            exit_notify_function({"test_id": exit_data.id, "data": data, "passed": exit_data.get_retval() == 0})
             logger.debug("Connection test finished: (retval=%d)" % exit_data.get_retval())
 
         # prepare test kinds
@@ -533,7 +500,7 @@ class WanStatusCommands(BaseCmdLine, BaseFile):
     DUID_STATUS_FILE = "/var/run/odhcp6c-duid"
 
     def get_status(self):
-        """ network info enriched by DUID """
+        """network info enriched by DUID"""
         network_info = NetworksCmd().get_network_info("wan")
         if not network_info:
             logger.error("Failed to obtain network info")

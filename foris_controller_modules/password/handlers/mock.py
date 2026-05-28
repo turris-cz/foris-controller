@@ -39,7 +39,7 @@ class MockPasswordHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def check_foris_password(self, password):
-        """ Mocks password checking
+        """Mocks password checking
 
         :param password: in plain text password
         :type password: str
@@ -52,7 +52,7 @@ class MockPasswordHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def set_foris_password(self, password):
-        """ Mocks password setting for foris
+        """Mocks password setting for foris
 
         :param password: plain text password
         :type password: str
@@ -70,7 +70,7 @@ class MockPasswordHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def set_system_password(self, password):
-        """ Mocks password setting for system
+        """Mocks password setting for system
 
         :param password: plain text password
         :type password: str

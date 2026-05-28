@@ -104,9 +104,7 @@ def test_advertize_netboot_booted(infrastructure, file_root_init, mount_on_netbo
 
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.only_message_buses(["mqtt"])
-def test_advertize_netboot_ready(
-    infrastructure, file_root_init, mount_on_netboot, netboot_configured
-):
+def test_advertize_netboot_ready(infrastructure, file_root_init, mount_on_netboot, netboot_configured):
 
     filters = [("remote", "advertize")]
     notifications = infrastructure.get_notifications(filters=filters)

@@ -27,7 +27,7 @@ class WebModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_data(self, data):
-        """ Get data required by the the web gui
+        """Get data required by the the web gui
         :param data: supposed to be {}
         :type data: dict
         :returns: current data {'language': '..'}
@@ -36,7 +36,7 @@ class WebModule(BaseModule):
         return self.handler.get_data()
 
     def action_set_language(self, data):
-        """ Sets language of the web gui
+        """Sets language of the web gui
         :param data: supposed to be {'language': '..'}
         :type data: dict
         :returns: current language {'result': true}
@@ -48,7 +48,7 @@ class WebModule(BaseModule):
         return {"result": res}
 
     def action_list_languages(self, data):
-        """ Returns a list of available languages
+        """Returns a list of available languages
         :param data: supposed to be {}
         :type data: dict
         :returns: current language {'languages': ['en', 'cs', ..]}
@@ -57,7 +57,7 @@ class WebModule(BaseModule):
         return {"languages": self.handler.list_languages()}
 
     def action_update_guide(self, data):
-        """ Update current guide settings
+        """Update current guide settings
         :param data: supposed to be {"enabled": True/False, "workflow": "standard"}
         :type data: dict
         :returns: {'result': true}
@@ -66,7 +66,7 @@ class WebModule(BaseModule):
         return {"result": self.handler.update_guide(**data)}
 
     def action_get_guide(self, data):
-        """ Get current guide settings (workflow, ...)
+        """Get current guide settings (workflow, ...)
         :param data: supposed to be {}
         :type data: dict
         :returns: current data
@@ -75,7 +75,7 @@ class WebModule(BaseModule):
         return self.handler.get_guide()
 
     def action_reset_guide(self, data):
-        """ Reset guide resets guide
+        """Reset guide resets guide
         :param data: supposed to be {}
         :type data: dict
         :returns: {"result": True/False}
@@ -84,8 +84,6 @@ class WebModule(BaseModule):
         return {"result": self.handler.reset_guide(**data)}
 
 
-@wrap_required_functions(
-    ["set_language", "list_languages", "update_guide", "get_data", "get_guide", "reset_guide"]
-)
+@wrap_required_functions(["set_language", "list_languages", "update_guide", "get_data", "get_guide", "reset_guide"])
 class Handler(object):
     pass

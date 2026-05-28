@@ -14,12 +14,6 @@ before_script:
 .base_image: &py3_common
   image: registry.nic.cz/turris/foris-ci/python3
 
-flake8:
-  <<: *py3_common
-  stage: lint
-  script:
-    - tox -q -e lint
-
 unit_tests:
   <<: *py3_common
   stage: test
@@ -71,4 +65,5 @@ sample_module:
 
 include:
   - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/base.yml"
+  - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/ruff.yml"
   - remote: "https://gitlab.nic.cz/turris/foris-controller/packages/-/raw/master/templates/python/build_and_publish.yml"

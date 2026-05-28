@@ -110,9 +110,7 @@ class ClientSocketHandler(BaseRequestHandler):
         logger.debug("Sending msg back to client.")
         response = json.dumps(response).encode("utf8")
         response_length = struct.pack("I", len(response))
-        logger.debug(
-            "Sending response (len=%d) %s" % (len(response), str(response)[:LOGGER_MAX_LEN])
-        )
+        logger.debug("Sending response (len=%d) %s" % (len(response), str(response)[:LOGGER_MAX_LEN]))
         self.request.sendall(response_length + response)
         logger.debug("Message delivered to client.")
 

@@ -43,7 +43,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "04:f0:21:24:11:1f"
+                "macaddr": "04:f0:21:24:11:1f",
             },
             {
                 "id": "wwan0",
@@ -55,9 +55,9 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "module_id": 0,
                 "configurable": True,
                 "macaddr": "",
-                'qmi_device': '/dev/cdc-wdm0',
-                "slot_path": "/sys/devices/platform/soc/soc:internal-regs@d0000000/d005e000.usb/usb1/1-1"
-            }
+                "qmi_device": "/dev/cdc-wdm0",
+                "slot_path": "/sys/devices/platform/soc/soc:internal-regs@d0000000/d005e000.usb/usb1/1-1",
+            },
         ],
         "lan": [
             {
@@ -69,7 +69,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "d8:58:d7:00:92:91"
+                "macaddr": "d8:58:d7:00:92:91",
             },
             {
                 "id": "lan1",
@@ -80,7 +80,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "d8:58:d7:00:92:92"
+                "macaddr": "d8:58:d7:00:92:92",
             },
             {
                 "id": "lan2",
@@ -91,7 +91,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "d8:58:d7:00:92:9c"
+                "macaddr": "d8:58:d7:00:92:9c",
             },
             {
                 "id": "lan3",
@@ -102,7 +102,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "d8:58:d7:00:92:9d"
+                "macaddr": "d8:58:d7:00:92:9d",
             },
             {
                 "id": "lan4",
@@ -113,7 +113,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "eth",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "d8:58:d7:00:92:9f"
+                "macaddr": "d8:58:d7:00:92:9f",
             },
         ],
         "guest": [
@@ -126,7 +126,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "bus": "usb",
                 "module_id": 0,
                 "configurable": True,
-                "macaddr": "d8:58:d7:00:92:9d"
+                "macaddr": "d8:58:d7:00:92:9d",
             }
         ],
         "none": [
@@ -140,8 +140,8 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "module_id": 0,
                 "configurable": True,
                 "macaddr": "04:f0:21:24:11:be",
-                'qmi_device': '/dev/cdc-wdm1',
-                "slot_path": "/sys/devices/platform/soc/soc:internal-regs@d0000000/d0058000.usb/usb3/3-1"
+                "qmi_device": "/dev/cdc-wdm1",
+                "slot_path": "/sys/devices/platform/soc/soc:internal-regs@d0000000/d0058000.usb/usb3/3-1",
             },
             {
                 "id": "wlan0",
@@ -154,21 +154,19 @@ class MockNetworksHandler(Handler, BaseMockHandler):
                 "configurable": False,
                 "ssid": "testing-ssid",
                 "macaddr": "04:f0:21:23:22:dc",
-                "slot_path": "soc/soc:pcie/pci0000:00/0000:00:02.0/0000:01:00.0"
-            }
+                "slot_path": "soc/soc:pcie/pci0000:00/0000:00:02.0/0000:01:00.0",
+            },
         ],
     }
     networks = BaseMockHandler._manager.dict(dict(copy.deepcopy(DEFAULT_NETWORKS)))
     networks_lock = BaseMockHandler._manager.Lock()
 
     def _cleanup(self):
-        MockNetworksHandler.networks = BaseMockHandler._manager.dict(
-            dict(copy.deepcopy(MockNetworksHandler))
-        )
+        MockNetworksHandler.networks = BaseMockHandler._manager.dict(dict(copy.deepcopy(MockNetworksHandler)))
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get networks settings
+        """Mocks get networks settings
 
         :returns: current networks settiongs
         :rtype: str
@@ -182,7 +180,7 @@ class MockNetworksHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ Mocks updates current wan settings
+        """Mocks updates current wan settings
 
         :returns: True if update passes
         :rtype: bool

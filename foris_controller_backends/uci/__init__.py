@@ -66,7 +66,7 @@ def get_section(data, config, section):
 
 
 def section_exists(data, config, section) -> bool:
-    """ Return whether named section exists as boolean"""
+    """Return whether named section exists as boolean"""
     try:
         get_section(data, config, section)
         return True
@@ -110,9 +110,7 @@ def get_option_anonymous(data, config, section_type, idx, option, default=None):
         res = res["data"][option]
     except KeyError:
         if default is None:
-            raise UciRecordNotFound(
-                config, section_type=section_type, section_idx=idx, option=option
-            )
+            raise UciRecordNotFound(config, section_type=section_type, section_idx=idx, option=option)
         else:
             res = default
     return res
@@ -172,9 +170,7 @@ class UciBackend(object):
             + list(args)
         )
         logger.debug("uci cmd '%s'" % str(args))
-        retval, stdout, stderr = handle_command(
-            *cmdline_args, input_data=kwargs.pop("input_data", None)
-        )
+        retval, stdout, stderr = handle_command(*cmdline_args, input_data=kwargs.pop("input_data", None))
         logger.debug("retcode: %d" % retval)
         logger.debug("stdout: %s" % stdout)
         logger.debug("stderr: %s" % stderr)
@@ -234,9 +230,7 @@ class UciBackend(object):
         merges with previous values
         """
         for value in values:
-            self._run_uci_command(
-                "add_list", "%s.%s.%s=%s" % (config, section_name, list_name, value)
-            )
+            self._run_uci_command("add_list", "%s.%s.%s=%s" % (config, section_name, list_name, value))
 
         self.affected_configs.add(config)
 
@@ -246,9 +240,7 @@ class UciBackend(object):
         """
         if values:
             for value in values:
-                self._run_uci_command(
-                    "del_list", "%s.%s.%s=%s" % (config, section_name, list_name, value)
-                )
+                self._run_uci_command("del_list", "%s.%s.%s=%s" % (config, section_name, list_name, value))
         else:
             self._run_uci_command("delete", "%s.%s.%s" % (config, section_name, list_name))
         self.affected_configs.add(config)
@@ -278,12 +270,10 @@ class UciBackend(object):
         logger.debug("Uci configs updates were commited.")
 
     def _convert_value(self, value):
-        """ Converts value to originall value which is was put to uci
-            "'Tom'\''sNet'" -> "Tom'sNet"
+        """Converts value to originall value which is was put to uci
+        "'Tom'\''sNet'" -> "Tom'sNet"
         """
-        return "".join(
-            ["'" if e == "\\'" else e.strip("'") for e in re.split(r"('[^']*'|\\')", value) if e]
-        )
+        return "".join(["'" if e == "\\'" else e.strip("'") for e in re.split(r"('[^']*'|\\')", value) if e])
 
     def _parse_section(self, lines):
         result = collections.OrderedDict()
@@ -320,9 +310,7 @@ class UciBackend(object):
                         "type": section_type,
                         "name": section_name,
                         "data": self._parse_section(lines),
-                        "anonymous": True
-                        if re.search(r"^cfg[0-9a-f]{6}$", section_name)
-                        else False,
+                        "anonymous": True if re.search(r"^cfg[0-9a-f]{6}$", section_name) else False,
                     }
                     result.append(section)
                 elif lines[0].startswith("package"):
@@ -348,9 +336,7 @@ class UciBackend(object):
                 package_line = lines.pop(0)
                 while not package_line.startswith("package"):
                     package_line = lines.pop(0)
-                result[
-                    re.match(r"^package ([^\s]+)$", package_line).group(1)
-                ] = self._parse_package(lines)
+                result[re.match(r"^package ([^\s]+)$", package_line).group(1)] = self._parse_package(lines)
 
         except IndexError:
             pass
@@ -363,13 +349,11 @@ class UciBackend(object):
         return self._parse_packages(lines)
 
     def export_data(self, config=None):
-        output = (
-            self._run_uci_command("export", config) if config else self._run_uci_command("export")
-        )
+        output = self._run_uci_command("export", config) if config else self._run_uci_command("export")
         return output
 
     def import_data(self, data, config):
-        """ Import data directly into uci
+        """Import data directly into uci
         NOTE that import is not affected by commit and an entire config is replaced
 
         :param data: data to be imorted

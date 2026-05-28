@@ -43,314 +43,202 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     # On real system enabled/disabled status will be written in uci config file
     DEFAULT_PACKAGE_LISTS = {
         "3g": {
-            "title": {
-                "en": "Extensions of network protocols for 3G/LTE"
-            },
-            "description": {
-                "en": "Support for Turris Omnia and Turris MOX LTE pack."
-            },
+            "title": {"en": "Extensions of network protocols for 3G/LTE"},
+            "description": {"en": "Support for Turris Omnia and Turris MOX LTE pack."},
             "url": "https://wiki.turris.cz/doc/en/howto/lte_modem_install",
-            "enabled": False
+            "enabled": False,
         },
         "datacollect": {
-            "title": {
-                "en": "Data Collection"
-            },
-            "description": {
-                "en": "Software for participation in data collection and distributed adaptive firewall."
-            },
+            "title": {"en": "Data Collection"},
+            "description": {"en": "Software for participation in data collection and distributed adaptive firewall."},
             "url": "https://docs.turris.cz/basics/collect/",
             "options": {
                 "survey": {
                     "title": "Usage Survey",
                     "description": "Collect data about router usage (installed packages, Internet connection type and etc.).",
-                    "default": True
+                    "default": True,
                 },
                 "dynfw": {
                     "title": "Dynamic Firewall",
                     "description": "Add firewall rules to block attackers detected by Turris collection network.",
-                    "default": True
+                    "default": True,
                 },
                 "fwlogs": {
                     "title": "Firewall Logs",
                     "description": "Collect logs from firewall for attempted connections.",
-                    "default": True
+                    "default": True,
                 },
                 "minipot": {
                     "title": "Minipots",
                     "description": "Minimal honeypots to catch attackers for various protocols.",
-                    "default": True
+                    "default": True,
                 },
                 "haas": {
                     "title": "SSH Honeypot",
-                    "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz)."
-                }
+                    "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz).",
+                },
             },
-            "enabled": False
+            "enabled": False,
         },
         "atlas": {
-            "title": {
-                "en": "RIPE Atlas SW Probe"
-            },
-            "description": {
-                "en": "Global platform, which measures Internet connectivity and reachability."
-            },
+            "title": {"en": "RIPE Atlas SW Probe"},
+            "description": {"en": "Global platform, which measures Internet connectivity and reachability."},
             "url": "https://wiki.turris.cz/doc/en/howto/atlas-probe",
-            "labels": [
-                "community"
-            ],
-            "enabled": False
+            "labels": ["community"],
+            "enabled": False,
         },
         "dvb": {
-            "title": {
-                "en": "DVB tuner"
-            },
+            "title": {"en": "DVB tuner"},
             "description": {
                 "en": "Software for sharing television received by a DVB tuner on Turris. Does not include device drivers."
             },
             "url": "https://wiki.turris.cz/doc/en/howto/dvb",
-            "labels": [
-                "community",
-                "advanced"
-            ],
-            "enabled": False
+            "labels": ["community", "advanced"],
+            "enabled": False,
         },
         "hardening": {
-            "title": {
-                "en": "Hardening"
-            },
-            "description": {
-                "en": "Seccomp tools for system hardening."
-            },
+            "title": {"en": "Hardening"},
+            "description": {"en": "Seccomp tools for system hardening."},
             "options": {
                 "common_passwords": {
                     "title": "Common passwords filter",
                     "description": "Compare new password you are about to set to access router with list of common passwords used by robots trapped in Turris honeypots.",
-                    "default": True
+                    "default": True,
                 },
                 "ujail": {
                     "title": "OpenWrt's process jail",
                     "description": "ujail allows to limit processes by limiting syscalls and file-system access",
-                    "labels": [
-                        "community",
-                        "experimental"
-                    ]
+                    "labels": ["community", "experimental"],
                 },
                 "seccomp": {
                     "title": "Secure Computing Mode (seccomp)",
                     "description": "Optional support for seccomp allowing processes to isolate from them self",
-                    "labels": [
-                        "community",
-                        "experimental"
-                    ]
-                }
+                    "labels": ["community", "experimental"],
+                },
             },
-            "enabled": False
+            "enabled": False,
         },
         "luci_controls": {
-            "title": {
-                "en": "LuCI extensions"
-            },
-            "description": {
-                "en": "Several additional tabs and controls for the advanced LuCI interface."
-            },
+            "title": {"en": "LuCI extensions"},
+            "description": {"en": "Several additional tabs and controls for the advanced LuCI interface."},
             "options": {
-                "adblock": {
-                    "title": "AdBlock",
-                    "description": "Script to block ad/abuse domains."
-                },
+                "adblock": {"title": "AdBlock", "description": "Script to block ad/abuse domains."},
                 "sqm": {
                     "title": "SQM",
-                    "description": "Active Queue Management to boost performance on heavily loaded network."
+                    "description": "Active Queue Management to boost performance on heavily loaded network.",
                 },
-                "tinyproxy": {
-                    "title": "Tinyproxy",
-                    "description": "HTTP(S) proxy."
-                },
-                "upnp": {
-                    "title": "UPnP",
-                    "description": "Universal Plug and Play service."
-                },
+                "tinyproxy": {"title": "Tinyproxy", "description": "HTTP(S) proxy."},
+                "upnp": {"title": "UPnP", "description": "Universal Plug and Play service."},
                 "printserver": {
                     "title": "Print server (p910nd)",
-                    "description": "Services allowing to connect a printer to the router and use it for remote printing."
+                    "description": "Services allowing to connect a printer to the router and use it for remote printing.",
                 },
                 "statistics": {
                     "title": "Statistics",
-                    "description": "Gather and render diagrams for system statistics by using collectd."
+                    "description": "Gather and render diagrams for system statistics by using collectd.",
                 },
                 "wireguard": {
                     "title": "WireGuard",
                     "description": "Alternative to OpenVPN, it provides fast, modern and secure VPN tunnel.",
                     "url": "https://openwrt.org/docs/guide-user/services/vpn/wireguard/start",
-                    "labels": [
-                        "advanced"
-                    ]
-                }
+                    "labels": ["advanced"],
+                },
             },
-            "labels": [
-                "community"
-            ],
-            "enabled": False
+            "labels": ["community"],
+            "enabled": False,
         },
         "lxc": {
-            "title": {
-                "en": "LXC utilities"
-            },
+            "title": {"en": "LXC utilities"},
             "description": {
                 "en": "Set of utilities to manage Linux Containers (lightweight virtualization technology)."
             },
             "url": "https://docs.turris.cz/geek/lxc/lxc/",
-            "labels": [
-                "storage",
-                "high_memory",
-                "advanced"
-            ],
-            "enabled": False
+            "labels": ["storage", "high_memory", "advanced"],
+            "enabled": False,
         },
         "nas": {
-            "title": {
-                "en": "NAS"
-            },
+            "title": {"en": "NAS"},
             "description": {
                 "en": "Services allowing to connect a disk to the router and use it as network data store."
             },
             "url": "https://wiki.turris.cz/doc/en/howto/nas",
             "options": {
-                "samba": {
-                    "title": "Samba",
-                    "description": "Implementation of SMB network protocol."
-                },
-                "dlna": {
-                    "title": "DLNA",
-                    "description": "Digital media sharing server."
-                },
-                "transmission": {
-                    "title": "Transmission",
-                    "description": "BitTorrent client."
-                },
+                "samba": {"title": "Samba", "description": "Implementation of SMB network protocol."},
+                "dlna": {"title": "DLNA", "description": "Digital media sharing server."},
+                "transmission": {"title": "Transmission", "description": "BitTorrent client."},
                 "raid": {
                     "title": "mdadm",
                     "description": "Software RAID storage support using mdadm.",
-                    "labels": [
-                        "advanced"
-                    ]
+                    "labels": ["advanced"],
                 },
                 "encrypt": {
                     "title": "Encrypted Storage",
                     "description": "Add support to access encrypted storage devices using dm-crypt.",
-                    "labels": [
-                        "advanced"
-                    ]
-                }
+                    "labels": ["advanced"],
+                },
             },
-            "labels": [
-                "community"
-            ],
-            "enabled": False
+            "labels": ["community"],
+            "enabled": False,
         },
         "net_monitoring": {
-            "title": {
-                "en": "Network monitoring and parental control"
-            },
-            "description": {
-                "en": "Tools to monitor local network and users on it."
-            },
+            "title": {"en": "Network monitoring and parental control"},
+            "description": {"en": "Tools to monitor local network and users on it."},
             "options": {
                 "netmetr": {
                     "title": "Internet connection speed measurement",
                     "description": "Actively measures speed of Internet connection using netmetr.cz service.",
-                    "url": "https://docs.turris.cz/basics/apps/netmetr/"
+                    "url": "https://docs.turris.cz/basics/apps/netmetr/",
                 },
                 "dev_detect": {
                     "title": "New devices detection",
                     "description": "Software for detecting new devices on local network.",
-                    "labels": [
-                        "experimental"
-                    ]
+                    "labels": ["experimental"],
                 },
                 "pakon": {
                     "title": "Pakon",
                     "description": "Software for in depth monitoring of your traffic using Suricata.",
                     "url": "https://docs.turris.cz/basics/apps/pakon/",
-                    "labels": [
-                        "experimental",
-                        "netload",
-                        "high_memory",
-                        "storage"
-                    ]
-                }
+                    "labels": ["experimental", "netload", "high_memory", "storage"],
+                },
             },
-            "enabled": False
+            "enabled": False,
         },
         "netboot": {
-            "title": {
-                "en": "Turris MOX network boot"
-            },
-            "description": {
-                "en": "Server-side for Turris MOX without microSD card used as Wi-Fi access point."
-            },
+            "title": {"en": "Turris MOX network boot"},
+            "description": {"en": "Server-side for Turris MOX without microSD card used as Wi-Fi access point."},
             "url": "https://docs.turris.cz/basics/apps/netboot",
-            "labels": [
-                "high_storage",
-                "experimental"
-            ],
-            "enabled": False
+            "labels": ["high_storage", "experimental"],
+            "enabled": False,
         },
         "netdata": {
-            "title": {
-                "en": "Netdata"
-            },
-            "description": {
-                "en": "Real-time perfomance and health monitoring options."
-            },
-            "labels": [
-                "community",
-                "high_memory"
-            ],
-            "enabled": False
+            "title": {"en": "Netdata"},
+            "description": {"en": "Real-time perfomance and health monitoring options."},
+            "labels": ["community", "high_memory"],
+            "enabled": False,
         },
         "nextcloud": {
-            "title": {
-                "en": "Nextcloud"
-            },
+            "title": {"en": "Nextcloud"},
             "description": {
                 "en": "Self-hosted files hosting and productivity platform that keeps you in control. Alternative to services such as Dropbox or Google Drive."
             },
             "url": "https://docs.turris.cz/geek/nextcloud/nextcloud/",
-            "labels": [
-                "experimental",
-                "storage"
-            ],
-            "enabled": False
+            "labels": ["experimental", "storage"],
+            "enabled": False,
         },
         "openvpn": {
-            "title": {
-                "en": "OpenVPN"
-            },
-            "description": {
-                "en": "Easy setup of the OpenVPN server from Foris."
-            },
+            "title": {"en": "OpenVPN"},
+            "description": {"en": "Easy setup of the OpenVPN server from Foris."},
             "url": "https://docs.turris.cz/basics/apps/openvpn/openvpn/",
-            "enabled": False
+            "enabled": False,
         },
         "tor": {
-            "title": {
-                "en": "Tor"
-            },
-            "description": {
-                "en": "Service to increase anonymity on the Internet."
-            },
-            "labels": [
-                "advanced",
-                "community"
-            ],
-            "enabled": False
+            "title": {"en": "Tor"},
+            "description": {"en": "Service to increase anonymity on the Internet."},
+            "labels": ["advanced", "community"],
+            "enabled": False,
         },
         "drivers": {
-            "title": {
-                "en": "Alternative core drivers"
-            },
+            "title": {"en": "Alternative core drivers"},
             "description": {
                 "en": "These options allow you to use alternative drivers over those available in default installation. You can try to enable these if you encounter some problems with default ones."
             },
@@ -358,22 +246,16 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
                 "ath10k_ct": {
                     "title": "Candela Technologies Wi-Fi drivers for Qualcomm Atheros QCA988x",
                     "description": "Alternative driver from Candela Technologies.",
-                    "boards": [
-                        "omnia",
-                        "turris1x"
-                    ]
+                    "boards": ["omnia", "turris1x"],
                 },
                 "ath10k_ct_htt": {
                     "title": "Candela Technologies Wi-Fi drivers for Qualcomm Atheros QCA988x with improved stability in busy networks",
-                    "description": "Alternative driver from Candela Technologies. It uses HTT TX data path for management frames, which improves stability in busy networks."
-                }
+                    "description": "Alternative driver from Candela Technologies. It uses HTT TX data path for management frames, which improves stability in busy networks.",
+                },
             },
-            "labels": [
-                "advanced",
-                "community"
-            ],
-            "enabled": False
-        }
+            "labels": ["advanced", "community"],
+            "enabled": False,
+        },
     }
 
     # actual stored user lists
@@ -383,49 +265,47 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         "advanced": {
             "title": "Advanced users",
             "description": "This functionality is usable only for advanced users.",
-            "severity": "secondary"
+            "severity": "secondary",
         },
         "community": {
             "title": "Community",
             "description": "This package list is not officially supported. Turris team has no responsibility for stability of software that is part of this list.",
-            "severity": "success"
+            "severity": "success",
         },
         "experimental": {
             "title": "Experimental",
             "description": "Software that is part of this package list is considered experimental. Problems when using it can be expected.",
-            "severity": "danger"
+            "severity": "danger",
         },
         "deprecated": {
             "title": "Deprecated",
             "description": "This package list and/or software that provides are planned to be removed. It is advised to not use it.",
-            "severity": "warning"
+            "severity": "warning",
         },
         "storage": {
             "title": "External storage",
             "description": "External storage use is highly suggested for use of this package list",
-            "severity": "primary"
+            "severity": "primary",
         },
         "high_memory": {
             "title": "High memory usage",
             "description": "Software in this package list consumes possibly higher amount of memory to run. It is not suggested to use it with small memory.",
-            "severity": "info"
+            "severity": "info",
         },
         "high_storage": {
             "title": "High storage usage",
             "description": "Software in this package list consumes possibly higher amount of storage space to install. It is not suggested to use it with small storages such as internal storage of Turris 1.x and SD cards with less than 1GB of storage.",
-            "severity": "info"
+            "severity": "info",
         },
         "netload": {
             "title": "Network load",
             "description": "This functionality can decreases network performance. That can be felt only on faster uplinks but because of that it still can be decremental to some users.",
-            "severity": "secondary"
-        }
+            "severity": "secondary",
+        },
     }
 
     INSTALLED_PACKAGES = ["foo-alternative", "turris-version"]
-    PROVIDING_PACKAGES = {
-        "foo-alternative": "foo"
-    }
+    PROVIDING_PACKAGES = {"foo-alternative": "foo"}
 
     languages = [
         {"code": "cs", "enabled": True},
@@ -448,7 +328,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self, lang):
-        """ Mocks get updater settings
+        """Mocks get updater settings
 
         :returns: current updater settings
         :rtype: dict
@@ -465,7 +345,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     @staticmethod
     @logger_wrapper(logger)
     def update_settings(user_lists, languages, approvals_settings, enabled):
-        """ Mocks update updater settings
+        """Mocks update updater settings
 
         :param user_lists: new user-list set
         :type user_lists: list of dictionaries, deprecated and ignored here
@@ -491,7 +371,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
     @staticmethod
     @logger_wrapper(logger)
     def get_package_lists(lang):
-        """ Mocks getting package lists
+        """Mocks getting package lists
 
         :param lang: language en/cs/de
         :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", "options": [], "labels": []]
@@ -524,7 +404,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         return exported
 
     def update_package_lists(self, package_lists):
-        """ Update package lists
+        """Update package lists
 
         :param package_lists: new package list settings
         :type package_lists: list of dictionaries
@@ -535,7 +415,9 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
             MockUpdaterHandler.PACKAGE_LISTS = {}
             for lst in package_lists:
                 list_name = lst["name"]
-                MockUpdaterHandler.PACKAGE_LISTS[list_name] = copy.deepcopy(MockUpdaterHandler.DEFAULT_PACKAGE_LISTS[list_name])
+                MockUpdaterHandler.PACKAGE_LISTS[list_name] = copy.deepcopy(
+                    MockUpdaterHandler.DEFAULT_PACKAGE_LISTS[list_name]
+                )
                 MockUpdaterHandler.PACKAGE_LISTS[list_name]["enabled"] = True
 
                 default_list_options = MockUpdaterHandler.PACKAGE_LISTS[list_name].get("options", {})
@@ -552,7 +434,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @staticmethod
     def query_installed_packages(packages: typing.List[str]) -> typing.List[str]:
-        """ Query whether packages are installed or provided by another packages """
+        """Query whether packages are installed or provided by another packages"""
         ret = set()
         for package in packages:
             if package in MockUpdaterHandler.INSTALLED_PACKAGES:
@@ -565,7 +447,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_approval(self):
-        """ Mocks return of current approval
+        """Mocks return of current approval
         :returns: current approval or {"present": False}
         :rtype: dict
         """
@@ -590,8 +472,10 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @staticmethod
     def _is_option_enabled(list_name, opt_name, opt_data):
-        if (list_name in MockUpdaterHandler.PACKAGE_LISTS
-                and opt_name in MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"]):
+        if (
+            list_name in MockUpdaterHandler.PACKAGE_LISTS
+            and opt_name in MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"]
+        ):
             return MockUpdaterHandler.PACKAGE_LISTS[list_name]["options"][opt_name]["enabled"]
 
         return opt_data.get("default", False)
@@ -614,7 +498,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_languages(self):
-        """ Mocks getting languages
+        """Mocks getting languages
 
         :returns: [{"code": "cs", "enabled": True}, {"code": "de", "enabled": True}, ...]
         :rtype: dict
@@ -631,13 +515,12 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def resolve_approval(self, hash, solution):
-        """ Mocks resolving of the current approval
-        """
+        """Mocks resolving of the current approval"""
         return random.choice([True, False])
 
     @logger_wrapper(logger)
     def run(self, set_reboot_indicator):
-        """ Mocks updater start
+        """Mocks updater start
         :param set_reboot_indicator: should reboot indicator be set after updater finishes
         :type set_reboot_indicator: bool
         """
@@ -645,12 +528,10 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_enabled(self):
-        """ Mocks get info whether updater is enabled
-        """
+        """Mocks get info whether updater is enabled"""
         return self.enabled
 
     @logger_wrapper(logger)
     def get_running(self):
-        """ Mocks get info whether updater is running
-        """
+        """Mocks get info whether updater is running"""
         return self.running

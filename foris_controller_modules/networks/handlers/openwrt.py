@@ -34,7 +34,7 @@ class OpenwrtNetworksHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ get networks settings
+        """get networks settings
 
         :returns: current networks settings
         :rtype: dict
@@ -43,7 +43,7 @@ class OpenwrtNetworksHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ updates current networks settings
+        """updates current networks settings
 
         :param new_settings: new settings dictionary
         :type new_settings: dict

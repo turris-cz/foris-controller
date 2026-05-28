@@ -65,16 +65,16 @@ class MockLanHandler(Handler, BaseMockHandler):
                     "duid": "00010003d8e63397f73ed8cd7cda",
                     "expires": 1539350186,
                     "active": True,
-                    "hostname": "prvni"
+                    "hostname": "prvni",
                 },
                 {
                     "ipv6": "fd52:ad42:a6c9::64fa",
                     "duid": "00020000df167896750a08ce0782",
                     "expires": 1539350186,
                     "active": False,
-                    "hostname": "*"
+                    "hostname": "*",
                 },
-            ]
+            ],
         },
     }
     mode_unmanaged: typing.Dict[str, typing.Any] = {
@@ -89,7 +89,7 @@ class MockLanHandler(Handler, BaseMockHandler):
         },
     }
 
-    qos = {'download': 1024, 'enabled': False, 'upload': 1024}
+    qos = {"download": 1024, "enabled": False, "upload": 1024}
 
     lan_redirect = True
 
@@ -97,7 +97,7 @@ class MockLanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get lan settings
+        """Mocks get lan settings
 
         :returns: current lan settiongs
         :rtype: str
@@ -120,17 +120,15 @@ class MockLanHandler(Handler, BaseMockHandler):
             "mode_managed": MockLanHandler.mode_managed,
             "mode_unmanaged": mode_unmanaged,
             "interface_count": len(MockNetworksHandler.networks["lan"]),
-            "interface_up_count": len(
-                [e for e in MockNetworksHandler.networks["lan"] if e["state"] == "up"]
-            ),
+            "interface_up_count": len([e for e in MockNetworksHandler.networks["lan"] if e["state"] == "up"]),
             "lan_redirect": MockLanHandler.lan_redirect,
-            "qos": MockLanHandler.qos
+            "qos": MockLanHandler.qos,
         }
         return result
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings: dict):
-        """ Mocks updates current lan settings
+        """Mocks updates current lan settings
         :returns: True if update passes
         :rtype: bool
         """
@@ -147,12 +145,8 @@ class MockLanHandler(Handler, BaseMockHandler):
             self.mode_managed["router_ip"] = mode["router_ip"]
             self.mode_managed["netmask"] = mode["netmask"]
             self.mode_managed["dhcp"]["enabled"] = mode["dhcp"]["enabled"]
-            self.mode_managed["dhcp"]["start"] = mode["dhcp"].get(
-                "start", self.mode_managed["dhcp"]["start"]
-            )
-            self.mode_managed["dhcp"]["limit"] = mode["dhcp"].get(
-                "limit", self.mode_managed["dhcp"]["limit"]
-            )
+            self.mode_managed["dhcp"]["start"] = mode["dhcp"].get("start", self.mode_managed["dhcp"]["start"])
+            self.mode_managed["dhcp"]["limit"] = mode["dhcp"].get("limit", self.mode_managed["dhcp"]["limit"])
             self.mode_managed["dhcp"]["lease_time"] = mode["dhcp"].get(
                 "lease_time", self.mode_managed["dhcp"]["lease_time"]
             )
@@ -169,9 +163,7 @@ class MockLanHandler(Handler, BaseMockHandler):
                         self.mode_managed["dhcp"]["start"],
                         self.mode_managed["dhcp"]["limit"],
                     )
-                    and MockLanHandler.in_network(
-                        e["ip"], self.mode_managed["router_ip"], self.mode_managed["netmask"]
-                    )
+                    and MockLanHandler.in_network(e["ip"], self.mode_managed["router_ip"], self.mode_managed["netmask"])
                 )
             ]
 
@@ -263,7 +255,7 @@ class MockLanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> dict:
-        """ Mocks setting configuration of a single dhcp client
+        """Mocks setting configuration of a single dhcp client
 
         It shouldn't allow overwriting existing configuration
 
@@ -299,7 +291,7 @@ class MockLanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def update_dhcp_client(self, ip: str, old_mac: str, mac: str, hostname: str) -> dict:
-        """ Mocks updating configuration of a single dhcp client
+        """Mocks updating configuration of a single dhcp client
 
         :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
         :param old_mac: previous mac address of the client
@@ -354,7 +346,7 @@ class MockLanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_port_forwardings(self):
-        return {"rules" : self.forwarding}
+        return {"rules": self.forwarding}
 
     @logger_wrapper(logger)
     def port_forwarding_set(
@@ -364,7 +356,7 @@ class MockLanHandler(Handler, BaseMockHandler):
         dest_ip: str,
         enabled: bool,
         dest_port: typing.Optional[typing.Union[int, str]] = None,
-        old_name: typing.Optional[str] = None
+        old_name: typing.Optional[str] = None,
     ):
         self.forwarding = [e for e in self.forwarding if e["name"] not in (old_name, name)]
         self.forwarding.append(

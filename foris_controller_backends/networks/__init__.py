@@ -49,7 +49,7 @@ def convert_network_name(name: str) -> str:
     return name
 
 
-class NetworksUci():
+class NetworksUci:
     def _prepare_network(self, data: dict, section: str, ports_map: typing.Dict[str, dict]) -> typing.List[dict]:
         """Map detected interfaces to interfaces found in uci config file.
 
@@ -69,7 +69,7 @@ class NetworksUci():
         interfaces = interfaces if isinstance(interfaces, (tuple, list)) else interfaces.split(" ")
         device = get_option_named(data, "network", section, "device", "")
 
-        ports = get_option_named(data,"network", device.replace("-", "_"), "ports", [])
+        ports = get_option_named(data, "network", device.replace("-", "_"), "ports", [])
 
         # by default migrated "br-lan" and "br-guest_turris" is anonymous
         if section in ("lan", "guest_turris") and not ports and not interfaces:
@@ -117,10 +117,7 @@ class NetworksUci():
         or just be there from default configuration.
         """
         devs = get_sections_by_type(uci_data, "network", "device")
-        bridge = [
-            dev for dev in devs
-            if dev["name"].startswith("cfg") and dev["data"].get("name") == f"br-{section}"
-        ]
+        bridge = [dev for dev in devs if dev["name"].startswith("cfg") and dev["data"].get("name") == f"br-{section}"]
 
         if not bridge:
             logger.debug("No anonymous section 'br-%s' found among network devices.", section)
@@ -148,9 +145,7 @@ class NetworksUci():
             # check whether the device is enabled
             device_name = iface_section["data"]["device"]
             try:
-                if parse_bool(
-                    get_option_named(wireless_data, "wireless", device_name, "disabled", "0")
-                ):
+                if parse_bool(get_option_named(wireless_data, "wireless", device_name, "disabled", "0")):
                     continue  # device section disabled
             except UciRecordNotFound:
                 continue  # section not found
@@ -162,7 +157,9 @@ class NetworksUci():
 
         return result
 
-    def _find_enabled_networks_by_macaddr(self, wireless_data, macaddr: typing.Optional[str], ifname: str) -> typing.Optional[NetworkAndSSIDs]:
+    def _find_enabled_networks_by_macaddr(
+        self, wireless_data, macaddr: typing.Optional[str], ifname: str
+    ) -> typing.Optional[NetworkAndSSIDs]:
         """
         :returns: None if no valid device section found, or list of (network, ssid) (can be empty)
         """
@@ -185,9 +182,7 @@ class NetworksUci():
                 for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
                 if section["data"].get("device") == device_section["name"]
                 and not parse_bool(section["data"].get("disabled", "0"))
-                and (
-                    section["data"].get("ifname") == ifname or section["data"].get("ifname") is None
-                )
+                and (section["data"].get("ifname") == ifname or section["data"].get("ifname") is None)
             ]
             for interface_section in interface_sections:
                 network = interface_section["data"].get("network", None)
@@ -197,10 +192,7 @@ class NetworksUci():
         return result
 
     def _find_enabled_networks_by_path(
-        self,
-        wireless_data,
-        slot_path: typing.Optional[str],
-        ifname: str
+        self, wireless_data, slot_path: typing.Optional[str], ifname: str
     ) -> typing.Optional[NetworkAndSSIDs]:
         """
         Return list of tuples with (network, ssid).
@@ -234,9 +226,7 @@ class NetworksUci():
                 for section in get_sections_by_type(wireless_data, "wireless", "wifi-iface")
                 if section["data"].get("device") == device_section["name"]
                 and not parse_bool(section["data"].get("disabled", "0"))
-                and (
-                    section["data"].get("ifname") == ifname or section["data"].get("ifname") is None
-                )
+                and (section["data"].get("ifname") == ifname or section["data"].get("ifname") is None)
             ]
 
             for interface_section in interface_sections:
@@ -256,7 +246,7 @@ class NetworksUci():
             for k, v in interfaces.items():
                 v["id"] = k
                 v["configurable"] = True
-                if v["type"] in {"wifi","wwan"}:
+                if v["type"] in {"wifi", "wwan"}:
                     v["configurable"] = False
                 if v["type"] == "wifi":
                     res_wireless.append(v)
@@ -268,8 +258,7 @@ class NetworksUci():
 
     @staticmethod
     def get_interface_count(network_data, wireless_data, network_name, up_only=False):
-        """ returns a count of iterfaces corresponding to the network
-        """
+        """returns a count of iterfaces corresponding to the network"""
         # convert guest name
         network_name = "guest_turris" if network_name == "guest" else network_name
 
@@ -302,16 +291,12 @@ class NetworksUci():
         if get_option_named(network_data, "network", network_name, "ifname", "") != "":
             config_interfaces = get_option_named(network_data, "network", network_name, "ifname")
         else:
-            device = get_option_named(network_data, "network", network_name, "device", "").replace("-","_")
+            device = get_option_named(network_data, "network", network_name, "device", "").replace("-", "_")
             if section_exists(network_data, "network", device):
                 config_interfaces = get_option_named(network_data, "network", device, "ports", [])
             else:
                 config_interfaces = get_option_named(network_data, "network", network_name, "device", [])
-        config_interfaces = (
-            config_interfaces
-            if isinstance(config_interfaces, (list, tuple))
-            else [config_interfaces]
-        )
+        config_interfaces = config_interfaces if isinstance(config_interfaces, (list, tuple)) else [config_interfaces]
         return len(set(hw_interfaces).intersection(config_interfaces)) + wifi_iface_count
 
     def _find_enabled_wireless_networks(self, wireless_data: dict, record: dict) -> NetworkAndSSIDs:
@@ -343,7 +328,7 @@ class NetworksUci():
         return []  # None found
 
     def get_settings(self):
-        """ Get current wifi settings
+        """Get current wifi settings
         :returns: {"device": {}, "networks": [{...},]}
         "rtype: dict
         """
@@ -378,11 +363,7 @@ class NetworksUci():
         none_network = list(iface_map.values())  # reduced in _prepare_network using pop()
         # Note: none_network interfaces should be already sorted from turrishw
 
-        network_groups_map = {
-            "wan": wan_network,
-            "lan": lan_network,
-            "guest_turris": guest_network
-        }
+        network_groups_map = {"wan": wan_network, "lan": lan_network, "guest_turris": guest_network}
 
         # prepare wifi interfaces... something along this:
         # self._prepare_wireless_network(lan_network, guest_network, none_network)
@@ -398,15 +379,9 @@ class NetworksUci():
                 network_groups_map.get(network_group, none_network).append(record)
 
         # parse firewall options
-        ssh_on_wan = parse_bool(
-            get_option_named(firewall_data, "firewall", "wan_ssh_turris_rule", "enabled", "0")
-        )
-        http_on_wan = parse_bool(
-            get_option_named(firewall_data, "firewall", "wan_http_turris_rule", "enabled", "0")
-        )
-        https_on_wan = parse_bool(
-            get_option_named(firewall_data, "firewall", "wan_https_turris_rule", "enabled", "0")
-        )
+        ssh_on_wan = parse_bool(get_option_named(firewall_data, "firewall", "wan_ssh_turris_rule", "enabled", "0"))
+        http_on_wan = parse_bool(get_option_named(firewall_data, "firewall", "wan_http_turris_rule", "enabled", "0"))
+        https_on_wan = parse_bool(get_option_named(firewall_data, "firewall", "wan_https_turris_rule", "enabled", "0"))
 
         return {
             "device": {

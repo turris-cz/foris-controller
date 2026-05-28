@@ -29,9 +29,7 @@ FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test
 
 
 def test_reboot(uci_configs_init, infrastructure, reboot_command):
-    res = infrastructure.process_message(
-        {"module": "maintain", "action": "reboot", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "maintain", "action": "reboot", "kind": "request"})
     assert res["data"]["result"]
 
 
@@ -42,9 +40,7 @@ def test_reboot_opewrt(uci_configs_init, infrastructure, reboot_command):
 
 
 def test_generate_backup(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "maintain", "action": "generate_backup", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "maintain", "action": "generate_backup", "kind": "request"})
     assert "backup" in res["data"].keys()
     base64.b64decode(res["data"]["backup"])
 
@@ -85,9 +81,7 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
     )
     assert res["data"] == {"result": True}
     wait_for_updater_run_finished(notifications, infrastructure)
-    notifications = infrastructure.get_notifications(
-        notifications, filters=[("maintain", "reboot_required")]
-    )
+    notifications = infrastructure.get_notifications(notifications, filters=[("maintain", "reboot_required")])
     assert notifications[-1] == {
         "module": "maintain",
         "action": "reboot_required",
@@ -96,9 +90,7 @@ def test_restore_backup_openwrt(file_root_init, uci_configs_init, infrastructure
 
 
 def test_generate_and_restore(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "maintain", "action": "generate_backup", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "maintain", "action": "generate_backup", "kind": "request"})
     assert "backup" in res["data"].keys()
 
     res = infrastructure.process_message(

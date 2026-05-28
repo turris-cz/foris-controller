@@ -63,8 +63,7 @@ def makedirs(path: typing.Union[Path, str], mask: int = 0o0755, exist_ok: bool =
 
 class BaseFile:
     def _file_content(self, path: typing.Union[Path, str]) -> str:
-        """Returns a content of a file
-        """
+        """Returns a content of a file"""
         path = inject_file_root(path)
         logger.debug("Trying to read file '%s'", path)
         with path.open() as f:

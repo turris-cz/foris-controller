@@ -25,47 +25,38 @@ from foris_controller_testtools.utils import get_uci_module
 
 def _set_hostname(infrastructure, hostname: str) -> dict:
     res = infrastructure.process_message(
-        {
-            "module": "system",
-            "action": "set_hostname",
-            "kind": "request",
-            "data": {
-                "hostname": hostname
-            }
-        }
+        {"module": "system", "action": "set_hostname", "kind": "request", "data": {"hostname": hostname}}
     )
     return res
 
 
 def _get_hostname(infrastructure) -> str:
-    res = infrastructure.process_message(
-        {"module": "system", "action": "get_hostname", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "system", "action": "get_hostname", "kind": "request"})
     assert "errors" not in res.keys()
     return res["data"]["hostname"]
 
 
-@pytest.mark.parametrize('hostname', ['','My custom hostname%'])
+@pytest.mark.parametrize("hostname", ["", "My custom hostname%"])
 def test_set_short_or_invalid_hostname(infrastructure, hostname) -> None:
-    """ Assert that hostname string is not valid. """
+    """Assert that hostname string is not valid."""
     res = _set_hostname(infrastructure, hostname)
     assert "errors" in res.keys()
-    err = res['errors'][0]['stacktrace']
+    err = res["errors"][0]["stacktrace"]
     assert f"ValidationError: '{hostname}' does not match '^[A-Za-z-_0-9]{{1,63}}$'" in err
 
 
 def test_get_hostname(infrastructure):
-    """ Test getting hostname. """
+    """Test getting hostname."""
     hostname = _get_hostname(infrastructure)
-    assert hostname == 'turris'
+    assert hostname == "turris"
 
 
 def test_set_and_check_hostname(infrastructure):
-    """ Test setting and getting `hostname` via message-bus. """
-    new_hostname = 'furry'
+    """Test setting and getting `hostname` via message-bus."""
+    new_hostname = "furry"
     success = _set_hostname(infrastructure, new_hostname)
     assert "errors" not in success.keys()
-    assert success['data']["result"] is True
+    assert success["data"]["result"] is True
 
     ret_hostname = _get_hostname(infrastructure)
     assert new_hostname == ret_hostname
@@ -73,10 +64,10 @@ def test_set_and_check_hostname(infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_set_and_check_with_uci(infrastructure, uci_configs_init):
-    """ Test setting and getting `hostname` via uci interface. """
+    """Test setting and getting `hostname` via uci interface."""
     uci = get_uci_module(infrastructure.name)
 
-    new_hostname = 'blurry'
+    new_hostname = "blurry"
     _set_hostname(infrastructure, new_hostname)
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -87,7 +78,7 @@ def test_set_and_check_with_uci(infrastructure, uci_configs_init):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_get_hostname_irregular(infrastructure, uci_configs_init):
-    """ Irregular hostname set in UCI should not fail on validation. """
+    """Irregular hostname set in UCI should not fail on validation."""
 
     uci = get_uci_module(infrastructure.name)
 

@@ -27,7 +27,7 @@ class WanModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data):
-        """ Get current wan settings
+        """Get current wan settings
         :param data: supposed to be {}
         :type data: dict
         :returns: current wan settings
@@ -36,7 +36,7 @@ class WanModule(BaseModule):
         return self.handler.get_settings()
 
     def action_update_settings(self, data):
-        """ Updates wan settings
+        """Updates wan settings
         :param data: new wan settings
         :type data: dict
         :returns: result of the update {'result': True/False}
@@ -53,7 +53,7 @@ class WanModule(BaseModule):
         return {"result": res}
 
     def action_connection_test_trigger(self, data):
-        """ Triggers connectio test
+        """Triggers connectio test
         :param data: supposed to be {}
         :type data: dict
         :returns: dict containing test id {'test_id': 'xxxx'}
@@ -68,13 +68,11 @@ class WanModule(BaseModule):
             self.notify("connection_test_finished", msg)
 
         return {
-            "test_id": self.handler.connection_test_trigger(
-                data["test_kinds"], notify, exit_notify, self.reset_notify
-            )
+            "test_id": self.handler.connection_test_trigger(data["test_kinds"], notify, exit_notify, self.reset_notify)
         }
 
     def action_connection_test_status(self, data):
-        """ Reads connection test data
+        """Reads connection test data
         :param data: supposed to be {'test_id': 'xxxx'}
         :type data: dict
         :returns: data about connection test {'status': 'xxxx', 'data': {...}}
@@ -83,7 +81,7 @@ class WanModule(BaseModule):
         return self.handler.connection_test_status(data["test_id"])
 
     def action_get_wan_status(self, data):
-        """ Obtains info regarding wan interface status
+        """Obtains info regarding wan interface status
         :param data: supposed to be {}
         :type data: dict
         :returns: data regarding wan interface status {'up': True/False}

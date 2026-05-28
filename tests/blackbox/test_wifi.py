@@ -83,9 +83,16 @@ DEFAULT_CONFIG = [
                 "band": "5g",
                 "available_htmodes": [
                     "NOHT",
-                    "HT20", "HT40",
-                    "VHT20", "VHT40", "VHT80", "VHT160",
-                    "HE20", "HE40", "HE80", "HE160",
+                    "HT20",
+                    "HT40",
+                    "VHT20",
+                    "VHT40",
+                    "VHT80",
+                    "VHT160",
+                    "HE20",
+                    "HE40",
+                    "HE80",
+                    "HE160",
                 ],
                 "available_channels": [
                     {"number": 36, "frequency": 5180, "radar": False},
@@ -225,16 +232,13 @@ def cut_out_htdata(data):
     for item in data:
         bands = []
         for band in item["available_bands"]:
-            bands.append(
-                {
-                    "band": band["band"],
-                    "available_htmodes": set(band.pop("available_htmodes"))
-                }
-            )
-        out.append({
-            "id": item["id"],
-            "available_bands": bands,
-        })
+            bands.append({"band": band["band"], "available_htmodes": set(band.pop("available_htmodes"))})
+        out.append(
+            {
+                "id": item["id"],
+                "available_bands": bands,
+            }
+        )
 
     return out
 
@@ -251,9 +255,7 @@ def match_default_openwrt_config(result_data):
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_settings(file_root_init, uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
     assert res.keys() == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
 
@@ -266,6 +268,7 @@ def test_get_settings_wpa2_openwrt(file_root_init, uci_configs_init, infrastruct
     There are separate objects in json schema representing multiple replies of `get_settings` (WPA2, WPA3 and custom),
     so test each reply separately.
     """
+
     def get(infrastructure):
         res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
         assert "errors" not in res.keys()
@@ -314,6 +317,7 @@ def test_get_settings_wpa3_openwrt(file_root_init, uci_configs_init, infrastruct
     There are separate objects in json schema representing multiple replies of `get_settings` (WPA2, WPA3 and custom),
     so test each reply separately.
     """
+
     def get(infrastructure):
         res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
         assert "errors" not in res.keys()
@@ -404,9 +408,7 @@ def test_get_settings_custom_encryption_openwrt(file_root_init, uci_configs_init
         backend.set_option("wireless", "@wifi-iface[1]", "disabled", "0")
         backend.set_option("wireless", "@wifi-iface[1]", "encryption", "none")
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
     assert "devices" in res["data"].keys()
     devices = res["data"]["devices"]
@@ -422,9 +424,7 @@ def test_get_settings_custom_encryption_ieee80211w_openwrt(file_root_init, uci_c
         backend.set_option("wireless", "@wifi-iface[0]", "encryption", "wpa3-mixed")  # WPA3/WPA3-enterprise
         backend.set_option("wireless", "@wifi-device[0]", "disabled", "0")
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
     assert "devices" in res["data"].keys()
     devices = res["data"]["devices"]
@@ -434,15 +434,13 @@ def test_get_settings_custom_encryption_ieee80211w_openwrt(file_root_init, uci_c
 
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_custom_encryption_openwrt(
-    file_root_init,
-    uci_configs_init,
-    infrastructure,
-    network_restart_command
+    file_root_init, uci_configs_init, infrastructure, network_restart_command
 ):
     """Test that setting custom encryption will keep the `encryption` + `ieee80211w` settings intact.
 
     That it is possible to change SSID, password, channel, frequency band, etc., but not the encryption settings.
     """
+
     def update(*devices, clean_guest=False):
         res = infrastructure.process_message(
             {
@@ -466,9 +464,7 @@ def test_update_settings_custom_encryption_openwrt(
             data = backend.read()
 
         # try to perform get_settings to see that nothing is broken
-        res = infrastructure.process_message(
-            {"module": "wifi", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
         assert "errors" not in res
 
         return data
@@ -491,7 +487,7 @@ def test_update_settings_custom_encryption_openwrt(
             "password": "2gcustompass",
             "guest_wifi": {"enabled": False},
         },
-        clean_guest=True
+        clean_guest=True,
     )
     assert uci.get_option_named(data, "wireless", "default_radio0", "ssid") == "Turris-custom-2G-with-long-SSID"
     assert uci.get_option_named(data, "wireless", "default_radio0", "key") == "2gcustompass"
@@ -556,7 +552,11 @@ def test_update_settings_custom_encryption_openwrt(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_initial_tos_config(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
 ):
     """In general Foris-controller should handle any unexpected values of 'encryption' as 'custom'
 
@@ -568,9 +568,7 @@ def test_get_settings_initial_tos_config(
     * encryption none && interface disabled => WPA2/3 (TOS preferred)
     * encryption none && interface enabled => custom (user wants it that way)
     """
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
     assert "devices" in res["data"].keys()
     devices = res["data"]["devices"]
@@ -581,7 +579,11 @@ def test_get_settings_initial_tos_config(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_without_encryption_set(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
 ):
     """Test that default encryption values are returned in case the option is missing"""
     uci = get_uci_module(infrastructure.name)
@@ -590,9 +592,7 @@ def test_get_settings_without_encryption_set(
         backend.del_option("wireless", "@wifi-iface[0]", "encryption")
         backend.del_option("wireless", "@wifi-iface[1]", "encryption")
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
     assert "devices" in res["data"].keys()
     devices = res["data"]["devices"]
@@ -602,7 +602,11 @@ def test_get_settings_without_encryption_set(
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_update_settings(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
 ):
     filters = [("wifi", "update_settings")]
 
@@ -635,9 +639,7 @@ def test_update_settings(
             "data": {"devices": devices},
         }
 
-        res = infrastructure.process_message(
-            {"module": "wifi", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
         assert res["module"] == "wifi"
         assert res["action"] == "get_settings"
@@ -871,9 +873,7 @@ def test_update_and_get_wpa2_modes(
         backend.set_option("wireless", "default_radio0", "encryption", wpa2_mode)
         backend.set_option("wireless", "guest_iface_0", "encryption", wpa2_mode)
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
     wifi_dev = res["data"]["devices"][0]
     assert wifi_dev["encryption"] == "WPA2"
@@ -883,7 +883,11 @@ def test_update_and_get_wpa2_modes(
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_uci(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
 ):
 
     uci = get_uci_module(infrastructure.name)
@@ -913,14 +917,12 @@ def test_update_settings_uci(
         real_section = [
             e
             for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
-            if e["data"].get("device") == radio_name
-            and not e.get("name", "").startswith("guest_iface_")
+            if e["data"].get("device") == radio_name and not e.get("name", "").startswith("guest_iface_")
         ][0]["name"]
         guest_section = [
             e
             for e in uci.get_sections_by_type(data, "wireless", "wifi-iface")
-            if e["data"].get("device") == radio_name
-            and e.get("name", "").startswith("guest_iface_")
+            if e["data"].get("device") == radio_name and e.get("name", "").startswith("guest_iface_")
         ][0]["name"]
         return real_section, guest_section
 
@@ -956,50 +958,30 @@ def test_update_settings_uci(
     assert uci.get_option_named(data, "wireless", "radio0", "channel") == "36"
     assert uci.get_option_named(data, "wireless", "radio0", "band") == "5g"
     assert uci.get_option_named(data, "wireless", "radio0", "htmode") == "VHT80"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is False
     real_section, guest_section = get_sections(data, "radio0")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev1"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "passpass"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
-        is False
-    )
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
     assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "0"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) is True
 
     assert uci.get_option_named(data, "wireless", "radio1", "channel") == "11"
     assert uci.get_option_named(data, "wireless", "radio1", "band") == "2g"
     assert uci.get_option_named(data, "wireless", "radio1", "htmode") == "HT20"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is False
     real_section, guest_section = get_sections(data, "radio1")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev2"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "ssapssap"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
-        is False
-    )
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae"
     assert uci.get_option_named(data, "wireless", real_section, "ieee80211w") == "0"
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) is True
 
     data = update(
         {
@@ -1033,51 +1015,31 @@ def test_update_settings_uci(
     assert uci.get_option_named(data, "wireless", "radio0", "channel") == "40"
     assert uci.get_option_named(data, "wireless", "radio0", "band") == "5g"
     assert uci.get_option_named(data, "wireless", "radio0", "htmode") == "VHT40"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is False
     real_section, guest_section = get_sections(data, "radio0")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev11"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "passpass"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
-        is False
-    )
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is False
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae-mixed"
     assert uci.get_option_named(data, "wireless", real_section, "ieee80211w", "") == ""
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) is True
 
     assert uci.get_option_named(data, "wireless", "radio1", "channel") == "12"
     assert uci.get_option_named(data, "wireless", "radio1", "band") == "2g"
     assert uci.get_option_named(data, "wireless", "radio1", "htmode") == "HT40"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is False
     real_section, guest_section = get_sections(data, "radio1")
     assert uci.get_option_named(data, "wireless", real_section, "ssid") == "Dev22"
     assert uci.get_option_named(data, "wireless", real_section, "key") == "ssapssap"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
-        is False
-    )
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) is False
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "hidden", "0")) is True
 
     assert uci.get_option_named(data, "wireless", real_section, "encryption") == "sae"
     assert uci.get_option_named(data, "wireless", real_section, "ieee80211w", "") == ""
     assert uci.get_option_named(data, "wireless", real_section, "wpa_group_rekey") == "86400"
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
-        is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) is False
     assert uci.get_option_named(data, "wireless", guest_section, "ssid") == "Dev22G"
     assert uci.get_option_named(data, "wireless", guest_section, "key") == "ssapssapg"
     assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
@@ -1086,10 +1048,7 @@ def test_update_settings_uci(
     assert uci.get_option_named(data, "wireless", guest_section, "mode") == "ap"
     assert uci.get_option_named(data, "wireless", guest_section, "network") == "guest_turris"
 
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0")) is True
 
     # test setting auto frequency
     data = update(
@@ -1119,44 +1078,23 @@ def test_update_settings_uci(
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is True
     real_section, guest_section = get_sections(data, "radio1")
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
-        is True
-    )
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) is True
     assert uci.get_option_named(data, "wireless", guest_section, "encryption") == "psk2+ccmp"
     assert uci.get_option_named(data, "wireless", guest_section, "ieee80211w", "") == ""
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled", "0")) is True
 
     data = update({"id": 0, "enabled": False}, {"id": 1, "enabled": False})
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio0", "disabled", "0")) is True
     real_section, guest_section = get_sections(data, "radio0")
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
-        is True
-    )
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) is True
 
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "radio1", "disabled", "0")) is True
     real_section, guest_section = get_sections(data, "radio1")
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0"))
-        is True
-    )
-    assert (
-        uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0"))
-        is True
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", real_section, "disabled", "0")) is True
+    assert uci.parse_bool(uci.get_option_named(data, "wireless", guest_section, "disabled", "0")) is True
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -1211,8 +1149,8 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
                 "enabled": False,
                 "SSID": "Turris-guest",
                 "encryption": DEFAULT_WIFI_ENCRYPTION,
-                "password": "passpass"
-            }
+                "password": "passpass",
+            },
         }
     )
 
@@ -1408,11 +1346,7 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
             "encryption": DEFAULT_WIFI_ENCRYPTION,
             "ieee80211w_disabled": False,
             "password": "passpass",
-            "guest_wifi": {
-                "enabled": True,
-                "SSID": "Turris-guest",
-                "password": "passpass"
-            }
+            "guest_wifi": {"enabled": True, "SSID": "Turris-guest", "password": "passpass"},
         }
     )
 
@@ -1447,9 +1381,7 @@ def test_reset_mock(wifi_opt, file_root_init, uci_configs_init, infrastructure, 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {"module": "wifi", "action": "reset", "kind": "notification"}
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
     # test initial openwrt situation (based on default omnia settings)
@@ -1489,9 +1421,7 @@ def test_reset_openwrt(wifi_opt, file_root_init, uci_configs_init, infrastructur
     notifications = infrastructure.get_notifications(notifications, filters=filters)
     assert notifications[-1] == {"module": "wifi", "action": "reset", "kind": "notification"}
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "devices" in res["data"].keys()
     # test initial openwrt situation (based on default omnia settings)
@@ -1507,9 +1437,7 @@ def test_reset_openwrt(wifi_opt, file_root_init, uci_configs_init, infrastructur
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
-def test_too_long_generated_guest_ssid(
-    file_root_init, uci_configs_init, infrastructure, network_restart_command
-):
+def test_too_long_generated_guest_ssid(file_root_init, uci_configs_init, infrastructure, network_restart_command):
     res = infrastructure.process_message(
         {
             "module": "wifi",
@@ -1540,9 +1468,7 @@ def test_too_long_generated_guest_ssid(
         "kind": "reply",
         "module": "wifi",
     }
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
     assert res["data"]["devices"][0]["guest_wifi"]["SSID"] == "Turris-guest"
 
 
@@ -1550,9 +1476,7 @@ def test_too_long_generated_guest_ssid(
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_missing_wireless(file_root_init, uci_configs_init, infrastructure):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
 
 
@@ -1568,9 +1492,7 @@ def test_get_hwmode_openwrt_21_02(infrastructure, uci_configs_init):
         # Make sure that `option hwmode` is not interfering
         backend.del_option("wireless", "radio0", "hwmode", fail_on_error=False)
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
     assert "errors" not in res
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -1591,9 +1513,7 @@ def test_get_hwmode_fallback_openwrt(infrastructure, uci_configs_init):
         backend.del_option("wireless", "radio0", "band", fail_on_error=False)
         backend.del_option("wireless", "radio0", "hwmode", fail_on_error=False)
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
     assert "errors" not in res
     assert res["data"]["devices"][0]["band"] == "2g"
 
@@ -1605,9 +1525,7 @@ def test_get_80211ax_htmodes(infrastructure, uci_configs_init):
         "5g": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80", "VHT160", "HE20", "HE40", "HE80", "HE160"],
     }
 
-    res = infrastructure.process_message(
-        {"module": "wifi", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res
     assert len(res["data"]["devices"]) >= 1
@@ -1622,7 +1540,11 @@ def test_get_80211ax_htmodes(infrastructure, uci_configs_init):
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_uci_country(
-    init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
 ):
 
     uci = get_uci_module(infrastructure.name)
@@ -1726,6 +1648,7 @@ def test_get_80211w_settings_openwrt(uci_configs_init, infrastructure, ieee80211
 @pytest.mark.only_backends(["openwrt"])
 def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart_command):
     """Test setting WPA3 with or without IEEE 802.11w enabled."""
+
     def update(device):
         """Currently update just one device, which should be enough for this particular tests."""
         request_data = {"devices": [device]}
@@ -1741,70 +1664,78 @@ def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart
 
     uci = get_uci_module(infrastructure.name)
 
-    uci_data = update({
-        "id": 0,
-        "enabled": True,
-        "SSID": "DevWPA3",
-        "hidden": False,
-        "channel": 40,
-        "htmode": "VHT40",
-        "band": "5g",
-        "encryption": "WPA3",
-        "ieee80211w_disabled": False,
-        "password": "passpass",
-        "guest_wifi": {"enabled": False},
-    })
+    uci_data = update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "DevWPA3",
+            "hidden": False,
+            "channel": 40,
+            "htmode": "VHT40",
+            "band": "5g",
+            "encryption": "WPA3",
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
 
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae"
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == ""
 
-    uci_data = update({
-        "id": 0,
-        "enabled": True,
-        "SSID": "DevWPA3",
-        "hidden": False,
-        "channel": 40,
-        "htmode": "VHT40",
-        "band": "5g",
-        "encryption": "WPA3",
-        "ieee80211w_disabled": True,
-        "password": "passpass",
-        "guest_wifi": {"enabled": False},
-    })
+    uci_data = update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "DevWPA3",
+            "hidden": False,
+            "channel": 40,
+            "htmode": "VHT40",
+            "band": "5g",
+            "encryption": "WPA3",
+            "ieee80211w_disabled": True,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
 
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae"
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == "0"
 
-    uci_data = update({
-        "id": 0,
-        "enabled": True,
-        "SSID": "DevWPA23",
-        "hidden": False,
-        "channel": 40,
-        "htmode": "VHT40",
-        "band": "5g",
-        "encryption": "WPA2/3",
-        "ieee80211w_disabled": False,
-        "password": "passpass",
-        "guest_wifi": {"enabled": False},
-    })
+    uci_data = update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "DevWPA23",
+            "hidden": False,
+            "channel": 40,
+            "htmode": "VHT40",
+            "band": "5g",
+            "encryption": "WPA2/3",
+            "ieee80211w_disabled": False,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
 
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae-mixed"
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == ""
 
-    uci_data = update({
-        "id": 0,
-        "enabled": True,
-        "SSID": "DevWPA23",
-        "hidden": False,
-        "channel": 40,
-        "htmode": "VHT40",
-        "band": "5g",
-        "encryption": "WPA2/3",
-        "ieee80211w_disabled": True,
-        "password": "passpass",
-        "guest_wifi": {"enabled": False},
-    })
+    uci_data = update(
+        {
+            "id": 0,
+            "enabled": True,
+            "SSID": "DevWPA23",
+            "hidden": False,
+            "channel": 40,
+            "htmode": "VHT40",
+            "band": "5g",
+            "encryption": "WPA2/3",
+            "ieee80211w_disabled": True,
+            "password": "passpass",
+            "guest_wifi": {"enabled": False},
+        }
+    )
 
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "encryption", "") == "sae-mixed"
     assert uci.get_option_named(uci_data, "wireless", "default_radio0", "ieee80211w", "") == "0"
@@ -1812,9 +1743,7 @@ def test_update_80211w_openwrt(uci_configs_init, infrastructure, network_restart
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
-def test_get_settings_5g_eht_no_higher_bandwidth_htmodes_openwrt(
-    file_root_init, uci_configs_init, infrastructure
-):
+def test_get_settings_5g_eht_no_higher_bandwidth_htmodes_openwrt(file_root_init, uci_configs_init, infrastructure):
     """Test that EHT240 and EHT320 are not available for 5 GHz band.
 
     A WiFi 7 capable chip may report EHT240 and EHT320 in its supported htmodes,
@@ -1837,10 +1766,22 @@ def test_get_settings_5g_eht_no_higher_bandwidth_htmodes_openwrt(
                     "quality_max": 70,
                     "noise": 0,
                     "htmodes": [
-                        "HT20", "HT40",
-                        "VHT20", "VHT40", "VHT80", "VHT160",
-                        "HE20", "HE40", "HE80", "HE160",
-                        "EHT20", "EHT40", "EHT80", "EHT160", "EHT240", "EHT320",
+                        "HT20",
+                        "HT40",
+                        "VHT20",
+                        "VHT40",
+                        "VHT80",
+                        "VHT160",
+                        "HE20",
+                        "HE40",
+                        "HE80",
+                        "HE160",
+                        "EHT20",
+                        "EHT40",
+                        "EHT80",
+                        "EHT160",
+                        "EHT240",
+                        "EHT320",
                     ],
                     "hwmodes": ["ac", "ax", "be", "n"],
                     "hwmode": "a/g",
@@ -1851,26 +1792,16 @@ def test_get_settings_5g_eht_no_higher_bandwidth_htmodes_openwrt(
             "freqlist": {
                 "radio0": {
                     "results": [
-                        {
-                            "channel": 1,
-                            "mhz": 2412,
-                            "restricted": False
-                        },
-                        {
-                            "channel": 36,
-                            "mhz": 5180,
-                            "restricted": False
-                        },
+                        {"channel": 1, "mhz": 2412, "restricted": False},
+                        {"channel": 36, "mhz": 5180, "restricted": False},
                     ]
                 }
-            }
+            },
         },
     }
 
     with FileFaker(FORIS_FILES_ROOT, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(iwinfo_mock)):
-        res = infrastructure.process_message(
-            {"module": "wifi", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
 
     assert "errors" not in res
     devices = res["data"]["devices"]

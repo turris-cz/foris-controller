@@ -27,7 +27,7 @@ class RouterNotificationsModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_list(self, data):
-        """ Displays current notifications
+        """Displays current notifications
 
         :param data: input data (supposed to be {"lang": "en/cs/.."} or {})
         :type data: dict
@@ -37,7 +37,7 @@ class RouterNotificationsModule(BaseModule):
         return {"notifications": self.handler.list(data.get("lang", "en"))}
 
     def action_mark_as_displayed(self, data):
-        """ Marks notifications as displayed
+        """Marks notifications as displayed
 
         displayed notifications will be removed by cleanup script later
 
@@ -50,7 +50,7 @@ class RouterNotificationsModule(BaseModule):
         return {"result": self.handler.mark_as_displayed(data["ids"])}
 
     def action_get_settings(self, data):
-        """ Get current notification settings
+        """Get current notification settings
         :param data: supposed to be {}
         :type data: dict
         :returns: current notification settings
@@ -59,7 +59,7 @@ class RouterNotificationsModule(BaseModule):
         return self.handler.get_settings()
 
     def action_update_settings(self, data):
-        """ Updates notification settings
+        """Updates notification settings
         :param data: new notification settings
         :type data: dict
         :returns: result of the update {'result': True/False}
@@ -69,16 +69,13 @@ class RouterNotificationsModule(BaseModule):
 
         # remove details such as passwords and others from email notification
         if "emails" in data and data["emails"]["enabled"]:
-            data["emails"] = {
-                "enabled": True,
-                "smtp_type": data["emails"]["smtp_type"]
-            }
+            data["emails"] = {"enabled": True, "smtp_type": data["emails"]["smtp_type"]}
         if res:
             self.notify("update_settings", data)
         return {"result": res}
 
     def action_create(self, data):
-        """ Creates notification
+        """Creates notification
 
         :param data: {'severity': 'news/update/...', 'message': "TEXT", 'immediate': True/False}
         :type data: dict

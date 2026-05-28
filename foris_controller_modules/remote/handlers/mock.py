@@ -42,7 +42,7 @@ class MockRemoteHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def generate_ca(self, notify, exit_notify, reset_notify):
         MockRemoteHandler.ca_generated = True
-        return "%08X" % random.randrange(2 ** 32)
+        return "%08X" % random.randrange(2**32)
 
     @logger_wrapper(logger)
     def get_status(self):
@@ -53,12 +53,10 @@ class MockRemoteHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def generate_token(self, name, notify, exit_notify, reset_notify):
-        MockRemoteHandler.tokens.append(
-            {"id": "%02X" % MockRemoteHandler.current_id, "name": name, "status": "valid"}
-        )
+        MockRemoteHandler.tokens.append({"id": "%02X" % MockRemoteHandler.current_id, "name": name, "status": "valid"})
         MockRemoteHandler.current_id += 1
 
-        return "%08X" % random.randrange(2 ** 32)
+        return "%08X" % random.randrange(2**32)
 
     @logger_wrapper(logger)
     def revoke(self, cert_id):

@@ -27,7 +27,7 @@ class UpdaterModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data):
-        """ Get current updater settings
+        """Get current updater settings
 
         :param data: supposed to be {'lang': }
         :type data: dict
@@ -40,7 +40,7 @@ class UpdaterModule(BaseModule):
         return res
 
     def action_update_settings(self, data):
-        """ Updates updater settings
+        """Updates updater settings
 
         :param data: data containing new updater settings
         :type data: dict
@@ -57,7 +57,7 @@ class UpdaterModule(BaseModule):
         }
 
     def action_get_package_lists(self, data):
-        """ Get current package lists settings
+        """Get current package lists settings
 
         :param data: supposed to be {'lang': }
         :type data: dict
@@ -68,19 +68,17 @@ class UpdaterModule(BaseModule):
         return {"package_lists": self.handler.get_package_lists(data["lang"])}
 
     def action_update_package_lists(self, data):
-        """ Updates package lists settings
+        """Updates package lists settings
 
         :param data: data containing new package lists settings
         :type data: dict
         :returns: {"result": True/False}
         :rtype: dict
         """
-        return {
-            "result": self.handler.update_package_lists(data["package_lists"])
-        }
+        return {"result": self.handler.update_package_lists(data["package_lists"])}
 
     def action_get_languages(self, data):
-        """ Get current language list
+        """Get current language list
 
         :param data: supposed to be {}
         :type data: dict
@@ -90,7 +88,7 @@ class UpdaterModule(BaseModule):
         return {"languages": self.handler.get_languages()}
 
     def action_update_languages(self, data):
-        """ Update current language list
+        """Update current language list
 
         :param data: data containing list of locale strings
         :type data: dict
@@ -100,7 +98,7 @@ class UpdaterModule(BaseModule):
         return {"result": self.handler.update_languages(data["languages"])}
 
     def action_resolve_approval(self, data):
-        """ Resolvs approval
+        """Resolvs approval
         :param data: {"id": "...", "solution": "grant/deny"}
         :type data: dict
 
@@ -113,7 +111,7 @@ class UpdaterModule(BaseModule):
         return {"result": res}
 
     def action_run(self, data):
-        """ Starts the updater
+        """Starts the updater
 
         :param data: {"set_reboot_indicator": True/False}
         :type data: dict
@@ -123,7 +121,7 @@ class UpdaterModule(BaseModule):
         return {"result": self.handler.run(**data)}
 
     def action_get_enabled(self, data):
-        """ Get information whether updater is enabled
+        """Get information whether updater is enabled
         :param data: supposed to be {}
         :type data: dict
         :returns: {"enabled": True/False}
@@ -132,7 +130,7 @@ class UpdaterModule(BaseModule):
         return {"enabled": self.handler.get_enabled()}
 
     def action_get_running(self, data):
-        """ Get information whether updater is running
+        """Get information whether updater is running
         :param data: supposed to be {}
         :type data: dict
         :returns: {"running": True/False}
@@ -141,7 +139,7 @@ class UpdaterModule(BaseModule):
         return {"running": self.handler.get_running()}
 
     def action_query_installed_packages(self, data):
-        """ Query whether packages are installed or provided by another packages """
+        """Query whether packages are installed or provided by another packages"""
         return {"installed": self.handler.query_installed_packages(**data)}
 
 

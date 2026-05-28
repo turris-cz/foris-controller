@@ -33,7 +33,7 @@ class OpenwrtGuestHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ get guest settings
+        """get guest settings
 
         :returns: current guest settings
         :rtype: dict
@@ -42,7 +42,7 @@ class OpenwrtGuestHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ updates current guest settings
+        """updates current guest settings
 
         :param new_settings: new settings dictionary
         :type new_settings: dict

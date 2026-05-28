@@ -34,14 +34,14 @@ import prctl
 from .module_base import BaseModule
 
 IPAddress = typing.TypeVar("IPAddress", ipaddress.IPv4Address, ipaddress.IPv6Address)
-ListOrString = typing.NewType('ListOrString', typing.Union[str, typing.List[str]])
+ListOrString = typing.NewType("ListOrString", typing.Union[str, typing.List[str]])
 
 LOGGER_MAX_LEN = 10000
 
 
 class RWLock(object):
-    """ Custom implementation of RWLock
-        it can use lock for Processes as well as lock for threads
+    """Custom implementation of RWLock
+    it can use lock for Processes as well as lock for threads
     """
 
     class ReadLock(object):
@@ -87,7 +87,7 @@ class RWLock(object):
             self.parent._writer_lock.release()
 
     def __init__(self, lock_module):
-        """ Initializes RWLock
+        """Initializes RWLock
 
         :param lock_module: module which is used as locking backend - multiprocessing/threading
         """
@@ -100,7 +100,7 @@ class RWLock(object):
 
 
 def logger_wrapper(logger):
-    """ Wraps funcion with some debug outputs of the logger
+    """Wraps funcion with some debug outputs of the logger
 
     :param logger: logger which will be used to trigger debug outputs
     :type logger: logging.Logger
@@ -120,7 +120,7 @@ def logger_wrapper(logger):
 
 
 def readlock(lock, logger):
-    """ Make sure that this fuction is called after the read lock is obtained and
+    """Make sure that this fuction is called after the read lock is obtained and
         wraps funcion with some debug outputs
 
     :param lock: lock which will be used
@@ -143,7 +143,7 @@ def readlock(lock, logger):
 
 
 def writelock(lock, logger):
-    """ Make sure that this fuction is called after the write lock is obtained and
+    """Make sure that this fuction is called after the write lock is obtained and
         wraps funcion with some debug outputs
 
     :param lock: lock which will be used
@@ -166,7 +166,7 @@ def writelock(lock, logger):
 
 
 def get_modules(filter_modules, module_paths=[]):
-    """ Returns a list of modules that can be used
+    """Returns a list of modules that can be used
 
     :param filter_modules: use only modules which names are specified in this list
     :param module_paths: extra paths to dir containing modules
@@ -198,7 +198,7 @@ def get_modules(filter_modules, module_paths=[]):
 
 
 def get_handler(module, base_handler_class):
-    """ Instanciates a specific handler based on the module and base_handler class
+    """Instanciates a specific handler based on the module and base_handler class
     :param module: module which should be used
     :type module: module
     :param base_handler_class: base of the class which should be Openwrt/Mock/...
@@ -212,14 +212,12 @@ def get_handler(module, base_handler_class):
 
         # find subclass of base_handler (Mock/Openwrt)
         for _, handler_class in inspect.getmembers(handler_mod, inspect.isclass):
-            if handler_class is not base_handler_class and issubclass(
-                handler_class, base_handler_class
-            ):
+            if handler_class is not base_handler_class and issubclass(handler_class, base_handler_class):
                 return handler_class()
 
 
 def get_module_class(module):
-    """ Returns class of the foris-controller module.
+    """Returns class of the foris-controller module.
         When a multiple suitable classes are present the first one is returned
 
     :param module: module which should be examined
@@ -230,15 +228,13 @@ def get_module_class(module):
 
 
 def get_validator_dirs(filter_modules, module_paths=[]):
-    """ Returns schema and definition dirs for validator
+    """Returns schema and definition dirs for validator
     :param filter_modules: use only modules present in this list
     :param module_paths: extra paths to dir containing modules
     """
 
     # and global definitions
-    definition_dirs = [
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions")
-    ]
+    definition_dirs = [os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions")]
 
     schema_dirs = []
     # load modules dirs
@@ -249,7 +245,7 @@ def get_validator_dirs(filter_modules, module_paths=[]):
 
 
 def make_multiprocessing_manager():
-    """ Prepares multiprocessing manager which can serve to exchange data between
+    """Prepares multiprocessing manager which can serve to exchange data between
     different processes (see pythons multiprocessing doc)
 
     :returns: newly create instance of multiprocessing manager
@@ -261,16 +257,15 @@ def make_multiprocessing_manager():
 
 
 def read_passwd_file(path: str) -> typing.Tuple[str]:
-    """ Returns username and password from passwd file
-    """
+    """Returns username and password from passwd file"""
     with open(path, "r") as f:
         return re.match(r"^([^:]+):(.*)$", f.readlines()[0][:-1]).groups()
 
 
 def check_dynamic_ranges(router_ip: str, netmask: str, start: int, limit: int) -> bool:
-    """ Test whether combination of router_ip, netmask, start, limit is a valid
-        dynamic dhcp range / ip combination
-        :returns: True if configuration is valid False otherwise
+    """Test whether combination of router_ip, netmask, start, limit is a valid
+    dynamic dhcp range / ip combination
+    :returns: True if configuration is valid False otherwise
     """
     # test new_settings
     ip = ipaddress.ip_address(router_ip)
@@ -291,15 +286,15 @@ def check_dynamic_ranges(router_ip: str, netmask: str, start: int, limit: int) -
 
 
 def ip_network_address(ip: IPAddress, netmask: str) -> IPAddress:
-    """ Get network address of given network
-        Accepts netmask as string, e.g. 255.255.255.0
+    """Get network address of given network
+    Accepts netmask as string, e.g. 255.255.255.0
     """
     return ipaddress.ip_network(f"{ip}/{netmask}", strict=False).network_address
 
 
 def unwrap_list(option: ListOrString) -> str:
-    """ Test whether passed value is list and return only string of first item
-        or original string."""
+    """Test whether passed value is list and return only string of first item
+    or original string."""
     if not option:
         return ""
     if isinstance(option, list):
@@ -308,7 +303,7 @@ def unwrap_list(option: ListOrString) -> str:
 
 
 def parse_to_list(option: ListOrString) -> typing.List[str]:
-    """ Test whether passed value is already list, convert if string."""
+    """Test whether passed value is already list, convert if string."""
     if not option:
         return [""]
     if not isinstance(option, list):
@@ -318,10 +313,7 @@ def parse_to_list(option: ListOrString) -> typing.List[str]:
 
 def sort_by_natural_order(items: typing.Union[typing.List[str], typing.Set[str]]) -> typing.List[str]:
     """Sort strings in collection by natural order"""
-    return sorted(
-        items,
-        key=lambda line: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", line)]
-    )
+    return sorted(items, key=lambda line: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", line)])
 
 
 def strtobool(value: str) -> bool:

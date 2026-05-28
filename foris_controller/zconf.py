@@ -84,9 +84,7 @@ class ZconfService:
 
                 if self.addresses and self.state == ZconfService.State.CONNECTED:
                     # Updating connected state
-                    logger.debug(
-                        "Updating zeroconf with new addresses %s", self.addresses
-                    )
+                    logger.debug("Updating zeroconf with new addresses %s", self.addresses)
                     self.zconf.update_service(self.make_info())
 
                 elif self.addresses and self.state == ZconfService.State.DISCONNECTED:
@@ -100,7 +98,6 @@ class ZconfService:
 
     def close(self):
         if self.state != ZconfService.State.CLOSED:
-
             logger.debug("Closing zconf service")
             self.zconf.close()
 
@@ -115,21 +112,13 @@ class ZconfService:
         """Get IPs which shall be propagated unsing zconf"""
         ips: typing.Set[str] = set()
         for adapter in ifaddr.get_adapters():
-            if (
-                app_info["zeroconf_devices"]
-                and adapter.name not in app_info["zeroconf_devices"]
-            ):
-                logger.debug(
-                    "skipping '%s' device for zeroconf configuration", adapter.name
-                )
+            if app_info["zeroconf_devices"] and adapter.name not in app_info["zeroconf_devices"]:
+                logger.debug("skipping '%s' device for zeroconf configuration", adapter.name)
                 continue
             ips |= set(e.ip for e in adapter.ips if e.is_IPv4)
 
         filtered_ips = [
-            e
-            for e in ips
-            if ipaddress.ip_address(e).is_private
-            and not ipaddress.ip_address(e).is_loopback
+            e for e in ips if ipaddress.ip_address(e).is_private and not ipaddress.ip_address(e).is_loopback
         ]
 
         if not filtered_ips:

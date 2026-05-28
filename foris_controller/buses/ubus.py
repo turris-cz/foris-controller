@@ -35,25 +35,23 @@ logger = logging.getLogger(__name__)
 
 
 class RequestStorage(object):
-    """ Storage for multipart requests"""
+    """Storage for multipart requests"""
 
     data = {}
 
     @staticmethod
     def append(request_id, data):
-        """ Appends data into storage
-        """
+        """Appends data into storage"""
         RequestStorage.data[request_id] = RequestStorage.data.get(request_id, "") + data
 
     @staticmethod
     def pickup(request_id):
-        """ Reads and removes data from the storage.
-        """
+        """Reads and removes data from the storage."""
         return RequestStorage.data.pop(request_id)
 
 
 def _register_object(module_name, module):
-    """ Transfers a module to an object which is registered on ubus
+    """Transfers a module to an object which is registered on ubus
 
     :param module_name: the name of the module
     :type module_name: str
@@ -69,9 +67,7 @@ def _register_object(module_name, module):
 
     def handler_gen(module, action):
         def handler(handler, data):
-            logger.debug(
-                "Handling request '%s' (multipart=%s)" % (data["request_id"], data["multipart"])
-            )
+            logger.debug("Handling request '%s' (multipart=%s)" % (data["request_id"], data["multipart"]))
             logger.debug("Data received '%s'." % str(data)[:LOGGER_MAX_LEN])
             router = Router()
             data["module"] = module
@@ -89,11 +85,7 @@ def _register_object(module_name, module):
                         data["data"] = json.loads(multi_data)
                     except ValueError:
                         logger.debug("Failed to parse multipart message.")
-                        res = {
-                            "errors": [
-                                {"description": "failed to parse multipart", "stacktrace": ""}
-                            ]
-                        }
+                        res = {"errors": [{"description": "failed to parse multipart", "stacktrace": ""}]}
                         handler.reply({"data": json.dumps(res)})
                         return
                 else:
@@ -140,7 +132,7 @@ def _register_object(module_name, module):
 
 
 def ubus_listener_worker(socket_path, module_name, module):
-    """ This function is used after a fork() to register a separate object based on the module
+    """This function is used after a fork() to register a separate object based on the module
 
     :param socket_path: path to ubus socket
     :type socket_path: str
@@ -163,7 +155,7 @@ def ubus_listener_worker(socket_path, module_name, module):
 
 
 def ubus_all_in_one_worker(socket_path, modules_list):
-    """ This function is used after fork() to register all obects on ubus in a separate process
+    """This function is used after fork() to register all obects on ubus in a separate process
 
     :param socket_path: path to ubus socket
     :type socket_path: str
@@ -185,7 +177,7 @@ def ubus_all_in_one_worker(socket_path, modules_list):
 
 class UbusListener(BaseSocketListener):
     def __init__(self, socket_path):
-        """ Inits object which handle listening on ubus
+        """Inits object which handle listening on ubus
 
         :param socket_path: path to ubus socket
         :type socket_path: str
@@ -217,8 +209,7 @@ class UbusListener(BaseSocketListener):
         logger.debug("Ubus workers successfully initialized.")
 
     def serve_forever(self):
-        """ Start listening on ubus (for all worker processes)
-        """
+        """Start listening on ubus (for all worker processes)"""
         logger.debug("Starting to run workers.")
 
         for worker in self.workers:
@@ -235,7 +226,7 @@ class UbusListener(BaseSocketListener):
 
 class UbusNotificationSender(BaseNotificationSender):
     def __init__(self, socket_path):
-        """ Inits object which handles sending notification via ubus
+        """Inits object which handles sending notification via ubus
 
         :param socket_path: path to ubus socket
         :type socket_path: str
@@ -248,27 +239,19 @@ class UbusNotificationSender(BaseNotificationSender):
             ubus.connect(self.socket_path)
 
         object_name = "foris-controller-%s" % module
-        logger.debug(
-            "Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data)
-        )
+        logger.debug("Sending notificaton (module='%s', action='%s', data='%s')" % (module, action, data))
 
-        ubus_msg = (
-            {"action": msg["action"], "data": msg["data"]}
-            if "data" in msg
-            else {"action": msg["action"]}
-        )
+        ubus_msg = {"action": msg["action"], "data": msg["data"]} if "data" in msg else {"action": msg["action"]}
         ubus.send(object_name, ubus_msg)
 
     def disconnect(self):
-        """ Disconnects from ubus
-        """
+        """Disconnects from ubus"""
         if ubus.get_connected():
             logger.debug("Disconnecting from ubus")
             ubus.disconnect()
 
     def reset(self):
-        """ Resets the connection
-        """
+        """Resets the connection"""
         logger.debug("Resetting the ubus connection.")
         # don't deregister objects from ubus just disconnect
         ubus.disconnect(deregister=False)

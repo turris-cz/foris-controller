@@ -35,9 +35,7 @@ def test_get(uci_configs_init, infrastructure):
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 def test_get_registration_number(infrastructure):
-    res = infrastructure.process_message(
-        {"module": "about", "action": "get_registration_number", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "about", "action": "get_registration_number", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {"registration_number"}
 
@@ -77,17 +75,11 @@ def test_get_contract(content, output, lock_backend, file_root_init):
     [
         ("shield", "shield"),
         ("mox", None),
-    ]
+    ],
 )
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get_router_customization(
-    uci_configs_init,
-    infrastructure,
-    prepare_turrishw,
-    device,
-    expected_result
-):
+def test_get_router_customization(uci_configs_init, infrastructure, prepare_turrishw, device, expected_result):
     prepare_turrishw(device)
     res = infrastructure.process_message(
         {

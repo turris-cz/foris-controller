@@ -33,19 +33,17 @@ logger = logging.getLogger(__name__)
 class CryptoWrapperCmds(BaseCmdLine):
     @writelock(i2c_lock, logger)
     def get_serial(self):
-        """ Obrains serial number
+        """Obrains serial number
 
         :returns: serial number
         :rtype: str
         """
-        return self._trigger_and_parse(
-            ("/usr/bin/crypto-wrapper", "serial-number"), r"^([0-9a-fA-F]{16})$", (1,)
-        )
+        return self._trigger_and_parse(("/usr/bin/crypto-wrapper", "serial-number"), r"^([0-9a-fA-F]{16})$", (1,))
 
 
 class SystemInfoCmds(BaseCmdLine):
     def get_kernel_version(self):
-        """ Obtains kernel version
+        """Obtains kernel version
 
         :returns: kernel version
         :rtype: str
@@ -61,7 +59,7 @@ class SystemInfoFiles(BaseFile):
 
     @readlock(file_lock, logger)
     def get_os_version(self):
-        """ Returns turris os version
+        """Returns turris os version
 
         :returns: os version
         :rtype: str
@@ -70,14 +68,15 @@ class SystemInfoFiles(BaseFile):
 
     @readlock(file_lock, logger)
     def get_contract(self) -> typing.Optional[str]:
-        """ Returns the contract router is under
+        """Returns the contract router is under
 
         :returns: contract
         :rtype: str
         """
         try:
             return self._read_and_parse(
-                SystemInfoFiles.CMDLINE_PATH, r"^.*turris_lists=contracts/([^\s]+)\s.*",
+                SystemInfoFiles.CMDLINE_PATH,
+                r"^.*turris_lists=contracts/([^\s]+)\s.*",
                 (1,),
                 log_error=False,
             )
@@ -85,7 +84,7 @@ class SystemInfoFiles(BaseFile):
             return None
 
     def get_os_branch(self):
-        """ Returns turris os branch
+        """Returns turris os branch
 
         :returns: os branch or version
         :rtype: dict
@@ -95,7 +94,7 @@ class SystemInfoFiles(BaseFile):
 
     @readlock(file_lock, logger)
     def get_model_name(self):
-        """ Returns model of the device
+        """Returns model of the device
 
         :returns: model
         :rtype: str
@@ -103,8 +102,7 @@ class SystemInfoFiles(BaseFile):
         return self._read_and_parse(SystemInfoFiles.MODEL_PATH, r"^(\w+.*)$", (1,))
 
     def get_model(self):
-        """ display standartized model name (omnia-ng/omnia/mox/turris)
-        """
+        """display standartized model name (omnia-ng/omnia/mox/turris)"""
         repr_model = self.get_model_name()
         if "Omnia NG" in repr_model:
             return "omnia-ng"
@@ -120,7 +118,7 @@ class ServerUplinkFiles(BaseFile):
 
     @readlock(server_uplink_lock, logger)
     def get_registration_number(self):
-        """ Returns registration number
+        """Returns registration number
 
         :returns: registration number
         :rtype: str

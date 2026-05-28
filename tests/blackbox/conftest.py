@@ -21,13 +21,12 @@ import os
 import pathlib
 
 import pytest
+
 # load common fixtures
 from foris_controller_testtools.fixtures import FILE_ROOT_PATH, UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import get_uci_module, FileFaker
 
-DEFAULT_UCI_CONFIG_DIR = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
-)
+DEFAULT_UCI_CONFIG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults")
 
 SCRIPT_ROOT_DIR = str(pathlib.Path(__file__).parent / "test_root")
 
@@ -65,15 +64,13 @@ def lan_dnsmasq_files():
             "ipv6     10 udp      17 41 src=fd52:ad42:910e:0000:0000:0000:0000:64fa "
             "dst=fd21:36f9:644e:0000:0000:0000:0000:0001 sport=59532 dport=53 packets=1 bytes=102 "
             "src=fd21:36f9:644e:0000:0000:0000:0000:0001 dst=fd52:ad42:910e:0000:0000:0000:0000:64fa "
-            "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2"
+            "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2",
         ]
     )
-    with FileFaker(
-        FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases
-    ) as lease_file,\
-        FileFaker(
-        FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack
-    ) as conntrack_file:
+    with (
+        FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file,
+        FileFaker(FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack) as conntrack_file,
+    ):
         yield lease_file, conntrack_file
 
 
@@ -126,7 +123,7 @@ def env_overrides():
 
 @pytest.fixture(scope="function")
 def fix_mox_wan(infrastructure, device):
-    """ Uci networks.wan.ifname should be eth0 on mox and eth2 on turris1x"""
+    """Uci networks.wan.ifname should be eth0 on mox and eth2 on turris1x"""
     if device.startswith("mox"):
         uci = get_uci_module(infrastructure.name)
         with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:

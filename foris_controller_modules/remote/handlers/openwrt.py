@@ -35,7 +35,6 @@ logger = logging.getLogger(__name__)
 
 
 class OpenwrtRemoteHandler(Handler, BaseOpenwrtHandler):
-
     asynchronuous = RemoteAsync()
     cmds = RemoteCmds()
     uci = RemoteUci()

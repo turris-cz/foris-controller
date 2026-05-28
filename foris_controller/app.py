@@ -33,7 +33,7 @@ app_info = {}
 
 
 def set_app_info(program_options):
-    """ updates app_info variable according to cmd line options
+    """updates app_info variable according to cmd line options
 
     :param program_options: cmd line parameters
     :type program_options: argparse.Namespace
@@ -42,9 +42,7 @@ def set_app_info(program_options):
     app_info["bus"] = program_options.bus
     app_info["debug"] = program_options.debug
     app_info["backend"] = program_options.backend
-    app_info["filter_modules"] = (
-        [e[0] for e in program_options.module] if program_options.module else None
-    )
+    app_info["filter_modules"] = [e[0] for e in program_options.module] if program_options.module else None
     app_info["extra_module_paths"] = [e[0] for e in program_options.extra_module_path]
 
     import multiprocessing
@@ -65,13 +63,10 @@ def set_app_info(program_options):
 
 
 def _gen_notify(module_name):
-    """ Generator for notify function which wrapps module name inside the notify call
-    """
+    """Generator for notify function which wrapps module name inside the notify call"""
 
     def notify(self, action, data=None):
-        self.logger.debug(
-            "New notification (module=%s, action=%s, data=%s)" % (module_name, action, data)
-        )
+        self.logger.debug("New notification (module=%s, action=%s, data=%s)" % (module_name, action, data))
         app_info["notification_sender"].notify(
             module_name,
             action,
@@ -84,14 +79,13 @@ def _gen_notify(module_name):
 
 
 def _reset_notify(self):
-    """ Resets current connection for notification sender
-    """
+    """Resets current connection for notification sender"""
     self.logger.debug("Resetting notification sender")
     app_info["notification_sender"].reset()
 
 
 def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
-    """ updates app_info dictionary with loaded foris-controller modules
+    """updates app_info dictionary with loaded foris-controller modules
 
     :param base_handler_class: handler class to be used to initialize the modules
     :type base_handler_class: class
@@ -100,17 +94,13 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
     app_info["modules"] = {}
 
     # and global definitions
-    definition_dirs = [
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions")
-    ]
+    definition_dirs = [os.path.join(os.path.abspath(os.path.dirname(__file__)), "schemas", "definitions")]
 
     schema_dirs = []
     for module_name, module in get_modules(app_info["filter_modules"], extra_modules_paths):
         # try to obtain version
         try:
-            version = importlib.import_module(
-                "foris_controller_%s_module" % module_name
-            ).__version__
+            version = importlib.import_module("foris_controller_%s_module" % module_name).__version__
         except (ImportError, AttributeError):
             version = __version__
 
@@ -126,14 +116,10 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
         # insert version
         module_class.version = version
         if not module_class:
-            logger.error(
-                "Failed to find a module class for module '%s'. Skipping module." % (module_name)
-            )
+            logger.error("Failed to find a module class for module '%s'. Skipping module." % (module_name))
             continue
 
-        app_info["modules"][module_name] = module_class(
-            handler, _gen_notify(module_name), _reset_notify
-        )
+        app_info["modules"][module_name] = module_class(handler, _gen_notify(module_name), _reset_notify)
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     logger.debug("Modules loaded %s." % app_info["modules"].keys())
@@ -143,7 +129,7 @@ def prepare_app_modules(base_handler_class, extra_modules_paths=[]):
 
 
 def set_validator(filter_modules):
-    """ updates app_info variable with validator object
+    """updates app_info variable with validator object
     :param filter_modules: use only specific modules in the validator
     :type filter_modules: list of str
     """
@@ -154,7 +140,7 @@ def set_validator(filter_modules):
 
 
 def prepare_notification_sender(sender_class, *args, **kwargs):
-    """ adds notification sender to app_info variable
+    """adds notification sender to app_info variable
 
     :param sender_class: class which will be used for sending notification
     :type sender_class: type

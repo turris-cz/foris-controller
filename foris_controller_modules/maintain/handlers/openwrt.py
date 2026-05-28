@@ -34,7 +34,7 @@ class OpenwrtMaintainHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def reboot(self):
-        """ Starts a reboot process of the router
+        """Starts a reboot process of the router
 
         :returns: probable new ips of the router
         :rtype: dict

@@ -24,7 +24,11 @@ import pytest
 @pytest.mark.only_backends(["mock"])
 def test_list_modules(infrastructure):
     res = infrastructure.process_message(
-        {"module": "introspect", "action": "list_modules", "kind": "request",}
+        {
+            "module": "introspect",
+            "action": "list_modules",
+            "kind": "request",
+        }
     )
 
     assert "error" not in res

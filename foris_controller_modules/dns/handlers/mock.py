@@ -72,7 +72,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get dns settings
+        """Mocks get dns settings
 
         :returns: current dns settings
         :rtype: str
@@ -97,7 +97,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
         forwarder=None,
         dns_from_dhcp_domain=None,
     ):
-        """ Mocks updates current dns settings
+        """Mocks updates current dns settings
 
         :param forwarding_enabled: set whether the forwarding is enabled
         :type forwarding_enabled: bool
@@ -180,7 +180,7 @@ class MockDnsHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def del_forwarder(self, name: str) -> bool:
-        for (idx, record) in enumerate(MockDnsHandler.available_forwarders):
+        for idx, record in enumerate(MockDnsHandler.available_forwarders):
             if record["name"] == name:
                 if record["editable"]:
                     del MockDnsHandler.available_forwarders[idx]

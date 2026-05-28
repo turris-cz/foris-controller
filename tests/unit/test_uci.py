@@ -449,9 +449,7 @@ def test_parse_read_data(uci_configs_init, lock_backend):
         uci.get_section_idx(res2, "test2", "anonymous", 99)
     with pytest.raises(UciRecordNotFound):
         uci.get_option_anonymous(res2, "test2", "anonymous", 1, "non_existing")
-    assert "def2" == uci.get_option_anonymous(
-        res2, "test2", "anonymous", 1, "non_existing", default="def2"
-    )
+    assert "def2" == uci.get_option_anonymous(res2, "test2", "anonymous", 1, "non_existing", default="def2")
 
 
 IMPORT_DATA = """
@@ -505,6 +503,4 @@ def test_strange_chars_in_value(uci_configs_init, lock_backend):
 
     for idx, value in enumerate(SPECIAL_VALUES):
         assert uci.get_option_named(data, "test1", "special_values", "val_%d" % idx) == value
-    assert [e for e in SPECIAL_VALUES] == uci.get_option_named(
-        data, "test1", "special_values", "my_list"
-    )
+    assert [e for e in SPECIAL_VALUES] == uci.get_option_named(data, "test1", "special_values", "my_list")

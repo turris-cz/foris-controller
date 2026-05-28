@@ -23,8 +23,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def extra_module_paths():
-    """ Override of extra module paths fixture
-    """
+    """Override of extra module paths fixture"""
     return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
 
 
@@ -139,9 +138,7 @@ def test_notification_error(infrastructure):
         infrastructure.client_socket.notification(msg)
         infrastructure.client_socket.close()
         infrastructure.client_socket.connect()
-        infrastructure.client_socket.notification(
-            {"module": "echo", "action": "echo", "kind": "notification"}
-        )
+        infrastructure.client_socket.notification({"module": "echo", "action": "echo", "kind": "notification"})
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert old_len + 1 == len(notifications)
         assert notifications[-1] == {"module": "echo", "action": "echo", "kind": "notification"}
@@ -149,6 +146,4 @@ def test_notification_error(infrastructure):
     notify_error({"module": "echo", "action": "echox", "kind": "notification"})
     notify_error({"module": "echox", "action": "echo", "kind": "notification"})
     notify_error({"module": "echo", "action": "echo", "kind": "notification", "data": {}})
-    notify_error(
-        {"module": "echo", "action": "echo2", "kind": "notification", "data": {"msgx": "dafdafda"}}
-    )
+    notify_error({"module": "echo", "action": "echo2", "kind": "notification", "data": {"msgx": "dafdafda"}})

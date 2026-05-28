@@ -34,7 +34,7 @@ class OpenwrtWifiHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ get wifi settings
+        """get wifi settings
 
         :returns: current wifi settings
         :rtype: dict
@@ -43,7 +43,7 @@ class OpenwrtWifiHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ updates current wifi settings
+        """updates current wifi settings
 
         :param new_settings: new settings dictionary
         :type new_settings: dict
@@ -55,7 +55,7 @@ class OpenwrtWifiHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def reset(self):
-        """ Resets wifi settings
+        """Resets wifi settings
         :returns: True if reset passes False otherwise
         :rtype: bool
         """

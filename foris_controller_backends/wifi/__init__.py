@@ -50,7 +50,7 @@ class Band(str, Enum):
     G6 = "6g"
 
     @classmethod
-    def from_frequency(cls, freq: int) -> typing.Optional['Band']:
+    def from_frequency(cls, freq: int) -> typing.Optional["Band"]:
         if 2412 <= freq <= 2484:
             return Band.G2
         elif 5160 <= freq < 5925:
@@ -62,26 +62,44 @@ class Band(str, Enum):
 
     @property
     def htmodes(self) -> typing.List[str]:
-        """ Band to htmode mapping
+        """Band to htmode mapping
 
-            Note that the order of modes matters here.
-            Users will select mode from a list based on this order.
+        Note that the order of modes matters here.
+        Users will select mode from a list based on this order.
         """
         match self:
             case Band.G2:
                 return ["HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]
             case Band.G5:
                 return [
-                    "HT20", "HT40",
-                    "VHT20", "VHT40", "VHT80", "VHT160",
-                    "HE20", "HE40", "HE80", "HE160",
-                    "EHT20", "EHT40", "EHT80", "EHT160"
+                    "HT20",
+                    "HT40",
+                    "VHT20",
+                    "VHT40",
+                    "VHT80",
+                    "VHT160",
+                    "HE20",
+                    "HE40",
+                    "HE80",
+                    "HE160",
+                    "EHT20",
+                    "EHT40",
+                    "EHT80",
+                    "EHT160",
                 ]
             case Band.G6:
                 # 6G + VHT* + HT* modes caused fallback to 5G via hostapd
                 return [
-                    "HE20", "HE40", "HE80", "HE160",
-                    "EHT20", "EHT40", "EHT80", "EHT160", "EHT240", "EHT320",
+                    "HE20",
+                    "HE40",
+                    "HE80",
+                    "HE160",
+                    "EHT20",
+                    "EHT40",
+                    "EHT80",
+                    "EHT160",
+                    "EHT240",
+                    "EHT320",
                 ]
 
     @property
@@ -126,14 +144,14 @@ class WifiUci:
 
     @staticmethod
     def get_wifi_devices(backend):
-        """ Example wifi-device section:
-config wifi-device 'radio0'
-    option type 'mac80211'
-    option path 'platform/soc@0/c000000.wifi'
-    option band '2g'
-    option channel '6'
-    option htmode 'HE20'
-    option cell_density '0'
+        """Example wifi-device section:
+        config wifi-device 'radio0'
+            option type 'mac80211'
+            option path 'platform/soc@0/c000000.wifi'
+            option band '2g'
+            option channel '6'
+            option htmode 'HE20'
+            option cell_density '0'
         """
         try:
             wifi_data = backend.read("wireless")
@@ -143,7 +161,7 @@ config wifi-device 'radio0'
 
     @staticmethod
     def set_guest_wifi_disabled(backend):
-        """ Should disable all guest wifi networks
+        """Should disable all guest wifi networks
         :param backend: backend controller instance
         :type backend: foris_controller_backends.uci.UciBackend
         """
@@ -202,7 +220,8 @@ config wifi-device 'radio0'
             else:
                 logger.warning(
                     "%s: Frequency '%d MHz' does not fit supported bands (2.4 & 5 & 6 GHz)",
-                    device_name, channel.frequency
+                    device_name,
+                    channel.frequency,
                 )
 
         return sorted(data.values(), key=lambda e: e.band.value)
@@ -215,8 +234,7 @@ config wifi-device 'radio0'
             return None
         device_id = int(device_no.group(1))
         enabled = not (
-            parse_bool(device["data"].get("disabled", "0"))
-            or parse_bool(interface["data"].get("disabled", "0"))
+            parse_bool(device["data"].get("disabled", "0")) or parse_bool(interface["data"].get("disabled", "0"))
         )
         ssid = interface["data"].get("ssid", "Turris")
         hidden = parse_bool(interface["data"].get("hidden", "0"))
@@ -303,9 +321,7 @@ config wifi-device 'radio0'
         return res
 
     def _get_device_sections(self, data):
-        return [
-            e for e in get_sections_by_type(data, "wireless", "wifi-device") if not e["anonymous"]
-        ]
+        return [e for e in get_sections_by_type(data, "wireless", "wifi-device") if not e["anonymous"]]
 
     def _get_interface_sections_from_device_section(self, data, device_section):
         # first section is interface
@@ -328,15 +344,14 @@ config wifi-device 'radio0'
         return interface, guest_interface
 
     def get_settings(self):
-        """ Get current wifi settings
+        """Get current wifi settings
         :returns: {"devices": [{...}]}
         "rtype: dict
         """
         devices = []
         try:
             turrishw_interfaces_map = {
-                e["slot_path"]: e for e in NetworksUci.detect_interfaces()[1]
-                if e.get("slot_path")
+                e["slot_path"]: e for e in NetworksUci.detect_interfaces()[1] if e.get("slot_path")
             }
         except Exception:
             turrishw_interfaces_map = {}
@@ -345,9 +360,7 @@ config wifi-device 'radio0'
                 data = backend.read("wireless")
             device_sections = self._get_device_sections(data)
             for device_section in device_sections:
-                interface, guest_interface = self._get_interface_sections_from_device_section(
-                    data, device_section
-                )
+                interface, guest_interface = self._get_interface_sections_from_device_section(data, device_section)
                 device = self._prepare_wifi_device(device_section, interface, guest_interface, turrishw_interfaces_map)
                 if device:
                     devices.append(device)
@@ -381,9 +394,7 @@ config wifi-device 'radio0'
             backend.set_option("wireless", device_section["name"], "disabled", store_bool(True))
             backend.set_option("wireless", interface_section["name"], "disabled", store_bool(True))
             if guest_interface_section:
-                backend.set_option(
-                    "wireless", guest_interface_section["name"], "disabled", store_bool(True)
-                )
+                backend.set_option("wireless", guest_interface_section["name"], "disabled", store_bool(True))
             return None
         else:
             backend.set_option("wireless", device_section["name"], "disabled", store_bool(False))
@@ -400,9 +411,7 @@ config wifi-device 'radio0'
         backend.set_option("wireless", interface_section["name"], "ssid", settings["SSID"])
         backend.set_option("wireless", interface_section["name"], "network", "lan")
         backend.set_option("wireless", interface_section["name"], "mode", "ap")
-        backend.set_option(
-            "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"])
-        )
+        backend.set_option("wireless", interface_section["name"], "hidden", store_bool(settings["hidden"]))
         wifi_encryption = settings.get("encryption", WifiUci.DEFAULT_WIFI_ENC_MODE)
         ieee80211w_disabled = settings.get("ieee80211w_disabled", False)
         if wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
@@ -428,9 +437,7 @@ config wifi-device 'radio0'
         backend.set_option("wireless", guest_name, "mode", "ap")
         backend.set_option("wireless", guest_name, "ssid", settings["guest_wifi"]["SSID"])
         backend.set_option("wireless", guest_name, "network", "guest_turris")
-        guest_wifi_encryption = settings["guest_wifi"].get(
-            "encryption", WifiUci.DEFAULT_WIFI_ENC_MODE
-        )
+        guest_wifi_encryption = settings["guest_wifi"].get("encryption", WifiUci.DEFAULT_WIFI_ENC_MODE)
         if guest_wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
             # apply the same encryption settings as main SSID to guest SSID
             self._set_wifi_encryption(backend, guest_name, guest_wifi_encryption, ieee80211w_disabled)
@@ -442,11 +449,7 @@ config wifi-device 'radio0'
         return True
 
     def _set_wifi_encryption(
-        self,
-        backend: UciBackend,
-        if_name: str,
-        wifi_encryption: str,
-        ieee80211w_disabled: bool
+        self, backend: UciBackend, if_name: str, wifi_encryption: str, ieee80211w_disabled: bool
     ) -> None:
         """Set wifi encryption mode and its related options
         :param backend: instance of UciBackend
@@ -469,7 +472,7 @@ config wifi-device 'radio0'
             backend.set_option("wireless", section["name"], "country", country_code)
 
     def update_settings(self, new_settings):
-        """ Updates current wifi settings
+        """Updates current wifi settings
         :param new_settings: {"devices": [{...}]}
         "type new_settings: dict
         :returns: True on success False otherwise
@@ -483,9 +486,7 @@ config wifi-device 'radio0'
                 enable_guest_network = False
 
                 for device in new_settings["devices"]:
-                    device_section = [
-                        e for e in device_sections if e["name"] == "radio%d" % device["id"]
-                    ][0]
+                    device_section = [e for e in device_sections if e["name"] == "radio%d" % device["id"]][0]
 
                     if device["enabled"]:
                         # find corresponding band
@@ -499,20 +500,14 @@ config wifi-device 'radio0'
                         band = bands[0]
 
                         # test channels (0 means auto)
-                        if device["channel"] not in [0] + [
-                            e.number for e in band.available_channels
-                        ]:
+                        if device["channel"] not in [0] + [e.number for e in band.available_channels]:
                             raise ValueError()
                         if device["htmode"] not in band.available_htmodes:
                             raise ValueError()
 
-                    interface, guest_interface = self._get_interface_sections_from_device_section(
-                        data, device_section
-                    )
+                    interface, guest_interface = self._get_interface_sections_from_device_section(data, device_section)
 
-                    if self._update_wifi(
-                        backend, device, device_section, interface, guest_interface
-                    ):
+                    if self._update_wifi(backend, device, device_section, interface, guest_interface):
                         enable_guest_network = True
 
                 if enable_guest_network:
@@ -520,9 +515,7 @@ config wifi-device 'radio0'
 
                 # update regulatory according to _country
                 system_data = backend.read("system")  # _country stored by time.update_settings
-                country_code = get_option_anonymous(
-                    system_data, "system", "system", 0, "_country", "00"
-                )
+                country_code = get_option_anonymous(system_data, "system", "system", 0, "_country", "00")
                 WifiUci.update_regulator_domain(data, backend, country_code)
 
         except (IndexError, ValueError):
@@ -535,7 +528,7 @@ config wifi-device 'radio0'
 
 class WifiCmds(BaseCmdLine):
     def set_regulatory_domain(self, country: typing.Optional[str]) -> bool:
-        """ Sets regulatry domain for wifi cards
+        """Sets regulatry domain for wifi cards
         :param country: country to be set or None, the None will cause that default 00 is set
         """
         country = country if country else "00"

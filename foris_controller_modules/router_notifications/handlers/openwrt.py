@@ -46,9 +46,7 @@ class OpenwrtRouterNotificationsHandler(Handler, BaseOpenwrtHandler):
                 "id": notification["id"],
                 "displayed": notification["displayed"],
                 "severity": notification["severity"],
-                "created_at": datetime.fromtimestamp(
-                    int(notification["id"].split("-")[0])
-                ).isoformat(),
+                "created_at": datetime.fromtimestamp(int(notification["id"].split("-")[0])).isoformat(),
             }
             msg = notification["messages"].get(lang, None)
             if msg is not None:

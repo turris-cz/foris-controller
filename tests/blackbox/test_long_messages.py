@@ -26,16 +26,13 @@ import uuid
 
 @pytest.fixture(scope="module")
 def extra_module_paths():
-    """ Override of extra module paths fixture
-    """
+    """Override of extra module paths fixture"""
     return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))
 def test_long_messsages(infrastructure, chars_len):
-    data = {
-        "random_characters": "".join(random.choice(string.ascii_letters) for _ in range(chars_len))
-    }
+    data = {"random_characters": "".join(random.choice(string.ascii_letters) for _ in range(chars_len))}
     res = infrastructure.process_message(
         {"module": "echo", "action": "echo", "kind": "request", "data": {"request_msg": data}}
     )

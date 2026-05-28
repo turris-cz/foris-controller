@@ -68,16 +68,15 @@ def guest_dnsmasq_files():
             "mark=0 zone=0 use=2",
         ]
     )
-    with FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file, FileFaker(
-        FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack
-    ) as conntrack_file:
+    with (
+        FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file,
+        FileFaker(FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack) as conntrack_file,
+    ):
         yield lease_file, conntrack_file
 
 
 def test_get_settings(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "guest", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "guest", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
         "enabled",
@@ -112,9 +111,7 @@ def test_update_settings(uci_configs_init, infrastructure, network_restart_comma
         assert notifications[-1]["kind"] == "notification"
         assert match_subdict(data, notifications[-1]["data"])
 
-        res = infrastructure.process_message(
-            {"module": "guest", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "guest", "action": "get_settings", "kind": "request"})
         assert res["module"] == "guest"
         assert res["action"] == "get_settings"
         assert res["kind"] == "reply"
@@ -165,9 +162,7 @@ def test_update_settings(uci_configs_init, infrastructure, network_restart_comma
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_update_settings_openwrt(
-    uci_configs_init, init_script_result, infrastructure, network_restart_command
-):
+def test_update_settings_openwrt(uci_configs_init, init_script_result, infrastructure, network_restart_command):
     filters = [("guest", "update_settings")]
     uci = get_uci_module(infrastructure.name)
 
@@ -208,7 +203,7 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "network", "guest_turris", "ipaddr") == "192.168.8.1"
     assert uci.get_option_named(data, "network", "guest_turris", "netmask") == "255.255.255.0"
     assert uci.parse_bool(uci.get_option_named(data, "network", "br_guest_turris", "bridge_empty"))
-    assert uci.get_option_named(data, "network", "guest_turris","ip6assign") == "64"
+    assert uci.get_option_named(data, "network", "guest_turris", "ip6assign") == "64"
 
     assert uci.get_option_named(data, "network", "br_guest_turris", "name") == "br-guest-turris"
     assert uci.get_option_named(data, "network", "br_guest_turris", "type") == "bridge"
@@ -222,23 +217,15 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "firewall", "guest_turris", "input") == "REJECT"
     assert uci.get_option_named(data, "firewall", "guest_turris", "forward") == "REJECT"
     assert uci.get_option_named(data, "firewall", "guest_turris", "output") == "ACCEPT"
-    assert uci.parse_bool(
-        uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "enabled")
-    )
-    assert (
-        uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "src") == "tr_guest"
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "enabled"))
+    assert uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "dest") == "wan"
-    assert uci.parse_bool(
-        uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "enabled")
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "enabled"))
     assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "proto") == "tcpudp"
     assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "dest_port") == "53"
     assert uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "target") == "ACCEPT"
-    assert uci.parse_bool(
-        uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "enabled")
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "enabled"))
     assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "src") == "tr_guest"
     assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "proto") == "udp"
     assert uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "src_port") == "67-68"
@@ -261,7 +248,10 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "family") == "ipv6"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "target") == "ACCEPT"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_MLD", "icmp_type") == [
-        '130/0', '131/0', '132/0', '143/0'
+        "130/0",
+        "131/0",
+        "132/0",
+        "143/0",
     ]
 
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "src") == "tr_guest"
@@ -270,9 +260,17 @@ def test_update_settings_openwrt(
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "family") == "ipv6"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "target") == "ACCEPT"
     assert uci.get_option_named(data, "firewall", "guest_turris_Allow_ICMPv6_Input", "icmp_type") == [
-        'echo-request', 'echo-reply', 'destination-unreachable', 'packet-too-big', 'time-exceeded',
-        'bad-header', 'unknown-header-type', 'router-solicitation', 'neighbour-solicitation',
-        'router-advertisement', 'neighbour-advertisement'
+        "echo-request",
+        "echo-reply",
+        "destination-unreachable",
+        "packet-too-big",
+        "time-exceeded",
+        "bad-header",
+        "unknown-header-type",
+        "router-solicitation",
+        "neighbour-solicitation",
+        "router-advertisement",
+        "neighbour-advertisement",
     ]
 
     with pytest.raises(UciRecordNotFound):
@@ -328,15 +326,9 @@ def test_update_settings_openwrt(
         data = backend.read()
     assert not uci.parse_bool(uci.get_option_named(data, "network", "guest_turris", "enabled"))
     assert not uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris", "enabled"))
-    assert not uci.parse_bool(
-        uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "enabled")
-    )
-    assert not uci.parse_bool(
-        uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "enabled")
-    )
-    assert not uci.parse_bool(
-        uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "enabled")
-    )
+    assert not uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris_forward_wan", "enabled"))
+    assert not uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris_dns_rule", "enabled"))
+    assert not uci.parse_bool(uci.get_option_named(data, "firewall", "guest_turris_dhcp_rule", "enabled"))
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "guest_iface_0", "disabled"))
     assert uci.parse_bool(uci.get_option_named(data, "wireless", "guest_iface_1", "disabled"))
 
@@ -430,9 +422,7 @@ def test_dhcp_lease(
         backend.add_section("dhcp", "dhcp", "guest_turris")
         backend.set_option("dhcp", "guest_turris", "leasetime", orig_backend_val)
 
-    res = infrastructure.process_message(
-        {"module": "guest", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "guest", "action": "get_settings", "kind": "request"})
     assert res["data"]["dhcp"]["lease_time"] == api_val
 
     res = infrastructure.process_message(
@@ -475,9 +465,7 @@ def test_dhcp_clients(
             "kind": "reply",
             "module": "guest",
         }
-        res = infrastructure.process_message(
-            {"module": "guest", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "guest", "action": "get_settings", "kind": "request"})
         assert res["data"]["dhcp"]["clients"] == clients
 
     # Return both
@@ -631,9 +619,7 @@ def test_interface_count(
             }
         )
         assert res["data"] == {"result": True}
-        res = infrastructure.process_message(
-            {"module": "guest", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "guest", "action": "get_settings", "kind": "request"})
         assert res["data"]["interface_count"] == count
 
     # No wifi no interfaces
@@ -838,10 +824,10 @@ def test_update_settings_dhcp_range(uci_configs_init, infrastructure, network_re
     # first wrong
     update("192.168.1.1", "255.255.255.0", 150, 106, False)
     # other range
-    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
-    update("10.10.0.1", "255.255.192.0", (2 ** 13), (2 ** 13) - 1, True)
+    update("10.10.0.1", "255.255.192.0", (2**13), (2**13) - 1, True)
+    update("10.10.0.1", "255.255.192.0", (2**13), (2**13) - 1, True)
     # too high number
-    update("10.10.0.1", "255.255.192.0", (2 ** 32), 1, False)
+    update("10.10.0.1", "255.255.192.0", (2**32), 1, False)
     # last valid router ip
     update("192.168.1.99", "255.255.255.0", 100, 150, True)
     # router ip in range
@@ -851,7 +837,5 @@ def test_update_settings_dhcp_range(uci_configs_init, infrastructure, network_re
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_missing_wireless(uci_configs_init, infrastructure):
     os.unlink(os.path.join(uci_configs_init[0], "wireless"))
-    res = infrastructure.process_message(
-        {"module": "guest", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "guest", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}

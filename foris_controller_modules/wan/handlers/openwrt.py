@@ -35,7 +35,7 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ get wan settings
+        """get wan settings
 
         :returns: current wan settings
         :rtype: dict
@@ -44,7 +44,7 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ updates current wan settings
+        """updates current wan settings
 
         :param new_settings: new settings dictionary
         :type new_settings: dict
@@ -56,10 +56,8 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
         return True
 
     @logger_wrapper(logger)
-    def connection_test_trigger(
-        self, test_kinds, notify_function, exit_notify_function, reset_notify_function
-    ):
-        """ Triggering of the connection test
+    def connection_test_trigger(self, test_kinds, notify_function, exit_notify_function, reset_notify_function):
+        """Triggering of the connection test
         :param test_kinds: which kinds of tests should be run (ipv4, ipv6, dns)
         :type test_kinds: array of str
         :param notify_function: function for sending notifications
@@ -77,7 +75,7 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def connection_test_status(self, test_id):
-        """ Connection test status
+        """Connection test status
         :param test_id: id of the test to display
         :type test_id: str
         :returns: connection test status + test data
@@ -87,7 +85,7 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_wan_status(self):
-        """ Obtians wan status
+        """Obtians wan status
         :returns: {'up': True/False}
         :rtype: dict
         """

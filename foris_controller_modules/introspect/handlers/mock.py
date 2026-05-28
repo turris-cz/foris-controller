@@ -43,7 +43,7 @@ FORIS_CONTROLLER_MODULES = [
     "updater",
     "wan",
     "web",
-    "wifi"
+    "wifi",
 ]
 
 

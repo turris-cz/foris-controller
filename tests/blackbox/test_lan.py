@@ -255,9 +255,10 @@ def lan_dnsmasq_files():
             "sport=53 dport=59532 packets=1 bytes=263 mark=0 zone=0 use=2",
         ]
     )
-    with FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file, FileFaker(
-        FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack
-    ) as conntrack_file:
+    with (
+        FileFaker(FILE_ROOT_PATH, "/tmp/dhcp.leases", False, leases) as lease_file,
+        FileFaker(FILE_ROOT_PATH, "/proc/net/nf_conntrack", False, conntrack) as conntrack_file,
+    ):
         yield lease_file, conntrack_file
 
 
@@ -3250,7 +3251,7 @@ def test_set_forwarding_to_existing_one(
     }
 
     res = infrastructure.process_message({"module": "lan", "action": "get_port_forwardings", "kind": "request"})
-    assert {
-        "name": "existing-rule", "dest_ip": "192.168.1.94", "src_dport": "9001-9025", "enabled": True
-    } in res["data"]["rules"]
+    assert {"name": "existing-rule", "dest_ip": "192.168.1.94", "src_dport": "9001-9025", "enabled": True} in res[
+        "data"
+    ]["rules"]
     assert all(e["name"] != "to-be-renamed" for e in res["data"]["rules"])

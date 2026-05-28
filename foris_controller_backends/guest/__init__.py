@@ -67,21 +67,13 @@ class GuestUci:
         )
 
         guest["qos"] = {}
-        guest["qos"]["enabled"] = parse_bool(
-            get_option_named(sqm_data, "sqm", "guest_limit_turris", "enabled", "0")
-        )
+        guest["qos"]["enabled"] = parse_bool(get_option_named(sqm_data, "sqm", "guest_limit_turris", "enabled", "0"))
         # upload is actually download limit nad vice versa
-        guest["qos"]["upload"] = int(
-            get_option_named(sqm_data, "sqm", "guest_limit_turris", "download", 1024)
-        )
-        guest["qos"]["download"] = int(
-            get_option_named(sqm_data, "sqm", "guest_limit_turris", "upload", 1024)
-        )
+        guest["qos"]["upload"] = int(get_option_named(sqm_data, "sqm", "guest_limit_turris", "download", 1024))
+        guest["qos"]["download"] = int(get_option_named(sqm_data, "sqm", "guest_limit_turris", "upload", 1024))
 
         guest["dhcp"] = {}
-        guest["dhcp"]["enabled"] = not parse_bool(
-            get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0")
-        )
+        guest["dhcp"]["enabled"] = not parse_bool(get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0"))
         guest["dhcp"]["start"] = int(
             get_option_named(dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START)
         )
@@ -98,19 +90,13 @@ class GuestUci:
             )
         )
         guest["dhcp"]["clients"] = (
-            LanFiles().get_dhcp_clients(guest["ip"], guest["netmask"])
-            if guest["dhcp"]["enabled"]
-            else []
+            LanFiles().get_dhcp_clients(guest["ip"], guest["netmask"]) if guest["dhcp"]["enabled"] else []
         )
 
         from foris_controller_backends.networks import NetworksUci
 
-        guest["interface_count"] = NetworksUci.get_interface_count(
-            network_data, wireless_data, "guest"
-        )
-        guest["interface_up_count"] = NetworksUci.get_interface_count(
-            network_data, wireless_data, "guest", True
-        )
+        guest["interface_count"] = NetworksUci.get_interface_count(network_data, wireless_data, "guest")
+        guest["interface_up_count"] = NetworksUci.get_interface_count(network_data, wireless_data, "guest", True)
 
         return guest
 
@@ -188,7 +174,7 @@ class GuestUci:
         backend.set_option("firewall", "guest_turris_Allow_MLD", "src_ip", "fe80::/10")
         backend.set_option("firewall", "guest_turris_Allow_MLD", "family", "ipv6")
         backend.set_option("firewall", "guest_turris_Allow_MLD", "target", "ACCEPT")
-        backend.replace_list("firewall", "guest_turris_Allow_MLD", "icmp_type", ['130/0', '131/0', '132/0', '143/0'])
+        backend.replace_list("firewall", "guest_turris_Allow_MLD", "icmp_type", ["130/0", "131/0", "132/0", "143/0"])
 
         backend.add_section("firewall", "rule", "guest_turris_Allow_ICMPv6_Input")
         backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "src", guest_zone_name)
@@ -196,10 +182,23 @@ class GuestUci:
         backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "limit", "1000/sec")
         backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "family", "ipv6")
         backend.set_option("firewall", "guest_turris_Allow_ICMPv6_Input", "target", "ACCEPT")
-        backend.replace_list("firewall", "guest_turris_Allow_ICMPv6_Input", "icmp_type", [
-            'echo-request', 'echo-reply', 'destination-unreachable', 'packet-too-big', 'time-exceeded', 'bad-header',
-            'unknown-header-type', 'router-solicitation', 'neighbour-solicitation', 'router-advertisement', 'neighbour-advertisement'
-        ]
+        backend.replace_list(
+            "firewall",
+            "guest_turris_Allow_ICMPv6_Input",
+            "icmp_type",
+            [
+                "echo-request",
+                "echo-reply",
+                "destination-unreachable",
+                "packet-too-big",
+                "time-exceeded",
+                "bad-header",
+                "unknown-header-type",
+                "router-solicitation",
+                "neighbour-solicitation",
+                "router-advertisement",
+                "neighbour-advertisement",
+            ],
         )
         # update dhcp config
         backend.add_section("dhcp", "dhcp", "guest_turris")
@@ -214,17 +213,13 @@ class GuestUci:
                     "dhcp",
                     "guest_turris",
                     "leasetime",
-                    "infinite"
-                    if guest_network["dhcp"]["lease_time"] == 0
-                    else guest_network["dhcp"]["lease_time"],
+                    "infinite" if guest_network["dhcp"]["lease_time"] == 0 else guest_network["dhcp"]["lease_time"],
                 )
                 # dhcpv6
                 backend.set_option("dhcp", "guest_turris", "dhcpv6", "server")
                 backend.set_option("dhcp", "guest_turris", "ra", "server")
             if guest_network.get("ip", False):
-                backend.replace_list(
-                    "dhcp", "guest_turris", "dhcp_option", ["6,%s" % guest_network["ip"]]
-                )
+                backend.replace_list("dhcp", "guest_turris", "dhcp_option", ["6,%s" % guest_network["ip"]])
 
         # qos part (replaces whole sqm section)
         try:
@@ -238,11 +233,7 @@ class GuestUci:
                 backend.set_option(config, section, option, data[key])
 
         try:
-            if (
-                guest_network["enabled"]
-                and "qos" in guest_network
-                and guest_network["qos"]["enabled"]
-            ):
+            if guest_network["enabled"] and "qos" in guest_network and guest_network["qos"]["enabled"]:
                 backend.add_section("sqm", "queue", "guest_limit_turris")
                 backend.set_option("sqm", "guest_limit_turris", "enabled", enabled)
                 backend.set_option("sqm", "guest_limit_turris", "interface", guest_net_bridge_name)
@@ -254,12 +245,8 @@ class GuestUci:
                 # We need to swap dowload and upload
                 # "upload" means upload to the guest network
                 # "download" means dowload from the guest network
-                set_if_exists(
-                    backend, "sqm", "guest_limit_turris", "upload", guest_network["qos"], "download"
-                )
-                set_if_exists(
-                    backend, "sqm", "guest_limit_turris", "download", guest_network["qos"], "upload"
-                )
+                set_if_exists(backend, "sqm", "guest_limit_turris", "upload", guest_network["qos"], "download")
+                set_if_exists(backend, "sqm", "guest_limit_turris", "download", guest_network["qos"], "upload")
                 return "enable"
             else:
                 return "disable"
@@ -268,27 +255,16 @@ class GuestUci:
 
     @staticmethod
     def enable_guest_network(backend):
-        """ Enables guest network. If guest network is not preset it is created
-        """
+        """Enables guest network. If guest network is not preset it is created"""
 
         network_data = backend.read("network")
         dhcp_data = backend.read("dhcp")
 
-        dhcp_enabled = not parse_bool(
-            get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0")
-        )
-        dhcp_start = int(
-            get_option_named(dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START)
-        )
-        dhcp_limit = int(
-            get_option_named(dhcp_data, "dhcp", "guest_turris", "limit", LanUci.DEFAULT_DHCP_LIMIT)
-        )
-        router_ip = get_option_named(
-            network_data, "network", "guest_turris", "ipaddr", GuestUci.DEFAULT_GUEST_ADDRESS
-        )
-        netmask = get_option_named(
-            network_data, "network", "guest_turris", "netmask", GuestUci.DEFAULT_GUEST_NETMASK
-        )
+        dhcp_enabled = not parse_bool(get_option_named(dhcp_data, "dhcp", "guest_turris", "ignore", "0"))
+        dhcp_start = int(get_option_named(dhcp_data, "dhcp", "guest_turris", "start", LanUci.DEFAULT_DHCP_START))
+        dhcp_limit = int(get_option_named(dhcp_data, "dhcp", "guest_turris", "limit", LanUci.DEFAULT_DHCP_LIMIT))
+        router_ip = get_option_named(network_data, "network", "guest_turris", "ipaddr", GuestUci.DEFAULT_GUEST_ADDRESS)
+        netmask = get_option_named(network_data, "network", "guest_turris", "netmask", GuestUci.DEFAULT_GUEST_NETMASK)
         dhcp_lease_time = LanUci._normalize_lease(
             get_option_named(
                 dhcp_data,

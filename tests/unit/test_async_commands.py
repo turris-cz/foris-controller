@@ -45,9 +45,7 @@ def async_infrastructure(lock_backend):
 
     app_info["lock_backend"] = lock_backend
 
-    os.environ["FORIS_CMDLINE_ROOT"] = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "test_root"
-    )
+    os.environ["FORIS_CMDLINE_ROOT"] = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_root")
 
     from foris_controller_backends.cmdline import AsyncCommand
 

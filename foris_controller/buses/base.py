@@ -40,8 +40,7 @@ class BaseNotificationSender(object):
         return msg
 
     def notify(self, module, action, data=None, validator=None, controller_id=None):
-        """ Send a notification on a message bus
-        """
+        """Send a notification on a message bus"""
 
         if controller_id is None:
             controller_id = f"{uuid.getnode():016X}"  # returns nodeid based on mac addr
@@ -68,7 +67,7 @@ class BaseSocketListener(object):
 
 
 def get_method_names_from_module(module):
-    """ Reads python module, checks for a valid foris-controller module class
+    """Reads python module, checks for a valid foris-controller module class
         and reads all names of class functions which starts with action_*
 
     :param module: module to be examine
@@ -85,9 +84,7 @@ def get_method_names_from_module(module):
     # read all names fucntions which starts with action_
     res = [
         e[0]
-        for e in inspect.getmembers(
-            module_class, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x)
-        )
+        for e in inspect.getmembers(module_class, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x))
         if e[0].startswith("action_")
     ]
 

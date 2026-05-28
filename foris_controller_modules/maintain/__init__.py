@@ -27,7 +27,7 @@ class MaintainModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_reboot(self, data):
-        """ Calls action to perform the reboot
+        """Calls action to perform the reboot
 
         :param data: input data (supposed to be {})
         :type data: dict
@@ -37,7 +37,7 @@ class MaintainModule(BaseModule):
         return {"result": self.handler.reboot()}
 
     def action_generate_backup(self, data):
-        """ Which calls a command which returns a backup of curret system
+        """Which calls a command which returns a backup of curret system
 
         :param data: input data (supposed to be {})
         :type data: dict
@@ -47,7 +47,7 @@ class MaintainModule(BaseModule):
         return {"backup": self.handler.generate_backup()}
 
     def action_restore_backup(self, data):
-        """ Restores backup (overrides current configuration with the backup)
+        """Restores backup (overrides current configuration with the backup)
 
         :param data: should contain the backup in base64 encoding ({"backup": "..."})
         :type data: dict

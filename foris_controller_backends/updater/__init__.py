@@ -38,7 +38,8 @@ logger = logging.getLogger(__name__)
 
 
 def run_updater_after(func):
-    """ Decorator to run pkgupdate after function finishes"""
+    """Decorator to run pkgupdate after function finishes"""
+
     @wraps(func)
     def inner(*args, **kwargs):
         res = func(*args, **kwargs)
@@ -119,7 +120,7 @@ class UpdaterUci(object):
 
 class Updater:
     def updater_running(self):
-        """ Returns indicator whether the updater is running
+        """Returns indicator whether the updater is running
         :returns: True if updater is running False otherwise
         :rtype: bool
         """
@@ -129,7 +130,7 @@ class Updater:
         return res
 
     def get_approval(self) -> typing.Union[svupdater_approvals.ApprovalRequest, ApprovalNotPresent]:
-        """ Returns current approval
+        """Returns current approval
         :returns: approval
         :rtype: dict
         """
@@ -211,7 +212,7 @@ class Updater:
 
     @staticmethod
     def query_installed_packages(packages: typing.List[str]) -> typing.List[str]:
-        """ Query whether packages are installed or provided by another packages """
+        """Query whether packages are installed or provided by another packages"""
         ret = []
 
         status = svupdater_packages.Status()
@@ -239,13 +240,10 @@ class Updater:
         return True
 
     def resolve_approval(self, approval_id, solution):
-        """ Resolves approval
-        """
+        """Resolves approval"""
         try:
             logger.debug("Resolving approval %s (->%s)", approval_id, solution)
-            svupdater_approvals.approve(
-                approval_id
-            ) if solution == "grant" else svupdater_approvals.deny(approval_id)
+            svupdater_approvals.approve(approval_id) if solution == "grant" else svupdater_approvals.deny(approval_id)
             logger.debug("Approval resolved %s (->%s)", approval_id, solution)
 
             # Run updater after approval was granted
@@ -263,13 +261,10 @@ class Updater:
         return True
 
     def run(self, set_reboot_indicator):
-        """ Starts updater run
-        """
+        """Starts updater run"""
 
         try:
-            logger.debug(
-                "Staring to trigger updater (set_reboot_indicator=%s)", set_reboot_indicator
-            )
+            logger.debug("Staring to trigger updater (set_reboot_indicator=%s)", set_reboot_indicator)
             hooks = ["/usr/bin/maintain-reboot-needed"] if set_reboot_indicator else []
             svupdater.run(hooklist=hooks)
             logger.debug("Updater triggered")

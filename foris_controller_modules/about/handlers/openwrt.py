@@ -36,7 +36,6 @@ logger = logging.getLogger(__name__)
 
 
 class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
-
     crypto_cmds = CryptoWrapperCmds()
     system_info_cmds = SystemInfoCmds()
     system_info_files = SystemInfoFiles()
@@ -47,7 +46,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_device_info(self):
-        """ Obtains info about the device
+        """Obtains info about the device
 
         :returns: result
         :rtype: dict
@@ -61,7 +60,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_serial(self):
-        """ Obtains serial number
+        """Obtains serial number
 
         :returns: result
         :rtype: dict
@@ -70,7 +69,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_registration_number(self):
-        """ Obtains registration number
+        """Obtains registration number
 
         :returns: result
         :rtype: dict
@@ -79,7 +78,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_customization(self):
-        """ Search for hardware-specific customization packages
+        """Search for hardware-specific customization packages
         If such package is installed, it means that this is certain custom
         software configuration for specific hardware.
         """

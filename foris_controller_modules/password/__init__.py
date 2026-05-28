@@ -28,7 +28,7 @@ class PasswordModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_check(self, data):
-        """ Checks whether provided password (base64 encoded) matches the current foris password
+        """Checks whether provided password (base64 encoded) matches the current foris password
 
         :param data: {"password": "<base64 string>"}
         :type data: dict
@@ -38,7 +38,7 @@ class PasswordModule(BaseModule):
         return {"status": self.handler.check_foris_password(base64.b64decode(data["password"]))}
 
     def action_set(self, data):
-        """ Sets the password for foris web interface xor system
+        """Sets the password for foris web interface xor system
 
         :param data: {"password": "<base64 string>", "type": "foris" / "system"}
         :type data: dict

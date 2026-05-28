@@ -110,9 +110,7 @@ def ready_certs():
 
 @pytest.mark.only_backends(["mock"])
 def test_generate_ca_mock(infrastructure):
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "generate_ca", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "generate_ca", "kind": "request"})
     assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
 
@@ -125,9 +123,7 @@ def test_generate_ca_openwrt(empty_certs, infrastructure):
     # successful generation
     notifications = infrastructure.get_notifications(filters=filters)
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "generate_ca", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "generate_ca", "kind": "request"})
     assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
     task_id = res["data"]["task_id"]
@@ -154,9 +150,7 @@ def test_generate_ca_openwrt(empty_certs, infrastructure):
 
     # failed to generate
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "generate_ca", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "generate_ca", "kind": "request"})
     assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
     task_id = res["data"]["task_id"]
@@ -170,18 +164,14 @@ def test_generate_ca_openwrt(empty_certs, infrastructure):
 
 @pytest.mark.only_backends(["mock"])
 def test_ca_get_status_mock(infrastructure):
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "status" in res["data"]
 
 
 @pytest.mark.only_backends(["openwrt"])
 def test_get_status_openwrt_ready(ready_certs, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert res == {
         "module": "remote",
         "action": "get_status",
@@ -199,9 +189,7 @@ def test_get_status_openwrt_ready(ready_certs, infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_get_status_openwrt_missing(empty_certs, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert res == {
         "module": "remote",
         "action": "get_status",
@@ -212,9 +200,7 @@ def test_get_status_openwrt_missing(empty_certs, infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_get_status_openwrt_generating(generating_certs, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert res == {
         "module": "remote",
         "action": "get_status",
@@ -225,9 +211,7 @@ def test_get_status_openwrt_generating(generating_certs, infrastructure):
 
 @pytest.mark.only_backends(["mock"])
 def test_generate_token_mock(infrastructure):
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     orig_count = len(res["data"]["tokens"])
@@ -243,9 +227,7 @@ def test_generate_token_mock(infrastructure):
     assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     assert len(res["data"]["tokens"]) == orig_count + 1
@@ -255,9 +237,7 @@ def test_generate_token_mock(infrastructure):
 @pytest.mark.only_backends(["openwrt"])
 def test_generate_token_openwrt_success(ready_certs, infrastructure):
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     orig_count = len(res["data"]["tokens"])
@@ -295,9 +275,7 @@ def test_generate_token_openwrt_success(ready_certs, infrastructure):
     assert new_notifications[-1]["data"]["status"] == "succeeded"
     assert new_notifications[-1]["data"]["task_id"] == task_id
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     assert len(res["data"]["tokens"]) == orig_count + 1
@@ -307,9 +285,7 @@ def test_generate_token_openwrt_success(ready_certs, infrastructure):
 @pytest.mark.only_backends(["openwrt"])
 def test_generate_token_openwrt_failed(empty_certs, infrastructure):
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     assert len(res["data"]["tokens"]) == 0
@@ -339,9 +315,7 @@ def test_generate_token_openwrt_failed(empty_certs, infrastructure):
     assert new_notifications[-1]["data"]["status"] == "failed"
     assert new_notifications[-1]["data"]["task_id"] == task_id
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     assert len(res["data"]["tokens"]) == 0
@@ -378,9 +352,7 @@ def test_revoke_mock(infrastructure):
     assert set(res.keys()) == {"module", "action", "kind", "data"}
     assert "task_id" in res["data"]
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     assert res["data"]["tokens"][-1]["name"] == "new.token_to_revoke"
@@ -436,9 +408,7 @@ def test_revoke_openwrt_ready(ready_certs, infrastructure):
         "data": {"id": "03"},
     }
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
     matched = [e for e in res["data"]["tokens"] if e["id"] == "03"][0]
@@ -464,9 +434,7 @@ def test_delete_ca(ready_certs, infrastructure):
     filters = [("remote", "delete_ca")]
 
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "delete_ca", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "delete_ca", "kind": "request"})
     assert "data" in res
     assert "result" in res["data"]
     assert res["data"]["result"] is True
@@ -478,22 +446,22 @@ def test_delete_ca(ready_certs, infrastructure):
         "kind": "notification",
     }
 
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "status" in res["data"]
     assert res["data"]["status"] == "missing"
 
 
 def test_get_settings(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_settings", "kind": "request"})
     assert set(res["data"].keys()) == {"enabled", "wan_access", "port"}
 
 
 def test_update_settings(
-    uci_configs_init, init_script_result, infrastructure, network_restart_command, ready_certs,
+    uci_configs_init,
+    init_script_result,
+    infrastructure,
+    network_restart_command,
+    ready_certs,
 ):
     filters = [("remote", "update_settings")]
 
@@ -517,9 +485,7 @@ def test_update_settings(
         notifications = infrastructure.get_notifications(notifications, filters=filters)
         assert notifications[-1]["data"] == new_settings
 
-        res = infrastructure.process_message(
-            {"module": "remote", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "remote", "action": "get_settings", "kind": "request"})
         assert match_subdict(new_settings, res["data"])
 
     update({"enabled": False})
@@ -541,9 +507,7 @@ def test_update_settings_ubus_unix(uci_configs_init, init_script_result, infrast
         assert "result" in res["data"]
         assert res["data"]["result"] is False
 
-        res = infrastructure.process_message(
-            {"module": "remote", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "remote", "action": "get_settings", "kind": "request"})
         assert res["data"]["enabled"] is False
 
         if infrastructure.backend_name == "openwrt":
@@ -558,9 +522,7 @@ def test_update_settings_ubus_unix(uci_configs_init, init_script_result, infrast
 
 @pytest.mark.only_message_buses(["mqtt"])
 @pytest.mark.only_backends(["openwrt"])
-def test_update_settings_openwrt_mqtt(
-    uci_configs_init, init_script_result, infrastructure, ready_certs
-):
+def test_update_settings_openwrt_mqtt(uci_configs_init, init_script_result, infrastructure, ready_certs):
 
     uci = get_uci_module(infrastructure.name)
 
@@ -581,24 +543,14 @@ def test_update_settings_openwrt_mqtt(
     update({"enabled": False})
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")
-        )
-        is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")) is False
 
     update({"enabled": True, "port": 123, "wan_access": False})
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")
-        )
-        is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")) is False
     assert uci.parse_bool(uci.get_option_named(data, "fosquitto", "remote", "enabled")) is True
     assert int(uci.get_option_named(data, "fosquitto", "remote", "port")) == 123
 
@@ -607,22 +559,12 @@ def test_update_settings_openwrt_mqtt(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")
-        )
-        is True
-    )
-    assert (
-        uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "name")
-        == "fosquitto_wan"
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")) is True
+    assert uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "name") == "fosquitto_wan"
     assert uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "target") == "ACCEPT"
     assert uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "proto") == "tcp"
     assert uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "src") == "wan"
-    assert (
-        uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "dest_port") == "1234"
-    )
+    assert uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "dest_port") == "1234"
 
     assert uci.parse_bool(uci.get_option_named(data, "fosquitto", "remote", "enabled")) is True
     assert int(uci.get_option_named(data, "fosquitto", "remote", "port")) == 1234
@@ -631,12 +573,7 @@ def test_update_settings_openwrt_mqtt(
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         data = backend.read()
 
-    assert (
-        uci.parse_bool(
-            uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")
-        )
-        is False
-    )
+    assert uci.parse_bool(uci.get_option_named(data, "firewall", "wan_fosquitto_turris_rule", "enabled")) is False
     assert uci.parse_bool(uci.get_option_named(data, "fosquitto", "remote", "enabled")) is False
 
 
@@ -644,9 +581,7 @@ def test_update_settings_openwrt_mqtt(
 def test_get_token_mock(infrastructure):
 
     query_data = {}
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "generate_ca", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "generate_ca", "kind": "request"})
     assert "errors" not in res
 
     query_data["id"] = "FF"
@@ -665,9 +600,7 @@ def test_get_token_mock(infrastructure):
         }
     )
     assert "errors" not in res
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "get_status", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "errors" not in res
     assert res["data"]["tokens"][-1]["name"] == "get_token"
     token = res["data"]["tokens"][-1]
@@ -693,9 +626,7 @@ def test_get_token_mock(infrastructure):
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_get_token_openwrt(
-    ready_certs, uci_configs_init, init_script_result, infrastructure, file_root_init
-):
+def test_get_token_openwrt(ready_certs, uci_configs_init, init_script_result, infrastructure, file_root_init):
 
     query_data = {}
     uci = get_uci_module(infrastructure.name)
@@ -794,9 +725,7 @@ def test_delete_ca_when_enabled(
         }
     )
     assert res["data"]["result"]
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "delete_ca", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "delete_ca", "kind": "request"})
     assert res["data"]["result"] is False
 
 
@@ -850,9 +779,7 @@ def test_set_netboot_configured(infrastructure, file_root_init, mount_on_netboot
 
     filters = [("remote", "set_netboot_configured")]
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message(
-        {"module": "remote", "action": "set_netboot_configured", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "remote", "action": "set_netboot_configured", "kind": "request"})
     assert res == {
         "module": "remote",
         "action": "set_netboot_configured",

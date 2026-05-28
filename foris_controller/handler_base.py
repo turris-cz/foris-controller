@@ -26,7 +26,7 @@ class HandlerFunctionNotImplemented(BaseException):
 
 
 def wrap_required_functions(required_functions):
-    """ make sure that wrapped class contains required functions
+    """make sure that wrapped class contains required functions
 
     param required_functions: list of names of required functions
     type required_functions: list of str

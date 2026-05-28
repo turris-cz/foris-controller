@@ -28,13 +28,13 @@ class SystemModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_hostname(self, data: dict) -> Dict[str, str]:
-        """ Get hostname setting. """
+        """Get hostname setting."""
         hostname = self.handler.get_hostname()
         return {"hostname": hostname}
 
     def action_set_hostname(self, data: dict) -> object:
-        """ Set hostname setting. """
-        res = self.handler.set_hostname(data['hostname'])
+        """Set hostname setting."""
+        res = self.handler.set_hostname(data["hostname"])
         return {"result": res}
 
 

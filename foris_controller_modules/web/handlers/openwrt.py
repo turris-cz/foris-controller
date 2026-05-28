@@ -47,7 +47,7 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def set_language(self, language):
-        """ Sets language
+        """Sets language
 
          :returns: True
         :rtype: bool
@@ -56,7 +56,7 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def list_languages(self):
-        """ Lists languages
+        """Lists languages
 
         :returns: available languages
         :rtype: list
@@ -64,7 +64,7 @@ class OpenwrtWebHandler(Handler, BaseOpenwrtHandler):
         return self.langs.list_languages()
 
     def update_guide(self, enabled, workflow=None):
-        """ Updates guide settings
+        """Updates guide settings
         :param enabled: is guide mode enabled
         :type enabled: bool
         :param workflow: which guide workflow is used

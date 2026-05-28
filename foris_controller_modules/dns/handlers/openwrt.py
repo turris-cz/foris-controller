@@ -34,7 +34,7 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ get dns settings
+        """get dns settings
 
         :returns: current dns settings
         :rtype: dict
@@ -50,7 +50,7 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
         forwarder=None,
         dns_from_dhcp_domain=None,
     ):
-        """ updates current dns settings
+        """updates current dns settings
 
         :param forwarding_enabled: set whether the forwarding is enabled
         :type forwarding_enabled: bool
@@ -85,9 +85,7 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
         tls_hostname: str = "",
         tls_pin: str = "",
     ) -> bool:
-        return OpenwrtDnsHandler.files.add_forwarder(
-            description, ipaddresses, tls_type, tls_hostname, tls_pin
-        )
+        return OpenwrtDnsHandler.files.add_forwarder(description, ipaddresses, tls_type, tls_hostname, tls_pin)
 
     @logger_wrapper(logger)
     def set_forwarder(
@@ -99,9 +97,7 @@ class OpenwrtDnsHandler(Handler, BaseOpenwrtHandler):
         tls_hostname: str = "",
         tls_pin: str = "",
     ) -> bool:
-        return OpenwrtDnsHandler.files.set_forwarder(
-            name, description, ipaddresses, tls_type, tls_hostname, tls_pin
-        )
+        return OpenwrtDnsHandler.files.set_forwarder(name, description, ipaddresses, tls_type, tls_hostname, tls_pin)
 
     @logger_wrapper(logger)
     def del_forwarder(self, name: str) -> bool:

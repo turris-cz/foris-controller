@@ -130,9 +130,7 @@ class WebUciCommands:
         # remedy for migration from older wizard
         step = int(get_option_named(foris_data, "foris", "wizard", "allowed_step_max", "0"))
         enabled = not finished and step < 7
-        workflow = get_option_named(
-            foris_data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow()
-        )
+        workflow = get_option_named(foris_data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
         passed = get_option_named(foris_data, "foris", "wizard", "passed", [])
 
         res = {"enabled": enabled, "workflow": workflow, "passed": passed}
@@ -185,9 +183,7 @@ class WebUciCommands:
                 passed += [step]
                 backend.add_section("foris", "config", "wizard")
                 backend.replace_list("foris", "wizard", "passed", passed)
-            workflow = get_option_named(
-                data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow()
-            )
+            workflow = get_option_named(data, "foris", "wizard", "workflow", WebUciCommands._detect_basic_workflow())
             if set(profiles.get_workflows()[workflow]).issubset(set(passed)):
                 backend.add_section("foris", "config", "wizard")
                 backend.set_option("foris", "wizard", "finished", store_bool(True))
@@ -219,7 +215,7 @@ class WebUciCommands:
         return True
 
 
-class Languages():
+class Languages:
     # reForis is the only web UI of Turris OS at the moment, so only look for reForis translations
     LANG_DIR = "/usr/lib/python%s.%s/site-packages/reforis/translations" % (
         sys.version_info.major,
@@ -229,11 +225,11 @@ class Languages():
 
     @staticmethod
     def list_languages() -> typing.List[str]:
-        """ List installed languages
+        """List installed languages
         :returns: list of installed languages
         :rtype: list of str
         """
 
-        return list({DEFAULT_LANGUAGE} | {
-            os.path.basename(e) for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCHES)
-        })
+        return list(
+            {DEFAULT_LANGUAGE} | {os.path.basename(e) for e in BaseMatch.list_files(Languages.INSTALLED_LANG_MATCHES)}
+        )

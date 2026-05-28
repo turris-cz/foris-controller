@@ -29,14 +29,14 @@ class LanModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data: dict) -> dict:
-        """ Get current lan settings
+        """Get current lan settings
         :param data: supposed to be {}
         :returns: current lan settings
         """
         return self.handler.get_settings()
 
     def action_update_settings(self, data: dict) -> dict:
-        """ Updates lan settings
+        """Updates lan settings
         :param data: new lan settings
         :returns: result of the update {'result': True/False}
         """
@@ -58,7 +58,7 @@ class LanModule(BaseModule):
         return {"result": res}
 
     def action_set_dhcp_client(self, data: dict) -> dict:
-        """ Set configuration of a single dhcp client
+        """Set configuration of a single dhcp client
         :param: data: client data to be set
         :returns: result of the update {'result': True/False}
         """
@@ -86,14 +86,14 @@ class LanModule(BaseModule):
         return res
 
     def action_get_port_forwardings(self, data) -> dict:
-        """ Provides list of forwarding rules
+        """Provides list of forwarding rules
         :param data: new forwarding settings
         :returns: list of forwaridng rules
         """
         return self.handler.get_port_forwardings()
 
     def action_port_forwarding_set(self, data: dict) -> dict:
-        """ Sets lan forwarding rule
+        """Sets lan forwarding rule
         :param data: new forwarding settings
         :returns: {'result': True} or {'result': False, 'reason': [...]}
         """

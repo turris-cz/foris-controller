@@ -59,7 +59,7 @@ class MockGuestHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get guest settings
+        """Mocks get guest settings
 
         :returns: current guest settiongs
         :rtype: str
@@ -73,15 +73,13 @@ class MockGuestHandler(Handler, BaseMockHandler):
             "dhcp": MockGuestHandler.dhcp,
             "qos": MockGuestHandler.qos,
             "interface_count": len(MockNetworksHandler.networks["guest"]),
-            "interface_up_count": len(
-                [e for e in MockNetworksHandler.networks["guest"] if e["state"] == "up"]
-            ),
+            "interface_up_count": len([e for e in MockNetworksHandler.networks["guest"] if e["state"] == "up"]),
         }
         return result
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ Mocks updates current guest settings
+        """Mocks updates current guest settings
         :returns: True if update passes
         :rtype: bool
         """
@@ -91,12 +89,8 @@ class MockGuestHandler(Handler, BaseMockHandler):
             MockGuestHandler.router_ip = new_settings["ip"]
             MockGuestHandler.netmask = new_settings["netmask"]
             MockGuestHandler.dhcp["enabled"] = new_settings["dhcp"]["enabled"]
-            MockGuestHandler.dhcp["start"] = new_settings["dhcp"].get(
-                "start", MockGuestHandler.dhcp["start"]
-            )
-            MockGuestHandler.dhcp["limit"] = new_settings["dhcp"].get(
-                "limit", MockGuestHandler.dhcp["limit"]
-            )
+            MockGuestHandler.dhcp["start"] = new_settings["dhcp"].get("start", MockGuestHandler.dhcp["start"])
+            MockGuestHandler.dhcp["limit"] = new_settings["dhcp"].get("limit", MockGuestHandler.dhcp["limit"])
             MockGuestHandler.dhcp["lease_time"] = new_settings["dhcp"].get(
                 "lease_time", MockGuestHandler.dhcp["lease_time"]
             )

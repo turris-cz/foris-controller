@@ -22,8 +22,8 @@ import pytest
 
 @pytest.fixture(scope="module")
 def controller_modules():
-    """ Overriding controller. This is a basically a test for test in which we check,
-        whether test module filtering works properly
+    """Overriding controller. This is a basically a test for test in which we check,
+    whether test module filtering works properly
     """
     # enable only dns module
     return ["dns"]
@@ -31,9 +31,7 @@ def controller_modules():
 
 @pytest.mark.only_message_buses(["unix-socket"])
 def test_call_existing_and_non_existing(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "dns", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "dns", "action": "get_settings", "kind": "request"})
     assert "errors" not in res
 
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})

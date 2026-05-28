@@ -33,9 +33,7 @@ from foris_controller_testtools.utils import (
 from foris_controller import profiles
 from foris_controller.exceptions import UciRecordNotFound
 
-NEW_WORKFLOWS = [
-    e for e in profiles.get_workflows() if e not in (profiles.Workflow.OLD, profiles.Workflow.SHIELD)
-]
+NEW_WORKFLOWS = [e for e in profiles.get_workflows() if e not in (profiles.Workflow.OLD, profiles.Workflow.SHIELD)]
 
 START_WORKFLOWS = [profiles.Workflow.OLD, profiles.Workflow.UNSET]
 FINISH_WORKFLOWS = [e for e in profiles.get_workflows() if e not in (profiles.Workflow.UNSET)]
@@ -60,9 +58,11 @@ def installed_languages(request):
     )
     mo_file = "LC_MESSAGES/messages.mo"
 
-    with FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "cs", mo_file), False, "") as f1, FileFaker(
-        FILE_ROOT_PATH, os.path.join(trans_dir, "de", mo_file), False, ""
-    ) as f2, FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "nb_NO", mo_file), False, "") as f3:
+    with (
+        FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "cs", mo_file), False, "") as f1,
+        FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "de", mo_file), False, "") as f2,
+        FileFaker(FILE_ROOT_PATH, os.path.join(trans_dir, "nb_NO", mo_file), False, "") as f3,
+    ):
         yield f1, f2, f3
 
 
@@ -117,9 +117,7 @@ def test_set_language(installed_languages, code, file_root_init, uci_configs_ini
     }
 
 
-def test_set_language_missing(
-    installed_languages, file_root_init, uci_configs_init, infrastructure
-):
+def test_set_language_missing(installed_languages, file_root_init, uci_configs_init, infrastructure):
     res = infrastructure.process_message(
         {"module": "web", "action": "set_language", "kind": "request", "data": {"language": "zz"}}
     )
@@ -132,20 +130,14 @@ def test_set_language_missing(
 
 
 def test_list_languages(installed_languages, file_root_init, uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "web", "action": "list_languages", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "list_languages", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "languages" in res["data"].keys()
     assert set(res["data"]["languages"]) == {"en", "cs", "de", "nb_NO"}
 
 
-def test_set_language_missing_data(
-    installed_languages, file_root_init, uci_configs_init, infrastructure
-):
-    res = infrastructure.process_message(
-        {"module": "web", "action": "set_language", "kind": "request"}
-    )
+def test_set_language_missing_data(installed_languages, file_root_init, uci_configs_init, infrastructure):
+    res = infrastructure.process_message({"module": "web", "action": "set_language", "kind": "request"})
     assert "errors" in res
 
 
@@ -162,9 +154,7 @@ def test_get_guide(file_root_init, uci_configs_init, infrastructure, device, tur
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message(
-        {"module": "web", "action": "get_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "get_guide", "kind": "request"})
 
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert set(res["data"].keys()) == {
@@ -183,31 +173,21 @@ def test_get_guide(file_root_init, uci_configs_init, infrastructure, device, tur
     indirect=True,
 )
 @pytest.mark.only_backends(["openwrt"])
-def test_get_guide_openwrt(
-    file_root_init, uci_configs_init, infrastructure, device, turris_os_version
-):
+def test_get_guide_openwrt(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message(
-        {"module": "web", "action": "get_guide", "kind": "request"}
-    )
-    assert set(res["data"]["available_workflows"]) == set(
-        EXPECTED_WORKFLOWS[device, turris_os_version]
-    )
+    res = infrastructure.process_message({"module": "web", "action": "get_guide", "kind": "request"})
+    assert set(res["data"]["available_workflows"]) == set(EXPECTED_WORKFLOWS[device, turris_os_version])
     assert res["data"]["recommended_workflow"] == RECOMMENDED_WORKFLOWS[device, turris_os_version]
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
-def test_get_guide_mox_variants(
-    file_root_init, uci_configs_init, infrastructure, device, turris_os_version
-):
+def test_get_guide_mox_variants(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
 
     prepare_turrishw("mox")
-    res = infrastructure.process_message(
-        {"module": "web", "action": "get_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "get_guide", "kind": "request"})
     assert set(res["data"]["available_workflows"]) == {
         profiles.Workflow.MIN,
         profiles.Workflow.BRIDGE,
@@ -215,9 +195,7 @@ def test_get_guide_mox_variants(
     assert res["data"]["recommended_workflow"] == profiles.Workflow.BRIDGE
 
     prepare_turrishw("mox+C")
-    res = infrastructure.process_message(
-        {"module": "web", "action": "get_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "get_guide", "kind": "request"})
     assert set(res["data"]["available_workflows"]) == {
         profiles.Workflow.MIN,
         profiles.Workflow.ROUTER,
@@ -226,9 +204,7 @@ def test_get_guide_mox_variants(
     assert res["data"]["recommended_workflow"] == profiles.Workflow.ROUTER
 
     prepare_turrishw("mox+EEC")
-    res = infrastructure.process_message(
-        {"module": "web", "action": "get_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "get_guide", "kind": "request"})
     assert set(res["data"]["available_workflows"]) == {
         profiles.Workflow.MIN,
         profiles.Workflow.ROUTER,
@@ -321,9 +297,7 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, device, t
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
-    res = infrastructure.process_message(
-        {"module": "web", "action": "reset_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "reset_guide", "kind": "request"})
     assert res["data"] == {"result": True}
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert res["data"]["guide"]["enabled"] is True
@@ -339,9 +313,7 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, device, t
     assert res["data"]["guide"]["enabled"] is False
     assert res["data"]["guide"]["passed"] == ["finished"]
 
-    res = infrastructure.process_message(
-        {"module": "web", "action": "reset_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "reset_guide", "kind": "request"})
     assert res["data"] == {"result": True}
 
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
@@ -360,17 +332,13 @@ def test_reset_guide(file_root_init, uci_configs_init, infrastructure, device, t
     indirect=True,
 )
 @pytest.mark.only_backends(["openwrt"])
-def test_reset_guide_openwrt(
-    file_root_init, uci_configs_init, infrastructure, device, turris_os_version
-):
+def test_reset_guide_openwrt(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
     uci = get_uci_module(infrastructure.name)
 
-    res = infrastructure.process_message(
-        {"module": "web", "action": "reset_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "reset_guide", "kind": "request"})
     assert res["data"] == {"result": True}
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -380,9 +348,7 @@ def test_reset_guide_openwrt(
         profiles.Workflow.UNSET,
         profiles.Workflow.OLD,
     ]
-    assert not uci.parse_bool(
-        uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False))
-    )
+    assert not uci.parse_bool(uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False)))
 
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert res["data"]["guide"]["enabled"] is True
@@ -397,17 +363,13 @@ def test_reset_guide_openwrt(
     assert res["data"]["result"]
 
     if allowed_workflows:
-        res = infrastructure.process_message(
-            {"module": "web", "action": "get_data", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
         assert res["data"]["guide"]["enabled"] is False
         assert res["data"]["guide"]["passed"] == ["finished"]
         assert res["data"]["device"] == device
         assert res["data"]["turris_os_version"] == turris_os_version
 
-    res = infrastructure.process_message(
-        {"module": "web", "action": "reset_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "reset_guide", "kind": "request"})
     assert res["data"] == {"result": True}
 
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
@@ -417,9 +379,7 @@ def test_reset_guide_openwrt(
         profiles.Workflow.UNSET,
         profiles.Workflow.OLD,
     ]
-    assert not uci.parse_bool(
-        uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False))
-    )
+    assert not uci.parse_bool(uci.get_option_named(data, "foris", "wizard", "finished", uci.store_bool(False)))
 
     res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
     assert res["data"]["guide"]["enabled"] is True
@@ -434,9 +394,7 @@ def test_reset_guide_openwrt(
         (profiles.Workflow.OLD, profiles.Workflow.OLD),
         (profiles.Workflow.SHIELD, profiles.Workflow.SHIELD),
     ]
-    + [
-        (profiles.Workflow.UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))
-    ],
+    + [(profiles.Workflow.UNSET, e) for e in set(FINISH_WORKFLOWS).intersection(set(NEW_WORKFLOWS))],
 )
 def test_walk_through_guide(
     file_root_init,
@@ -465,9 +423,7 @@ def test_walk_through_guide(
     assert old_workflow == res["data"]["guide"]["workflow"]
 
     def check_passed(passed, workflow, enabled):
-        res = infrastructure.process_message(
-            {"module": "web", "action": "get_data", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "web", "action": "get_data", "kind": "request"})
         assert res["data"]["guide"]["enabled"] is enabled
         assert res["data"]["guide"]["workflow"] == workflow
         assert res["data"]["guide"]["passed"] == passed
@@ -504,9 +460,7 @@ def test_walk_through_guide(
 
     def networks_step(passed, target_workflow, enabled):
         # Update networks
-        res = infrastructure.process_message(
-            {"module": "networks", "action": "get_settings", "kind": "request"}
-        )
+        res = infrastructure.process_message({"module": "networks", "action": "get_settings", "kind": "request"})
         ports = (
             res["data"]["networks"]["wan"]
             + res["data"]["networks"]["lan"]
@@ -670,18 +624,13 @@ def test_auto_set_unconfigured_wan(
             # wan is not used at all
             backend.del_option("network", "wan", "device")
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     assert res["data"]["wan_settings"]["wan_type"] == "none"
 
-    res = infrastructure.process_message(
-        {"module": "web", "action": "reset_guide", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "web", "action": "reset_guide", "kind": "request"})
     assert res["data"] == {"result": True}
 
     if password_set:
-
         res = infrastructure.process_message(
             {
                 "module": "password",
@@ -697,9 +646,7 @@ def test_auto_set_unconfigured_wan(
     )
     assert res["data"]["result"] is True
 
-    res = infrastructure.process_message(
-        {"module": "wan", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})
     if wan_configured:
         assert res["data"]["wan_settings"]["wan_type"] == "dhcp"
         assert network_restart_was_called([])

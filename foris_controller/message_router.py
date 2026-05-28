@@ -49,7 +49,7 @@ def display_spend_time(message_in, message_out):
 
 class Router(object):
     def _build_error_msg(self, orig_msg, errors):
-        """ prepare error response
+        """prepare error response
 
         :param orig_msg: original message
         :type orig_msg: dict
@@ -67,7 +67,7 @@ class Router(object):
 
     @display_spend_time(None, "validation took %f.")
     def validate(self, message):
-        """ validates whether the message fits current schema
+        """validates whether the message fits current schema
 
         :param message: message to be validated
         :type message: dict
@@ -77,7 +77,7 @@ class Router(object):
 
     @display_spend_time("Starting to process message", "Message processing took %f.")
     def process_message(self, message):
-        """ handles the incomming message, makes sure that msg content is validated,
+        """handles the incomming message, makes sure that msg content is validated,
             routes message to corresponding module, validates output and returns reply
 
         :param message: incomming message
@@ -100,9 +100,7 @@ class Router(object):
 
         if message["kind"] != "request":
             logger.warning("Wrong message kind (only requests allowed) (=%s)." % message["kind"])
-            return self._build_error_msg(
-                message, [{"description": "Wrong message kind (only request are allowed)."}]
-            )
+            return self._build_error_msg(message, [{"description": "Wrong message kind (only request are allowed)."}])
 
         # check whether the module is loaded
         if message["module"] not in app_info["modules"]:

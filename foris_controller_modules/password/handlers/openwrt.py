@@ -36,7 +36,7 @@ class OpenwrtPasswordHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def check_foris_password(self, password):
-        """ Checks foris password
+        """Checks foris password
 
         :param password: plain text password
         :type password: str
@@ -50,7 +50,7 @@ class OpenwrtPasswordHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def set_foris_password(self, password):
-        """ Sets password for foris
+        """Sets password for foris
 
         :param password: plain text password
         :type password: str
@@ -61,7 +61,7 @@ class OpenwrtPasswordHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def set_system_password(self, password):
-        """ Sets password for the system (root)
+        """Sets password for the system (root)
 
         :param password: plain text password
         :type password: str

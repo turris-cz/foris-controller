@@ -28,7 +28,7 @@ class NetworksModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data):
-        """ Get current networks settings
+        """Get current networks settings
         :param data: supposed to be {}
         :type data: dict
         :returns: current networks settings
@@ -37,7 +37,7 @@ class NetworksModule(BaseModule):
         return self.handler.get_settings()
 
     def action_update_settings(self, data):
-        """ Updates networks settings
+        """Updates networks settings
         :param data: new networks settings
         :type data: dict
         :returns: result of the update {'result': True/False}

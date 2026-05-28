@@ -60,9 +60,7 @@ def updated_match_expected(result, new_settings):
     del result["data"]["approval"]
 
     list_data = result["data"].pop("user_lists")
-    assert {e["name"] for e in new_settings["user_lists"]} == {
-        e["name"] for e in list_data if e["enabled"]
-    }
+    assert {e["name"] for e in new_settings["user_lists"]} == {e["name"] for e in list_data if e["enabled"]}
 
     lang_data = result["data"].pop("languages")
     assert set(new_settings["languages"]) == {e["code"] for e in lang_data if e["enabled"]}
@@ -77,9 +75,7 @@ def match_package_list_options(result, new_settings, defaults):
     list_data = result["data"].pop("package_lists")
 
     new_settings_options = {
-        ulist["name"]: {
-            opt["name"] for opt in ulist.get("options", []) if opt["enabled"]
-        }
+        ulist["name"]: {opt["name"] for opt in ulist.get("options", []) if opt["enabled"]}
         for ulist in new_settings["package_lists"]
     }
     list_options = {
@@ -100,7 +96,12 @@ def match_package_list_options(result, new_settings, defaults):
 @pytest.mark.parametrize("lang", ["en", "cs", "de", "nb_NO", "xx"])
 def test_get_settings(updater_languages, updater_userlists, uci_configs_init, infrastructure, lang):
     res = infrastructure.process_message(
-        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": lang},}
+        {
+            "module": "updater",
+            "action": "get_settings",
+            "kind": "request",
+            "data": {"lang": lang},
+        }
     )
 
     assert set(res.keys()) == {"action", "kind", "data", "module"}
@@ -132,11 +133,21 @@ def test_update_settings_clear(
     }
 
     res = infrastructure.process_message(
-        {"module": "updater", "action": "update_settings", "kind": "request", "data": settings,}
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": settings,
+        }
     )
     assert "result" in res["data"] and res["data"]["result"] is True
     res = infrastructure.process_message(
-        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": "en"},}
+        {
+            "module": "updater",
+            "action": "get_settings",
+            "kind": "request",
+            "data": {"lang": "en"},
+        }
     )
 
     updated_match_expected(res, settings)
@@ -173,9 +184,7 @@ def test_update_settings_clear_and_write(
         )
         updated_match_expected(res, new_settings)
 
-    update_settings(
-        {"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []}
-    )
+    update_settings({"enabled": True, "approval_settings": {"status": "off"}, "user_lists": [], "languages": []})
     update_settings(
         {
             "enabled": True,
@@ -203,11 +212,21 @@ def test_update_settings_languages(
     }
 
     res = infrastructure.process_message(
-        {"module": "updater", "action": "update_settings", "kind": "request", "data": settings,}
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": settings,
+        }
     )
     assert "result" in res["data"] and res["data"]["result"] is True
     res = infrastructure.process_message(
-        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": "en"},}
+        {
+            "module": "updater",
+            "action": "get_settings",
+            "kind": "request",
+            "data": {"lang": "en"},
+        }
     )
 
     lang_data = res["data"].pop("languages")
@@ -233,25 +252,28 @@ def test_update_settings_deprecated_user_lists(
     }
 
     res = infrastructure.process_message(
-        {"module": "updater", "action": "update_settings", "kind": "request", "data": settings,}
+        {
+            "module": "updater",
+            "action": "update_settings",
+            "kind": "request",
+            "data": settings,
+        }
     )
     assert "result" in res["data"] and res["data"]["result"] is True
     res = infrastructure.process_message(
-        {"module": "updater", "action": "get_settings", "kind": "request", "data": {"lang": "en"},}
+        {
+            "module": "updater",
+            "action": "get_settings",
+            "kind": "request",
+            "data": {"lang": "en"},
+        }
     )
     assert res["data"]["user_lists"] == []
 
 
 @pytest.mark.parametrize("lang", ["en", "cs", "de", "nb_NO", "xx"])
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
-def test_get_package_lists(
-    updater_userlists,
-    uci_configs_init,
-    infrastructure,
-    device,
-    turris_os_version,
-    lang
-):
+def test_get_package_lists(updater_userlists, uci_configs_init, infrastructure, device, turris_os_version, lang):
     res = infrastructure.process_message(
         {
             "module": "updater",
@@ -279,7 +301,7 @@ def test_get_package_lists_options(
     device,
     turris_os_version,
 ):
-    """ Test that package lists options are properly formated """
+    """Test that package lists options are properly formated"""
     res = infrastructure.process_message(
         {
             "module": "updater",
@@ -311,12 +333,8 @@ def test_package_lists_with_defaults(
     device,
     turris_os_version,
 ):
-    settings = {
-        "package_lists": [
-            {"name": "datacollect", "options": [{"name": "haas", "enabled": True}]}
-        ]
-    }
-    defaults = {"datacollect": {"survey", "dynfw", "fwlogs","minipot"}}
+    settings = {"package_lists": [{"name": "datacollect", "options": [{"name": "haas", "enabled": True}]}]}
+    defaults = {"datacollect": {"survey", "dynfw", "fwlogs", "minipot"}}
 
     res = infrastructure.process_message(
         {
@@ -349,12 +367,15 @@ def test_update_package_lists_override_defaults(
 ):
     settings = {
         "package_lists": [
-            {"name": "datacollect", "options": [
-                {"name": "survey", "enabled": False},
-                {"name": "dynfw", "enabled": False},
-                {"name": "fwlogs", "enabled": False},
-                {"name": "minipot", "enabled": False}
-            ]},
+            {
+                "name": "datacollect",
+                "options": [
+                    {"name": "survey", "enabled": False},
+                    {"name": "dynfw", "enabled": False},
+                    {"name": "fwlogs", "enabled": False},
+                    {"name": "minipot", "enabled": False},
+                ],
+            },
             {"name": "hardening", "options": [{"name": "ujail", "enabled": True}]},
         ]
     }
@@ -553,9 +574,7 @@ def test_approval_resolve(updater_languages, updater_userlists, uci_configs_init
 
 
 @pytest.mark.only_backends(["openwrt"])
-def test_approval_resolve_openwrt(
-    updater_languages, updater_userlists, uci_configs_init, infrastructure
-):
+def test_approval_resolve_openwrt(updater_languages, updater_userlists, uci_configs_init, infrastructure):
     filters = [("updater", "run")]
 
     def resolve(approval_data, query_data, result):
@@ -752,9 +771,7 @@ def test_get_enabled(
     )
     assert res["data"]["result"]
 
-    res = infrastructure.process_message(
-        {"module": "updater", "action": "get_enabled", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "updater", "action": "get_enabled", "kind": "request"})
     assert res["data"]["enabled"] is True
 
     res = infrastructure.process_message(
@@ -767,9 +784,7 @@ def test_get_enabled(
     )
     assert res["data"]["result"]
 
-    res = infrastructure.process_message(
-        {"module": "updater", "action": "get_enabled", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "updater", "action": "get_enabled", "kind": "request"})
     assert res["data"]["enabled"] is False
 
 
@@ -782,9 +797,7 @@ def test_get_running(
     device,
     turris_os_version,
 ):
-    res = infrastructure.process_message(
-        {"module": "updater", "action": "get_running", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "updater", "action": "get_running", "kind": "request"})
     assert isinstance(res["data"]["running"], bool)
 
 
@@ -797,9 +810,7 @@ def test_get_languages(
     device,
     turris_os_version,
 ):
-    res = infrastructure.process_message(
-        {"module": "updater", "action": "get_languages", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "updater", "action": "get_languages", "kind": "request"})
 
     assert "languages" in res["data"].keys()
     assert isinstance(res["data"]["languages"], list)
@@ -824,9 +835,7 @@ def test_update_languages(
         }
     )
     assert "result" in res["data"] and res["data"]["result"] is True
-    res = infrastructure.process_message(
-        {"module": "updater", "action": "get_languages", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "updater", "action": "get_languages", "kind": "request"})
 
     lang_data = res["data"].pop("languages")
     assert set(data["languages"]) == {e["code"] for e in lang_data if e["enabled"]}
@@ -840,10 +849,10 @@ def test_update_languages(
         (["nonsense", "turris-version"], ["turris-version"]),
         (["foo-alternative", "turris-version"], ["foo-alternative", "turris-version"]),
         (["foo"], ["foo"]),  # foo is not installed, but provided by foo-alernative
-    ]
+    ],
 )
 def test_query_installed_packages(infrastructure, packages, expected_result):
-    """ Query installed packages for either installed or provided by another packages """
+    """Query installed packages for either installed or provided by another packages"""
     data = {"packages": packages}
     res = infrastructure.process_message(
         {

@@ -34,7 +34,7 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ get lan settings
+        """get lan settings
 
         :returns: current lan settings
         :rtype: dict
@@ -43,7 +43,7 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ updates current lan settings
+        """updates current lan settings
 
         :param new_settings: new settings dictionary
         :type new_settings: dict
@@ -55,7 +55,7 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> dict:
-        """ Sets configuration of a single dhcp client
+        """Sets configuration of a single dhcp client
         :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
         :param mac: mac address of the client
         :param hostname: hostname of the client (can be empty)
@@ -83,7 +83,7 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def delete_dhcp_client(self, mac: str) -> dict:
-        """Delete configuration of a single dhcp client """
+        """Delete configuration of a single dhcp client"""
         err = self.uci.delete_dhcp_client(mac)
         if err:
             return {"result": False, "reason": err}
@@ -92,7 +92,7 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_port_forwardings(self) -> list:
-        """ Returns all current forwardings
+        """Returns all current forwardings
         :rtype: List[dict]
         """
         return self.uci.get_port_forwardings()
@@ -105,19 +105,14 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
         dest_ip: typing.Union[int, str],
         enabled: bool,
         dest_port: typing.Optional[typing.Union[int, str]] = None,
-        old_name: typing.Optional[str] = None
+        old_name: typing.Optional[str] = None,
     ):
-        """ Updates lan forwarding rules
+        """Updates lan forwarding rules
         :param data: new forwarding settings
         :returns: {'result': True} or {'result': False, 'reason': [...]}
         """
         err = self.uci.port_forwarding_set(
-            name=name,
-            src_dport=src_dport,
-            dest_ip=dest_ip,
-            enabled=enabled,
-            dest_port=dest_port,
-            old_name=old_name
+            name=name, src_dport=src_dport, dest_ip=dest_ip, enabled=enabled, dest_port=dest_port, old_name=old_name
         )
         if err:
             return {"result": False, "reason": err}

@@ -53,9 +53,7 @@ def main():
     # Parse the command line options
     parser = argparse.ArgumentParser(prog="foris-notify")
     parser.add_argument("--version", action="version", version=__version__)
-    parser.add_argument(
-        "-m", "--module", dest="module", help="module which will be used", required=True, type=str
-    )
+    parser.add_argument("-m", "--module", dest="module", help="module which will be used", required=True, type=str)
     parser.add_argument(
         "-a",
         "--action",
@@ -147,9 +145,7 @@ def main():
         logger.debug("Validation will be performed.")
         from foris_schema import ForisValidator
 
-        validator = ForisValidator(
-            *get_validator_dirs([options.module], [e[0] for e in options.extra_module_path])
-        )
+        validator = ForisValidator(*get_validator_dirs([options.module], [e[0] for e in options.extra_module_path]))
     else:
         logger.debug("No validation")
         validator = None

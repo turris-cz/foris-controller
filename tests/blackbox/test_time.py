@@ -25,12 +25,7 @@ from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import check_service_result, get_uci_module
 
 
-_EXTRA_SERVERS = [
-    "time.google.com",
-    "time1.google.com",
-    "time.facebook.com",
-    "time.windows.com"
-]
+_EXTRA_SERVERS = ["time.google.com", "time1.google.com", "time.facebook.com", "time.windows.com"]
 
 
 NTPDATE_INDICATOR_PATH = "/tmp/foris-controller-ntp-fail"
@@ -63,12 +58,8 @@ def cmd_mock_gen(path):
     return inner_function
 
 
-hwclock_mock = pytest.fixture(
-    cmd_mock_gen("/tmp/foris-controller-tests-hwclock-called"), name="hwclock_mock"
-)
-date_mock = pytest.fixture(
-    cmd_mock_gen("/tmp/foris-controller-tests-date-called"), name="date_mock"
-)
+hwclock_mock = pytest.fixture(cmd_mock_gen("/tmp/foris-controller-tests-hwclock-called"), name="hwclock_mock")
+date_mock = pytest.fixture(cmd_mock_gen("/tmp/foris-controller-tests-date-called"), name="date_mock")
 
 
 @pytest.fixture
@@ -114,9 +105,7 @@ def regulatory_domain():
 
 
 def test_get_settings(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "time", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "get_settings", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "region" in res["data"].keys()
     assert "country" in res["data"].keys()
@@ -167,9 +156,7 @@ def test_update_settings(
             "time_settings": {"how_to_set_time": "ntp"},
         },
     }
-    res = infrastructure.process_message(
-        {"module": "time", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "get_settings", "kind": "request"})
     assert res["data"]["region"] == "Europe"
     assert res["data"]["country"] == "RU"
     assert res["data"]["city"] == "Moscow"
@@ -210,9 +197,7 @@ def test_update_settings(
             },
         },
     }
-    res = infrastructure.process_message(
-        {"module": "time", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "get_settings", "kind": "request"})
     assert res["data"]["region"] == "Europe"
     assert res["data"]["country"] == "CZ"
     assert res["data"]["city"] == "Prague"
@@ -221,9 +206,7 @@ def test_update_settings(
 
 
 def test_get_router_time(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "time", "action": "get_router_time", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "get_router_time", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "time" in res["data"].keys()
 
@@ -269,12 +252,7 @@ def test_openwrt_complex(
     assert uci.get_option_anonymous(data, "system", "system", 0, "_country") == "RU"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Moscow"
     assert uci.parse_bool(uci.get_option_named(data, "system", "ntp", "enabled"))
-    assert all(
-        [
-            e["data"].get("country") == "RU"
-            for e in uci.get_sections_by_type(data, "wireless", "wifi-device")
-        ]
-    )
+    assert all([e["data"].get("country") == "RU" for e in uci.get_sections_by_type(data, "wireless", "wifi-device")])
     check_regulatory_domain("reg set RU")
 
     assert not date_mock()
@@ -303,18 +281,10 @@ def test_openwrt_complex(
         data = backend.read()
 
     assert uci.get_option_anonymous(data, "system", "system", 0, "_country") == "CZ"
-    assert (
-        uci.get_option_anonymous(data, "system", "system", 0, "timezone")
-        == "CET-1CEST,M3.5.0,M10.5.0/3"
-    )
+    assert uci.get_option_anonymous(data, "system", "system", 0, "timezone") == "CET-1CEST,M3.5.0,M10.5.0/3"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Prague"
     assert not uci.parse_bool(uci.get_option_named(data, "system", "ntp", "enabled"))
-    assert all(
-        [
-            e["data"].get("country") == "CZ"
-            for e in uci.get_sections_by_type(data, "wireless", "wifi-device")
-        ]
-    )
+    assert all([e["data"].get("country") == "CZ" for e in uci.get_sections_by_type(data, "wireless", "wifi-device")])
 
     check_regulatory_domain("reg set CZ")
 
@@ -324,9 +294,7 @@ def test_openwrt_complex(
 
 @pytest.mark.only_backends(["mock"])
 def test_ntpdate_trigger_mock(uci_configs_init, infrastructure):
-    res = infrastructure.process_message(
-        {"module": "time", "action": "ntpdate_trigger", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "ntpdate_trigger", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "id" in res["data"].keys()
 
@@ -343,9 +311,7 @@ def test_ntpdate_trigger_pass_openwrt(
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message(
-        {"module": "time", "action": "ntpdate_trigger", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "ntpdate_trigger", "kind": "request"})
     async_id = res["data"]["id"]
 
     # get started notification
@@ -379,9 +345,7 @@ def test_ntpdate_trigger_fail_openwrt(
 ):
     filters = [("time", "ntpdate_started"), ("time", "ntpdate_finished")]
     notifications = infrastructure.get_notifications(filters=filters)
-    res = infrastructure.process_message(
-        {"module": "time", "action": "ntpdate_trigger", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "ntpdate_trigger", "kind": "request"})
     async_id = res["data"]["id"]
 
     # get started notification
@@ -414,9 +378,7 @@ def test_ntp_servers_add_and_delete(
     regulatory_domain,
 ):
     # get defaults
-    res = infrastructure.process_message(
-        {"module": "time", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     data = res["data"]
@@ -431,18 +393,11 @@ def test_ntp_servers_add_and_delete(
     data["time_settings"]["ntp_extras"] = _EXTRA_SERVERS
     # update with `ntp_extras`
     res = infrastructure.process_message(
-        {
-            "module": "time",
-            "action": "update_settings",
-            "kind": "request",
-            "data": data
-        }
+        {"module": "time", "action": "update_settings", "kind": "request", "data": data}
     )
     assert res["data"]["result"]
 
-    res = infrastructure.process_message(
-        {"module": "time", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
     assert "time.google.com" not in res["data"]["time_settings"]["ntp_servers"]
     assert "time.google.com" in res["data"]["time_settings"]["ntp_extras"]
@@ -459,9 +414,7 @@ def test_add_extras_uci(
     regulatory_domain,
 ):
     # get defaults
-    res = infrastructure.process_message(
-        {"module": "time", "action": "get_settings", "kind": "request"}
-    )
+    res = infrastructure.process_message({"module": "time", "action": "get_settings", "kind": "request"})
     assert "errors" not in res.keys()
 
     data = res["data"]
@@ -476,12 +429,7 @@ def test_add_extras_uci(
     data["time_settings"]["ntp_extras"] = _EXTRA_SERVERS
     # update with `ntp_extras`
     res = infrastructure.process_message(
-        {
-            "module": "time",
-            "action": "update_settings",
-            "kind": "request",
-            "data": data
-        }
+        {"module": "time", "action": "update_settings", "kind": "request", "data": data}
     )
     assert res["data"]["result"]
 

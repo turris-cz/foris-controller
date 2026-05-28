@@ -18,17 +18,13 @@
 #
 
 
-from foris_controller_backends.uci import (
-    UciBackend,
-    get_option_anonymous
-)
+from foris_controller_backends.uci import UciBackend, get_option_anonymous
 
 
 class SystemUciCommands:
-
     @staticmethod
     def get_hostname() -> str:
-        """ Get hostname uci setting. """
+        """Get hostname uci setting."""
 
         with UciBackend() as backend:
             system_data = backend.read("system")
@@ -39,7 +35,7 @@ class SystemUciCommands:
 
     @staticmethod
     def set_hostname(hostname: str) -> bool:
-        """ Set hostname uci setting. """
+        """Set hostname uci setting."""
 
         with UciBackend() as backend:
             backend.set_option("system", "@system[0]", "hostname", hostname)

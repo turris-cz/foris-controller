@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class MockMaintainHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def reboot(self):
-        """ Mocks rebooting the device
+        """Mocks rebooting the device
 
         :returns: {"result": True}
         :rtype: dict

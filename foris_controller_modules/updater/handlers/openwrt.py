@@ -37,7 +37,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self, lang="en"):
-        """ get updater settings
+        """get updater settings
 
         :returns: current updater settings
         :rtype: dict
@@ -46,7 +46,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, user_lists, languages, approvals_settings, enabled):
-        """ update updater settings
+        """update updater settings
 
         :param user_lists: new user-list set
         :type user_lists: dictionary
@@ -64,13 +64,11 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
         # user_list are silently dropped as we don't use it anymore here
         # function signature remains for backward compatibility
-        return OpenwrtUpdaterHandler.uci.update_settings(
-            languages, approvals_status, approvals_delay, enabled
-        )
+        return OpenwrtUpdaterHandler.uci.update_settings(languages, approvals_status, approvals_delay, enabled)
 
     @logger_wrapper(logger)
     def get_package_lists(self, lang):
-        """ Returns package lists with their options
+        """Returns package lists with their options
         :param lang: language en/cs/de
         :returns: [{"name": "..", "enabled": True, "title": "..", "description": "..", "options": [], "labels": []]
         :rtype: dict
@@ -79,7 +77,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def update_package_lists(self, package_lists):
-        """ Update package lists
+        """Update package lists
 
         :param package_lists: new package-lists set
         :type package_lists: dictionary
@@ -88,7 +86,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_approval(self) -> typing.Union[svupdater_approvals.ApprovalRequest, ApprovalNotPresent]:
-        """ Returns current approval
+        """Returns current approval
         :returns: current approval or {"present": False}
         :rtype: dict
         """
@@ -96,7 +94,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def resolve_approval(self, hash, solution):
-        """ Resolv current approval
+        """Resolv current approval
         :param hash: approval hash
         :type hash: str
         :param solution: what to do with the approval grant/deny
@@ -109,7 +107,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_languages(self):
-        """ Returns language list and indicator whether the language is enabled
+        """Returns language list and indicator whether the language is enabled
 
         :returns: [{"code": "cs", "enabled": True}, {"code": "de", "enabled": True}, ...]
         :rtype: dict
@@ -117,7 +115,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         return self.updater.get_languages()
 
     def update_languages(self, languages):
-        """ Update installed languages
+        """Update installed languages
 
         :param languages: languages
         :type languages: list
@@ -128,12 +126,12 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         return self.updater.update_languages(languages)
 
     def query_installed_packages(self, packages: typing.List[str]) -> typing.List[str]:
-        """ Query whether packages are installed or provided by another packages """
+        """Query whether packages are installed or provided by another packages"""
         return self.updater.query_installed_packages(packages)
 
     @logger_wrapper(logger)
     def run(self, set_reboot_indicator):
-        """ Start updater run
+        """Start updater run
         :param set_reboot_indicator: should reboot indicator be set after updater finishes
         :type set_reboot_indicator: bool
         :returns: True if updater started
@@ -143,12 +141,10 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_enabled(self):
-        """ Get info whether updater is enabled
-        """
+        """Get info whether updater is enabled"""
         return self.uci.get_enabled()
 
     @logger_wrapper(logger)
     def get_running(self):
-        """ Get info whether updater is running
-        """
+        """Get info whether updater is running"""
         return self.updater.updater_running()

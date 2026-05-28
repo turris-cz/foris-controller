@@ -79,9 +79,7 @@ def test_service(action, custom_cmdline_root, init_script_result, service_class)
 
 
 @pytest.mark.parametrize("action", ["start", "stop", "restart", "reload", "enable", "disable"])
-def test_service_delayed(
-    action, custom_cmdline_root, init_script_result, service_class, sh_command
-):
+def test_service_delayed(action, custom_cmdline_root, init_script_result, service_class, sh_command):
     # can't check the result for delayed services thus fail_on_error doesn't make sense neither
     with service_class() as services:
         getattr(services, action)("pass", delay=2)
@@ -89,11 +87,12 @@ def test_service_delayed(
 
 
 @pytest.mark.parametrize(
-    "service, expected_result", [
+    "service, expected_result",
+    [
         ("my-dummy-service", True),
         ("non-existing", False),
         ("nonsense", False),
-    ]
+    ],
 )
 def test_service_is_enabled(service, expected_result, service_class):
     with service_class() as services:

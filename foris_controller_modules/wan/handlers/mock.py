@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class MockWanHandler(Handler, BaseMockHandler):
-    _HARDWARE_MAC_ADDRESS = 'de:ad:be:ef:99:99'
+    _HARDWARE_MAC_ADDRESS = "de:ad:be:ef:99:99"
     guide_set = BaseMockHandler._manager.Value(bool, False)
     wan_type = "none"
     wan_dhcp = {"hostname": None}
@@ -50,7 +50,7 @@ class MockWanHandler(Handler, BaseMockHandler):
     custom_mac = None
     test_id_set = set()
     mac_address = _HARDWARE_MAC_ADDRESS
-    qos = {'enabled': False, 'upload': 1024, 'download': 1024}
+    qos = {"enabled": False, "upload": 1024, "download": 1024}
     vlan_settings = {"enabled": False}
 
     def _cleanup(self):
@@ -80,7 +80,7 @@ class MockWanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get wan settings
+        """Mocks get wan settings
 
         :returns: current wan settiongs
         :rtype: str
@@ -94,11 +94,9 @@ class MockWanHandler(Handler, BaseMockHandler):
             "wan6_settings": {"wan6_type": self.wan6_type},
             "mac_settings": {"custom_mac_enabled": self.custom_mac_enabled},
             "interface_count": len(MockNetworksHandler.networks["wan"]),
-            "interface_up_count": len(
-                [e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"]
-            ),
+            "interface_up_count": len([e for e in MockNetworksHandler.networks["wan"] if e["state"] == "up"]),
             "qos": self.qos,
-            "vlan_settings": self.vlan_settings
+            "vlan_settings": self.vlan_settings,
         }
         if self.wan_type == "dhcp":
             if self.wan_dhcp["hostname"]:
@@ -148,16 +146,14 @@ class MockWanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ Mocks updates current wan settings
+        """Mocks updates current wan settings
         :returns: True if update passes
         :rtype: bool
         """
         self._cleanup()
         self.wan_type = new_settings["wan_settings"]["wan_type"]
         if self.wan_type == "dhcp":
-            self.wan_dhcp["hostname"] = new_settings["wan_settings"]["wan_dhcp"].get(
-                "hostname", None
-            )
+            self.wan_dhcp["hostname"] = new_settings["wan_settings"]["wan_dhcp"].get("hostname", None)
         if self.wan_type == "static":
             self.wan_static["ip"] = new_settings["wan_settings"]["wan_static"]["ip"]
             self.wan_static["netmask"] = new_settings["wan_settings"]["wan_static"]["netmask"]
@@ -173,18 +169,12 @@ class MockWanHandler(Handler, BaseMockHandler):
             self.wan6_static["ip"] = new_settings["wan6_settings"]["wan6_static"]["ip"]
             self.wan6_static["network"] = new_settings["wan6_settings"]["wan6_static"]["network"]
             self.wan6_static["gateway"] = new_settings["wan6_settings"]["wan6_static"]["gateway"]
-            self.wan6_static["dns1"] = new_settings["wan6_settings"]["wan6_static"].get(
-                "dns1", None
-            )
-            self.wan6_static["dns2"] = new_settings["wan6_settings"]["wan6_static"].get(
-                "dns2", None
-            )
+            self.wan6_static["dns1"] = new_settings["wan6_settings"]["wan6_static"].get("dns1", None)
+            self.wan6_static["dns2"] = new_settings["wan6_settings"]["wan6_static"].get("dns2", None)
         elif self.wan6_type == "dhcpv6":
             self.wan6_dhcpv6["duid"] = new_settings["wan6_settings"]["wan6_dhcpv6"]["duid"]
         elif self.wan6_type == "6to4":
-            self.wan6_6to4["ipv4_address"] = new_settings["wan6_settings"]["wan6_6to4"][
-                "ipv4_address"
-            ]
+            self.wan6_6to4["ipv4_address"] = new_settings["wan6_settings"]["wan6_6to4"]["ipv4_address"]
         elif self.wan6_type == "6in4":
             self.wan6_6in4 = copy.deepcopy(new_settings["wan6_settings"]["wan6_6in4"])
 
@@ -210,10 +200,8 @@ class MockWanHandler(Handler, BaseMockHandler):
         return True
 
     @logger_wrapper(logger)
-    def connection_test_trigger(
-        self, test_kinds, notify_function, exit_notify_function, reset_notify_function
-    ):
-        """ Mocks triggering of the connection test
+    def connection_test_trigger(self, test_kinds, notify_function, exit_notify_function, reset_notify_function):
+        """Mocks triggering of the connection test
         :param test_kinds: which kinds of tests should be run (ipv4, ipv6, dns)
         :type test_kinds: array of str
         :param notify_function: function to publish notifications
@@ -225,13 +213,13 @@ class MockWanHandler(Handler, BaseMockHandler):
         :returns: generated_test_id
         :rtype: str
         """
-        new_test_id = "%032X" % random.randrange(2 ** 32)
+        new_test_id = "%032X" % random.randrange(2**32)
         MockWanHandler.test_id_set.add(new_test_id)
         return new_test_id
 
     @logger_wrapper(logger)
     def connection_test_status(self, test_id):
-        """ Mocks connection test status
+        """Mocks connection test status
         :param test_id: id of the test to display
         :type test_id: str
         :returns: connection test status + test data
@@ -244,7 +232,7 @@ class MockWanHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_wan_status(self):
-        """ Mocks wan status
+        """Mocks wan status
         :returns: {'up': True/False}
         :rtype: dict
         """

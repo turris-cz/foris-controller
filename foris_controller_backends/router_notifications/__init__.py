@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 class RouterNotificationsCmds(BaseCmdLine):
     def list(self):
-        """ Lists notifications
+        """Lists notifications
 
         :returns: list of notifications in following format
             {
@@ -64,16 +64,14 @@ class RouterNotificationsCmds(BaseCmdLine):
         return parsed
 
     def active_count(self):
-        """ get active notifications
+        """get active notifications
         :returns: number of active notifiations
         :rtype: int
         """
-        return len(glob.glob("/tmp/user_notify/*-*")) - len(
-            glob.glob("/tmp/user_notify/*-*/displayed")
-        )
+        return len(glob.glob("/tmp/user_notify/*-*")) - len(glob.glob("/tmp/user_notify/*-*/displayed"))
 
     def mark_as_displayed(self, ids):
-        """ Marks notifications as displayed
+        """Marks notifications as displayed
 
         displayed notifications will be removed by cleanup script later
 
@@ -84,7 +82,7 @@ class RouterNotificationsCmds(BaseCmdLine):
         _, _ = self._run_command_and_check_retval(args, 0)
 
     def create_notification(self, msg, severity, immediate):
-        """ Call cmd to create notification
+        """Call cmd to create notification
 
         :param msg: message to be stored
         :type msg: str
@@ -93,9 +91,7 @@ class RouterNotificationsCmds(BaseCmdLine):
         :param immediate:
         :type immediate: bool
         """
-        args = (
-            ["/usr/bin/create_notification"] + (["-t"] if immediate else []) + ["-s", severity, msg]
-        )
+        args = ["/usr/bin/create_notification"] + (["-t"] if immediate else []) + ["-s", severity, msg]
         retval, _, _ = self._run_command(*args)
         return retval == 0
 
@@ -110,22 +106,12 @@ class RouterNotificationsUci(object):
                 "enabled": parse_bool(get_option_named(data, "user_notify", "smtp", "enable", "0")),
                 "common": {
                     "to": get_option_named(data, "user_notify", "smtp", "to", []),
-                    "severity_filter": int(
-                        get_option_named(data, "user_notify", "notifications", "severity", "1")
-                    ),
-                    "send_news": parse_bool(
-                        get_option_named(data, "user_notify", "notifications", "news", "1")
-                    ),
+                    "severity_filter": int(get_option_named(data, "user_notify", "notifications", "severity", "1")),
+                    "send_news": parse_bool(get_option_named(data, "user_notify", "notifications", "news", "1")),
                 },
-                "smtp_turris": {
-                    "sender_name": get_option_named(
-                        data, "user_notify", "smtp", "sender_name", "turris"
-                    )
-                },
+                "smtp_turris": {"sender_name": get_option_named(data, "user_notify", "smtp", "sender_name", "turris")},
                 "smtp_custom": {
-                    "from": get_option_named(
-                        data, "user_notify", "smtp", "from", ""
-                    ),
+                    "from": get_option_named(data, "user_notify", "smtp", "from", ""),
                     "host": get_option_named(data, "user_notify", "smtp", "server", ""),
                     "port": int(get_option_named(data, "user_notify", "smtp", "port", "465")),
                     "username": get_option_named(data, "user_notify", "smtp", "username", ""),
@@ -144,9 +130,7 @@ class RouterNotificationsUci(object):
             },
         }
         smtp_type = (
-            "turris"
-            if parse_bool(get_option_named(data, "user_notify", "smtp", "use_turris_smtp", "1"))
-            else "custom"
+            "turris" if parse_bool(get_option_named(data, "user_notify", "smtp", "use_turris_smtp", "1")) else "custom"
         )
         res["emails"]["smtp_type"] = smtp_type
 
@@ -166,18 +150,10 @@ class RouterNotificationsUci(object):
                 )
             if emails_settings["smtp_type"] == "custom":
                 backend.set_option("user_notify", "smtp", "use_turris_smtp", store_bool(False))
-                backend.set_option(
-                    "user_notify", "smtp", "from", emails_settings["smtp_custom"]["from"]
-                )
-                backend.set_option(
-                    "user_notify", "smtp", "server", emails_settings["smtp_custom"]["host"]
-                )
-                backend.set_option(
-                    "user_notify", "smtp", "port", int(emails_settings["smtp_custom"]["port"])
-                )
-                backend.set_option(
-                    "user_notify", "smtp", "security", emails_settings["smtp_custom"]["security"]
-                )
+                backend.set_option("user_notify", "smtp", "from", emails_settings["smtp_custom"]["from"])
+                backend.set_option("user_notify", "smtp", "server", emails_settings["smtp_custom"]["host"])
+                backend.set_option("user_notify", "smtp", "port", int(emails_settings["smtp_custom"]["port"]))
+                backend.set_option("user_notify", "smtp", "security", emails_settings["smtp_custom"]["security"])
                 if emails_settings["smtp_custom"]["username"].strip():
                     backend.set_option(
                         "user_notify",
@@ -214,9 +190,7 @@ class RouterNotificationsUci(object):
         backend.set_option("user_notify", "reboot", "time", reboots_settings["time"])
         backend.set_option("user_notify", "reboot", "delay", str(reboots_settings["delay"]))
 
-    def update_ntfy_settings(
-        self, backend: UciBackend, ntfy_settings: dict
-    ):
+    def update_ntfy_settings(self, backend: UciBackend, ntfy_settings: dict):
         backend.add_section("user_notify", "ntfy", "ntfy")
         if ntfy_settings["enabled"]:
             backend.set_option("user_notify", "ntfy", "enable", store_bool(True))

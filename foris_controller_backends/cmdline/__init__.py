@@ -46,7 +46,7 @@ logger.debug("Cmdline root is set to '%s'." % str(CMDLINE_ROOT))
 
 
 def inject_cmdline_root(path):
-    """ merge path with root if set (path has to be absolute) relative paths are kept
+    """merge path with root if set (path has to be absolute) relative paths are kept
 
     :param path: path
     :type path: str
@@ -90,7 +90,7 @@ def handle_command(*args, **kwargs):
 class BaseCmdLine(object):
     @staticmethod
     def _run_command_in_background(*args):
-        """ Executes command in background
+        """Executes command in background
 
         :param args: cmd and its arguments
         :type args: tuple
@@ -106,7 +106,7 @@ class BaseCmdLine(object):
 
     @staticmethod
     def _run_command(*args, **kwargs):
-        """ Executes command and waits till it's finished
+        """Executes command and waits till it's finished
 
         :param args: cmd and its arguments
         :type args: tuple
@@ -134,7 +134,7 @@ class BaseCmdLine(object):
 
     @staticmethod
     def _run_command_and_check_retval(args, expected_retval):
-        """ Runs command and checks its retval.
+        """Runs command and checks its retval.
 
         :param args: cmd and its arguments
         :type args: tuple
@@ -147,16 +147,13 @@ class BaseCmdLine(object):
         """
         retval, stdout, stderr = BaseCmdLine._run_command(*args)
         if not retval == expected_retval:
-            logger.error(
-                "Command %s unexpected returncode (%d, expected %d)."
-                % (str(args), retval, expected_retval)
-            )
+            logger.error("Command %s unexpected returncode (%d, expected %d)." % (str(args), retval, expected_retval))
             raise BackendCommandFailed(retval, args)
         return stdout, stderr
 
     @staticmethod
     def _trigger_and_parse(args, regex, groups=(1,)):
-        """ Runs command and parses the output by regex,
+        """Runs command and parses the output by regex,
             raises an exception when the output doesn't match regex
 
         :param args: command and arguments
@@ -178,20 +175,20 @@ class BaseCmdLine(object):
 
 class AsyncProcessData(object):
     def __init__(self, manager):
-        """ Initializes async process data instance.
+        """Initializes async process data instance.
         Note that these data will be shared between two processes using shared memory
 
         :param manager: multiprocessing manager
         :type manager: multiprocessing.managers.SyncManager
         """
         self.lock = manager.Lock()
-        self.id = "%016x" % random.randrange(2 ** 64)
+        self.id = "%016x" % random.randrange(2**64)
         self._data = manager.list()
         self._retval = manager.Value(int, 0)
         self._exited = manager.Value(bool, False)
 
     def read_all_data(self):
-        """ Reads and returns all data which were stored by the process
+        """Reads and returns all data which were stored by the process
         :returns: process data
         :rtype: dict
         """
@@ -199,7 +196,7 @@ class AsyncProcessData(object):
             return [json.loads(e) for e in self._data]
 
     def append_data(self, record):
-        """ Appends a record to process data
+        """Appends a record to process data
         :returns: process data
         :rtype: dict
         """
@@ -210,14 +207,14 @@ class AsyncProcessData(object):
             self._data.append(json.dumps(record))
 
     def set_retval(self, retval):
-        """ Set the return value of the process
+        """Set the return value of the process
         :param retval: process return value
         :type retval: int
         """
         self._retval.set(retval)
 
     def get_retval(self):
-        """ Returns the return value of the process.
+        """Returns the return value of the process.
         Should be used only after get_exited() returns True
         :returns: retval of the process
         :rtype: int
@@ -225,12 +222,11 @@ class AsyncProcessData(object):
         return self._retval.get()
 
     def set_exited(self):
-        """ Sets the the process exited
-        """
+        """Sets the the process exited"""
         self._exited.set(True)
 
     def get_exited(self):
-        """ returns whether the process exited
+        """returns whether the process exited
         :returns: True if process exited False if the process is still running
         :rtype: bool
         """
@@ -248,7 +244,7 @@ class AsyncCommand(object):
 
     @staticmethod
     def _command_worker(args, reset_notify, handler_list, handler_exit, process_data, ready):
-        """ Watch over an external command
+        """Watch over an external command
 
         :param args: arguments of the external commands
         :type args: list[str]
@@ -330,7 +326,7 @@ class AsyncCommand(object):
         logger.debug("Async process finished.")
 
     def start_process(self, args, handler_list, handler_exit, reset_notify_function):
-        """ Starts a thread which starts a process which monitors external command.
+        """Starts a thread which starts a process which monitors external command.
 
         A new process is started because ubus doesn't allow you to listen and send notification
         at once.

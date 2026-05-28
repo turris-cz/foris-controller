@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class MockAboutHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def get_device_info(self):
-        """ Returns fake info about the device
+        """Returns fake info about the device
 
         :returns: Mocked result
         :rtype: dict
@@ -48,7 +48,7 @@ class MockAboutHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_serial(self):
-        """ Returns fake serial number
+        """Returns fake serial number
 
         :returns: Mocked result
         :rtype: dict
@@ -57,14 +57,14 @@ class MockAboutHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_registration_number(self):
-        """ Returns fake registration number
+        """Returns fake registration number
 
         :returns: Mocked result
         :rtype: dict
         """
-        return {"registration_number": "%016X" % random.randrange(2 ** 16)}
+        return {"registration_number": "%016X" % random.randrange(2**16)}
 
     @classmethod
     def get_customization(cls):
-        """ Return router software customization """
+        """Return router software customization"""
         return None

@@ -40,7 +40,7 @@ class MockWebHandler(Handler, BaseMockHandler):
     device = "mox"
 
     def get_language(self):
-        """ Mocks get language
+        """Mocks get language
 
         :returns: current language
         :rtype: str
@@ -49,7 +49,7 @@ class MockWebHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def set_language(self, language):
-        """ Sets language
+        """Sets language
 
         :returns: True
         :rtype: bool
@@ -61,7 +61,7 @@ class MockWebHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def list_languages(self):
-        """ Lists languages
+        """Lists languages
 
         :returns: available languages
         :rtype: list

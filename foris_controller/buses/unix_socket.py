@@ -36,14 +36,12 @@ logger = logging.getLogger(__name__)
 
 class UnixSocketHandler(BaseRequestHandler):
     def setup(self):
-        """ Connection initialization
-        """
+        """Connection initialization"""
         logger.debug("Client connected.")
         self.router = Router()
 
     def handle(self):
-        """ Main handler
-        """
+        """Main handler"""
         logger.debug("Handling request")
         while True:
             try:
@@ -72,9 +70,7 @@ class UnixSocketHandler(BaseRequestHandler):
                 response = self.router.process_message(parsed)
                 response = json.dumps(response).encode("utf8")
                 response_length = struct.pack("I", len(response))
-                logger.debug(
-                    "Sending response (len=%d) %s" % (len(response), str(response)[:LOGGER_MAX_LEN])
-                )
+                logger.debug("Sending response (len=%d) %s" % (len(response), str(response)[:LOGGER_MAX_LEN]))
                 self.request.sendall(response_length + response)
 
             except Exception:
@@ -84,14 +80,13 @@ class UnixSocketHandler(BaseRequestHandler):
         logger.debug("Handling finished.")
 
     def finish(self):
-        """ Connection closing
-        """
+        """Connection closing"""
         logger.debug("Client diconnected.")
 
 
 class UnixSocketListener(ThreadingMixIn, UnixStreamServer, BaseSocketListener):
     def __init__(self, socket_path):
-        """ Init listener project
+        """Init listener project
 
         :param socket_path: path to ubus socket
         :type socket_path: str
@@ -107,7 +102,7 @@ class UnixSocketListener(ThreadingMixIn, UnixStreamServer, BaseSocketListener):
 
 class UnixSocketNotificationSender(BaseNotificationSender):
     def __init__(self, socket_path):
-        """ Inits object which handles sending notification via unix-socket
+        """Inits object which handles sending notification via unix-socket
 
         :param socket_path: path to ubus socket
         :type socket_path: str
@@ -119,10 +114,7 @@ class UnixSocketNotificationSender(BaseNotificationSender):
     def _send_message(self, msg, controller_id, module, action, data=None):
         notification = json.dumps(msg).encode("utf8")
         notification_length = struct.pack("I", len(notification))
-        logger.debug(
-            "Sending notification (len=%d) %s"
-            % (len(notification), str(notification)[:LOGGER_MAX_LEN])
-        )
+        logger.debug("Sending notification (len=%d) %s" % (len(notification), str(notification)[:LOGGER_MAX_LEN]))
         self.socket.sendall(notification_length + notification)
 
     def disconnect(self):

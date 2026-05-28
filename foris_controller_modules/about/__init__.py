@@ -27,7 +27,7 @@ class AboutModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get(self, data):
-        """ Performs get action to obtain data from the device
+        """Performs get action to obtain data from the device
 
         :param data: input data (supposed to be {})
         :type data: dict
@@ -44,7 +44,7 @@ class AboutModule(BaseModule):
         return res
 
     def action_get_registration_number(self, data):
-        """ Obtains registration number
+        """Obtains registration number
 
         :param data: input data (supposed to be {})
         :type data: dict

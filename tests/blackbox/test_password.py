@@ -45,9 +45,7 @@ def pass_file():
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
-def test_set_and_check_system(
-    uci_configs_init, pass_file, infrastructure, device, turris_os_version
-):
+def test_set_and_check_system(uci_configs_init, pass_file, infrastructure, device, turris_os_version):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)
@@ -86,9 +84,7 @@ def test_set_and_check_system(
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
-def test_set_and_check_foris(
-    uci_configs_init, pass_file, infrastructure, device, turris_os_version
-):
+def test_set_and_check_foris(uci_configs_init, pass_file, infrastructure, device, turris_os_version):
     filters = [("password", "set")]
     new_pass = "".join(random.choice(string.ascii_letters) for _ in range(20))
     old_notifications = infrastructure.get_notifications(filters=filters)

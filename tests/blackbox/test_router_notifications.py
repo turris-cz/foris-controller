@@ -174,9 +174,7 @@ def test_mark_as_displayed_notification(notify_cmd, uci_configs_init, infrastruc
         assert new_notifications == old_notifications
 
     mark_as_displayed_notification({"ids": ["1518776436-2595"], "new_count": 3})
-    mark_as_displayed_notification(
-        {"ids": ["1518776436-2595", "1518776436-2595", "1518776436-2595"], "new_count": 0}
-    )
+    mark_as_displayed_notification({"ids": ["1518776436-2595", "1518776436-2595", "1518776436-2595"], "new_count": 0})
     mark_as_displayed_notification_failed({"ids": ["1518776436x-2595"], "new_count": 3})
     mark_as_displayed_notification_failed(
         {"ids": ["1518776436-2595", "1518776436-2595", "1518776436x-2595"], "new_count": 0}
@@ -250,11 +248,7 @@ def test_update_settings(uci_configs_init, infrastructure):
                 "smtp_type": "turris",
                 "smtp_turris": {"sender_name": "name1"},
             },
-            "ntfy": {
-                "enabled": True,
-                "url": "ntfy.sh/test",
-                "priority": "high"
-            }
+            "ntfy": {"enabled": True, "url": "ntfy.sh/test", "priority": "high"},
         }
     )
     update(
@@ -273,7 +267,7 @@ def test_update_settings(uci_configs_init, infrastructure):
                 "enabled": True,
                 "url": "ntfy.sh/test",
                 "priority": "max",
-            }
+            },
         }
     )
 
@@ -300,7 +294,7 @@ def test_update_settings(uci_configs_init, infrastructure):
                 "enabled": True,
                 "url": "ntfy.sh/test",
                 "priority": "low",
-            }
+            },
         }
     )
     update(
@@ -322,7 +316,7 @@ def test_update_settings(uci_configs_init, infrastructure):
                     "password": "pass2",
                 },
             },
-            "ntfy": {"enabled": False}
+            "ntfy": {"enabled": False},
         }
     )
 
@@ -367,9 +361,7 @@ def test_create(stored_notifications, uci_configs_init, infrastructure):
         assert "notifications" in res["data"].keys()
         new_ids = [e["id"] for e in res["data"]["notifications"]]
         assert len(new_ids) == len(old_ids) + 1
-        new_msg = [
-            e for e in res["data"]["notifications"] if e["id"] in set(new_ids) - set(old_ids)
-        ][0]
+        new_msg = [e for e in res["data"]["notifications"] if e["id"] in set(new_ids) - set(old_ids)][0]
         assert new_msg["severity"] == severity
         assert new_msg["msg"] == message
 
@@ -496,12 +488,14 @@ def test_update_email_settings(uci_configs_init, infrastructure):
     )
 
 
-@pytest.mark.parametrize("email, host",[
-    ("invalid.email.niet", "correct-host.org"),
-    ("correct@email.com","$invalid#hostname"),
-    ("", "correct-host.cz"),
-    ("my-good@email.net","")
-]
+@pytest.mark.parametrize(
+    "email, host",
+    [
+        ("invalid.email.niet", "correct-host.org"),
+        ("correct@email.com", "$invalid#hostname"),
+        ("", "correct-host.cz"),
+        ("my-good@email.net", ""),
+    ],
 )
 def test_update_settings_incorrect_from_and_host(infrastructure, uci_configs_init, email, host):
     data = {
@@ -590,14 +584,12 @@ def test_update_settings_openwrt(uci_configs_init, infrastructure):
 
     update(
         {
-            "emails": {
-                "enabled": False
-            },
+            "emails": {"enabled": False},
             "ntfy": {
                 "enabled": True,
                 "url": "ntfy.sh/test",
                 "priority": "low",
-            }
+            },
         }
     )
 
@@ -628,7 +620,7 @@ def test_update_settings_openwrt(uci_configs_init, infrastructure):
                     "password": "pass2",
                 },
             },
-            "ntfy": {"enabled": False}
+            "ntfy": {"enabled": False},
         }
     )
 
@@ -638,10 +630,10 @@ def test_update_settings_openwrt(uci_configs_init, infrastructure):
     assert uci.get_option_named(uci_data, "user_notify", "ntfy", "priority") == "low"
 
     assert uci.parse_bool(uci.get_option_named(uci_data, "user_notify", "smtp", "enable")) is True
-    assert (
-        set(uci.get_option_named(uci_data, "user_notify", "smtp", "to"))
-        == {"user3@example.com", "user2@example.com"}
-    )
+    assert set(uci.get_option_named(uci_data, "user_notify", "smtp", "to")) == {
+        "user3@example.com",
+        "user2@example.com",
+    }
 
     assert uci.get_option_named(uci_data, "user_notify", "smtp", "from") == "turris2@example.com"
     assert uci.get_option_named(uci_data, "user_notify", "smtp", "server") == "example2.com"
@@ -676,19 +668,19 @@ def test_update_reboot_settings(uci_configs_init, infrastructure):
     update({"delay": 1, "time": "03:30"})
 
     uci_data = get_uci_backend_data(uci)
-    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == '1'
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == "1"
     assert uci.get_option_named(uci_data, "user_notify", "reboot", "time") == "03:30"
 
     update({"delay": 0, "time": "04:20"})
 
     uci_data = get_uci_backend_data(uci)
-    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == '0'
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == "0"
     assert uci.get_option_named(uci_data, "user_notify", "reboot", "time") == "04:20"
 
     update({"delay": 2, "time": "05:10"})
 
     uci_data = get_uci_backend_data(uci)
-    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == '2'
+    assert uci.get_option_named(uci_data, "user_notify", "reboot", "delay") == "2"
     assert uci.get_option_named(uci_data, "user_notify", "reboot", "time") == "05:10"
 
 

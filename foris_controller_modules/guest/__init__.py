@@ -28,7 +28,7 @@ class GuestModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data):
-        """ Get current guest settings
+        """Get current guest settings
         :param data: supposed to be {}
         :type data: dict
         :returns: current guest settings
@@ -37,7 +37,7 @@ class GuestModule(BaseModule):
         return self.handler.get_settings()
 
     def action_update_settings(self, data):
-        """ Updates guest settings
+        """Updates guest settings
         :param data: new guest settings
         :type data: dict
         :returns: result of the update {'result': True/False}
@@ -46,9 +46,7 @@ class GuestModule(BaseModule):
         if (
             data["enabled"]
             and data["dhcp"]["enabled"]
-            and not check_dynamic_ranges(
-                data["ip"], data["netmask"], data["dhcp"]["start"], data["dhcp"]["limit"]
-            )
+            and not check_dynamic_ranges(data["ip"], data["netmask"], data["dhcp"]["start"], data["dhcp"]["limit"])
         ):
             res = False
         else:

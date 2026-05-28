@@ -37,7 +37,7 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Get time settings
+        """Get time settings
 
         :returns: current time settiongs
         :rtype: dict
@@ -54,7 +54,7 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         ntp_extras: typing.Optional[typing.List[str]] = None,
         time: typing.Optional[datetime] = None,
     ) -> bool:
-        """ Updates current time settings
+        """Updates current time settings
 
         :param region: set the region (Europe, America, Asia, ...)
         :param city: set the city (Prague, London, ...)
@@ -67,7 +67,7 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
 
     @logger_wrapper(logger)
     def ntpdate_trigger(self, exit_notify_function, reset_notify_function):
-        """ Triggers the ntpdate command in async mode
+        """Triggers the ntpdate command in async mode
         :param exit_notify_function: function for sending notification when the cmds finishes
         :type exit_notify_function: callable
         :param reset_notify_function: function to reconnect to the notification bus

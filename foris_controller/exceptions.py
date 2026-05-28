@@ -19,16 +19,16 @@
 
 
 class ForisControllerError(Exception):
-    """ Base exception classs """
+    """Base exception classs"""
 
 
 class GenericError(ForisControllerError):
-    """ An generic unrecoverable error occured """
+    """An generic unrecoverable error occured"""
 
 
 class BackendCommandFailed(ForisControllerError):
     def __init__(self, retval, args, strerr=None):
-        """ exception which indicates the command failed
+        """exception which indicates the command failed
 
         :param args: argumenst of the command
         :type args: iterable
@@ -46,7 +46,7 @@ class BackendCommandFailed(ForisControllerError):
 
 class FailedToParseCommandOutput(ForisControllerError):
     def __init__(self, args, output):
-        """ exception which indicates the output of the cmd was somehow incorrect
+        """exception which indicates the output of the cmd was somehow incorrect
 
         :param args: argumenst of the command
         :type args: iterable
@@ -58,7 +58,7 @@ class FailedToParseCommandOutput(ForisControllerError):
 
 class FailedToParseFileContent(ForisControllerError):
     def __init__(self, path, content):
-        """ exception which inicates the there's something wrong with the content of a file
+        """exception which inicates the there's something wrong with the content of a file
 
         :param path: path to file
         :type path: str
@@ -70,7 +70,7 @@ class FailedToParseFileContent(ForisControllerError):
 
 class UciException(ForisControllerError):
     def __init__(self, cmdline_args, stderr):
-        """ exception which is raise when an uci cmd fails
+        """exception which is raise when an uci cmd fails
 
         :param cmdline_args: cmd line arguments
         :type cmdline_args: str
@@ -82,20 +82,18 @@ class UciException(ForisControllerError):
 
 class UciTypeException(ForisControllerError):
     def __init__(self, value, required_types):
-        """ exception which is raised when a values are incorrectly parsed from uci
+        """exception which is raised when a values are incorrectly parsed from uci
         :param value: value that was matched
         :type value: str
         :param required_types: types which were required
         :type required_types: list of strings
         """
-        super(UciTypeException, self).__init__(
-            "'%s' doesn't match any of required types %s" % (value, required_types)
-        )
+        super(UciTypeException, self).__init__("'%s' doesn't match any of required types %s" % (value, required_types))
 
 
 class UciRecordNotFound(ForisControllerError):
     def __init__(self, config, section=None, section_type=None, section_idx=None, option=None):
-        """ excecption which is raised when a field is not found within uci config
+        """excecption which is raised when a field is not found within uci config
 
         :param config: config name
         :type config: str
@@ -123,7 +121,7 @@ class UciRecordNotFound(ForisControllerError):
 
 class ServiceCmdFailed(ForisControllerError):
     def __init__(self, service, cmd, explanation=None):
-        """ exception which is raised during service cmd
+        """exception which is raised during service cmd
 
         :param service: the name of the service
         :type service: str
@@ -131,6 +129,4 @@ class ServiceCmdFailed(ForisControllerError):
         :type cmd: str
         """
         explanation = " (%s)" % explanation if explanation else ""
-        super(ServiceCmdFailed, self).__init__(
-            "Calling '%s' for service '%s' failed.%s" % (cmd, service, explanation)
-        )
+        super(ServiceCmdFailed, self).__init__("Calling '%s' for service '%s' failed.%s" % (cmd, service, explanation))

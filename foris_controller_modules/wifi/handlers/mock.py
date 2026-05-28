@@ -75,9 +75,16 @@ DEFAULT_CONFIG = [
                 "band": "5g",
                 "available_htmodes": [
                     "NOHT",
-                    "HT20", "HT40",
-                    "VHT20", "VHT40", "VHT80", "VHT160",
-                    "HE20", "HE40", "HE80", "HE160",
+                    "HT20",
+                    "HT40",
+                    "VHT20",
+                    "VHT40",
+                    "VHT80",
+                    "VHT160",
+                    "HE20",
+                    "HE40",
+                    "HE80",
+                    "HE160",
                 ],
                 "available_channels": [
                     {"number": 36, "frequency": 5180, "radar": False},
@@ -169,7 +176,7 @@ class MockWifiHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def get_settings(self):
-        """ Mocks get wifi settings
+        """Mocks get wifi settings
 
         :returns: current wifi settings
         :rtype: str
@@ -245,7 +252,7 @@ class MockWifiHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def update_settings(self, new_settings):
-        """ Mocks updates current wifi settings
+        """Mocks updates current wifi settings
         :returns: True if update passes
         :rtype: bool
         """
@@ -258,7 +265,7 @@ class MockWifiHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def reset(self):
-        """ Mocks reset of wifi settings
+        """Mocks reset of wifi settings
         :returns: True if reset passes False otherwise
         :rtype: bool
         """

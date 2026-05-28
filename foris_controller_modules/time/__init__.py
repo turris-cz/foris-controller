@@ -29,7 +29,7 @@ class TimeModule(BaseModule):
     logger = logging.getLogger(__name__)
 
     def action_get_settings(self, data):
-        """ Get current time settings
+        """Get current time settings
         :param data: supposed to be {}
         :type data: dict
         :returns: current time settings {'timezone': '..', 'zonename': '..'}
@@ -40,7 +40,7 @@ class TimeModule(BaseModule):
         return backend_data
 
     def action_update_settings(self, data):
-        """ Updates time settings
+        """Updates time settings
         :param data: new time settings {'timezone': '..', 'zonename': '..'}
         :type data: dict
         :returns: result of the update {'result': '..'}
@@ -72,7 +72,7 @@ class TimeModule(BaseModule):
         return {"result": res}
 
     def action_get_router_time(self, data):
-        """ Returns current router time
+        """Returns current router time
 
         :param data: supposed to be {}
         :type data: dict
@@ -83,8 +83,7 @@ class TimeModule(BaseModule):
         return {"time": datetime.now().isoformat()}
 
     def action_ntpdate_trigger(self, data):
-        """ Tries to run ntpdate to update system time
-        """
+        """Tries to run ntpdate to update system time"""
 
         def exit_notify(msg):
             if msg["result"]:

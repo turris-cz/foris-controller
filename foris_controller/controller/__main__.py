@@ -82,9 +82,7 @@ def main():
 
     unix_parser = subparsers.add_parser("unix-socket", help="use unix socket to recieve commands")
     unix_parser.add_argument("--path", default="/tmp/foris-controller.soc")
-    unix_parser.add_argument(
-        "--notifications-path", default="/tmp/foris-controller-notifications.soc"
-    )
+    unix_parser.add_argument("--notifications-path", default="/tmp/foris-controller-notifications.soc")
 
     if "ubus" in available_buses:
         ubus_parser = subparsers.add_parser("ubus", help="use ubus to recieve commands")
@@ -150,9 +148,7 @@ def main():
         required=True,
     )
     parser.add_argument("-d", "--debug", action="store_true", default=False)
-    parser.add_argument(
-        "-m", "--module", nargs=1, action="append", default=[], help="use only following modules"
-    )
+    parser.add_argument("-m", "--module", nargs=1, action="append", default=[], help="use only following modules")
     parser.add_argument(
         "-l",
         "--log-file",
@@ -192,9 +188,7 @@ def main():
         file_handler = logging.FileHandler(options.log_file)
         if options.debug:
             file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(
-            logging.Formatter("[%(created)f:%(process)d]" + logging.BASIC_FORMAT)
-        )
+        file_handler.setFormatter(logging.Formatter("[%(created)f:%(process)d]" + logging.BASIC_FORMAT))
         logging.getLogger().addHandler(file_handler)
 
     logger.debug("Version %s" % __version__)
@@ -220,9 +214,7 @@ def main():
 
         logger.info("Using mqtt to recieve commands.")
         server = MqttListener(options.host, options.port)
-        prepare_notification_sender(
-            MqttNotificationSender, options.host, options.port, options.passwd_file
-        )
+        prepare_notification_sender(MqttNotificationSender, options.host, options.port, options.passwd_file)
 
     if options.backend == "openwrt":
         from foris_controller.handler_base import BaseOpenwrtHandler
@@ -239,7 +231,6 @@ def main():
 
     # fork and start a socket_client
     if client_modules_loaded and options.client_socket_path:
-
         # prepare args
         if options.bus == "ubus":
             from foris_client.buses.ubus import UbusSender
@@ -295,10 +286,7 @@ def main():
         try:
             zconf_service = ZconfService()
         except Exception:
-            logger.error(
-                "Zeroconf fails to start (occupied port 5353?). "
-                "Proceeding without zeroconf capabilities..."
-            )
+            logger.error("Zeroconf fails to start (occupied port 5353?). Proceeding without zeroconf capabilities...")
             zeroconf = False
 
     try:

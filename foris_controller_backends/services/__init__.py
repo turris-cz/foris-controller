@@ -50,7 +50,7 @@ class OpenwrtServices(object):
         logger.debug("Service lock released.")
 
     def _run_service_command(self, service_name, cmd, fail_on_error=True):
-        """ Executes a service task and waits till it's finished
+        """Executes a service task and waits till it's finished
 
         :param service_name: the name of the service
         :type service_name: str
@@ -64,9 +64,7 @@ class OpenwrtServices(object):
 
         except OSError as e:
             if fail_on_error:
-                raise ServiceCmdFailed(
-                    service_name, cmd, "unable to call '%s %s'" % (script_path, cmd)
-                )
+                raise ServiceCmdFailed(service_name, cmd, "unable to call '%s %s'" % (script_path, cmd))
             retval = e.errno
             stdout = ""
             stderr = e.strerror
@@ -80,7 +78,7 @@ class OpenwrtServices(object):
             raise ServiceCmdFailed(service_name, cmd)
 
     def _run_service_command_in_background(self, service_name, cmd, delay):
-        """ Runs service command in background with specified delay
+        """Runs service command in background with specified delay
 
         :param service_name: the name of the service
         :type service_name: str
@@ -90,20 +88,15 @@ class OpenwrtServices(object):
         :type delay: int
         """
         script_path = os.path.join(self.service_scripts_path, service_name)
-        logger.debug(
-            "Starting to call '%s %s' in background (delay=%d)" % (script_path, cmd, delay)
-        )
+        logger.debug("Starting to call '%s %s' in background (delay=%d)" % (script_path, cmd, delay))
         try:
             BaseCmdLine._run_command(
                 "/bin/sh",
                 "-c",
-                "( sleep %(delay)d; %(script_path)s %(cmd)s ) &"
-                % dict(delay=delay, script_path=script_path, cmd=cmd),
+                "( sleep %(delay)d; %(script_path)s %(cmd)s ) &" % dict(delay=delay, script_path=script_path, cmd=cmd),
             )
         except OSError:
-            raise ServiceCmdFailed(
-                service_name, cmd, "unable to call '%s %s' in background" % (script_path, cmd)
-            )
+            raise ServiceCmdFailed(service_name, cmd, "unable to call '%s %s' in background" % (script_path, cmd))
 
         # as the command is triggered in background the retval can't be check..
 
@@ -144,7 +137,7 @@ class OpenwrtServices(object):
             self._run_service_command(service_name, "disable", fail_on_error)
 
     def is_enabled(self, service_name):
-        """ Check if service is enabled
+        """Check if service is enabled
 
         Look inside /etc/rc.d/ for service startup and shutdown scripts
         """

@@ -56,7 +56,7 @@ class SetTimeCommand(BaseCmdLine):
 
     @writelock(time_lock, logger)
     def set_time(self, time):
-        """ Sets current time using date command
+        """Sets current time using date command
         :param time: time to be set
         :type time: datetime.datetime
         """
@@ -66,10 +66,9 @@ class SetTimeCommand(BaseCmdLine):
 
 
 class TimeUciCommands(BaseFile):
-
     def _get_default_servers(self):
         servers = self._file_content("/usr/share/turris-defaults/ntpservers")
-        return servers.strip().split('\n')
+        return servers.strip().split("\n")
 
     def get_settings(self):
 
@@ -96,7 +95,7 @@ class TimeUciCommands(BaseFile):
             "time_settings": {
                 "how_to_set_time": "ntp" if ntp else "manual",
                 "ntp_servers": ntp_servers,
-                "ntp_extras": ntp_extras
+                "ntp_extras": ntp_extras,
             },
         }
 
@@ -107,10 +106,7 @@ class TimeUciCommands(BaseFile):
 
         with UciBackend() as backend:
             backend.set_option(
-                "system",
-                "@system[0]",
-                "timezone",
-                TZ_GNU.get(f"{region}/{city.replace(' ', '_')}", "UTC")
+                "system", "@system[0]", "timezone", TZ_GNU.get(f"{region}/{city.replace(' ', '_')}", "UTC")
             )
             backend.set_option("system", "@system[0]", "_country", country)
             backend.set_option("system", "@system[0]", "zonename", "%s/%s" % (region, city))
@@ -164,7 +160,7 @@ class TimeUciCommands(BaseFile):
 
 class TimeAsyncCmds(AsyncCommand):
     def ntpd_trigger(self, exit_notify_function, reset_notify_function):
-        """ Executes ntpd in async modude
+        """Executes ntpd in async modude
 
         This means that we don't wait for result, but a async_id will be returned immediatelly.
         Then we cat watch ntpd notifications with the same async_id
