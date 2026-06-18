@@ -372,8 +372,12 @@ def test_get_wan_status(uci_configs_init, infrastructure):
     res = infrastructure.process_message({"module": "wan", "action": "get_wan_status", "kind": "request"})
     assert set(res.keys()) == {"action", "kind", "data", "module"}
     assert "up" in res["data"].keys()
+    assert "up6" in res["data"].keys()
     assert "last_seen_duid" in res["data"].keys()
     assert "proto" in res["data"].keys()
+    assert "proto6" in res["data"].keys()
+    assert "ipv4" in res["data"].keys()
+    assert "ipv6" in res["data"].keys()
 
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)

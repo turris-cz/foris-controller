@@ -90,4 +90,12 @@ class OpenwrtWanHandler(Handler, BaseOpenwrtHandler):
         :rtype: dict
         """
         status = self.status_cmds.get_status()
-        return {"up": status["up"], "last_seen_duid": status["duid"], "proto": status["proto"]}
+        return {
+            "up": status["up"],
+            "proto": status["proto"],
+            "ipv4": status["ipv4"],
+            "up6": status["up6"],
+            "proto6": status["proto6"],
+            "ipv6": status["ipv6"],
+            "last_seen_duid": status["duid"],
+        }

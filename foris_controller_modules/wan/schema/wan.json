@@ -391,16 +391,26 @@
                     "type": "object",
                     "properties": {
                         "up": {"type": "boolean"},
+                        "up6": {"type": "boolean"},
                         "last_seen_duid": {
                             "oneOf": [
                                 {"enum": [""]},
                                 {"$ref": "#/definitions/duid"}
                             ]
                         },
-                        "proto": {"type": "string"}
+                        "proto": {"type": "string"},
+                        "proto6": {"type": "string"},
+                        "ipv4": {
+                            "type": "array",
+                            "items": {"type": "string", "format": "ipv4"}
+                        },
+                        "ipv6": {
+                            "type": "array",
+                            "items": {"type": "string", "format": "ipv6"}
+                        }
                     },
                     "additionalProperties": false,
-                    "required": ["up", "last_seen_duid", "proto"]
+                    "required": ["up", "up6", "last_seen_duid", "proto", "proto6"]
                 }
             },
             "additionalProperties": false,

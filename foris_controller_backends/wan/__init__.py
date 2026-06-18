@@ -501,10 +501,18 @@ class WanStatusCommands(BaseCmdLine, BaseFile):
 
     def get_status(self):
         """network info enriched by DUID"""
-        network_info = NetworksCmd().get_network_info("wan")
-        if not network_info:
-            logger.error("Failed to obtain network info")
+        if not (network_info := NetworksCmd().get_network_info("wan")):
+            logger.error("Failed to obtain network info for wan")
             raise GenericError("Failed to obtain network info")
+
+        if network_info6 := NetworksCmd().get_network_info("wan6"):
+            network_info["up6"] = network_info6["up"]
+            network_info["proto6"] = network_info6["proto"]
+            network_info["ipv6"] = network_info6["ipv6"]
+        else:
+            logger.warning("Failed to obtain network info for wan6")
+            network_info["up6"] = False
+            network_info["proto6"] = "none"
 
         # try to figure out duid (best effort)
         device = network_info.get("device", None)

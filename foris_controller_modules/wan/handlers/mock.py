@@ -238,6 +238,10 @@ class MockWanHandler(Handler, BaseMockHandler):
         """
         return {
             "up": random.choice([True, False]),
+            "up6": random.choice([True, False]),
             "last_seen_duid": random.choice(["", "00030001d858d7004555"]),
             "proto": random.choice(["pppoe", "dhcp", "static", "none"]),
+            "proto6": random.choice(["pppoe", "dhcp", "static", "none"]),
+            "ipv4": ["1.2.3.4"],
+            "ipv6": ["2001::1"],
         }

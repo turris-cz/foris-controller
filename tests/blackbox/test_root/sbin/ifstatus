@@ -2,8 +2,13 @@
 
 if [ "$1" = "lan" ] ; then
 	IPv4="10.20.30.40"
-else
+	PROTO="static"
+elif [ "$1" = "wan6" ]; then
+	PROTO="dhcpv6"
 	IPv4="172.20.6.87"
+else 
+	IPv4="172.20.6.87"
+	PROTO="dhcp"
 fi
 
 cat << EOF
@@ -15,7 +20,7 @@ cat << EOF
 	"dynamic": false,
 	"uptime": 14151,
 	"l3_device": "eth2",
-	"proto": "dhcp",
+	"proto": "${PROTO}",
 	"device": "eth2",
 	"updated": [
 		"addresses",
@@ -32,7 +37,12 @@ cat << EOF
 		}
 	],
 	"ipv6-address": [
-		
+		{
+			"address": "2001:1488:fffe:63e0::1",
+			"mask": 128,
+			"preferred": 604567,
+			"valid": 2591767
+		}
 	],
 	"ipv6-prefix": [
 		
