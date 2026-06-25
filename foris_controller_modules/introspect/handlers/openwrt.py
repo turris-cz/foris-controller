@@ -32,6 +32,6 @@ class OpenwrtIntrospectHandler(Handler, BaseOpenwrtHandler):
     @staticmethod
     @logger_wrapper(logger)
     def list_modules():
-        modules = get_modules(app_info["filter_modules"], app_info["extra_module_paths"])
+        modules = get_modules(app_info["filter_modules"])
 
         return [mod[0] for mod in modules]

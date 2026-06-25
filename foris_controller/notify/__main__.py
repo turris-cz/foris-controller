@@ -98,14 +98,6 @@ def main():
         help="disables schema validation (based on foris-controller modules)",
     )
     parser.add_argument(
-        "--extra-module-path",
-        nargs=1,
-        action="append",
-        default=[],
-        help="set extra path to module",
-        required=False,
-    )
-    parser.add_argument(
         "notification",
         metavar="NOTIFICATION",
         nargs="+",
@@ -145,7 +137,7 @@ def main():
         logger.debug("Validation will be performed.")
         from foris_schema import ForisValidator
 
-        validator = ForisValidator(*get_validator_dirs([options.module], [e[0] for e in options.extra_module_path]))
+        validator = ForisValidator(*get_validator_dirs([options.module]))
     else:
         logger.debug("No validation")
         validator = None

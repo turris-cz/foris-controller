@@ -21,12 +21,6 @@ import os
 import pytest
 
 
-@pytest.fixture(scope="module")
-def extra_module_paths():
-    """Override of extra module paths fixture"""
-    return [os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_modules", "echo")]
-
-
 def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure):
     filters = [("web", "set_language")]
     notifications = infrastructure.get_notifications(filters=filters)

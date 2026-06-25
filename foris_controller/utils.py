@@ -165,7 +165,7 @@ def writelock(lock, logger):
     return outer
 
 
-def get_modules(filter_modules, module_paths=[]):
+def get_modules(filter_modules):
     """Returns a list of modules that can be used
 
     :param filter_modules: use only modules which names are specified in this list
@@ -182,17 +182,6 @@ def get_modules(filter_modules, module_paths=[]):
             continue
         module = importlib.import_module("foris_controller_modules.%s" % mod_name)
         res.append((mod_name, module))
-
-    for modules_path in module_paths:
-        # dir base name will be module name
-        modules_path = modules_path.rstrip("/")
-        name = os.path.basename(modules_path)
-        modules_path = modules_path + "/__init__.py"
-        spec = importlib.util.spec_from_file_location(name, modules_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[name] = module
-        spec.loader.exec_module(module)
-        res.append((name, module))
 
     return res
 
@@ -227,7 +216,7 @@ def get_module_class(module):
             return module_class
 
 
-def get_validator_dirs(filter_modules, module_paths=[]):
+def get_validator_dirs(filter_modules):
     """Returns schema and definition dirs for validator
     :param filter_modules: use only modules present in this list
     :param module_paths: extra paths to dir containing modules
@@ -238,7 +227,7 @@ def get_validator_dirs(filter_modules, module_paths=[]):
 
     schema_dirs = []
     # load modules dirs
-    for module_name, module in get_modules(filter_modules, module_paths):
+    for module_name, module in get_modules(filter_modules):
         schema_dirs.append(os.path.join(module.__path__[0], "schema"))
 
     return schema_dirs, definition_dirs

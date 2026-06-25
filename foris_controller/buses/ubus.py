@@ -192,12 +192,12 @@ class UbusListener(BaseSocketListener):
                 target=ubus_all_in_one_worker,
                 args=(
                     socket_path,
-                    get_modules(app_info["filter_modules"], app_info["extra_module_paths"]),
+                    get_modules(app_info["filter_modules"]),
                 ),
             )
             self.workers.append(worker)
         else:
-            modules = get_modules(app_info["filter_modules"], app_info["extra_module_paths"])
+            modules = get_modules(app_info["filter_modules"])
             for module_name, module in modules:
                 worker = multiprocessing.Process(
                     name=module_name,

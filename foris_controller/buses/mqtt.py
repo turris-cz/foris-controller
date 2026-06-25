@@ -238,7 +238,7 @@ class MqttListener(BaseSocketListener):
     @staticmethod
     def list_modules():
         res = []
-        for module_name, module in get_modules(app_info["filter_modules"], app_info["extra_module_paths"]):
+        for module_name, module in get_modules(app_info["filter_modules"]):
             res.append({"name": module_name, "actions": get_method_names_from_module(module) or []})
         return res
 
@@ -250,7 +250,7 @@ class MqttListener(BaseSocketListener):
 
     @staticmethod
     def list_actions(module_name):
-        modules_dict = dict(get_modules(app_info["filter_modules"], app_info["extra_module_paths"]))
+        modules_dict = dict(get_modules(app_info["filter_modules"]))
         return get_method_names_from_module(modules_dict.get(module_name)) or []
 
     def list_working_replies(self):
