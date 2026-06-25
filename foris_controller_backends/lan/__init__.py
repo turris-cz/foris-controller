@@ -310,7 +310,6 @@ class LanUci:
             return int(leasetime)
 
     def get_settings(self):
-
         with UciBackend() as backend:
             network_data = backend.read("network")
             sqm_data = backend.read("sqm")

@@ -221,7 +221,6 @@ ca_file="/etc/ssl/certs/ca-certificates.crt"
 
 class DnsUciCommands(object):
     def get_settings(self):
-
         with UciBackend() as backend:
             resolver_data = backend.read("resolver")
             dhcp_data = backend.read("dhcp")
@@ -254,7 +253,6 @@ class DnsUciCommands(object):
         forwarder=None,
         dns_from_dhcp_domain=None,
     ):
-
         if forwarder and forwarder not in [e["name"] for e in DnsFiles.get_available_forwarders_short()]:
             return False
 

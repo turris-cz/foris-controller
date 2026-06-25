@@ -34,7 +34,6 @@ from foris_controller_testtools.utils import (
     "device,turris_os_version", [("omnia", "4.0"), ("mox", "4.0"), ("turris", "6.0")], indirect=True
 )
 def test_get_settings(uci_configs_init, fix_mox_wan, infrastructure, device, turris_os_version):
-
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 

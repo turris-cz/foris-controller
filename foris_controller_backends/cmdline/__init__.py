@@ -352,7 +352,6 @@ class AsyncCommand(object):
         # and this code might be called from some handler thread which dies
         # after response is delivered
         def worker_thread(process_started):
-
             import logging
 
             logger = logging.getLogger(__name__)

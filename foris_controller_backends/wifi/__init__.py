@@ -172,7 +172,6 @@ class WifiUci:
 
     @staticmethod
     def _get_device_bands(device_name: str) -> typing.List[BandData]:
-
         request_msg = {"device": device_name}
         iwinfo_data = UbusBackend.call_ubus("iwinfo", "info", request_msg)
         if not iwinfo_data:

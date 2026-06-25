@@ -11,6 +11,7 @@ license = { "file" = "COPYING" }
 authors = [
     { name = "CZ.NIC, z.s.p.o. (http://www.nic.cz/)", email = "packaging@turris.cz" },
 ]
+requires-python = ">=3.10"
 dependencies = [
     "foris-schema",
     "pbkdf2",
@@ -20,6 +21,10 @@ dependencies = [
     "turris-timezone",
     "turrishw",
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
 
 [project.optional-dependencies]
 client-socket = [
@@ -36,7 +41,7 @@ mqtt = [
 ]
 tests = [
     "foris-client",
-    "foris-controller-testtools",
+    "foris-controller-testtools >= 3.0.0",
     "paho-mqtt",
     "pytest",
     "ubus",
@@ -54,6 +59,24 @@ zeroconf = [
 [project.scripts]
 foris-controller = "foris_controller.controller.__main__:main"
 foris-notify = "foris_controller.notify.__main__:main"
+
+[project.entry-points.foris_controller_modules]
+about = "foris_controller_modules.about"
+dns = "foris_controller_modules.dns"
+guest = "foris_controller_modules.guest"
+introspect = "foris_controller_modules.introspect"
+lan = "foris_controller_modules.lan"
+maintain = "foris_controller_modules.maintain"
+networks = "foris_controller_modules.networks"
+password = "foris_controller_modules.password"
+remote = "foris_controller_modules.remote"
+router_notifications = "foris_controller_modules.router_notifications"
+system = "foris_controller_modules.system"
+time = "foris_controller_modules.time"
+updater = "foris_controller_modules.updater"
+wan = "foris_controller_modules.wan"
+web = "foris_controller_modules.web"
+wifi = "foris_controller_modules.wifi"
 
 [project.urls]
 Homepage = "https://gitlab.nic.cz/turris/foris-controller/foris-controller"

@@ -58,7 +58,6 @@ def service_class(lock_backend):
 
 @pytest.mark.parametrize("action", ["start", "stop", "restart", "reload", "enable", "disable"])
 def test_service(action, custom_cmdline_root, init_script_result, service_class):
-
     with service_class() as services:
         getattr(services, action)("pass")
         check_service_result("pass", action, clean=False)

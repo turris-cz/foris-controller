@@ -71,7 +71,6 @@ class TimeUciCommands(BaseFile):
         return servers.strip().split("\n")
 
     def get_settings(self):
-
         with UciBackend() as backend:
             system_data = backend.read("system")
 

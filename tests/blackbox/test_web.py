@@ -185,7 +185,6 @@ def test_get_guide_openwrt(file_root_init, uci_configs_init, infrastructure, dev
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_guide_mox_variants(file_root_init, uci_configs_init, infrastructure, device, turris_os_version):
-
     prepare_turrishw("mox")
     res = infrastructure.process_message({"module": "web", "action": "get_guide", "kind": "request"})
     assert set(res["data"]["available_workflows"]) == {

@@ -755,7 +755,6 @@ def test_get_enabled(
     device,
     turris_os_version,
 ):
-
     res = infrastructure.process_message(
         {
             "module": "updater",

@@ -517,7 +517,6 @@ class NetworksUci:
 
 class NetworksCmd(BaseCmdLine):
     def get_network_info(self, network_name: str) -> typing.Optional[dict]:
-
         retval, stdout, stderr = BaseCmdLine._run_command("/sbin/ifstatus", network_name)
         if retval != 0:
             return None

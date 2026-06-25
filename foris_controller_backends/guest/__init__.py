@@ -310,7 +310,6 @@ class GuestUci:
             )
 
     def get_settings(self):
-
         with UciBackend() as backend:
             firewall = backend.read("firewall")
             network = backend.read("network")

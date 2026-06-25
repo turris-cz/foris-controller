@@ -179,7 +179,6 @@ class ClientSocketListener(ThreadingMixIn, UnixStreamServer):
         timeout=0,
         controller_id=None,
     ):
-
         self.sender = sender_instance
         self.notification_sender = notification_sender_instance
         self.timeout = timeout

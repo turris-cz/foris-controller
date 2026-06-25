@@ -24,8 +24,8 @@ import os
 import pkgutil
 import re
 import signal
-import sys
 import typing
+from importlib import metadata
 from functools import wraps
 from multiprocessing.managers import SyncManager
 
@@ -173,17 +173,11 @@ def get_modules(filter_modules):
     :type filter_modules: list of str
     :returns: list of (module_name, module)
     """
-    res = []
-
-    modules = importlib.import_module("foris_controller_modules")
-
-    for _, mod_name, _ in pkgutil.iter_modules(modules.__path__):
-        if filter_modules and mod_name not in filter_modules:
-            continue
-        module = importlib.import_module("foris_controller_modules.%s" % mod_name)
-        res.append((mod_name, module))
-
-    return res
+    return [
+        (e.name, e.load())
+        for e in metadata.entry_points(group="foris_controller_modules")
+        if not filter_modules or e.name in filter_modules
+    ]
 
 
 def get_handler(module, base_handler_class):
@@ -219,7 +213,6 @@ def get_module_class(module):
 def get_validator_dirs(filter_modules):
     """Returns schema and definition dirs for validator
     :param filter_modules: use only modules present in this list
-    :param module_paths: extra paths to dir containing modules
     """
 
     # and global definitions

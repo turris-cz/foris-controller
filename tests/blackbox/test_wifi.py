@@ -889,7 +889,6 @@ def test_update_settings_uci(
     infrastructure,
     network_restart_command,
 ):
-
     uci = get_uci_module(infrastructure.name)
 
     def update(*devices):
@@ -1391,7 +1390,6 @@ def test_reset_mock(wifi_opt, file_root_init, uci_configs_init, infrastructure, 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_reset_openwrt(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
-
     prepare_turrishw_root("omnia", "7.0")
 
     res = infrastructure.process_message(
@@ -1546,7 +1544,6 @@ def test_update_settings_uci_country(
     infrastructure,
     network_restart_command,
 ):
-
     uci = get_uci_module(infrastructure.name)
 
     def set_country(country):

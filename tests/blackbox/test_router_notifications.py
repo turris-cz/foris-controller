@@ -193,7 +193,6 @@ def test_get_settings(uci_configs_init, infrastructure):
 
 
 def test_get_settings_empty_from_and_hostname(infrastructure, uci_configs_init):
-
     res = infrastructure.process_message(
         {"module": "router_notifications", "action": "get_settings", "kind": "request"}
     )
@@ -566,7 +565,6 @@ def test_update_reboot_settings(uci_configs_init, infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt(uci_configs_init, infrastructure):
-
     uci = get_uci_module(infrastructure.name)
 
     def update(data):
@@ -645,7 +643,6 @@ def test_update_settings_openwrt(uci_configs_init, infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_update_reboot_settings(uci_configs_init, infrastructure):
-
     uci = get_uci_module(infrastructure.name)
 
     def update(data):

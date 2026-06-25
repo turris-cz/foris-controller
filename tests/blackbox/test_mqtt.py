@@ -69,7 +69,6 @@ def query_bus(topic):
 
 @pytest.mark.only_message_buses(["mqtt"])
 def test_advertize(infrastructure, file_root_init, mount_on_normal):
-
     filters = [("remote", "advertize")]
     notifications = infrastructure.get_notifications(filters=filters)
 
@@ -95,7 +94,6 @@ def test_advertize(infrastructure, file_root_init, mount_on_normal):
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.only_message_buses(["mqtt"])
 def test_advertize_netboot_booted(infrastructure, file_root_init, mount_on_netboot):
-
     filters = [("remote", "advertize")]
     notifications = infrastructure.get_notifications(filters=filters)
     notifications = infrastructure.get_notifications(notifications, filters=filters)
@@ -105,7 +103,6 @@ def test_advertize_netboot_booted(infrastructure, file_root_init, mount_on_netbo
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.only_message_buses(["mqtt"])
 def test_advertize_netboot_ready(infrastructure, file_root_init, mount_on_netboot, netboot_configured):
-
     filters = [("remote", "advertize")]
     notifications = infrastructure.get_notifications(filters=filters)
     notifications = infrastructure.get_notifications(notifications, filters=filters)

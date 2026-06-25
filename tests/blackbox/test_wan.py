@@ -45,7 +45,6 @@ def check_connection_mock(request):
 
 @pytest.mark.parametrize("device,turris_os_version", [("mox", "6.0"), ("omnia", "6.0")], indirect=True)
 def test_get_settings(uci_configs_init, infrastructure, fix_mox_wan, device, turris_os_version):
-
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
@@ -843,7 +842,6 @@ def test_wan_openwrt_backend(
     device,
     turris_os_version,
 ):
-
     uci = get_uci_module(infrastructure.name)
 
     def _filter_possible_list(data, *args):
@@ -1638,7 +1636,6 @@ def test_get_settings_missing_wireless(uci_configs_init, infrastructure, fix_mox
 @pytest.mark.parametrize("device, turris_os_version", [("mox", "4.0"), ("omnia", "4.0")], indirect=True)
 @pytest.mark.only_backends(["openwrt"])
 def test_wan6_options_can_be_empty(uci_configs_init, infrastructure, device, turris_os_version):
-
     prepare_turrishw_root(device, turris_os_version)
     uci = get_uci_module(infrastructure.name)
 
@@ -1660,7 +1657,6 @@ def test_update_mac_address_and_disable(
     device,
     turris_os_version,
 ):
-
     if infrastructure.backend_name in ["openwrt"]:
         prepare_turrishw_root(device, turris_os_version)
 
@@ -1703,7 +1699,6 @@ def test_update_mac_address_and_disable(
 )
 @pytest.mark.only_backends(["openwrt"])
 def test_different_devices(uci_configs_init, infrastructure, device, fix_mox_wan, turris_os_version, wan_mac):
-
     prepare_turrishw_root(device, turris_os_version)
 
     res = infrastructure.process_message({"module": "wan", "action": "get_settings", "kind": "request"})

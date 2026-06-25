@@ -30,6 +30,9 @@ ubus = [
     "ubus",
 ]
 
+[project.entry-points.foris_controller_modules]
+{{ cookiecutter.name_snake }} = "foris_controller_modules.{{ cookiecutter.name_snake }}"
+
 [project.scripts]
 turris-{{ cookiecutter.name_snake }} = "foris_controller_{{ cookiecutter.name_snake }}_module.__main__:main"
 

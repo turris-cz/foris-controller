@@ -165,4 +165,5 @@ def controller_modules():
         "guest",
         "remote",
         "introspect",
+        "echo",
     ]

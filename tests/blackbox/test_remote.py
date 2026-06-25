@@ -117,7 +117,6 @@ def test_generate_ca_mock(infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_generate_ca_openwrt(empty_certs, infrastructure):
-
     filters = [("remote", "generate_ca")]
 
     # successful generation
@@ -236,7 +235,6 @@ def test_generate_token_mock(infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_generate_token_openwrt_success(ready_certs, infrastructure):
-
     res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
@@ -284,7 +282,6 @@ def test_generate_token_openwrt_success(ready_certs, infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_generate_token_openwrt_failed(empty_certs, infrastructure):
-
     res = infrastructure.process_message({"module": "remote", "action": "get_status", "kind": "request"})
     assert "data" in res
     assert "tokens" in res["data"]
@@ -340,7 +337,6 @@ def test_generate_token_name_failed(empty_certs, infrastructure):
 
 @pytest.mark.only_backends(["mock"])
 def test_revoke_mock(infrastructure):
-
     res = infrastructure.process_message(
         {
             "module": "remote",
@@ -523,7 +519,6 @@ def test_update_settings_ubus_unix(uci_configs_init, init_script_result, infrast
 @pytest.mark.only_message_buses(["mqtt"])
 @pytest.mark.only_backends(["openwrt"])
 def test_update_settings_openwrt_mqtt(uci_configs_init, init_script_result, infrastructure, ready_certs):
-
     uci = get_uci_module(infrastructure.name)
 
     def update(data):
@@ -579,7 +574,6 @@ def test_update_settings_openwrt_mqtt(uci_configs_init, init_script_result, infr
 
 @pytest.mark.only_backends(["mock"])
 def test_get_token_mock(infrastructure):
-
     query_data = {}
     res = infrastructure.process_message({"module": "remote", "action": "generate_ca", "kind": "request"})
     assert "errors" not in res
@@ -627,7 +621,6 @@ def test_get_token_mock(infrastructure):
 
 @pytest.mark.only_backends(["openwrt"])
 def test_get_token_openwrt(ready_certs, uci_configs_init, init_script_result, infrastructure, file_root_init):
-
     query_data = {}
     uci = get_uci_module(infrastructure.name)
 

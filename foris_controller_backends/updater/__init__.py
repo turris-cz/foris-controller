@@ -57,7 +57,6 @@ def run_updater_after(func):
 
 class UpdaterUci(object):
     def get_settings(self, lang="en"):
-
         res = {
             "enabled": svupdater_autorun.enabled(),
             "user_lists": [],  # don't return package lists, return empty list for compatibility instead

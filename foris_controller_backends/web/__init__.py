@@ -125,7 +125,6 @@ class WebUciCommands:
 
     @staticmethod
     def get_guide_data(foris_data):
-
         finished = parse_bool(get_option_named(foris_data, "foris", "wizard", "finished", "0"))
         # remedy for migration from older wizard
         step = int(get_option_named(foris_data, "foris", "wizard", "allowed_step_max", "0"))
