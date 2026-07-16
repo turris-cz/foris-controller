@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.0] - 2026-07-16
+### Changed
+- foris-controller modules are loaded via entrypoint
+### Added
+- IP addresses to wan.get_wan_status API call
+- `slot` and `bus` to wifi.get_settings
+### Removed
+- `--extra-modules-paths` option
+
+
 ## [6.3.1] - 2026-03-26
 ### Fixed
 - 5G band does not support width >160 MHz
