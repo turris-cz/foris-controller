@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- wifi: 6 GHz band supports WPA3 only, WPA2 and mixed WPA2/3 mode are refused there
+- wifi: default encryption mode depends on the band (WPA3 on 6 GHz, WPA2/3 otherwise)
+
+
 ## [7.0.0] - 2026-07-16
 ### Changed
 - foris-controller modules are loaded via entrypoint
