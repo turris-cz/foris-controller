@@ -204,6 +204,66 @@ DEFAULT_UPDATE_DATA = [
 ]
 
 
+# ubus data of a 6 GHz capable card (used to fake such hardware for radio0)
+WIFI_6G_UBUS_MOCK_DATA = {
+    "iwinfo": {
+        "info": {
+            "radio0": {
+                "phy": "phy0",
+                "bssid": "AA:BB:CC:DD:EE:FF",
+                "country": "US",
+                "mode": "Client",
+                "frequency_offset": 0,
+                "txpower": 6,
+                "txpower_offset": 0,
+                "quality_max": 70,
+                "noise": 0,
+                "htmodes": ["HE20", "HE40", "HE80", "HE160", "EHT20", "EHT40", "EHT80", "EHT160"],
+                "hwmodes": ["ax", "be"],
+                "hwmode": "a/g",
+                "htmode": "20",
+                "hardware": {"id": [1, 2, 1, 2], "name": "WiFi 7 Test Chip"},
+            }
+        },
+        "freqlist": {
+            "radio0": {
+                "results": [
+                    {"channel": 1, "mhz": 5955, "restricted": False},
+                    {"channel": 5, "mhz": 5975, "restricted": False},
+                    {"channel": 37, "mhz": 6135, "restricted": False},
+                    {"channel": 233, "mhz": 7115, "restricted": False},
+                ]
+            }
+        },
+    },
+}
+
+
+def wifi_6g_device(encryption="WPA3", guest_encryption="WPA3"):
+    """Settings of a single 6 GHz wifi device for update_settings"""
+    device = {
+        "id": 0,
+        "enabled": True,
+        "SSID": "Turris6G",
+        "hidden": False,
+        "channel": 37,
+        "htmode": "HE20",
+        "band": "6g",
+        "encryption": encryption,
+        "password": "passpass",
+        "guest_wifi": {
+            "enabled": True,
+            "SSID": "Turris6G-guest",
+            "password": "passpassg",
+            "encryption": guest_encryption,
+        },
+    }
+    if encryption != "WPA2":  # 802.11w is not used with WPA2
+        device["ieee80211w_disabled"] = False
+
+    return device
+
+
 @pytest.fixture(scope="function", params=["config"])
 def wifi_opt(request):
     WIFI_OPT_PATH = "/tmp/foris-controller-tests-wifi-detect-opt"
@@ -564,6 +624,8 @@ def test_get_settings_initial_tos_config(
 
     * encryption none && interface disabled => WPA2/3 (TOS preferred)
     * encryption none && interface enabled => custom (user wants it that way)
+
+    The preferred mode depends on the band: 6 GHz band supports WPA3 only.
     """
     res = infrastructure.process_message(
         {"module": "wifi", "action": "get_settings", "kind": "request"}
@@ -574,13 +636,26 @@ def test_get_settings_initial_tos_config(
     assert devices[0]["encryption"] == "WPA2/3"
     assert devices[1]["encryption"] == "WPA2/3"
 
+    # the same config on 6 GHz band should return WPA3 instead
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "radio0", "band", "6g")
+
+    with FileFaker(FORIS_FILES_ROOT, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(WIFI_6G_UBUS_MOCK_DATA)):
+        res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
+
+    device = res["data"]["devices"][0]
+    assert device["band"] == "6g"
+    assert device["encryption"] == "WPA3"
+    assert device["guest_wifi"]["encryption"] == "WPA3"
+
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
 @pytest.mark.only_backends(["openwrt"])
 def test_get_settings_without_encryption_set(
     init_script_result, file_root_init, uci_configs_init, infrastructure, network_restart_command,
 ):
-    """Test that default encryption values are returned in case the option is missing"""
+    """Test that default encryption values (based on the band) are returned in case the option is missing"""
     uci = get_uci_module(infrastructure.name)
     with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
         # clear the encryption options
@@ -595,6 +670,18 @@ def test_get_settings_without_encryption_set(
     devices = res["data"]["devices"]
     assert devices[0]["encryption"] == "WPA2/3"
     assert devices[1]["encryption"] == "WPA2/3"
+
+    # 6 GHz band supports WPA3 only, so that one is the default there
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        backend.set_option("wireless", "radio0", "band", "6g")
+
+    with FileFaker(FORIS_FILES_ROOT, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(WIFI_6G_UBUS_MOCK_DATA)):
+        res = infrastructure.process_message({"module": "wifi", "action": "get_settings", "kind": "request"})
+
+    device = res["data"]["devices"][0]
+    assert device["band"] == "6g"
+    assert device["encryption"] == "WPA3"
+    assert device["guest_wifi"]["encryption"] == "WPA3"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -1415,7 +1502,83 @@ def test_wrong_update(file_root_init, uci_configs_init, infrastructure, network_
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_reset(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
+@pytest.mark.parametrize("encryption", ["WPA2", "WPA2/3"])
+def test_update_settings_6g_wpa2_not_allowed(
+    file_root_init, uci_configs_init, infrastructure, network_restart_command, encryption
+):
+    """Test that neither WPA2 nor mixed WPA2/3 mode can be set on 6 GHz band.
+
+    6 GHz band supports WPA3 only, so such settings have to be refused by the schema.
+    """
+
+    def update(device):
+        return infrastructure.process_message(
+            {
+                "module": "wifi",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {"devices": [device]},
+            }
+        )
+
+    def update_fails(device):
+        res = update(device)
+        assert "errors" in res
+        # Make sure it fails for the right reason, not just that it fails.
+        assert "not valid under any of the given schemas" in res["errors"][0]["stacktrace"]
+
+    # regular wifi
+    update_fails(wifi_6g_device(encryption=encryption))
+
+    # guest wifi shares the radio with the regular one, so the same restriction applies there
+    update_fails(wifi_6g_device(guest_encryption=encryption))
+
+    # the very same settings with WPA3 have to pass the schema validation
+    # (the update itself may still fail when there is no 6 GHz capable card)
+    assert "errors" not in update(wifi_6g_device())
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["openwrt"])
+def test_update_settings_6g_wpa3_openwrt(
+    init_script_result,
+    file_root_init,
+    uci_configs_init,
+    infrastructure,
+    network_restart_command,
+):
+    """Test that WPA3 can be set on 6 GHz band (both for regular and guest wifi)."""
+    with FileFaker(FORIS_FILES_ROOT, UBUS_TEST_MOCK_DATA_FILE, False, json.dumps(WIFI_6G_UBUS_MOCK_DATA)):
+        res = infrastructure.process_message(
+            {
+                "module": "wifi",
+                "action": "update_settings",
+                "kind": "request",
+                "data": {"devices": [wifi_6g_device()]},
+            }
+        )
+
+    assert res == {
+        "action": "update_settings",
+        "data": {"result": True},
+        "kind": "reply",
+        "module": "wifi",
+    }
+
+    uci = get_uci_module(infrastructure.name)
+    with uci.UciBackend(UCI_CONFIG_DIR_PATH) as backend:
+        data = backend.read()
+
+    assert uci.get_option_named(data, "wireless", "radio0", "band") == "6g"
+    assert uci.get_option_named(data, "wireless", "radio0", "htmode") == "HE20"
+    assert uci.get_option_named(data, "wireless", "radio0", "channel") == "37"
+    assert uci.get_option_named(data, "wireless", "default_radio0", "encryption") == "sae"
+    assert uci.get_option_named(data, "wireless", "guest_iface_0", "encryption") == "sae"
+
+
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+@pytest.mark.only_backends(["mock"])
+def test_reset_mock(wifi_opt, file_root_init, uci_configs_init, infrastructure, network_restart_command):
     res = infrastructure.process_message(
         {
             "module": "wifi",

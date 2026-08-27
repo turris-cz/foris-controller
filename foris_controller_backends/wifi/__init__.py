@@ -107,6 +107,13 @@ class BandData:
     available_multilink: bool = False
 
 
+def get_default_enc_mode(band: str) -> str:
+    if band == Band.G6:
+        return "WPA3"
+    else:
+        return "WPA2/3"
+
+
 class WifiUci:
     WIFI_ENC_MODES_TO_UCI = {
         "WPA2": "psk2+ccmp",
@@ -121,7 +128,6 @@ class WifiUci:
         Band.G5: 36,
         Band.G6: 37,
     }
-    DEFAULT_WIFI_ENC_MODE = "WPA2/3"
 
     @staticmethod
     def get_wifi_devices(backend):
@@ -229,7 +235,8 @@ config wifi-device 'radio0'
 
         current_channel = device["data"].get("channel", WifiUci.DEFAULT_CHANNELS[band])
         current_channel = 0 if current_channel == "auto" else int(current_channel)
-        wifi_encryption = interface["data"].get("encryption", self.WIFI_UCI_DEFAULT_ENC_MODE)
+        default_uci_enc_mode = self.WIFI_ENC_MODES_TO_UCI[get_default_enc_mode(band)]
+        wifi_encryption = interface["data"].get("encryption", default_uci_enc_mode)
         ieee80211w = interface["data"].get("ieee80211w")
         ieee80211w_disabled = ieee80211w == "0"  # "1", "2" or unset means that ieee80211w will be enabled in some way
 
@@ -244,14 +251,14 @@ config wifi-device 'radio0'
         if not enabled and wifi_encryption == "none":
             # In case we have default OpenWrt config, return Turris OS prefered encryption mode,
             # so it will be the initial choice in reForis for the first time wifi setup
-            wifi_encryption = self.WIFI_UCI_DEFAULT_ENC_MODE
+            wifi_encryption = default_uci_enc_mode
 
         derived_guest = "%s-guest" % ssid if len("%s-guest" % ssid) <= 32 else "Turris-guest"
         if guest_interface:
             guest_enabled = not parse_bool(guest_interface["data"].get("disabled", "0"))
             guest_ssid = guest_interface["data"].get("ssid", derived_guest)
             guest_password = guest_interface["data"].get("key", "")
-            guest_wifi_encryption = guest_interface["data"].get("encryption", self.WIFI_UCI_DEFAULT_ENC_MODE)
+            guest_wifi_encryption = guest_interface["data"].get("encryption", default_uci_enc_mode)
             # compatibility with many different WPA2 mode names that are allowed in OpenWrt
             # "psk2*" -> WPA2
             if guest_wifi_encryption.startswith("psk2"):
@@ -260,7 +267,7 @@ config wifi-device 'radio0'
             guest_enabled = False
             guest_ssid = derived_guest
             guest_password = ""
-            guest_wifi_encryption = self.WIFI_UCI_DEFAULT_ENC_MODE
+            guest_wifi_encryption = default_uci_enc_mode
 
         bands = WifiUci._get_device_bands(device_name)
         if not bands:
@@ -383,10 +390,8 @@ config wifi-device 'radio0'
         backend.set_option("wireless", interface_section["name"], "ssid", settings["SSID"])
         backend.set_option("wireless", interface_section["name"], "network", "lan")
         backend.set_option("wireless", interface_section["name"], "mode", "ap")
-        backend.set_option(
-            "wireless", interface_section["name"], "hidden", store_bool(settings["hidden"])
-        )
-        wifi_encryption = settings.get("encryption", WifiUci.DEFAULT_WIFI_ENC_MODE)
+        backend.set_option("wireless", interface_section["name"], "hidden", store_bool(settings["hidden"]))
+        wifi_encryption = settings.get("encryption", get_default_enc_mode(settings["band"]))
         ieee80211w_disabled = settings.get("ieee80211w_disabled", False)
         if wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
             self._set_wifi_encryption(backend, interface_section["name"], wifi_encryption, ieee80211w_disabled)
@@ -411,9 +416,7 @@ config wifi-device 'radio0'
         backend.set_option("wireless", guest_name, "mode", "ap")
         backend.set_option("wireless", guest_name, "ssid", settings["guest_wifi"]["SSID"])
         backend.set_option("wireless", guest_name, "network", "guest_turris")
-        guest_wifi_encryption = settings["guest_wifi"].get(
-            "encryption", WifiUci.DEFAULT_WIFI_ENC_MODE
-        )
+        guest_wifi_encryption = settings["guest_wifi"].get("encryption", get_default_enc_mode(settings["band"]))
         if guest_wifi_encryption != "custom":  # custom == keep wifi encryption configuration intact
             # apply the same encryption settings as main SSID to guest SSID
             self._set_wifi_encryption(backend, guest_name, guest_wifi_encryption, ieee80211w_disabled)

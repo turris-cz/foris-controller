@@ -28,6 +28,20 @@ from .. import Handler
 logger = logging.getLogger(__name__)
 
 DEFAULT_WIFI_ENCRYPTION = "WPA2/3"
+DEFAULT_WIFI_ENCRYPTION_6G = "WPA3"  # 6 GHz band supports WPA3 only
+
+
+def get_default_enc_mode(band: str) -> str:
+    """Default encryption mode of given band
+
+    Mirrors the openwrt backend, see `foris_controller_backends.wifi.get_default_enc_mode`
+    """
+    if band == "6g":
+        return DEFAULT_WIFI_ENCRYPTION_6G
+    else:
+        return DEFAULT_WIFI_ENCRYPTION
+
+
 # Note: default OpenWrt config has "encryption none" and interface disabled
 # However we treat this config as not configured wifi yet and return TOS preferred mode instead
 DEFAULT_CONFIG = [
@@ -223,7 +237,9 @@ class MockWifiHandler(Handler, BaseMockHandler):
         dev["channel"] = channel
         dev["htmode"] = htmode
         dev["band"] = band
-        dev["encryption"] = encryption if encryption is not None else DEFAULT_WIFI_ENCRYPTION
+        if encryption is None:
+            encryption = get_default_enc_mode(band)
+        dev["encryption"] = encryption
 
         # handle optional ieee80211w based on encryption type
         if encryption in ("WPA2/3", "WPA3"):
