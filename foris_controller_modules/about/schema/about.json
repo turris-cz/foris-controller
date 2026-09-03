@@ -37,6 +37,7 @@
                             "required": ["mode", "value"]
                         },
                         "kernel": {"type": "string"},
+                        "uptime": {"type": "integer", "minimum": 0, "description": "seconds since the boot"},
                         "customization": {"$ref": "#/definitions/router_customization"}
                     },
                     "additionalProperties": false

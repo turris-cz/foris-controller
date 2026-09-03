@@ -19,6 +19,7 @@
 
 import logging
 import random
+import time
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
@@ -29,6 +30,8 @@ logger = logging.getLogger(__name__)
 
 
 class MockAboutHandler(Handler, BaseMockHandler):
+    started_at = time.monotonic()
+
     @logger_wrapper(logger)
     def get_device_info(self):
         """Returns fake info about the device
@@ -44,6 +47,7 @@ class MockAboutHandler(Handler, BaseMockHandler):
                 "mode": "branch",
                 "value": "hbk",
             },
+            "uptime": round(time.monotonic() - MockAboutHandler.started_at),
         }
 
     @logger_wrapper(logger)

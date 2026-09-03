@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - wifi: alter htmodes filter for 2G bands
 
+### Added
+- about: `uptime` (seconds since boot) in the `about.get` reply
+
 ## [7.0.1] - 2026-08-27
 ### Fixed
 - wifi: 6 GHz band supports WPA3 only, WPA2 and mixed WPA2/3 mode are refused there

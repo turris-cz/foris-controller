@@ -54,6 +54,7 @@ class SystemInfoFiles(BaseFile):
     OS_RELEASE_PATH = "/etc/turris-version"
     MODEL_PATH = "/tmp/sysinfo/model"
     CMDLINE_PATH = "/proc/cmdline"
+    UPTIME_PATH = "/proc/uptime"
     file_lock = RWLock(app_info["lock_backend"])
 
     @readlock(file_lock, logger)
@@ -110,6 +111,15 @@ class SystemInfoFiles(BaseFile):
         elif "Mox" in repr_model:
             return "mox"
         return "turris"
+
+    @readlock(file_lock, logger)
+    def get_uptime(self) -> int:
+        """Returns number of seconds since the boot
+
+        :returns: uptime in seconds
+        :rtype: int
+        """
+        return round(float(self._read_and_parse(SystemInfoFiles.UPTIME_PATH, r"^([0-9]+(?:\.[0-9]+)?)\s", (1,))))
 
 
 class ServerUplinkFiles(BaseFile):

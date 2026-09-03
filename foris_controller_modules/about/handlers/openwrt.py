@@ -55,6 +55,7 @@ class OpenwrtAboutHandler(Handler, BaseOpenwrtHandler):
             "kernel": self.system_info_cmds.get_kernel_version(),
             "os_version": self.system_info_files.get_os_version(),
             "os_branch": self.system_info_files.get_os_branch(),
+            "uptime": self.system_info_files.get_uptime(),
         }
 
     @logger_wrapper(logger)

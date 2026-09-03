@@ -18,19 +18,30 @@
 #
 
 import os
+import time
 
 import pytest
+from foris_controller_testtools.fixtures import FILE_ROOT_PATH as TMP_FILE_ROOT_PATH
 from foris_controller_testtools.utils import FileFaker
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_about_files")
 
 
+@pytest.fixture(scope="function")
+def uptime_file(file_root_init):
+    """fake /proc/uptime inside the copied file root (read by the openwrt backend)"""
+    with FileFaker(TMP_FILE_ROOT_PATH, "/proc/uptime", False, "12345.67 98765.43\n"):
+        yield
+
+
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get(uci_configs_init, infrastructure):
+def test_get(uci_configs_init, uptime_file, infrastructure):
     res = infrastructure.process_message({"module": "about", "action": "get", "kind": "request"})
     assert res.keys() == {"action", "kind", "data", "module"}
-    assert res["data"].keys() == {"model", "serial", "os_version", "os_branch", "kernel"}
+    assert res["data"].keys() == {"model", "serial", "os_version", "os_branch", "kernel", "uptime"}
     assert res["data"]["os_branch"].keys() == {"mode", "value"}
+    assert isinstance(res["data"]["uptime"], int)
+    assert res["data"]["uptime"] >= 0
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -79,7 +90,9 @@ def test_get_contract(content, output, lock_backend, file_root_init):
 )
 @pytest.mark.only_backends(["openwrt"])
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
-def test_get_router_customization(uci_configs_init, infrastructure, prepare_turrishw, device, expected_result):
+def test_get_router_customization(
+    uci_configs_init, uptime_file, infrastructure, prepare_turrishw, device, expected_result
+):
     prepare_turrishw(device)
     res = infrastructure.process_message(
         {
@@ -93,3 +106,32 @@ def test_get_router_customization(uci_configs_init, infrastructure, prepare_turr
     if expected_result:
         assert "customization" in res["data"]
         assert res["data"]["customization"] == expected_result
+
+
+@pytest.mark.parametrize(
+    "content,expected",
+    (
+        ("12345.67 98765.43\n", 12346),
+        ("0.00 0.00\n", 0),
+        ("100 200\n", 100),
+    ),
+    ids=["rounds-up", "zero", "no-fraction"],
+)
+@pytest.mark.only_backends(["openwrt"])
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_get_uptime(uci_configs_init, file_root_init, infrastructure, content, expected):
+    with FileFaker(TMP_FILE_ROOT_PATH, "/proc/uptime", False, content):
+        res = infrastructure.process_message({"module": "about", "action": "get", "kind": "request"})
+
+    assert "errors" not in res.keys()
+    assert res["data"]["uptime"] == expected
+
+
+@pytest.mark.only_backends(["mock"])
+@pytest.mark.file_root_path(FILE_ROOT_PATH)
+def test_get_uptime_grows(uci_configs_init, infrastructure):
+    first = infrastructure.process_message({"module": "about", "action": "get", "kind": "request"})
+    time.sleep(1.1)
+    second = infrastructure.process_message({"module": "about", "action": "get", "kind": "request"})
+
+    assert second["data"]["uptime"] > first["data"]["uptime"]
