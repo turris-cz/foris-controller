@@ -20,8 +20,8 @@
 import copy
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class NetworksModule(BaseModule):
@@ -51,5 +51,5 @@ class NetworksModule(BaseModule):
 
 
 @wrap_required_functions(["get_settings", "update_settings"])
-class Handler(object):
+class Handler:
     pass

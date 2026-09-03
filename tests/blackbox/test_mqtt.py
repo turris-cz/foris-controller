@@ -19,14 +19,12 @@
 
 import collections
 import json
-import pytest
 import uuid
 
-
+import pytest
+from foris_controller_testtools.infrastructure import MQTT_HOST, MQTT_ID, MQTT_PORT
 from paho import mqtt as mqtt_module
 from paho.mqtt import client as mqtt
-
-from foris_controller_testtools.infrastructure import MQTT_ID, MQTT_PORT, MQTT_HOST
 
 from foris_controller import __version__
 
@@ -115,9 +113,9 @@ def test_modules_list(infrastructure, file_root_init):
     topic = "foris-controller/%s/list" % MQTT_ID
     modules = query_bus(topic)
     assert len(modules) > 0
-    assert all([set(e.keys()) == {"name", "actions"} for e in modules])
-    assert all([isinstance(e["name"], str) for e in modules])
-    assert all([isinstance(e["actions"], collections.abc.Iterable) for e in modules])
+    assert all(set(e.keys()) == {"name", "actions"} for e in modules)
+    assert all(isinstance(e["name"], str) for e in modules)
+    assert all(isinstance(e["actions"], collections.abc.Iterable) for e in modules)
 
 
 @pytest.mark.only_message_buses(["mqtt"])

@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class MaintainModule(BaseModule):
@@ -59,5 +59,5 @@ class MaintainModule(BaseModule):
 
 
 @wrap_required_functions(["reboot", "generate_backup", "restore_backup"])
-class Handler(object):
+class Handler:
     pass

@@ -18,9 +18,9 @@
 #
 
 import os
-import pytest
 import time
 
+import pytest
 
 NOTIFICATION_PATH = "/tmp/async-notification.txt"
 RESET_PATH = "/tmp/async-reset.txt"
@@ -32,7 +32,7 @@ def get_data(old_data=None):
         with open(NOTIFICATION_PATH) as f:
             data = f.readlines()
             last_data = [e.strip() for e in data]
-            if not old_data == last_data:
+            if old_data != last_data:
                 break
             else:
                 time.sleep(0.1)

@@ -41,7 +41,7 @@ class BackendCommandFailed(ForisControllerError):
             msg = "Retval=%d(%s) for %s" % (retval, strerr, args)
         else:
             msg = "Retval=%d for %s" % (retval, args)
-        super(BackendCommandFailed, self).__init__(msg)
+        super().__init__(msg)
 
 
 class FailedToParseCommandOutput(ForisControllerError):
@@ -53,7 +53,7 @@ class FailedToParseCommandOutput(ForisControllerError):
         :param output: program output
         :type output: str
         """
-        super(FailedToParseCommandOutput, self).__init__("%s: %s" % (args, output))
+        super().__init__("%s: %s" % (args, output))
 
 
 class FailedToParseFileContent(ForisControllerError):
@@ -65,7 +65,7 @@ class FailedToParseFileContent(ForisControllerError):
         :param content: the content of the file
         :type content: str
         """
-        super(FailedToParseFileContent, self).__init__("%s: %s" % (path, content))
+        super().__init__("%s: %s" % (path, content))
 
 
 class UciException(ForisControllerError):
@@ -77,7 +77,7 @@ class UciException(ForisControllerError):
         :param stderr: error output
         :type stderr: str
         """
-        super(UciException, self).__init__("%s: command failed (%s)" % (cmdline_args, stderr))
+        super().__init__("%s: command failed (%s)" % (cmdline_args, stderr))
 
 
 class UciTypeException(ForisControllerError):
@@ -88,7 +88,7 @@ class UciTypeException(ForisControllerError):
         :param required_types: types which were required
         :type required_types: list of strings
         """
-        super(UciTypeException, self).__init__("'%s' doesn't match any of required types %s" % (value, required_types))
+        super().__init__("'%s' doesn't match any of required types %s" % (value, required_types))
 
 
 class UciRecordNotFound(ForisControllerError):
@@ -116,7 +116,7 @@ class UciRecordNotFound(ForisControllerError):
         if option:
             uci_path += ".%s" % option
 
-        super(UciRecordNotFound, self).__init__("Uci record was not found '%s'." % uci_path)
+        super().__init__("Uci record was not found '%s'." % uci_path)
 
 
 class ServiceCmdFailed(ForisControllerError):
@@ -129,4 +129,4 @@ class ServiceCmdFailed(ForisControllerError):
         :type cmd: str
         """
         explanation = " (%s)" % explanation if explanation else ""
-        super(ServiceCmdFailed, self).__init__("Calling '%s' for service '%s' failed.%s" % (cmd, service, explanation))
+        super().__init__("Calling '%s' for service '%s' failed.%s" % (cmd, service, explanation))

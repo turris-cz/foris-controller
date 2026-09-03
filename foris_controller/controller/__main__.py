@@ -24,14 +24,13 @@ import logging
 import multiprocessing
 import os
 import re
-import typing
 
 from foris_controller import __version__
 from foris_controller.app import (
     app_info,
-    set_app_info,
     prepare_app_modules,
     prepare_notification_sender,
+    set_app_info,
 )
 from foris_controller.utils import LOGGER_MAX_LEN, read_passwd_file
 
@@ -42,7 +41,7 @@ except ImportError:
     client_modules_loaded = False
 
 
-available_buses: typing.List[str] = ["unix-socket"]
+available_buses: list[str] = ["unix-socket"]
 zeroconf = False
 
 

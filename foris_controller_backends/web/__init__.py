@@ -20,7 +20,6 @@
 import logging
 import os
 import sys
-import typing
 
 import turrishw
 
@@ -173,7 +172,7 @@ class WebUciCommands:
         }
 
     @staticmethod
-    def update_passed(step: typing.Union[str, profiles.Step]):
+    def update_passed(step: str | profiles.Step):
         step = step.value if isinstance(step, profiles.Step) else step
         with UciBackend() as backend:
             data = backend.read("foris")
@@ -223,7 +222,7 @@ class Languages:
     INSTALLED_LANG_MATCHES = [os.path.join(LANG_DIR, "??"), os.path.join(LANG_DIR, "??_??")]
 
     @staticmethod
-    def list_languages() -> typing.List[str]:
+    def list_languages() -> list[str]:
         """List installed languages
         :returns: list of installed languages
         :rtype: list of str

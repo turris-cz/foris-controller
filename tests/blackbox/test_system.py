@@ -18,7 +18,6 @@
 #
 
 import pytest
-
 from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import get_uci_module
 

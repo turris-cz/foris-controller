@@ -23,7 +23,6 @@ import os
 from foris_controller.updater import svupdater, svupdater_exceptions
 from foris_controller_backends.cmdline import BackendCommandFailed, BaseCmdLine
 
-
 logger = logging.getLogger(__name__)
 
 

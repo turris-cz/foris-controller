@@ -18,7 +18,6 @@
 #
 
 import logging
-import typing
 from datetime import datetime
 from functools import wraps
 
@@ -55,7 +54,7 @@ def run_updater_after(func):
     return inner
 
 
-class UpdaterUci(object):
+class UpdaterUci:
     def get_settings(self, lang="en"):
         res = {
             "enabled": svupdater_autorun.enabled(),
@@ -72,7 +71,7 @@ class UpdaterUci(object):
 
         return res
 
-    def get_enabled(self) -> typing.Optional[bool]:
+    def get_enabled(self) -> bool | None:
         return svupdater_autorun.enabled()
 
     @run_updater_after
@@ -128,7 +127,7 @@ class Updater:
         logger.debug("opkg_lock() -> %s", res)
         return res
 
-    def get_approval(self) -> typing.Union[svupdater_approvals.ApprovalRequest, ApprovalNotPresent]:
+    def get_approval(self) -> svupdater_approvals.ApprovalRequest | ApprovalNotPresent:
         """Returns current approval
         :returns: approval
         :rtype: dict
@@ -210,7 +209,7 @@ class Updater:
         return exported
 
     @staticmethod
-    def query_installed_packages(packages: typing.List[str]) -> typing.List[str]:
+    def query_installed_packages(packages: list[str]) -> list[str]:
         """Query whether packages are installed or provided by another packages"""
         ret = []
 

@@ -20,16 +20,14 @@
 #
 
 import argparse
-import logging
 import json
+import logging
 import re
-import typing
 
 from foris_controller import __version__
 from foris_controller.utils import get_validator_dirs, read_passwd_file
 
-
-available_buses: typing.List[str] = ["unix-socket"]
+available_buses: list[str] = ["unix-socket"]
 
 
 try:

@@ -18,7 +18,6 @@
 #
 
 import logging
-import typing
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.updater import svupdater_approvals
@@ -85,7 +84,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         return OpenwrtUpdaterHandler.uci.update_package_lists(package_lists)
 
     @logger_wrapper(logger)
-    def get_approval(self) -> typing.Union[svupdater_approvals.ApprovalRequest, ApprovalNotPresent]:
+    def get_approval(self) -> svupdater_approvals.ApprovalRequest | ApprovalNotPresent:
         """Returns current approval
         :returns: current approval or {"present": False}
         :rtype: dict
@@ -125,7 +124,7 @@ class OpenwrtUpdaterHandler(Handler, BaseOpenwrtHandler):
         """
         return self.updater.update_languages(languages)
 
-    def query_installed_packages(self, packages: typing.List[str]) -> typing.List[str]:
+    def query_installed_packages(self, packages: list[str]) -> list[str]:
         """Query whether packages are installed or provided by another packages"""
         return self.updater.query_installed_packages(packages)
 

@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class RouterNotificationsModule(BaseModule):
@@ -87,5 +87,5 @@ class RouterNotificationsModule(BaseModule):
 
 
 @wrap_required_functions(["list", "mark_as_displayed", "get_settings", "update_settings", "create"])
-class Handler(object):
+class Handler:
     pass

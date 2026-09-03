@@ -33,7 +33,7 @@ client-socket = [
 dev = [
     "cookiecutter",
     "pre-commit",
-    "ruff",
+    "ruff==0.16.5",
 	"tox",
 ]
 mqtt = [

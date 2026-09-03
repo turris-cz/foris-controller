@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class AboutModule(BaseModule):
@@ -55,5 +55,5 @@ class AboutModule(BaseModule):
 
 
 @wrap_required_functions(["get_device_info", "get_serial", "get_registration_number"])
-class Handler(object):
+class Handler:
     pass

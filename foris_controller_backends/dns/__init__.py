@@ -20,12 +20,16 @@
 import hashlib
 import json
 import logging
-import re
 import pathlib
+import re
+
 from slugify import slugify
 
 from foris_controller.app import app_info
+from foris_controller.exceptions import UciException, UciRecordNotFound
 from foris_controller.utils import RWLock
+from foris_controller_backends.files import BaseFile, BaseMatch, path_exists
+from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.uci import (
     UciBackend,
     get_option_anonymous,
@@ -33,9 +37,6 @@ from foris_controller_backends.uci import (
     parse_bool,
     store_bool,
 )
-from foris_controller_backends.files import BaseMatch, BaseFile, path_exists
-from foris_controller_backends.services import OpenwrtServices
-from foris_controller.exceptions import UciRecordNotFound, UciException
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +220,7 @@ ca_file="/etc/ssl/certs/ca-certificates.crt"
         ]
 
 
-class DnsUciCommands(object):
+class DnsUciCommands:
     def get_settings(self):
         with UciBackend() as backend:
             resolver_data = backend.read("resolver")

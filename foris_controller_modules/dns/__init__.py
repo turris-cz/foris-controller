@@ -97,5 +97,5 @@ class DnsModule(BaseModule):
 @wrap_required_functions(
     ["get_settings", "update_settings", "list_forwarders", "set_forwarder", "add_forwarder", "del_forwarder"]
 )
-class Handler(object):
+class Handler:
     pass

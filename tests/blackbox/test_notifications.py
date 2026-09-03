@@ -23,7 +23,7 @@ import pytest
 def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure):
     filters = [("web", "set_language")]
     notifications = infrastructure.get_notifications(filters=filters)
-    retval, stdout, stderr = notify_cmd("web", "set_language", {"language": "en"}, True)
+    retval, _, stderr = notify_cmd("web", "set_language", {"language": "en"}, True)
     assert retval == 0
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)
@@ -34,12 +34,12 @@ def test_notify_cmd(notify_cmd, uci_configs_init, infrastructure):
         "data": {"language": "en"},
     }
 
-    retval, stdout, stderr = notify_cmd("web", "set_language", {"language": "en", "invalid": True}, True)
+    retval, _, stderr = notify_cmd("web", "set_language", {"language": "en", "invalid": True}, True)
     assert retval == 1
     assert b"ValidationError" in stderr
     assert notifications == infrastructure.get_notifications(filters=filters)
 
-    retval, stdout, stderr = notify_cmd("web", "set_language", {"language": "en", "invalid": True}, False)
+    retval, _, stderr = notify_cmd("web", "set_language", {"language": "en", "invalid": True}, False)
     assert retval == 0
 
     notifications = infrastructure.get_notifications(notifications, filters=filters)

@@ -21,7 +21,6 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-
 from foris_controller_backends.maintain import MaintainCommands
 
 from .. import Handler

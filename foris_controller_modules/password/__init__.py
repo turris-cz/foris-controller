@@ -17,11 +17,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
 import base64
+import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class PasswordModule(BaseModule):
@@ -59,5 +59,5 @@ class PasswordModule(BaseModule):
 
 
 @wrap_required_functions(["check_foris_password", "set_foris_password", "set_system_password"])
-class Handler(object):
+class Handler:
     pass

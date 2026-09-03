@@ -17,11 +17,9 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import base64
 import logging
 import random
-import base64
-import typing
-
 
 from foris_controller.app import app_info
 from foris_controller.handler_base import BaseMockHandler
@@ -34,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class MockRemoteHandler(Handler, BaseMockHandler):
     ca_generated = False
-    tokens: typing.List[dict] = []
+    tokens: list[dict] = []
     current_id = 2
     settings = {"enabled": False, "wan_access": False, "port": 11884}
     netboot = "no"

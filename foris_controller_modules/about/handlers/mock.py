@@ -67,4 +67,4 @@ class MockAboutHandler(Handler, BaseMockHandler):
     @classmethod
     def get_customization(cls):
         """Return router software customization"""
-        return None
+        return

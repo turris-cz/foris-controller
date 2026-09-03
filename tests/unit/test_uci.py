@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #
 # foris-controller
 # Copyright (C) 2017 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
@@ -19,16 +17,15 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
-import subprocess
-import re
 import os
-
+import re
+import subprocess
 from collections import OrderedDict
 
-from foris_controller.exceptions import UciException, UciTypeException, UciRecordNotFound
-
+import pytest
 from foris_controller_testtools.utils import get_uci_module
+
+from foris_controller.exceptions import UciException, UciRecordNotFound, UciTypeException
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "uci_configs")
 
@@ -378,7 +375,6 @@ def test_read(uci_configs_init, lock_backend):
 
 @pytest.mark.uci_config_path(CONFIG_PATH)
 def test_bool(uci_configs_init, lock_backend):
-    config_dir, _ = uci_configs_init
     TRUE = ["1", "on", "true", "yes", "enabled"]
     FALSE = ["0", "off", "false", "no", "disabled"]
     uci = get_uci_module(lock_backend)
@@ -392,7 +388,7 @@ def test_bool(uci_configs_init, lock_backend):
             uci.parse_bool(value)
 
     for value in TRUE + FALSE:
-        uci.store_bool(value) == value
+        assert uci.store_bool(value) == value
 
     assert uci.store_bool(True) == "1"
     assert uci.store_bool(False) == "0"
@@ -458,12 +454,12 @@ config import 'import1'
 
 config import
 	option ipass '0'
-"""  # noqa
+"""
 
 
 @pytest.mark.uci_config_path(CONFIG_PATH)
 def test_import_data(uci_configs_init, lock_backend):
-    config_dir, _ = uci_configs_init  # noqa
+    config_dir, _ = uci_configs_init
     uci = get_uci_module(lock_backend)
     backend_class = get_uci_module(lock_backend).UciBackend
 

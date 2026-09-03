@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class WifiModule(BaseModule):
@@ -61,5 +61,5 @@ class WifiModule(BaseModule):
 
 
 @wrap_required_functions(["get_settings", "update_settings", "reset"])
-class Handler(object):
+class Handler:
     pass

@@ -3,7 +3,6 @@
 
 import json
 import logging
-import typing
 
 from foris_controller_backends.cmdline import BaseCmdLine
 
@@ -14,7 +13,7 @@ class UbusBackend(BaseCmdLine):
     UBUS_CMD = "/bin/ubus"
 
     @staticmethod
-    def call_ubus(ubus_object: str, method: str, data: typing.Optional[dict] = None) -> typing.Optional[dict]:
+    def call_ubus(ubus_object: str, method: str, data: dict | None = None) -> dict | None:
         """Method to call ubus executable and get data/trigger action provided by ubus objects.
 
         Try to return:

@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class MockLanHandler(Handler, BaseMockHandler):
     guide_set = BaseMockHandler._manager.Value(bool, False)
     mode: str = "managed"
-    mode_managed: typing.Dict[str, typing.Any] = {
+    mode_managed: dict[str, typing.Any] = {
         "router_ip": "192.168.1.1",
         "netmask": "255.255.255.0",
         "dhcp": {
@@ -77,7 +77,7 @@ class MockLanHandler(Handler, BaseMockHandler):
             ],
         },
     }
-    mode_unmanaged: typing.Dict[str, typing.Any] = {
+    mode_unmanaged: dict[str, typing.Any] = {
         "lan_type": "none",
         "lan_dhcp": {"hostname": None},
         "lan_static": {
@@ -228,7 +228,7 @@ class MockLanHandler(Handler, BaseMockHandler):
         return True
 
     @staticmethod
-    def validate_dhcp_host_ip(ip: str) -> typing.Optional[str]:
+    def validate_dhcp_host_ip(ip: str) -> str | None:
         """Validate DHCP host IP address
 
         Check whether it fits the target network or doesn't overlap with DHCP pool range
@@ -317,9 +317,7 @@ class MockLanHandler(Handler, BaseMockHandler):
 
         # ip is unique or the same on the same host
         err = MockLanHandler.validate_dhcp_host_ip(ip)
-        if err == "ip-exists" and current_client_config["ip"] != ip:
-            return {"result": False, "reason": err}
-        elif err is not None:
+        if err == "ip-exists" and current_client_config["ip"] != ip or err is not None:
             return {"result": False, "reason": err}
 
         unique_hostname = MockLanHandler.is_hostname_unique(hostname)
@@ -352,11 +350,11 @@ class MockLanHandler(Handler, BaseMockHandler):
     def port_forwarding_set(
         self,
         name: str,
-        src_dport: typing.Union[int, str],
+        src_dport: int | str,
         dest_ip: str,
         enabled: bool,
-        dest_port: typing.Optional[typing.Union[int, str]] = None,
-        old_name: typing.Optional[str] = None,
+        dest_port: int | str | None = None,
+        old_name: str | None = None,
     ):
         self.forwarding = [e for e in self.forwarding if e["name"] not in (old_name, name)]
         self.forwarding.append(
@@ -373,7 +371,7 @@ class MockLanHandler(Handler, BaseMockHandler):
     @logger_wrapper(logger)
     def port_forwarding_delete(
         self,
-        names: typing.List[str],
+        names: list[str],
     ):
         self.forwarding = [e for e in self.forwarding if e["name"] not in names]
         return True

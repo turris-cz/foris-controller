@@ -18,18 +18,18 @@
 #
 
 import logging
-import pbkdf2
 import pathlib
 
-from foris_controller_backends.cmdline import BaseCmdLine, BackendCommandFailed
+import pbkdf2
+
+from foris_controller_backends.cmdline import BackendCommandFailed, BaseCmdLine
+from foris_controller_backends.files import BaseMatch
 from foris_controller_backends.uci import (
     UciBackend,
-    get_option_named,
     UciException,
     UciRecordNotFound,
+    get_option_named,
 )
-from foris_controller_backends.files import BaseMatch
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ FILTER_PASSWORDS_FILES_MATCH = "/usr/share/common_passwords/*"
 def pawned_password(password):
     for path in BaseMatch.list_files([FILTER_PASSWORDS_FILES_MATCH]):
         file_name = pathlib.Path(path).name
-        list_name = file_name[: -len("_passwords")] if file_name.endswith("_passwords") else file_name
+        list_name = file_name.removesuffix("_passwords")
         with open(path, "rb") as f:
             line = f.readline()
             while line:
@@ -59,7 +59,7 @@ def pawned_password(password):
     return None
 
 
-class ForisPasswordUci(object):
+class ForisPasswordUci:
     def set_password(self, password):
         pawned = pawned_password(password)
         if pawned:

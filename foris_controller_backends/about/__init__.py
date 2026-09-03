@@ -18,7 +18,6 @@
 #
 
 import logging
-import typing
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import FailedToParseFileContent
@@ -67,7 +66,7 @@ class SystemInfoFiles(BaseFile):
         return self._read_and_parse(SystemInfoFiles.OS_RELEASE_PATH, r"^([0-9]+(\.[0-9]+)*)$", (1,))
 
     @readlock(file_lock, logger)
-    def get_contract(self) -> typing.Optional[str]:
+    def get_contract(self) -> str | None:
         """Returns the contract router is under
 
         :returns: contract

@@ -21,7 +21,7 @@ import logging
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.wifi import WifiUci, WifiCmds
+from foris_controller_backends.wifi import WifiCmds, WifiUci
 
 from .. import Handler
 

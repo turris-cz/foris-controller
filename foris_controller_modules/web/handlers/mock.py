@@ -19,9 +19,9 @@
 
 import logging
 
+from foris_controller import profiles
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller import profiles
 
 from .. import Handler
 
@@ -96,13 +96,13 @@ class MockWebHandler(Handler, BaseMockHandler):
         return True
 
     def get_guide_data(self):
-        from foris_controller_modules.password.handlers import MockPasswordHandler
-        from foris_controller_modules.wan.handlers import MockWanHandler
-        from foris_controller_modules.time.handlers import MockTimeHandler
         from foris_controller_modules.dns.handlers import MockDnsHandler
-        from foris_controller_modules.updater.handlers import MockUpdaterHandler
-        from foris_controller_modules.networks.handlers import MockNetworksHandler
         from foris_controller_modules.lan.handlers import MockLanHandler
+        from foris_controller_modules.networks.handlers import MockNetworksHandler
+        from foris_controller_modules.password.handlers import MockPasswordHandler
+        from foris_controller_modules.time.handlers import MockTimeHandler
+        from foris_controller_modules.updater.handlers import MockUpdaterHandler
+        from foris_controller_modules.wan.handlers import MockWanHandler
 
         passed = [
             e[0]
@@ -160,13 +160,13 @@ class MockWebHandler(Handler, BaseMockHandler):
 
     @logger_wrapper(logger)
     def reset_guide(self, new_workflow=profiles.Workflow.UNSET):
-        from foris_controller_modules.password.handlers import MockPasswordHandler
-        from foris_controller_modules.wan.handlers import MockWanHandler
-        from foris_controller_modules.time.handlers import MockTimeHandler
         from foris_controller_modules.dns.handlers import MockDnsHandler
-        from foris_controller_modules.updater.handlers import MockUpdaterHandler
-        from foris_controller_modules.networks.handlers import MockNetworksHandler
         from foris_controller_modules.lan.handlers import MockLanHandler
+        from foris_controller_modules.networks.handlers import MockNetworksHandler
+        from foris_controller_modules.password.handlers import MockPasswordHandler
+        from foris_controller_modules.time.handlers import MockTimeHandler
+        from foris_controller_modules.updater.handlers import MockUpdaterHandler
+        from foris_controller_modules.wan.handlers import MockWanHandler
 
         MockPasswordHandler.guide_set.set(False)
         MockWebHandler.guide_set.set(False)

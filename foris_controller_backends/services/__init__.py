@@ -22,16 +22,14 @@ import os
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import ServiceCmdFailed
-from foris_controller_backends.files import BaseMatch
 from foris_controller.utils import RWLock
-
-from foris_controller_backends.cmdline import handle_command, inject_cmdline_root, BaseCmdLine
-
+from foris_controller_backends.cmdline import BaseCmdLine, handle_command, inject_cmdline_root
+from foris_controller_backends.files import BaseMatch
 
 logger = logging.getLogger(__name__)
 
 
-class OpenwrtServices(object):
+class OpenwrtServices:
     DEFAUL_SERVICE_SCRIPTS_PATH = "/etc/init.d/"
 
     services_lock = RWLock(app_info["lock_backend"])
@@ -93,10 +91,10 @@ class OpenwrtServices(object):
             BaseCmdLine._run_command(
                 "/bin/sh",
                 "-c",
-                "( sleep %(delay)d; %(script_path)s %(cmd)s ) &" % dict(delay=delay, script_path=script_path, cmd=cmd),
+                f"( sleep {delay}; {script_path} {cmd} ) &",
             )
         except OSError:
-            raise ServiceCmdFailed(service_name, cmd, "unable to call '%s %s' in background" % (script_path, cmd))
+            raise ServiceCmdFailed(service_name, cmd, f"unable to call '{script_path} {cmd}' in background")
 
         # as the command is triggered in background the retval can't be check..
 

@@ -24,7 +24,7 @@ class UnknownAction(Exception):
     pass
 
 
-class BaseModule(object):
+class BaseModule:
     version: str = None  # will be filled by individual modules later
 
     def __init__(self, handler, notify, reset_notify):

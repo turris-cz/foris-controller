@@ -19,7 +19,6 @@
 
 import json
 import logging
-import typing
 
 import turrishw
 
@@ -40,7 +39,7 @@ from foris_controller_backends.uci import (
 
 logger = logging.getLogger(__name__)
 
-NetworkAndSSIDs = typing.List[typing.Tuple[str, str]]
+NetworkAndSSIDs = list[tuple[str, str]]
 
 
 def convert_network_name(name: str) -> str:
@@ -50,7 +49,7 @@ def convert_network_name(name: str) -> str:
 
 
 class NetworksUci:
-    def _prepare_network(self, data: dict, section: str, ports_map: typing.Dict[str, dict]) -> typing.List[dict]:
+    def _prepare_network(self, data: dict, section: str, ports_map: dict[str, dict]) -> list[dict]:
         """Map detected interfaces to interfaces found in uci config file.
 
         Return only those that exist in uci configuration and ignore the rest.
@@ -95,7 +94,7 @@ class NetworksUci:
                 res.append(iface)
         return res
 
-    def _prepare_wwan(self, data: dict, ports_map: typing.Dict[str, dict]) -> typing.List[dict]:
+    def _prepare_wwan(self, data: dict, ports_map: dict[str, dict]) -> list[dict]:
         """Detetmine if network in uci and return list of active devices."""
 
         res = []
@@ -110,7 +109,7 @@ class NetworksUci:
         return res
 
     @staticmethod
-    def _get_anonymous_bridge_ports(uci_data: dict, section: str) -> typing.List[str]:
+    def _get_anonymous_bridge_ports(uci_data: dict, section: str) -> list[str]:
         """Get network bridges (lan, guest, ...) ports names of anonymous bridge config section.
 
         These config sections might exist after network config migration in TOS 6.x,
@@ -125,7 +124,7 @@ class NetworksUci:
 
         return bridge[0]["data"].get("ports", [])
 
-    def _find_enabled_networks_by_ifname(self, wireless_data, ifname: str) -> typing.Optional[NetworkAndSSIDs]:
+    def _find_enabled_networks_by_ifname(self, wireless_data, ifname: str) -> NetworkAndSSIDs | None:
         """
         :returns: None if no valid iterface section found, or list of (network, ssid) (can be empty)
         """
@@ -158,8 +157,8 @@ class NetworksUci:
         return result
 
     def _find_enabled_networks_by_macaddr(
-        self, wireless_data, macaddr: typing.Optional[str], ifname: str
-    ) -> typing.Optional[NetworkAndSSIDs]:
+        self, wireless_data, macaddr: str | None, ifname: str
+    ) -> NetworkAndSSIDs | None:
         """
         :returns: None if no valid device section found, or list of (network, ssid) (can be empty)
         """
@@ -192,8 +191,8 @@ class NetworksUci:
         return result
 
     def _find_enabled_networks_by_path(
-        self, wireless_data, slot_path: typing.Optional[str], ifname: str
-    ) -> typing.Optional[NetworkAndSSIDs]:
+        self, wireless_data, slot_path: str | None, ifname: str
+    ) -> NetworkAndSSIDs | None:
         """
         Return list of tuples with (network, ssid).
         Return None if no valid interface section is found.
@@ -419,7 +418,7 @@ class NetworksUci:
             # current ports doesn't match the one that are being set
             return False
 
-        def _create_bridge(backend: UciBackend, net: str, ifs: typing.List[str], mac=None):
+        def _create_bridge(backend: UciBackend, net: str, ifs: list[str], mac=None):
             """Create bridge device and set its interfaces"""
             net = convert_network_name(net)
             backend.add_section("network", "device", f"br_{net}")
@@ -431,7 +430,7 @@ class NetworksUci:
             if mac:
                 backend.set_option("network", f"br_{net}", "macaddr", mac)
 
-        def _del_bridge(backend: UciBackend, data, net: str, devices: typing.List[str]):
+        def _del_bridge(backend: UciBackend, data, net: str, devices: list[str]):
             """Delete bridge and set the interface device to device"""
             net = convert_network_name(net)
             mac = get_option_named(data, "network", f"br_{net}", "macaddr", False)
@@ -516,8 +515,8 @@ class NetworksUci:
 
 
 class NetworksCmd(BaseCmdLine):
-    def get_network_info(self, network_name: str) -> typing.Optional[dict]:
-        retval, stdout, stderr = BaseCmdLine._run_command("/sbin/ifstatus", network_name)
+    def get_network_info(self, network_name: str) -> dict | None:
+        retval, stdout, _ = BaseCmdLine._run_command("/sbin/ifstatus", network_name)
         if retval != 0:
             return None
         try:

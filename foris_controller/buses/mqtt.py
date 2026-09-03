@@ -17,9 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
 import json
-import uuid
+import logging
 import os
 import re
 import socket
@@ -27,18 +26,17 @@ import sys
 import threading
 import time
 import typing
-
+import uuid
 from importlib import metadata
 
+from jsonschema import ValidationError
 from paho import mqtt as mqtt_module
 from paho.mqtt import client as mqtt
 from paho.mqtt.publish import single
-from jsonschema import ValidationError
 
 from foris_controller.app import app_info
-from foris_controller.utils import strtobool
 from foris_controller.message_router import Router
-from foris_controller.utils import get_modules
+from foris_controller.utils import get_modules, strtobool
 
 from .base import BaseNotificationSender, BaseSocketListener, get_method_names_from_module
 
@@ -61,12 +59,12 @@ def mqtt_client_extra():
 
 
 class EntryPointAnnouncer:
-    def __init__(self, period: int, callback: typing.Callable[[], typing.Optional[dict]]):
+    def __init__(self, period: int, callback: typing.Callable[[], dict | None]):
         self.callback = callback
         self.period = period
         self.last_called = 0
 
-    def get_data(self, counter: int) -> typing.Optional[dict]:
+    def get_data(self, counter: int) -> dict | None:
         if self.period + self.last_called <= counter:
             self.last_called = counter
             return self.callback()
@@ -128,13 +126,13 @@ def _publish(client: mqtt.Client, msg: dict):
 def _publish_advertize(
     client: mqtt.Client,
     adv_base: AdvertizementBase,
-    working_replies: typing.Dict[str, typing.Tuple[threading.Thread, float]],
+    working_replies: dict[str, tuple[threading.Thread, float]],
     working_replies_lock: threading.Lock,
 ):
     data = adv_base.build()
 
     with working_replies_lock:
-        data["working_replies"]: typing.List[str] = [e for e in working_replies.keys()]
+        data["working_replies"]: list[str] = [e for e in working_replies]
 
     msg = {"module": "remote", "action": "advertize", "kind": "notification", "data": data}
     _publish(client, msg)
@@ -169,7 +167,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
     counter = 1
 
     # perpare entry points
-    announcers: typing.List[EntryPointAnnouncer] = []
+    announcers: list[EntryPointAnnouncer] = []
     for entry_point in metadata.entry_points(group="foris_controller_announcer"):
         logger.debug("Loading announcer entry point %s", entry_point.name)
         period, callback = entry_point.load()()
@@ -193,7 +191,7 @@ def announcer_worker(host, port, working_replies, working_replies_lock):
 
 class MqttListener(BaseSocketListener):
     router = Router()
-    subscriptions: typing.Dict[int, bool] = {}
+    subscriptions: dict[int, bool] = {}
 
     @staticmethod
     def handle_on_connect(client, userdata, flags, rc):
@@ -263,7 +261,7 @@ class MqttListener(BaseSocketListener):
         :param reply_id: id of reply
         :param msg: message to be processed
         """
-        auth: typing.Optional[typing.Dict[str, str]] = None
+        auth: dict[str, str] | None = None
         if app_info.get("mqtt_credentials", None) and app_info["mqtt_credentials"]:
             auth = {
                 "username": app_info["mqtt_credentials"][0],
@@ -277,14 +275,14 @@ class MqttListener(BaseSocketListener):
 
             response = MqttListener.router.process_message(msg)
             raw_response = json.dumps(response)
-            kwargs = dict(
-                payload=raw_response,
-                qos=0,
-                retain=True,
-                hostname=self.host,
-                port=self.port,
-                auth=auth,
-            )
+            kwargs = {
+                "payload": raw_response,
+                "qos": 0,
+                "retain": True,
+                "hostname": self.host,
+                "port": self.port,
+                "auth": auth,
+            }
             logger.debug("Publishing response '%s' to '%s'", response, reply_topic)
             try:
                 single(reply_topic, **kwargs)
@@ -340,7 +338,7 @@ class MqttListener(BaseSocketListener):
         self.mqtt_client_id: str = f"{uuid.uuid4()}-controller-request"
         self.host: str = host
         self.port: int = port
-        self.working_replies: typing.Set[typing.Dict[str, threading.Thread]] = dict()
+        self.working_replies: set[dict[str, threading.Thread]] = {}
         self.working_replies_lock: threading.Lock = threading.Lock()
 
         def on_publish(client, userdata, mid):

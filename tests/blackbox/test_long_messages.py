@@ -17,10 +17,11 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
 import random
 import string
 import uuid
+
+import pytest
 
 
 @pytest.mark.parametrize("chars_len", (1024, 1024 * 1024, 10 * 1024 * 1024))

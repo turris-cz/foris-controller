@@ -25,8 +25,8 @@ import pkgutil
 import re
 import signal
 import typing
-from importlib import metadata
 from functools import wraps
+from importlib import metadata
 from multiprocessing.managers import SyncManager
 
 import prctl
@@ -34,17 +34,17 @@ import prctl
 from .module_base import BaseModule
 
 IPAddress = typing.TypeVar("IPAddress", ipaddress.IPv4Address, ipaddress.IPv6Address)
-ListOrString = typing.NewType("ListOrString", typing.Union[str, typing.List[str]])
+ListOrString = typing.NewType("ListOrString", str | list[str])
 
 LOGGER_MAX_LEN = 10000
 
 
-class RWLock(object):
+class RWLock:
     """Custom implementation of RWLock
     it can use lock for Processes as well as lock for threads
     """
 
-    class ReadLock(object):
+    class ReadLock:
         def __init__(self, parent):
             self.parent = parent
 
@@ -55,17 +55,16 @@ class RWLock(object):
             self.release()
 
         def acquire(self):
-            with self.parent._new_readers:
-                with self.parent._counter_lock:
-                    self.parent._counter += 1
-                    self.parent._counter_lock.notify()
+            with self.parent._new_readers, self.parent._counter_lock:
+                self.parent._counter += 1
+                self.parent._counter_lock.notify()
 
         def release(self):
             with self.parent._counter_lock:
                 self.parent._counter -= 1
                 self.parent._counter_lock.notify()
 
-    class WriteLock(object):
+    class WriteLock:
         def __init__(self, parent):
             self.parent = parent
 
@@ -238,7 +237,7 @@ def make_multiprocessing_manager():
     return manager
 
 
-def read_passwd_file(path: str) -> typing.Tuple[str]:
+def read_passwd_file(path: str) -> tuple[str]:
     """Returns username and password from passwd file"""
     with open(path, "r") as f:
         return re.match(r"^([^:]+):(.*)$", f.readlines()[0][:-1]).groups()
@@ -284,7 +283,7 @@ def unwrap_list(option: ListOrString) -> str:
     return option
 
 
-def parse_to_list(option: ListOrString) -> typing.List[str]:
+def parse_to_list(option: ListOrString) -> list[str]:
     """Test whether passed value is already list, convert if string."""
     if not option:
         return [""]
@@ -293,7 +292,7 @@ def parse_to_list(option: ListOrString) -> typing.List[str]:
     return option
 
 
-def sort_by_natural_order(items: typing.Union[typing.List[str], typing.Set[str]]) -> typing.List[str]:
+def sort_by_natural_order(items: list[str] | set[str]) -> list[str]:
     """Sort strings in collection by natural order"""
     return sorted(items, key=lambda line: [int(s) if s.isdigit() else s.lower() for s in re.split(r"(\d+)", line)])
 

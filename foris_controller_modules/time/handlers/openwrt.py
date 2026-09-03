@@ -18,13 +18,11 @@
 #
 
 import logging
-import typing
-
 from datetime import datetime
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-from foris_controller_backends.time import TimeUciCommands, TimeAsyncCmds
+from foris_controller_backends.time import TimeAsyncCmds, TimeUciCommands
 
 from .. import Handler
 
@@ -51,8 +49,8 @@ class OpenwrtTimeHandler(Handler, BaseOpenwrtHandler):
         country: str,
         city: str,
         how_to_set_time: str,
-        ntp_extras: typing.Optional[typing.List[str]] = None,
-        time: typing.Optional[datetime] = None,
+        ntp_extras: list[str] | None = None,
+        time: datetime | None = None,
     ) -> bool:
         """Updates current time settings
 

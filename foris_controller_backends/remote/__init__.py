@@ -17,30 +17,28 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import os
-import re
-import logging
-import tarfile
 import base64
 import json
-
-from io import BytesIO
+import logging
+import os
+import re
+import tarfile
 from collections import OrderedDict
+from io import BytesIO
 
 from foris_controller.app import app_info
-
 from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
-from foris_controller_backends.files import BaseFile, path_exists, makedirs
-from foris_controller_backends.uci import (
-    UciBackend,
-    get_option_named,
-    parse_bool,
-    UciException,
-    store_bool,
-    get_option_anonymous,
-)
+from foris_controller_backends.files import BaseFile, makedirs, path_exists
 from foris_controller_backends.networks import NetworksCmd
 from foris_controller_backends.services import OpenwrtServices
+from foris_controller_backends.uci import (
+    UciBackend,
+    UciException,
+    get_option_anonymous,
+    get_option_named,
+    parse_bool,
+    store_bool,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +153,7 @@ class RemoteCmds(BaseCmdLine):
         return "ready" if path_exists(NETBOOT_CONFIGURED_PATH) else "booted"
 
 
-class RemoteUci(object):
+class RemoteUci:
     DEFAULTS = {"enabled": False, "wan_access": False, "port": 11883}
 
     def get_settings(self):
@@ -275,8 +273,8 @@ class RemoteFiles(BaseFile):
         ips["lan"].extend(get_ipv4_addresess_from_cmd("lan"))
 
         # remove ip duplicities, preserver order
-        for network in ips:
-            ips[network] = [e for e in OrderedDict((ip, None) for ip in ips[network])]
+        for network, values in ips.items():
+            ips[network] = [e for e in OrderedDict((ip, None) for ip in values)]
 
         dhcp_names = {
             "wan": get_dhcp_name_from_network(network_data, "wan"),

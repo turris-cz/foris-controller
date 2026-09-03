@@ -20,8 +20,8 @@
 import logging
 import re
 import typing
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from dataclasses import dataclass, field, asdict
 
 from foris_controller.exceptions import (
     BackendCommandFailed,
@@ -61,7 +61,7 @@ class Band(str, Enum):
             return None
 
     @property
-    def htmodes(self) -> typing.List[str]:
+    def htmodes(self) -> list[str]:
         """Band to htmode mapping
 
         Note that the order of modes matters here.
@@ -121,8 +121,8 @@ class Channel:
 @dataclass
 class BandData:
     band: Band
-    available_channels: typing.List[Channel] = field(default_factory=list)
-    available_htmodes: typing.List[str] = field(default_factory=list)
+    available_channels: list[Channel] = field(default_factory=list)
+    available_htmodes: list[str] = field(default_factory=list)
     available_multilink: bool = False
 
 
@@ -177,7 +177,7 @@ class WifiUci:
             backend.set_option("wireless", section_name, "disabled", store_bool(True))
 
     @staticmethod
-    def _get_device_bands(device_name: str) -> typing.List[BandData]:
+    def _get_device_bands(device_name: str) -> list[BandData]:
         request_msg = {"device": device_name}
         iwinfo_data = UbusBackend.call_ubus("iwinfo", "info", request_msg)
         if not iwinfo_data:
@@ -207,7 +207,7 @@ class WifiUci:
         return res
 
     @staticmethod
-    def _get_frequencies(freq_data, device_name: str) -> typing.List[BandData]:
+    def _get_frequencies(freq_data, device_name: str) -> list[BandData]:
         """Get available frequencies sorted into frequency bands
 
         Return frequencies for both 2.4 GHz, 5 GHz and 6 GHz.
@@ -383,7 +383,7 @@ class WifiUci:
         device_section,
         interface_section,
         guest_interface_section,
-    ) -> typing.Optional[bool]:
+    ) -> bool | None:
         """
         :param backend: instance of UciBackend
         :param settings: requested settings
@@ -533,7 +533,7 @@ class WifiUci:
 
 
 class WifiCmds(BaseCmdLine):
-    def set_regulatory_domain(self, country: typing.Optional[str]) -> bool:
+    def set_regulatory_domain(self, country: str | None) -> bool:
         """Sets regulatry domain for wifi cards
         :param country: country to be set or None, the None will cause that default 00 is set
         """

@@ -19,7 +19,6 @@
 
 import json
 import os
-import typing
 from pathlib import Path
 
 import pytest
@@ -1175,12 +1174,12 @@ def test_dhcp_clients_multimac_openwrt(
     5b) Deleting single mac from multiple mac addresses (>2) should keep remaining macs (>=2)
     """
 
-    def host_in_result(clients: typing.List[dict], ip: str, mac: str, hostname: str, present: bool = True):
+    def host_in_result(clients: list[dict], ip: str, mac: str, hostname: str, present: bool = True):
         assert len([e for e in clients if e["ip"] == ip and e["mac"] == mac and e["hostname"] == hostname]) == (
             1 if present else 0
         )
 
-    def get_dhcpv4_clients() -> typing.List[dict]:
+    def get_dhcpv4_clients() -> list[dict]:
         """Get dhcpv4 clients records from backend."""
         message = {"module": "lan", "action": "get_settings", "kind": "request"}
         reply = query_infrastructure(infrastructure, message)

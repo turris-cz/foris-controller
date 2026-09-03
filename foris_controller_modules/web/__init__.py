@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class WebModule(BaseModule):
@@ -85,5 +85,5 @@ class WebModule(BaseModule):
 
 
 @wrap_required_functions(["set_language", "list_languages", "update_guide", "get_data", "get_guide", "reset_guide"])
-class Handler(object):
+class Handler:
     pass

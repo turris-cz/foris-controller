@@ -18,8 +18,8 @@
 #
 
 import os
-import pytest
 
+import pytest
 from foris_controller_testtools.utils import check_service_result, sh_was_called
 
 from foris_controller.exceptions import ServiceCmdFailed

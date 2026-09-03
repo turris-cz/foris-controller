@@ -18,12 +18,10 @@
 #
 
 import logging
-
 from datetime import datetime
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-
 from foris_controller_backends.router_notifications import (
     RouterNotificationsCmds,
     RouterNotificationsUci,

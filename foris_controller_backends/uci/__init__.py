@@ -22,11 +22,9 @@ import logging
 import os
 import re
 
-from foris_controller.utils import RWLock
-
 from foris_controller.app import app_info
-from foris_controller.exceptions import UciException, UciTypeException, UciRecordNotFound
-
+from foris_controller.exceptions import UciException, UciRecordNotFound, UciTypeException
+from foris_controller.utils import RWLock
 from foris_controller_backends.cmdline import handle_command
 
 logger = logging.getLogger(__name__)
@@ -116,7 +114,7 @@ def get_option_anonymous(data, config, section_type, idx, option, default=None):
     return res
 
 
-class UciBackend(object):
+class UciBackend:
     CHANGES_DIR = "/tmp/.uci-foris-controller"
     DEFAULT_CONFIG_DIR = "/etc/config/"
     uci_lock = RWLock(app_info["lock_backend"])
@@ -160,7 +158,7 @@ class UciBackend(object):
         :return: command output
         :rtype: str
         """
-        fail_on_error = kwargs["fail_on_error"] if "fail_on_error" in kwargs else True
+        fail_on_error = kwargs.get("fail_on_error", True)
         changes_path_option = "-p" if args[0] == "commit" else "-P"
         export_anonymous = ["-n"] if args[0] == "export" else []
         cmdline_args = (
@@ -310,7 +308,7 @@ class UciBackend(object):
                         "type": section_type,
                         "name": section_name,
                         "data": self._parse_section(lines),
-                        "anonymous": True if re.search(r"^cfg[0-9a-f]{6}$", section_name) else False,
+                        "anonymous": bool(re.search(r"^cfg[0-9a-f]{6}$", section_name)),
                     }
                     result.append(section)
                 elif lines[0].startswith("package"):

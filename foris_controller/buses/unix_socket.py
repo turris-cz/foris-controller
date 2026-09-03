@@ -22,14 +22,12 @@ import logging
 import os
 import socket
 import struct
-
-from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
+from socketserver import BaseRequestHandler, ThreadingMixIn, UnixStreamServer
 
 from foris_controller.message_router import Router
 from foris_controller.utils import LOGGER_MAX_LEN
 
 from .base import BaseNotificationSender, BaseSocketListener
-
 
 logger = logging.getLogger(__name__)
 

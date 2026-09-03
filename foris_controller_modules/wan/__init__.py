@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class WanModule(BaseModule):
@@ -99,5 +99,5 @@ class WanModule(BaseModule):
         "get_wan_status",
     ]
 )
-class Handler(object):
+class Handler:
     pass

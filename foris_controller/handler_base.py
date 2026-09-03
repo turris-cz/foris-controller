@@ -18,6 +18,7 @@
 #
 
 import inspect
+
 from foris_controller.utils import make_multiprocessing_manager
 
 
@@ -41,7 +42,7 @@ def wrap_required_functions(required_functions):
                         if function_name not in dct:
                             raise HandlerFunctionNotImplemented(function_name)
 
-                super(MetaClass, cls).__init__(name, bases, dct)
+                super().__init__(name, bases, dct)
 
         body = vars(base_class).copy()
         body.pop("__dict__", None)
@@ -52,9 +53,9 @@ def wrap_required_functions(required_functions):
     return wrapped
 
 
-class BaseOpenwrtHandler(object):
+class BaseOpenwrtHandler:
     pass
 
 
-class BaseMockHandler(object):
+class BaseMockHandler:
     _manager = make_multiprocessing_manager()

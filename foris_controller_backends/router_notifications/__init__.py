@@ -20,7 +20,6 @@
 import glob
 import json
 import logging
-import typing
 
 from foris_controller.exceptions import FailedToParseCommandOutput
 from foris_controller_backends.cmdline import BaseCmdLine
@@ -96,7 +95,7 @@ class RouterNotificationsCmds(BaseCmdLine):
         return retval == 0
 
 
-class RouterNotificationsUci(object):
+class RouterNotificationsUci:
     def get_settings(self):
         with UciBackend() as backend:
             data = backend.read("user_notify")
@@ -201,9 +200,9 @@ class RouterNotificationsUci(object):
 
     def update_settings(
         self,
-        emails_settings: typing.Optional[dict] = None,
-        ntfy_settings: typing.Optional[dict] = None,
-        reboots_settings: typing.Optional[dict] = None,
+        emails_settings: dict | None = None,
+        ntfy_settings: dict | None = None,
+        reboots_settings: dict | None = None,
     ):
         if not (emails_settings or ntfy_settings or reboots_settings):
             return False  # nothing to update

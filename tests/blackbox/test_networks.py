@@ -775,8 +775,8 @@ config wifi-iface 'guest_iface_0'
 	option key 'testtest'
 	option ifname 'guest_turris_0'
 	option isolate '1'
-	option disabled '0'""",  # noqa
-            "wireless",  # noqa
+	option disabled '0'""",
+            "wireless",
         )
         backend.set_option("wireless", "radio0", "macaddr", macaddr)
 

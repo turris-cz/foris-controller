@@ -17,18 +17,17 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import os
 import base64
-import pytest
+import json
+import os
 import shutil
 import tarfile
-import json
 import uuid
-
 from io import BytesIO
 
+import pytest
 from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
-from foris_controller_testtools.utils import match_subdict, get_uci_module, check_service_result
+from foris_controller_testtools.utils import check_service_result, get_uci_module, match_subdict
 
 CERT_PATH = "/tmp/test-cagen/"
 

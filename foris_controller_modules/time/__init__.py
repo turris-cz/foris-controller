@@ -18,11 +18,10 @@
 #
 
 import logging
-
 from datetime import datetime
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class TimeModule(BaseModule):
@@ -97,5 +96,5 @@ class TimeModule(BaseModule):
 
 
 @wrap_required_functions(["get_settings", "update_settings", "ntpdate_trigger"])
-class Handler(object):
+class Handler:
     pass

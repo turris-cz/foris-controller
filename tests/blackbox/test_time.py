@@ -18,12 +18,11 @@
 #
 
 
-import pytest
 import os
 
+import pytest
 from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import check_service_result, get_uci_module
-
 
 _EXTRA_SERVERS = ["time.google.com", "time1.google.com", "time.facebook.com", "time.windows.com"]
 
@@ -252,7 +251,7 @@ def test_openwrt_complex(
     assert uci.get_option_anonymous(data, "system", "system", 0, "_country") == "RU"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Moscow"
     assert uci.parse_bool(uci.get_option_named(data, "system", "ntp", "enabled"))
-    assert all([e["data"].get("country") == "RU" for e in uci.get_sections_by_type(data, "wireless", "wifi-device")])
+    assert all(e["data"].get("country") == "RU" for e in uci.get_sections_by_type(data, "wireless", "wifi-device"))
     check_regulatory_domain("reg set RU")
 
     assert not date_mock()
@@ -284,7 +283,7 @@ def test_openwrt_complex(
     assert uci.get_option_anonymous(data, "system", "system", 0, "timezone") == "CET-1CEST,M3.5.0,M10.5.0/3"
     assert uci.get_option_anonymous(data, "system", "system", 0, "zonename") == "Europe/Prague"
     assert not uci.parse_bool(uci.get_option_named(data, "system", "ntp", "enabled"))
-    assert all([e["data"].get("country") == "CZ" for e in uci.get_sections_by_type(data, "wireless", "wifi-device")])
+    assert all(e["data"].get("country") == "CZ" for e in uci.get_sections_by_type(data, "wireless", "wifi-device"))
 
     check_regulatory_domain("reg set CZ")
 

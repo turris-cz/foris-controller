@@ -21,20 +21,19 @@ import json
 import logging
 import multiprocessing
 import os
-import prctl
 import random
 import re
 import signal
 import subprocess
 import threading
-
-from tempfile import TemporaryFile
 from collections import OrderedDict
+from tempfile import TemporaryFile
+
+import prctl
 
 from foris_controller.app import app_info
 from foris_controller.exceptions import BackendCommandFailed, FailedToParseCommandOutput
 from foris_controller.utils import RWLock, make_multiprocessing_manager
-
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +86,7 @@ def handle_command(*args, **kwargs):
     return process.returncode, stdout, stderr
 
 
-class BaseCmdLine(object):
+class BaseCmdLine:
     @staticmethod
     def _run_command_in_background(*args):
         """Executes command in background
@@ -123,7 +122,7 @@ class BaseCmdLine(object):
 
         try:
             retval, stdout, stderr = handle_command(*args, **kwargs)
-        except (OSError, IOError) as e:
+        except OSError as e:
             raise BackendCommandFailed(e.errno, args, e.strerror)
 
         logger.debug("Command '%s' finished.", str(args))
@@ -146,7 +145,7 @@ class BaseCmdLine(object):
         :raises: BackendCommandFailed
         """
         retval, stdout, stderr = BaseCmdLine._run_command(*args)
-        if not retval == expected_retval:
+        if retval != expected_retval:
             logger.error("Command %s unexpected returncode (%d, expected %d)." % (str(args), retval, expected_retval))
             raise BackendCommandFailed(retval, args)
         return stdout, stderr
@@ -173,7 +172,7 @@ class BaseCmdLine(object):
         return match.group(*groups)
 
 
-class AsyncProcessData(object):
+class AsyncProcessData:
     def __init__(self, manager):
         """Initializes async process data instance.
         Note that these data will be shared between two processes using shared memory
@@ -233,7 +232,7 @@ class AsyncProcessData(object):
         return self._exited.get()
 
 
-class AsyncCommand(object):
+class AsyncCommand:
     PROCESS_BUFFER = 20
 
     manager = make_multiprocessing_manager()

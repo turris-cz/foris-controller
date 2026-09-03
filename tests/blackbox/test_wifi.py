@@ -22,7 +22,8 @@ import json
 import os
 
 import pytest
-from foris_controller_testtools.fixtures import FILE_ROOT_PATH as FORIS_FILES_ROOT, UCI_CONFIG_DIR_PATH
+from foris_controller_testtools.fixtures import FILE_ROOT_PATH as FORIS_FILES_ROOT
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
     FileFaker,
     get_uci_module,
@@ -30,7 +31,6 @@ from foris_controller_testtools.utils import (
     network_restart_was_called,
     prepare_turrishw_root,
 )
-
 
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_wifi_files")
 UBUS_TEST_MOCK_DATA_FILE = "/tmp/ubus_test_mock_data.json"

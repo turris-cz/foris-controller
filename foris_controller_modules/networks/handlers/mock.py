@@ -206,11 +206,11 @@ class MockNetworksHandler(Handler, BaseMockHandler):
             if [True for _, v in ports_map.items() if v["configurable"]]:  # ports were not assigned
                 return False
 
-            for k, v in ports_map.items():
-                new_nets["none"].append(v)
+            for value in ports_map.values():
+                new_nets["none"].append(value)
 
-            for key in new_nets.keys():
-                MockNetworksHandler.networks[key] = new_nets[key]
+            for key, value in new_nets.items():
+                MockNetworksHandler.networks[key] = value
 
         MockNetworksHandler.firewall = new_settings["firewall"]
 

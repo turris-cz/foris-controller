@@ -21,7 +21,6 @@ import ipaddress
 import logging
 import socket
 import threading
-import typing
 from enum import Enum, auto
 
 import ifaddr
@@ -108,14 +107,14 @@ class ZconfService:
         self.state = ZconfService.State.CLOSED
 
     @staticmethod
-    def get_addresses() -> typing.List[str]:
+    def get_addresses() -> list[str]:
         """Get IPs which shall be propagated unsing zconf"""
-        ips: typing.Set[str] = set()
+        ips: set[str] = set()
         for adapter in ifaddr.get_adapters():
             if app_info["zeroconf_devices"] and adapter.name not in app_info["zeroconf_devices"]:
                 logger.debug("skipping '%s' device for zeroconf configuration", adapter.name)
                 continue
-            ips |= set(e.ip for e in adapter.ips if e.is_IPv4)
+            ips |= {e.ip for e in adapter.ips if e.is_IPv4}
 
         filtered_ips = [
             e for e in ips if ipaddress.ip_address(e).is_private and not ipaddress.ip_address(e).is_loopback

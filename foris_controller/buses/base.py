@@ -17,17 +17,16 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import logging
 import inspect
+import logging
 import uuid
 
 from foris_controller.utils import get_module_class
 
-
 logger = logging.getLogger(__name__)
 
 
-class BaseNotificationSender(object):
+class BaseNotificationSender:
     def _validate(self, msg, validator):
         logger.debug("Starting to validate notification.")
         validator.validate(msg)
@@ -61,7 +60,7 @@ class BaseNotificationSender(object):
         raise NotImplementedError()
 
 
-class BaseSocketListener(object):
+class BaseSocketListener:
     def serve_forever(self):
         raise NotImplementedError()
 

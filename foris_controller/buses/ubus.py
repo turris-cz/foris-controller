@@ -20,21 +20,22 @@
 
 import json
 import logging
-import ubus
-import prctl
-import signal
 import multiprocessing
+import signal
 
-from foris_controller.message_router import Router
+import prctl
+import ubus
+
 from foris_controller.app import app_info
-from foris_controller.utils import get_modules, LOGGER_MAX_LEN
+from foris_controller.message_router import Router
+from foris_controller.utils import LOGGER_MAX_LEN, get_modules
 
 from .base import BaseNotificationSender, BaseSocketListener, get_method_names_from_module
 
 logger = logging.getLogger(__name__)
 
 
-class RequestStorage(object):
+class RequestStorage:
     """Storage for multipart requests"""
 
     data = {}

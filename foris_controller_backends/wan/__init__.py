@@ -17,8 +17,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-from enum import Enum
 import logging
+from enum import Enum
 
 from foris_controller.exceptions import GenericError, UciException
 from foris_controller.utils import parse_to_list, unwrap_list
@@ -205,14 +205,14 @@ class WanUci:
             backend.del_option("network", "wan6", "ip6prefix", fail_on_error=False)
 
             # disable rule for 6in4 + cleanup
-            if not wan6_type == "6in4":
+            if wan6_type != "6in4":
                 for item in ["tunnelid", "username", "password", "peeraddr", "mtu", "ip6addr"]:
                     backend.del_option("network", "wan6", item, fail_on_error=False)
                 backend.add_section("firewall", "rule", "turris_wan_6in4_rule")
                 backend.set_option("firewall", "turris_wan_6in4_rule", "enabled", store_bool(False))
 
             # disable rule for 6to4 + cleanup
-            if not wan6_type == "6to4":
+            if wan6_type != "6to4":
                 backend.add_section("firewall", "rule", "turris_wan_6to4_rule")
                 backend.set_option("firewall", "turris_wan_6to4_rule", "enabled", store_bool(False))
 
@@ -521,7 +521,7 @@ class WanStatusCommands(BaseCmdLine, BaseFile):
             duid_path = "%s.%s" % (WanStatusCommands.DUID_STATUS_FILE, device)
             try:
                 network_info["duid"] = self._file_content(duid_path).strip()
-            except (OSError, IOError):
+            except OSError:
                 pass
 
         return network_info

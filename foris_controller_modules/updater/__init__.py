@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class UpdaterModule(BaseModule):
@@ -159,5 +159,5 @@ class UpdaterModule(BaseModule):
         "query_installed_packages",
     ]
 )
-class Handler(object):
+class Handler:
     pass

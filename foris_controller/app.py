@@ -17,15 +17,13 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import os
-import logging
 import importlib
+import logging
+import os
 import uuid
 
-
 from foris_controller import __version__
-from foris_controller.utils import get_modules, get_handler, get_module_class, get_validator_dirs
-
+from foris_controller.utils import get_handler, get_module_class, get_modules, get_validator_dirs
 
 logger = logging.getLogger(__name__)
 

@@ -22,11 +22,11 @@ import os
 import pytest
 from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
+    FileFaker,
     get_uci_module,
     match_subdict,
     network_restart_was_called,
     prepare_turrishw_root,
-    FileFaker,
 )
 
 from .helpers.common import get_uci_backend_data, query_infrastructure

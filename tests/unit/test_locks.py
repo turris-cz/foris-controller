@@ -17,14 +17,15 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
 import random
 import time
+
+import pytest
 
 from foris_controller.utils import RWLock
 
 
-class Locker(object):
+class Locker:
     PLACE_BEGIN = "B"
     PLACE_END = "E"
     KIND_READ = "R"

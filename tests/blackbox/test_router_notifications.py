@@ -17,14 +17,13 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import pytest
-import os
 import json
-
-from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
-from foris_controller_testtools.utils import match_subdict, get_uci_module
-
+import os
 from types import ModuleType
+
+import pytest
+from foris_controller_testtools.fixtures import UCI_CONFIG_DIR_PATH
+from foris_controller_testtools.utils import get_uci_module, match_subdict
 
 STORED_NOTIFICATIONS = [
     {
@@ -169,7 +168,7 @@ def test_mark_as_displayed_notification(notify_cmd, uci_configs_init, infrastruc
     def mark_as_displayed_notification_failed(data):
         new_notifications = infrastructure.get_notifications(filters=filters)
         retval, _, _ = notify_cmd("router_notifications", "mark_as_displayed", data)
-        assert not retval == 0
+        assert retval != 0
         old_notifications = infrastructure.get_notifications(filters=filters)
         assert new_notifications == old_notifications
 

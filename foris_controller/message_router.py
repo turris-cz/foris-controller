@@ -19,11 +19,10 @@
 
 import logging
 import time
-
+from functools import wraps
 from traceback import format_exc
 
 from jsonschema import ValidationError
-from functools import wraps
 
 from foris_controller.app import app_info
 
@@ -47,7 +46,7 @@ def display_spend_time(message_in, message_out):
     return real_decorator
 
 
-class Router(object):
+class Router:
     def _build_error_msg(self, orig_msg, errors):
         """prepare error response
 

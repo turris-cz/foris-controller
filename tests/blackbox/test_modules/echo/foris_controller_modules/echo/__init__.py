@@ -19,8 +19,8 @@
 
 import logging
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class EchoModule(BaseModule):
@@ -32,5 +32,5 @@ class EchoModule(BaseModule):
 
 
 @wrap_required_functions([])
-class Handler(object):
+class Handler:
     pass

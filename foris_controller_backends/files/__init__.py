@@ -21,8 +21,6 @@ import logging
 import os
 import re
 import shutil
-import typing
-
 from pathlib import Path
 
 from foris_controller.app import app_info
@@ -38,7 +36,7 @@ if FILE_ROOT:
     logger.debug("File root is set to '%s'.", FILE_ROOT)
 
 
-def inject_file_root(path: typing.Union[Path, str]) -> Path:
+def inject_file_root(path: Path | str) -> Path:
     """merge path with file root if set (path has to be absolute) relative paths are kept"""
     path = Path(path)
     if FILE_ROOT:
@@ -47,12 +45,12 @@ def inject_file_root(path: typing.Union[Path, str]) -> Path:
     return path
 
 
-def path_exists(path: typing.Union[Path, str]):
+def path_exists(path: Path | str):
     """Checks whether a path exists"""
     return inject_file_root(path).exists()
 
 
-def makedirs(path: typing.Union[Path, str], mask: int = 0o0755, exist_ok: bool = True):
+def makedirs(path: Path | str, mask: int = 0o0755, exist_ok: bool = True):
     """Creates directories on the given path
     :param path: path to be created
     :param mask: last dir mask
@@ -62,7 +60,7 @@ def makedirs(path: typing.Union[Path, str], mask: int = 0o0755, exist_ok: bool =
 
 
 class BaseFile:
-    def _file_content(self, path: typing.Union[Path, str]) -> str:
+    def _file_content(self, path: Path | str) -> str:
         """Returns a content of a file"""
         path = inject_file_root(path)
         logger.debug("Trying to read file '%s'", path)
@@ -73,8 +71,8 @@ class BaseFile:
         return content
 
     def _read_and_parse(
-        self, path: typing.Union[Path, str], regex: str, groups: typing.Tuple[int, ...] = (1,), log_error: bool = True
-    ) -> typing.Tuple[str, ...]:
+        self, path: Path | str, regex: str, groups: tuple[int, ...] = (1,), log_error: bool = True
+    ) -> tuple[str, ...]:
         """Reads and parses a content of the file by regex,
             raises an exception when the output doesn't match regex
 
@@ -91,7 +89,7 @@ class BaseFile:
             raise FailedToParseFileContent(path, content)
         return match.group(*groups)
 
-    def _store_to_file(self, path: typing.Union[Path, str], content: str) -> str:
+    def _store_to_file(self, path: Path | str, content: str) -> str:
         """Inserts a content into the file
         :returns: file content
         """
@@ -104,7 +102,7 @@ class BaseFile:
         logger.debug("content: %s", content)
         return content
 
-    def delete_directory(self, path: typing.Union[Path, str]):
+    def delete_directory(self, path: Path | str):
         """Deletes a directory on path (or raises an exception)
 
         :param path: path to the file
@@ -115,7 +113,7 @@ class BaseFile:
         shutil.rmtree(path)
         logger.debug("'%s' was successfully deleted", path)
 
-    def delete_file(self, path: typing.Union[Path, str]):
+    def delete_file(self, path: Path | str):
         """Deletes a file on path (or raises an exception)
 
         :param path: path to the file
@@ -127,7 +125,7 @@ class BaseFile:
         logger.debug("'%s' was successfully deleted", path)
 
 
-class BaseMatch(object):
+class BaseMatch:
     @staticmethod
     def list_files(file_matches):
         """Reads all files in which matches the request (glob will be used for matching)

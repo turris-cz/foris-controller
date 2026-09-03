@@ -18,7 +18,6 @@
 #
 
 import logging
-import typing
 
 from foris_controller.handler_base import wrap_required_functions
 from foris_controller.module_base import BaseModule
@@ -78,7 +77,7 @@ class LanModule(BaseModule):
             self.notify("update_dhcp_client", data)
         return res
 
-    def action_delete_dhcp_client(self, data: dict) -> typing.Dict[str, bool]:
+    def action_delete_dhcp_client(self, data: dict) -> dict[str, bool]:
         """Delete configuration of a single dhcp client"""
         res = self.handler.delete_dhcp_client(**data)
         if res["result"]:

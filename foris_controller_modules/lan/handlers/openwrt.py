@@ -18,7 +18,6 @@
 #
 
 import logging
-import typing
 
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
@@ -101,11 +100,11 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
     def port_forwarding_set(
         self,
         name: str,
-        src_dport: typing.Union[int, str],
-        dest_ip: typing.Union[int, str],
+        src_dport: int | str,
+        dest_ip: int | str,
         enabled: bool,
-        dest_port: typing.Optional[typing.Union[int, str]] = None,
-        old_name: typing.Optional[str] = None,
+        dest_port: int | str | None = None,
+        old_name: str | None = None,
     ):
         """Updates lan forwarding rules
         :param data: new forwarding settings
@@ -122,6 +121,6 @@ class OpenwrtLanHandler(Handler, BaseOpenwrtHandler):
     @logger_wrapper(logger)
     def port_forwarding_delete(
         self,
-        names: typing.List[str],
+        names: list[str],
     ):
         return self.uci.port_forwarding_delete(names)

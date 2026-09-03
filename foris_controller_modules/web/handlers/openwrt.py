@@ -20,16 +20,14 @@
 import logging
 
 from foris_controller import profiles
-
 from foris_controller.handler_base import BaseOpenwrtHandler
 from foris_controller.utils import logger_wrapper
-
 from foris_controller_backends.about import SystemInfoFiles
-from foris_controller_backends.updater import Updater
-from foris_controller_backends.web import WebUciCommands, Languages
 from foris_controller_backends.maintain import MaintainCommands
-from foris_controller_backends.router_notifications import RouterNotificationsCmds
 from foris_controller_backends.password import ForisPasswordUci
+from foris_controller_backends.router_notifications import RouterNotificationsCmds
+from foris_controller_backends.updater import Updater
+from foris_controller_backends.web import Languages, WebUciCommands
 
 from .. import Handler
 

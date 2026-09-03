@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #
 # foris-controller
 # Copyright (C) 2019-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
@@ -23,13 +21,10 @@ import copy
 import logging
 import random
 import uuid
-import typing
-
 from datetime import datetime
 
 from foris_controller.handler_base import BaseMockHandler
 from foris_controller.utils import logger_wrapper
-
 
 from .. import Handler
 
@@ -433,7 +428,7 @@ class MockUpdaterHandler(Handler, BaseMockHandler):
         return True
 
     @staticmethod
-    def query_installed_packages(packages: typing.List[str]) -> typing.List[str]:
+    def query_installed_packages(packages: list[str]) -> list[str]:
         """Query whether packages are installed or provided by another packages"""
         ret = set()
         for package in packages:

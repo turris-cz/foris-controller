@@ -24,7 +24,7 @@ import pytest
 
 # load common fixtures
 from foris_controller_testtools.fixtures import FILE_ROOT_PATH, UCI_CONFIG_DIR_PATH
-from foris_controller_testtools.utils import get_uci_module, FileFaker
+from foris_controller_testtools.utils import FileFaker, get_uci_module
 
 DEFAULT_UCI_CONFIG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults")
 

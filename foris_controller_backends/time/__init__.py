@@ -18,12 +18,16 @@
 #
 
 import logging
-
 from functools import reduce
 
 from turris_timezone import TZ_GNU
 
 from foris_controller.app import app_info
+from foris_controller.exceptions import UciException
+from foris_controller.utils import RWLock, writelock
+from foris_controller_backends.cmdline import AsyncCommand, BaseCmdLine
+from foris_controller_backends.files import BaseFile, path_exists
+from foris_controller_backends.services import OpenwrtServices
 from foris_controller_backends.uci import (
     UciBackend,
     get_option_anonymous,
@@ -31,13 +35,7 @@ from foris_controller_backends.uci import (
     parse_bool,
     store_bool,
 )
-from foris_controller.utils import writelock, RWLock
-from foris_controller.exceptions import UciException
-from foris_controller_backends.services import OpenwrtServices
-from foris_controller_backends.cmdline import BaseCmdLine, AsyncCommand
-from foris_controller_backends.files import path_exists, BaseFile
 from foris_controller_backends.wifi import WifiCmds, WifiUci
-
 
 logger = logging.getLogger(__name__)
 

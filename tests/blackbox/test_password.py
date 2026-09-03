@@ -20,10 +20,10 @@
 
 import base64
 import os
-import pytest
 import random
 import string
 
+import pytest
 
 PASS_PATH = "/tmp/passwd_input"
 FILE_ROOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_password_files")
@@ -148,7 +148,7 @@ def test_passowrd_openwrt(uci_configs_init, pass_file, infrastructure):
         "module": "password",
     }
     with open(pass_file) as f:
-        assert f.read() == ("%(password)s\n%(password)s\n" % dict(password=new_pass))
+        assert f.read() == f"{new_pass}\n{new_pass}\n"
 
 
 @pytest.mark.file_root_path(FILE_ROOT_PATH)
@@ -159,7 +159,7 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
             "action": "set",
             "kind": "request",
             "data": {
-                "password": base64.b64encode("password_from_haas".encode()).decode("utf-8"),
+                "password": base64.b64encode(b"password_from_haas").decode("utf-8"),
                 "type": "system",
             },
         }
@@ -176,7 +176,7 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
             "action": "set",
             "kind": "request",
             "data": {
-                "password": base64.b64encode("password_from_other".encode()).decode("utf-8"),
+                "password": base64.b64encode(b"password_from_other").decode("utf-8"),
                 "type": "foris",
             },
         }
@@ -193,7 +193,7 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
             "action": "set",
             "kind": "request",
             "data": {
-                "password": base64.b64encode("valid".encode()).decode("utf-8"),
+                "password": base64.b64encode(b"valid").decode("utf-8"),
                 "type": "system",
             },
         }
@@ -210,7 +210,7 @@ def test_password_filter(uci_configs_init, pass_file, infrastructure):
             "action": "set",
             "kind": "request",
             "data": {
-                "password": base64.b64encode("valid".encode()).decode("utf-8"),
+                "password": base64.b64encode(b"valid").decode("utf-8"),
                 "type": "foris",
             },
         }

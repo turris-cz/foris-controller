@@ -18,16 +18,15 @@
 #
 
 import logging
-from typing import Dict
 
-from foris_controller.module_base import BaseModule
 from foris_controller.handler_base import wrap_required_functions
+from foris_controller.module_base import BaseModule
 
 
 class SystemModule(BaseModule):
     logger = logging.getLogger(__name__)
 
-    def action_get_hostname(self, data: dict) -> Dict[str, str]:
+    def action_get_hostname(self, data: dict) -> dict[str, str]:
         """Get hostname setting."""
         hostname = self.handler.get_hostname()
         return {"hostname": hostname}

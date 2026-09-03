@@ -19,14 +19,14 @@
 
 import json
 import logging
-import prctl
 import os
 import signal
 import struct
 import threading
+from socketserver import BaseRequestHandler, ThreadingMixIn, UnixStreamServer
 
+import prctl
 from jsonschema import ValidationError
-from socketserver import BaseRequestHandler, UnixStreamServer, ThreadingMixIn
 
 from foris_controller.utils import LOGGER_MAX_LEN
 

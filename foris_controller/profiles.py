@@ -18,12 +18,10 @@
 #
 
 import logging
-
 from copy import deepcopy
 from enum import Enum
 from functools import lru_cache
 from importlib import metadata
-
 
 logger = logging.getLogger(__name__)
 

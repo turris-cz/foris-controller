@@ -18,13 +18,12 @@
 #
 
 import os
-import typing
 
 import pytest
 from foris_controller_testtools.fixtures import FILE_ROOT_PATH, UCI_CONFIG_DIR_PATH
 from foris_controller_testtools.utils import (
-    check_service_result,
     FileFaker,
+    check_service_result,
     get_uci_module,
     read_and_parse_file,
 )
@@ -37,7 +36,7 @@ def check_dns_server_port(name: str, port: int):
     assert res == port
 
 
-def list_forwarders(infrastructure) -> typing.List[dict]:
+def list_forwarders(infrastructure) -> list[dict]:
     return infrastructure.process_message({"module": "dns", "action": "list_forwarders", "kind": "request"})["data"][
         "forwarders"
     ]

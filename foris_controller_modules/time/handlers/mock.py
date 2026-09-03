@@ -19,8 +19,6 @@
 
 import logging
 import random
-import typing
-
 from datetime import datetime
 
 from turris_timezone import TZ_GNU
@@ -82,8 +80,8 @@ class MockTimeHandler(Handler, BaseMockHandler):
         country: str,
         city: str,
         how_to_set_time: str,
-        ntp_extras: typing.Optional[typing.List[str]],
-        time: typing.Optional[datetime] = None,
+        ntp_extras: list[str] | None,
+        time: datetime | None = None,
     ) -> bool:
         """Mocks updates current time settings
 

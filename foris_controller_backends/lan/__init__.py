@@ -21,11 +21,8 @@ import abc
 import ipaddress
 import logging
 import time
-import typing
-
-from importlib import metadata
-
 from copy import deepcopy
+from importlib import metadata
 
 from foris_controller.exceptions import UciException
 from foris_controller.utils import parse_to_list, unwrap_list
@@ -48,7 +45,7 @@ logger = logging.getLogger(__name__)
 class ForwardingException(Exception, metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
-    def api_response(self) -> typing.List[dict]:
+    def api_response(self) -> list[dict]:
         pass
 
     def __init__(self, rule_name):
@@ -56,12 +53,12 @@ class ForwardingException(Exception, metaclass=abc.ABCMeta):
 
 
 class NotInLanException(ForwardingException):
-    def api_response(self) -> typing.List[dict]:
+    def api_response(self) -> list[dict]:
         return [{"new_rule": self.rule_name, "msg": "not-in-lan"}]
 
 
 class NotUserDefinedException(ForwardingException):
-    def api_response(self) -> typing.List[dict]:
+    def api_response(self) -> list[dict]:
         return [{"new_rule": self.rule_name, "msg": "not-user-defined"}]
 
 
@@ -70,7 +67,7 @@ class AlreadyUsedException(ForwardingException):
         self.rule_name = rule_name
         self.overlaps = overlaps
 
-    def api_response(self) -> typing.List[dict]:
+    def api_response(self) -> list[dict]:
         return [
             {
                 "old_rule": e["old_rule"],
@@ -97,7 +94,7 @@ class LanFiles(BaseFile):
         ip_exploded = ip.exploded
         return f"src={ip_exploded}" in conntrack or f"dst={ip_exploded}" in conntrack
 
-    def get_dhcp_clients(self, network_ip: str, netmask: str) -> typing.List[dict]:
+    def get_dhcp_clients(self, network_ip: str, netmask: str) -> list[dict]:
         if not path_exists(LanFiles.DNSMASQ_LEASE_FILE):
             return []
         lines = self._file_content(LanFiles.DNSMASQ_LEASE_FILE).strip("\n \t").split("\n")
@@ -135,7 +132,7 @@ class LanUci:
     FW_ALLOWED_KEYS = ("name", "dest_ip", "src_dport", "dest_port", "enabled")
 
     @staticmethod
-    def get_network_combo(network_data) -> typing.Tuple[str, str, str]:
+    def get_network_combo(network_data) -> tuple[str, str, str]:
         """In case CIDR ipv4 address notation is used in Uci
         convert lan address.
 
@@ -169,7 +166,7 @@ class LanUci:
 
         backend.add_to_list("network", "lan", "ipaddr", parse_to_list(_get_interface(router_ip, netmask)))
 
-    def get_client_list(self, uci_data: dict, router_ip: str, netmask: str) -> typing.List[dict]:
+    def get_client_list(self, uci_data: dict, router_ip: str, netmask: str) -> list[dict]:
         file_records = LanFiles().get_dhcp_clients(router_ip, netmask)
 
         static_uci_data = get_sections_by_type(uci_data, "dhcp", "host")
@@ -211,7 +208,7 @@ class LanUci:
         return file_records
 
     @staticmethod
-    def _get_ipv6_client_list(interface="br-lan") -> typing.List[dict]:
+    def _get_ipv6_client_list(interface="br-lan") -> list[dict]:
         """Get dhcpv6 leases info from json data provided by odhcpd.
 
         NOTE: We are getting this data via ubus, so this function could break anytime
@@ -260,7 +257,7 @@ class LanUci:
         return res
 
     @staticmethod
-    def _sanitize_dhcpv6_lease_time(leasetime: str) -> typing.Optional[int]:
+    def _sanitize_dhcpv6_lease_time(leasetime: str) -> int | None:
         """Sanitize dhcpv6 lease time string.
 
         Fallback to `None` on unexpected values (i.e. lease time that can't be converted to int).
@@ -275,7 +272,7 @@ class LanUci:
 
         # '-1' or other negative numbers points to some kind of error with lease time (see odhcpd source code).
         # Fallback to 0 in case of negative lease time.
-        return expires if expires >= 0 else 0
+        return max(expires, 0)
 
     @staticmethod
     def _make_timestamp_from_dhcpv6_lease_time(now: int, lease_duration: int) -> int:
@@ -390,8 +387,8 @@ class LanUci:
         self,
         backend: UciBackend,
         dhcp_data,
-        old_router_ip: typing.Optional[str],
-        old_netmask: typing.Optional[str],
+        old_router_ip: str | None,
+        old_netmask: str | None,
         new_router_ip: str,
         new_netmask: str,
         new_start: int,
@@ -582,7 +579,7 @@ class LanUci:
         return ipaddress.ip_address(ip) in network
 
     @staticmethod
-    def _process_uci_mac_addresses(mac_addrs: typing.Union[str, typing.List[str]]) -> typing.List[str]:
+    def _process_uci_mac_addresses(mac_addrs: str | list[str]) -> list[str]:
         """Parse MAC address/addresses uci value and return result in unified format.
 
         Distinguish between MAC addresses as string or list of strings.
@@ -610,7 +607,7 @@ class LanUci:
         return bool(LanUci._get_host_record_section(dhcp_data, mac))
 
     @staticmethod
-    def _get_host_record_section(dhcp_data: dict, mac: str) -> typing.Optional[dict]:
+    def _get_host_record_section(dhcp_data: dict, mac: str) -> dict | None:
         """Get DHCP host uci config section based on MAC address
 
         Useful for manipulation with anonymous uci config sections.
@@ -677,7 +674,7 @@ class LanUci:
         ip: str,
         router_ip: str,
         netmask: str,
-    ) -> typing.Optional[str]:
+    ) -> str | None:
         """Validate DHCP host IP address
 
         Check whether it fits the target network, DHCP is enabled and so on
@@ -708,7 +705,7 @@ class LanUci:
 
         return None  # data looks OK
 
-    def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> typing.Optional[str]:
+    def set_dhcp_client(self, ip: str, mac: str, hostname: str) -> str | None:
         """Create configuration of a single dhcp client
 
         Distiction between create and update is that creating new client config
@@ -750,7 +747,7 @@ class LanUci:
 
         return None  # everything went ok
 
-    def update_dhcp_client(self, ip: str, old_mac: str, mac: str, hostname: str) -> typing.Optional[str]:
+    def update_dhcp_client(self, ip: str, old_mac: str, mac: str, hostname: str) -> str | None:
         """Update configuration of a single dhcp client
 
         :param ip: ip address to be assigned (or 'ignore' - don't assign any ip)
@@ -791,9 +788,7 @@ class LanUci:
             # 2) input data validation
             err_msg = LanUci._validate_dhcp_host_ip(network_data, dhcp_data, ip, router_ip, netmask)
             if err_msg is not None:
-                if err_msg != "ip-exists":
-                    return err_msg
-                elif err_msg == "ip-exists" and ip != current_config["ip"]:  # IP is already used for another dhcp host
+                if err_msg != "ip-exists" or err_msg == "ip-exists" and ip != current_config["ip"]:
                     return err_msg
 
             if not LanUci._hostname_is_unique(dhcp_data, hostname) and hostname != current_config["hostname"]:
@@ -825,7 +820,7 @@ class LanUci:
 
         return None  # everything went ok
 
-    def delete_dhcp_client(self, mac: str) -> typing.Optional[str]:
+    def delete_dhcp_client(self, mac: str) -> str | None:
         """Delete configuration of single dhcp client
         :param mac: mac address of dhcp client
         """
@@ -851,13 +846,13 @@ class LanUci:
 
         return None  # everything went ok
 
-    def _get_user_defined_dhcp_clients(self, dhcp_data) -> typing.List[dict]:
+    def _get_user_defined_dhcp_clients(self, dhcp_data) -> list[dict]:
         """Helper function to determine user-defined dhcp leases that are used with forwarding."""
         hosts = get_sections_by_type(dhcp_data, "dhcp", "host")
         return hosts
 
     @staticmethod
-    def _convert_ports(data) -> typing.Optional[dict]:
+    def _convert_ports(data) -> dict | None:
         """Converts dashed `-` range to dictionary
         :param data: firewall rules for port forwarding
 
@@ -899,7 +894,7 @@ class LanUci:
         else:
             return self._make_range_set(port["value"])
 
-    def _get_all_forwardings(self, fw_data) -> typing.List[dict]:
+    def _get_all_forwardings(self, fw_data) -> list[dict]:
         """Provides all current forwardings in UCI
         src_dport and dest_port are converted to dictionary
         whether there is dashed `-` range or plain int
@@ -915,14 +910,14 @@ class LanUci:
         return [e["data"] for e in forwardings]
 
     @staticmethod
-    def _make_range_set(start: int, end: typing.Optional[int] = None) -> typing.Set[int]:
+    def _make_range_set(start: int, end: int | None = None) -> set[int]:
         """Helper func. to create set of port ranges to interpolate."""
         if end is None:
             return {start}
         else:
             return set(range(start, end + 1))
 
-    def _check_port_range_not_used(self, fw_data, src_dport: dict, name: str) -> typing.Optional[typing.List[str]]:
+    def _check_port_range_not_used(self, fw_data, src_dport: dict, name: str) -> list[str] | None:
         """Checks for possible port interference.
         :retval: None or List of objects related to an error"""
         errors = []
@@ -958,7 +953,7 @@ class LanUci:
 
         return errors if len(errors) > 0 else None
 
-    def get_port_forwardings(self) -> typing.List[typing.Dict[str, str]]:
+    def get_port_forwardings(self) -> list[dict[str, str]]:
         """API method, gets all current forwardings."""
         with UciBackend() as backend:
             firewall_data = backend.read("firewall")
@@ -1043,8 +1038,6 @@ class LanUci:
             backend.set_option("firewall", redirect, "dest_port", dest_port["value"])
         backend.set_option("firewall", redirect, "enabled", store_bool(enabled))
 
-        return None  # update successful
-
     def _delete_rule(self, fw_data, backend, name) -> None:
         """Delete rule based on name in list."""
         current = self._get_all_forwardings(fw_data)
@@ -1052,7 +1045,7 @@ class LanUci:
             if item["name"] == name:
                 backend.del_section("firewall", f"@redirect[{item['index']}]")
 
-    def port_forwarding_delete(self, names: typing.List[str]) -> bool:
+    def port_forwarding_delete(self, names: list[str]) -> bool:
         with UciBackend() as backend:
             fw_data = backend.read("firewall")
             for rule_name in names:
