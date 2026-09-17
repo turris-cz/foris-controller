@@ -70,7 +70,7 @@
         "wifi_device_htmode_2g": {
            "allOf": [
                {"$ref": "#/definitions/wifi_device_htmode"},
-               {"enum": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]}
+               {"enum": ["NOHT", "HT20", "HT40", "HE20", "HE40", "EHT20", "EHT40"]}
             ]
         },
         "wifi_device_htmodes_2g": {

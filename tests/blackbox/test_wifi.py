@@ -61,7 +61,7 @@ DEFAULT_CONFIG = [
         "available_bands": [
             {
                 "band": "2g",
-                "available_htmodes": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
+                "available_htmodes": ["NOHT", "HE20", "HE40", "HT20", "HT40"],
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
                     {"number": 2, "frequency": 2417, "radar": False},
@@ -1681,7 +1681,7 @@ def test_get_hwmode_fallback_openwrt(infrastructure, uci_configs_init):
 def test_get_80211ax_htmodes(infrastructure, uci_configs_init):
     """Test that MT7915E chipset will return correct 802.11ax HE modes"""
     htmodes = {
-        "2g": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
+        "2g": ["NOHT", "HE20", "HE40", "HT20", "HT40"],
         "5g": ["NOHT", "HT20", "HT40", "VHT20", "VHT40", "VHT80", "VHT160", "HE20", "HE40", "HE80", "HE160"],
     }
 

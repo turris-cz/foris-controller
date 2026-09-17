@@ -67,7 +67,7 @@ DEFAULT_CONFIG = [
         "available_bands": [
             {
                 "band": "2g",
-                "available_htmodes": ["NOHT", "HT20", "HT40", "HE20", "HE40", "HE80", "HE160"],
+                "available_htmodes": ["NOHT", "HE20", "HE40", "HT20", "HT40"],
                 "available_channels": [
                     {"number": 1, "frequency": 2412, "radar": False},
                     {"number": 2, "frequency": 2417, "radar": False},

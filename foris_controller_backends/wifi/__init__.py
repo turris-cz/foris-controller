@@ -69,7 +69,14 @@ class Band(str, Enum):
         """
         match self:
             case Band.G2:
-                return ["HT20", "HT40", "HE20", "HE40", "HE80", "HE160"]
+                return [
+                    "EHT20",
+                    "EHT40",
+                    "HE20",
+                    "HE40",
+                    "HT20",
+                    "HT40",
+                ]
             case Band.G5:
                 return [
                     "HT20",
